@@ -1,7 +1,9 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
-import { FORMAT_REFERENCE, PRIMARY_FORMATS } from '../content/format-reference';
-const formats = PRIMARY_FORMATS.map((id) => FORMAT_REFERENCE[id]);
+import { FORMAT_REFERENCE, PRIMARY_FORMATS, type FormatReference } from '../content/format-reference';
+const formats = PRIMARY_FORMATS
+  .map((id) => FORMAT_REFERENCE[id])
+  .filter((format): format is FormatReference => Boolean(format));
 ---
 <SiteLayout title="Supported Image Formats | ConvertAnyFile" description="Explore image formats recognized by ConvertAnyFile, including JPG, PNG, WebP, AVIF, HEIC, TIFF, GIF, BMP and ICO, with compression, transparency, compatibility and conversion guidance.">
 <section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Formats</span></div><span class="eyebrow">Format reference</span><h1>Choose the right image format for the job.</h1><p>Image conversion is the first live category on ConvertAnyFile. This reference explains what common formats are good at, what they trade away, and why runtime capability matters before a conversion is offered.</p></div></section>
