@@ -31,8 +31,8 @@ const acceptedHint = converter.category === 'image' ? (converter.input ? `${conv
       </section>
       <div class="progress-wrap" data-role="progress" hidden aria-live="polite"><div class="progress-copy"><strong data-role="progress-text">Preparing…</strong><span>Keep this tab open</span></div><div class="progress-track"><span data-role="progress-bar"></span></div></div>
       <div class="file-list" data-role="file-list" aria-label="Selected files"></div>
-      <footer class="batch-action-bar"><p class="result-summary" data-role="result-summary" hidden></p><div class="batch-buttons"><button data-role="cancel" class="secondary-button danger-button" type="button" hidden>Cancel</button><button data-role="download-zip" class="secondary-button" type="button" hidden>Download ZIP</button><button data-role="convert-all" class="primary-button" type="button">Preparing converter…</button></div></footer>
+      <div class="batch-action-bar"><p class="result-summary" data-role="result-summary" hidden></p><div class="batch-buttons"><button data-role="cancel" class="secondary-button danger-button" type="button" hidden>Cancel</button><button data-role="download-zip" class="secondary-button" type="button" hidden>Download ZIP</button><button data-role="convert-all" class="primary-button" type="button">Preparing converter…</button></div></div>
     </div>
   </section>
 </div>
-<script>import '../client/converter-app';</script>
+<script src="../client/converter-app.ts"></script>
