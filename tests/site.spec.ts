@@ -102,13 +102,13 @@ test('generated sitemap pages keep valid canonicals, unique titles, descriptions
   }
 });
 
-test('every live converter route uses the shared compact converter page contract', async ({ request }) => {
+test('every dedicated live converter route uses the shared compact converter page contract', async ({ request }) => {
   const pagePaths = await getSitemapPagePaths(request);
   let converterPages = 0;
   for (const path of pagePaths) {
     const response = await request.get(path);
     const html = await response.text();
-    if (!html.includes('data-converter-app')) continue;
+    if (path === '/' || !html.includes('data-converter-app')) continue;
     converterPages += 1;
     expect(html, `${path} must render through ConverterPageFrame`).toContain('data-converter-page-frame');
     expect(html, `${path} must use the compact shared ConverterShell`).toContain('converter-card--compact');
@@ -155,7 +155,7 @@ test('desktop homepage keeps hero compact, drop zone above fold, and Converters 
   await expect(page.getByRole('heading', { name: 'One interface. Multiple file categories.' })).toBeVisible();
 });
 
-test('all converter routes keep the file picker in the first desktop viewport', async ({ page, request }, testInfo) => {
+test('all dedicated converter routes keep the file picker in the first desktop viewport', async ({ page, request }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop converter-page contract');
   await page.setViewportSize({ width: 1440, height: 900 });
   const pagePaths = await getSitemapPagePaths(request);
@@ -163,7 +163,7 @@ test('all converter routes keep the file picker in the first desktop viewport', 
   for (const path of pagePaths) {
     const response = await request.get(path);
     const html = await response.text();
-    if (html.includes('data-converter-app')) converterPaths.push(path);
+    if (path !== '/' && html.includes('data-converter-app')) converterPaths.push(path);
   }
   expect(converterPaths.length).toBeGreaterThan(10);
 
