@@ -1,6 +1,6 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
-import ConverterShell from '../components/ConverterShell.astro';
+import ConverterPageFrame from '../components/ConverterPageFrame.astro';
 import FaqList from '../components/FaqList.astro';
 import ArticleFrame from '../components/ArticleFrame.astro';
 import { PAIR_CONVERTERS, getConverter } from '../config/converters';
@@ -34,8 +34,7 @@ const faq = [
 const schema={'@context':'https://schema.org','@type':'WebApplication',name:converter.h1,url:`${SITE.origin}/${converter.slug}/`,applicationCategory:'MultimediaApplication',operatingSystem:'Any',offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}};
 ---
 <SiteLayout title={converter.title} description={converter.description} schema={schema}>
-<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/image-converter/">Image Converter</a><span>/</span><span>{converter.eyebrow}</span></div><span class="eyebrow">{converter.eyebrow}</span><h1>{converter.h1}</h1><p>{converter.intro}</p></div></section>
-<section class="converter-page-wrap"><div class="site-container"><ConverterShell converter={converter} /></div></section>
+<ConverterPageFrame converter={converter} />
 
 <ArticleFrame toc={toc} related={asideRelated} relatedTitle="Related conversions" asideNote="The conversion engine checks the file signature and runtime codec capability before relying on the format extension.">
   <div class="quick-answer"><strong>Quick answer</strong><p>{content?.when}</p></div>
