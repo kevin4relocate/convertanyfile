@@ -3,6 +3,7 @@
 import { ImageMagick, Magick, MagickColors, MagickFormat, initializeImageMagick, type MagickFormat as MagickFormatType } from '@imagemagick/magick-wasm';
 import magickWasmUrl from '@imagemagick/magick-wasm/magick.wasm?url';
 import type { ConversionErrorCode } from '../../platform/converter/errors';
+import { extractBestPngIcoFrame } from './legacy-formats';
 import type { ImageWorkerRequest, ImageWorkerResponse } from './protocol';
 
 const scope = self as DedicatedWorkerGlobalScope;
@@ -47,6 +48,14 @@ async function convert(input: ArrayBuffer, inputFormat: string | undefined, outp
       const copy = new Uint8Array(data.length); copy.set(data); return copy.buffer;
     });
   };
+
+  // ICO files can contain several size variants. For a single-image conversion, decode the
+  // largest PNG-backed frame directly instead of asking ImageMagick to collapse the container.
+  if (inputFormat === 'ico') {
+    const pngFrame = extractBestPngIcoFrame(bytes);
+    if (pngFrame) return ImageMagick.read(pngFrame, MagickFormat.Png, process);
+  }
+
   const hint = inputFormat ? INPUT_HINT_MAP[inputFormat] : undefined;
   return hint ? ImageMagick.read(bytes, hint, process) : ImageMagick.read(bytes, process);
 }
