@@ -5,6 +5,10 @@ const PNG_2X2 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP4z8DA8J+BkYHh////DAAe9gT9Ce00PgAAAABJRU5ErkJggg==',
   'base64',
 );
+const PNG_TRANSPARENT_16 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAIUlEQVR4nGNkIAD+MzD8xyfPRMgAQmDUgFEDRg0YLAYAABitAh61MMBjAAAAAElFTkSuQmCC',
+  'base64',
+);
 
 const fakeAudioNamedJpg = Buffer.from('ID3\x04\x00\x00\x00\x00\x00\x00fake-audio');
 
@@ -43,6 +47,20 @@ async function expectControllerReady(page: Page) {
     throw error;
   }
   return app;
+}
+
+async function downloadedPixel(page: Page, jpeg: Buffer, x: number, y: number): Promise<number[]> {
+  return page.evaluate(async ({ base64, x, y }) => {
+    const response = await fetch(`data:image/jpeg;base64,${base64}`);
+    const bitmap = await createImageBitmap(await response.blob());
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas unavailable');
+    context.drawImage(bitmap, 0, 0);
+    return Array.from(context.getImageData(x, y, 1, 1).data);
+  }, { base64: jpeg.toString('base64'), x, y });
 }
 
 test('real image engine accepts PNG, keeps settings stable, rejects disguised audio, converts and downloads JPEG', async ({ page }, testInfo) => {
@@ -102,6 +120,30 @@ test('real image engine accepts PNG, keeps settings stable, rejects disguised au
   expect(path).not.toBeNull();
   const jpeg = await readFile(path!);
   expect(Array.from(jpeg.subarray(0, 3))).toEqual([0xff, 0xd8, 0xff]);
+  expect(browserErrors, browserErrors.join('\n')).toEqual([]);
+});
+
+test('transparent PNG pixels are flattened to white when creating JPEG', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run the pixel-level JPEG regression once');
+  const browserErrors = captureBrowserDiagnostics(page);
+  await page.goto('/png-to-jpg/');
+  const app = await expectControllerReady(page);
+  await app.locator('[data-role="file-input"]').setInputFiles({ name: 'transparent.png', mimeType: 'image/png', buffer: PNG_TRANSPARENT_16 });
+  const convert = app.locator('[data-role="convert-all"]');
+  await expect(convert).toBeEnabled({ timeout: 60_000 });
+  await convert.click();
+  await expect(app.locator('[data-role="result-summary"]')).toContainText('1/1 converted', { timeout: 60_000 });
+
+  const downloadPromise = page.waitForEvent('download');
+  await app.getByRole('button', { name: 'Download', exact: true }).click();
+  const download = await downloadPromise;
+  const path = await download.path();
+  expect(path).not.toBeNull();
+  const jpeg = await readFile(path!);
+  const pixel = await downloadedPixel(page, jpeg, 2, 8);
+  expect(pixel[0]).toBeGreaterThan(235);
+  expect(pixel[1]).toBeGreaterThan(235);
+  expect(pixel[2]).toBeGreaterThan(235);
   expect(browserErrors, browserErrors.join('\n')).toEqual([]);
 });
 
