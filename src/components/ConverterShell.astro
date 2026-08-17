@@ -35,9 +35,11 @@ const acceptedHint = converter.category === 'image' ? (converter.input ? `${conv
         <div class="workspace-actions"><button data-role="add-more" class="text-button strong" type="button">+ Add more</button><button data-role="clear-all" class="text-button" type="button">Clear all</button></div>
       </header>
       <section class="settings-card" aria-label="Conversion settings">
-        <label class="field"><span>Convert all to</span><select data-role="output-format" aria-label="Output format"></select></label>
-        <label class="field quality-field" data-role="quality-field"><span data-role="quality-label">Quality 90</span><input data-role="quality" type="range" min="1" max="100" value="90" aria-label="Output quality" /></label>
-        <div class="quick-field"><span>Quick output</span><div class="quick-outputs" data-role="quick-outputs"></div></div>
+        <div class="settings-main-row">
+          <label class="field output-field"><span>Convert all to</span><select data-role="output-format" aria-label="Output format"></select></label>
+          <label class="field quality-field" data-role="quality-field"><span data-role="quality-label">Quality 90</span><input data-role="quality" type="range" min="1" max="100" value="90" aria-label="Output quality" /></label>
+        </div>
+        <div class="quick-field"><span>Popular outputs</span><div class="quick-outputs" data-role="quick-outputs"></div></div>
       </section>
       <div class="progress-wrap" data-role="progress" hidden aria-live="polite"><div class="progress-copy"><strong data-role="progress-text">Preparing…</strong><span>Keep this tab open</span></div><div class="progress-track"><span data-role="progress-bar"></span></div></div>
       <div class="file-list" data-role="file-list" aria-label="Selected files"></div>
