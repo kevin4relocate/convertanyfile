@@ -40,16 +40,27 @@ test('shared site shell and static SEO routes are healthy', async ({ page, reque
   expect(sitemap).toContain('convertanyfile.net');
 });
 
-test('desktop converter is actionable above the fold and content uses 1080px grid', async ({ page }, testInfo) => {
+test('desktop homepage shows the complete drop zone above the fold and uses the 1080px grid', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop layout regression');
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
 
+  const converter = page.locator('.hero-converter .converter-card');
+  const dropZone = page.locator('.hero-converter [data-role="drop-zone"]');
   const choose = page.getByText('Choose files', { exact: true });
+  const privacyHint = page.getByText('Files stay on your device during conversion', { exact: true });
+
+  await expect(converter).toBeVisible();
+  await expect(dropZone).toBeVisible();
   await expect(choose).toBeVisible();
-  const chooseBox = await choose.boundingBox();
-  expect(chooseBox).not.toBeNull();
-  expect(chooseBox!.y + chooseBox!.height).toBeLessThanOrEqual(900);
+  await expect(privacyHint).toBeVisible();
+
+  const converterBox = await converter.boundingBox();
+  const dropBox = await dropZone.boundingBox();
+  expect(converterBox).not.toBeNull();
+  expect(dropBox).not.toBeNull();
+  expect(converterBox!.y).toBeLessThan(400);
+  expect(dropBox!.y + dropBox!.height).toBeLessThanOrEqual(900);
 
   await page.goto('/about/');
   const content = page.locator('.page-hero .site-container');

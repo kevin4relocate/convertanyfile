@@ -2,3 +2,175 @@
 .page-hero .hero-inner {
   max-width: none;
 }
+
+/* Keep conversion settings visually stable when an output has no quality control. */
+.settings-card {
+  display: grid;
+  grid-template-columns: auto minmax(280px, 1fr);
+  grid-template-areas:
+    "output quality"
+    "quick quick";
+  gap: 0;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+}
+
+.output-field {
+  grid-area: output;
+  min-height: 64px;
+  padding: 13px 0 13px 17px;
+}
+
+.quality-field {
+  grid-area: quality;
+  min-width: 0;
+  min-height: 64px;
+  padding: 13px 17px 13px 28px;
+}
+
+.quality-field input {
+  width: 100%;
+  min-width: 180px;
+}
+
+.quick-field {
+  grid-area: quick;
+  min-height: 48px;
+  padding: 10px 17px;
+  border-top: 1px solid #e7e8ef;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.quick-field > span {
+  min-width: 94px;
+}
+
+/* Homepage: keep the product promise, but get the converter into the first viewport faster. */
+.hero {
+  padding: 28px 0 24px;
+}
+
+.hero::before {
+  top: -520px;
+  width: 680px;
+  height: 680px;
+}
+
+.hero h1 {
+  margin: 11px 0 10px;
+  font-size: clamp(40px, 4.5vw, 56px);
+  line-height: 0.99;
+}
+
+.hero-lead {
+  max-width: 760px;
+  font-size: clamp(14px, 1.45vw, 16px);
+  line-height: 1.48;
+}
+
+.hero-trust {
+  margin-top: 12px;
+  gap: 14px;
+}
+
+.hero-converter {
+  margin-top: 20px;
+}
+
+.converter-card--compact .converter-topbar {
+  min-height: 52px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.converter-card--compact .converter-app {
+  padding: 12px;
+}
+
+.converter-card--compact .drop-zone {
+  min-height: 245px;
+  padding: 22px 18px;
+}
+
+.converter-card--compact .drop-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+}
+
+.converter-card--compact .drop-zone h2 {
+  font-size: clamp(26px, 2.5vw, 31px);
+}
+
+.converter-card--compact .drop-zone p {
+  margin: 8px 0 14px;
+}
+
+.converter-card--compact .choose-button {
+  padding: 11px 18px;
+}
+
+.converter-card--compact .drop-zone small {
+  margin-top: 10px;
+}
+
+@media (max-width: 760px) {
+  .settings-card {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "output"
+      "quick"
+      "quality";
+  }
+
+  .output-field,
+  .quality-field {
+    width: 100%;
+    min-height: 0;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+  }
+
+  .quality-field {
+    border-top: 1px solid #e7e8ef;
+  }
+
+  .output-field select,
+  .quality-field input {
+    width: 100%;
+  }
+
+  .quick-field {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px 14px;
+  }
+
+  .quick-field > span {
+    min-width: 0;
+  }
+
+  .quick-outputs {
+    flex-wrap: wrap;
+  }
+
+  .hero {
+    padding: 30px 0 22px;
+  }
+
+  .hero h1 {
+    font-size: clamp(38px, 11vw, 50px);
+  }
+
+  .hero-converter {
+    margin-top: 18px;
+  }
+
+  .converter-card--compact .drop-zone {
+    min-height: 270px;
+  }
+}

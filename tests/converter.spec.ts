@@ -45,7 +45,7 @@ async function expectControllerReady(page: Page) {
   return app;
 }
 
-test('real image engine accepts PNG, rejects disguised audio, converts and downloads JPEG', async ({ page }, testInfo) => {
+test('real image engine accepts PNG, keeps settings stable, rejects disguised audio, converts and downloads JPEG', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run the expensive WASM conversion once');
   const browserErrors = captureBrowserDiagnostics(page);
 
@@ -64,9 +64,27 @@ test('real image engine accepts PNG, rejects disguised audio, converts and downl
   await expect(app.locator('[data-role="file-list"]')).not.toContainText('pretend.jpg');
   await expect(app.locator('[data-role="notice"]')).toContainText('pretend.jpg');
 
+  const outputSelect = app.locator('[data-role="output-format"]');
+  const qualityField = app.locator('[data-role="quality-field"]');
+  const popularOutputs = app.locator('.quick-field');
+  await expect(outputSelect).toBeEnabled({ timeout: 60_000 });
+  await expect(app.locator('[data-role="engine-state"]')).toContainText('Private converter ready');
+  await expect(popularOutputs).toContainText('Popular outputs');
+
+  await outputSelect.selectOption('webp');
+  await expect(qualityField).toBeVisible();
+  const popularBefore = await popularOutputs.boundingBox();
+  expect(popularBefore).not.toBeNull();
+
+  await outputSelect.selectOption('ico');
+  await expect(qualityField).toBeHidden();
+  const popularAfter = await popularOutputs.boundingBox();
+  expect(popularAfter).not.toBeNull();
+  expect(Math.abs(popularAfter!.y - popularBefore!.y)).toBeLessThanOrEqual(2);
+
+  await outputSelect.selectOption('jpg');
   const convert = app.locator('[data-role="convert-all"]');
   await expect(convert).toBeEnabled({ timeout: 60_000 });
-  await expect(app.locator('[data-role="engine-state"]')).toContainText('Private converter ready');
   await convert.click();
 
   const summary = app.locator('[data-role="result-summary"]');
