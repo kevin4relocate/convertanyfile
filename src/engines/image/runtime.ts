@@ -24,9 +24,7 @@ export const imageEngine: EngineAdapter = {
     if (!detected) return null;
     if (requiredInput && normalizeImageExtension(requiredInput) !== normalizeImageExtension(detected.extension)) return null;
     if (detected.width && detected.height) {
-      if (detected.width > MAX_IMAGE_DIMENSION || detected.height > MAX_IMAGE_DIMENSION || (detected.estimatedDecodedBytes ?? 0) > MAX_ESTIMATED_DECODED_BYTES) {
-        throw new Error(`Image is too large to process safely in this browser (${detected.width}×${detected.height})`);
-      }
+      if (detected.width > MAX_IMAGE_DIMENSION || detected.height > MAX_IMAGE_DIMENSION || (detected.estimatedDecodedBytes ?? 0) > MAX_ESTIMATED_DECODED_BYTES) return null;
     }
     return detected;
   },
