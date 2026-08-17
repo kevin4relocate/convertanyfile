@@ -19,6 +19,10 @@ function tga1x1(): Buffer {
   return bytes;
 }
 
+function realMultiSizePngBackedIco(): Buffer {
+  return Buffer.from('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', 'base64');
+}
+
 function truncatedPng(): Buffer {
   const bytes = Buffer.alloc(24);
   Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,0x00,0x00,0x00,0x0d,0x49,0x48,0x44,0x52]).copy(bytes);
@@ -55,6 +59,11 @@ test('PCX converts through the real image engine', async ({ page }, testInfo) =>
 test('TGA converts through the real image engine', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run legacy WASM conversion once');
   await expectLegacyConversion(page, 'legacy.tga', 'image/x-tga', tga1x1());
+});
+
+test('real multi-size PNG-backed ICO converts through the real image engine', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run real ICO WASM conversion once');
+  await expectLegacyConversion(page, 'image.ico', 'image/x-icon', realMultiSizePngBackedIco());
 });
 
 test('deterministic corrupt-input failures do not offer pointless retry actions', async ({ page }, testInfo) => {
