@@ -12,6 +12,7 @@ const OUTPUT_MAP: Record<string, MagickFormatType> = {
   tiff: MagickFormat.Tiff, gif: MagickFormat.Gif, bmp: MagickFormat.Bmp, ico: MagickFormat.Ico,
 };
 const INPUT_HINT_MAP: Record<string, MagickFormatType> = {
+  ico: MagickFormat.Ico,
   pcx: MagickFormat.Pcx,
   tga: MagickFormat.Tga,
 };
