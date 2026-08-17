@@ -99,15 +99,21 @@ test('generated sitemap pages keep valid canonicals, unique titles, descriptions
   }
 });
 
-test('desktop homepage shows the complete drop zone above the fold and uses the 1080px grid', async ({ page }, testInfo) => {
+test('desktop homepage keeps hero compact, drop zone above fold, and Converters anchor at the section heading', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop layout regression');
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
 
+  const heroTitle = page.locator('.hero h1');
   const converter = page.locator('.hero-converter .converter-card');
   const dropZone = page.locator('.hero-converter [data-role="drop-zone"]');
   const choose = page.getByText('Choose files', { exact: true });
   const privacyHint = page.getByText('Files stay on your device during conversion', { exact: true });
+
+  await expect(heroTitle).toHaveText('Convert files fast. Keep them private.');
+  const heroTitleBox = await heroTitle.boundingBox();
+  expect(heroTitleBox).not.toBeNull();
+  expect(heroTitleBox!.height).toBeLessThan(70);
 
   await expect(converter).toBeVisible();
   await expect(dropZone).toBeVisible();
@@ -120,6 +126,16 @@ test('desktop homepage shows the complete drop zone above the fold and uses the 
   expect(dropBox).not.toBeNull();
   expect(converterBox!.y).toBeLessThan(400);
   expect(dropBox!.y + dropBox!.height).toBeLessThanOrEqual(900);
+
+  await page.getByRole('link', { name: 'Converters', exact: true }).click();
+  await expect(page).toHaveURL(/#converters$/);
+  await page.waitForFunction(() => {
+    const section = document.querySelector('#converters');
+    if (!section) return false;
+    const top = section.getBoundingClientRect().top;
+    return top >= 64 && top <= 100;
+  });
+  await expect(page.getByRole('heading', { name: 'One interface. Multiple file categories.' })).toBeVisible();
 
   await page.goto('/about/');
   const content = page.locator('.page-hero .site-container');
