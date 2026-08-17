@@ -1,8 +1,38 @@
 import type { DetectedFile } from '../../platform/converter/types';
 
+const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 const u16le = (bytes: Uint8Array, offset: number) => (bytes[offset] ?? 0) | ((bytes[offset + 1] ?? 0) << 8);
 const u32le = (bytes: Uint8Array, offset: number) => new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(offset, true);
 const starts = (bytes: Uint8Array, signature: number[]) => signature.every((value, index) => bytes[index] === value);
+
+interface IcoEntry {
+  width: number;
+  height: number;
+  bitDepth: number;
+  size: number;
+  offset: number;
+}
+
+function parseIcoEntries(bytes: Uint8Array, totalSize: number): IcoEntry[] | null {
+  if (bytes.length < 6 || !starts(bytes, [0x00, 0x00, 0x01, 0x00])) return null;
+  const count = u16le(bytes, 4);
+  if (count < 1 || count > 1024) return null;
+  const directoryEnd = 6 + count * 16;
+  if (directoryEnd > bytes.length || directoryEnd > totalSize) return null;
+
+  const entries: IcoEntry[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const entry = 6 + index * 16;
+    const width = bytes[entry] || 256;
+    const height = bytes[entry + 1] || 256;
+    const bitDepth = u16le(bytes, entry + 6);
+    const size = u32le(bytes, entry + 8);
+    const offset = u32le(bytes, entry + 12);
+    if (size < 1 || offset < directoryEnd || offset + size > totalSize) return null;
+    entries.push({ width, height, bitDepth, size, offset });
+  }
+  return entries;
+}
 
 function detected(extension: string, label: string, width: number, height: number): DetectedFile | null {
   if (width <= 0 || height <= 0) return null;
@@ -49,24 +79,34 @@ export async function detectLegacyImage(file: File, extension: string, bytes: Ui
 }
 
 export async function validateIcoFile(file: File, bytes: Uint8Array): Promise<boolean> {
-  if (bytes.length < 6 || !starts(bytes, [0x00, 0x00, 0x01, 0x00])) return false;
-  const count = u16le(bytes, 4);
-  if (count < 1 || count > 1024) return false;
-  const directoryEnd = 6 + count * 16;
-  if (directoryEnd > file.size || directoryEnd > bytes.length) return false;
-
-  let firstOffset = 0;
-  for (let index = 0; index < count; index += 1) {
-    const entry = 6 + index * 16;
-    const size = u32le(bytes, entry + 8);
-    const offset = u32le(bytes, entry + 12);
-    if (size < 1 || offset < directoryEnd || offset + size > file.size) return false;
-    if (index === 0) firstOffset = offset;
-  }
-
-  const payload = new Uint8Array(await file.slice(firstOffset, Math.min(file.size, firstOffset + 16)).arrayBuffer());
-  if (starts(payload, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return true;
+  const entries = parseIcoEntries(bytes, file.size);
+  if (!entries) return false;
+  const first = entries[0]!;
+  const payload = new Uint8Array(await file.slice(first.offset, Math.min(file.size, first.offset + 16)).arrayBuffer());
+  if (starts(payload, PNG_SIGNATURE)) return true;
   if (payload.length < 4) return false;
   const dibHeaderSize = u32le(payload, 0);
   return [12, 40, 52, 56, 64, 108, 124].includes(dibHeaderSize);
+}
+
+/**
+ * ICO is a container that can hold multiple icon frames. For single-image outputs, prefer the
+ * largest PNG-backed frame so ImageMagick does not need to decode the whole multi-frame ICO.
+ * Returns undefined for legacy DIB-backed ICOs so the caller can use its normal ICO decoder.
+ */
+export function extractBestPngIcoFrame(bytes: Uint8Array): Uint8Array | undefined {
+  const entries = parseIcoEntries(bytes, bytes.length);
+  if (!entries) return undefined;
+  const pngEntries = entries.filter((entry) => {
+    if (entry.offset + PNG_SIGNATURE.length > bytes.length) return false;
+    return starts(bytes.subarray(entry.offset, entry.offset + PNG_SIGNATURE.length), PNG_SIGNATURE);
+  });
+  if (!pngEntries.length) return undefined;
+  const best = pngEntries.reduce((current, candidate) => {
+    const currentArea = current.width * current.height;
+    const candidateArea = candidate.width * candidate.height;
+    if (candidateArea !== currentArea) return candidateArea > currentArea ? candidate : current;
+    return candidate.bitDepth > current.bitDepth ? candidate : current;
+  });
+  return bytes.slice(best.offset, best.offset + best.size);
 }
