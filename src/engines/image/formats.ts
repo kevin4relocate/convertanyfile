@@ -12,7 +12,7 @@ export const IMAGE_OUTPUTS: readonly OutputOption[] = [
 ];
 
 export const IMAGE_INPUT_EXTENSIONS = [
-  'jpg','jpeg','jfif','png','webp','avif','heic','heif','jxl','gif','tif','tiff','bmp','ico','jp2','j2k','svg',
+  'jpg','jpeg','jfif','png','webp','avif','heic','heif','jxl','gif','tif','tiff','bmp','ico','pcx','tga','jp2','j2k','svg',
   'exr','hdr','qoi','pnm','ppm','pgm','pbm','pam','psd','psb','dds',
   '3fr','arw','cr2','cr3','crw','dcr','dng','erf','fff','iiq','k25','kdc','mef','mos','mrw','nef','nrw','orf','pef','raf','raw','rw2','rwl','sr2','srf','srw','x3f',
 ] as const;
@@ -36,7 +36,7 @@ export function extensionFromFilename(filename: string): string {
 const RUNTIME_NAMES: Record<string, readonly string[]> = {
   jpg: ['JPEG', 'JPG', 'JPE'], png: ['PNG'], webp: ['WEBP'], avif: ['AVIF', 'HEIC'],
   tiff: ['TIFF', 'TIF'], gif: ['GIF'], bmp: ['BMP'], ico: ['ICO'], heic: ['HEIC', 'HEIF'],
-  jxl: ['JXL'], jp2: ['JP2', 'J2K'], svg: ['SVG'], exr: ['EXR'], hdr: ['HDR'], qoi: ['QOI'],
+  pcx: ['PCX'], tga: ['TGA'], jxl: ['JXL'], jp2: ['JP2', 'J2K'], svg: ['SVG'], exr: ['EXR'], hdr: ['HDR'], qoi: ['QOI'],
   pnm: ['PNM','PPM','PGM','PBM','PAM'], psd: ['PSD','PSB'], dds: ['DDS'],
 };
 
