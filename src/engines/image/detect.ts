@@ -1,5 +1,6 @@
 import type { DetectedFile } from '../../platform/converter/types';
 import { extensionFromFilename, normalizeImageExtension } from './formats';
+import { detectLegacyImage, validateIcoFile } from './legacy-formats';
 
 const ascii = (bytes: Uint8Array, start: number, length: number) => new TextDecoder('ascii').decode(bytes.slice(start, start + length));
 const starts = (bytes: Uint8Array, signature: number[]) => signature.every((value, index) => bytes[index] === value);
@@ -116,9 +117,10 @@ export async function detectImage(file: File): Promise<DetectedFile | null> {
   if (RAW_EXTENSIONS.has(extension) && (signature === 'tiff' || signature === 'cr3')) {
     return withDimensions({ extension, label: `${extension.toUpperCase()} RAW image`, confidence: 'signature+extension' }, bytes);
   }
-  if (!signature) return null;
+  if (!signature) return detectLegacyImage(file, extension, bytes);
   const normalizedSignature = normalizeImageExtension(signature);
   const compatible = extension === normalizedSignature || (extension === 'heic' && normalizedSignature === 'heic') || (extension === 'tiff' && normalizedSignature === 'tiff');
   if (!compatible && extension) return null;
+  if (normalizedSignature === 'ico' && !(await validateIcoFile(file, bytes))) return null;
   return withDimensions({ extension: normalizedSignature, label: LABELS[normalizedSignature] ?? `${normalizedSignature.toUpperCase()} image`, confidence: extension ? 'signature+extension' : 'signature' }, bytes);
 }
