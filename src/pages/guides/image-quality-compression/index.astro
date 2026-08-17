@@ -1,7 +1,68 @@
 ---
 import SiteLayout from '../../../layouts/SiteLayout.astro';
+import ArticleFrame from '../../../components/ArticleFrame.astro';
+const toc = [
+  { id: 'lossy-lossless', label: 'Lossy vs lossless' },
+  { id: 'quality', label: 'What quality sliders mean' },
+  { id: 'generation-loss', label: 'Generation loss' },
+  { id: 'dimensions', label: 'Dimensions and memory' },
+  { id: 'workflow', label: 'A practical workflow' },
+  { id: 'faq', label: 'Common questions' },
+];
+const related = [
+  { href: '/guides/jpg-vs-png/', label: 'JPG vs PNG' },
+  { href: '/guides/webp-vs-avif/', label: 'WebP vs AVIF' },
+  { href: '/image-converter/', label: 'Image Converter' },
+  { href: '/formats/', label: 'Format reference' },
+];
 ---
-<SiteLayout title="Image Quality and Compression Guide | ConvertAnyFile" description="Understand lossy vs lossless compression, quality sliders, generation loss, resizing, and how to create practical image delivery copies.">
-<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/guides/">Guides</a><span>/</span><span>Image quality</span></div><span class="eyebrow">Compression basics</span><h1>Smaller is useful only when the image still works.</h1><p>Compression is a tradeoff between bytes, visual quality, compatibility, and the job the image needs to perform.</p></div></section>
-<section class="article-shell"><article class="site-container article"><h2>Lossy and lossless are different promises</h2><p>Lossless formats preserve the represented pixel data through encoding and decoding. Lossy formats intentionally discard or approximate information to reduce file size. Neither category is automatically better; they solve different delivery problems.</p><h2>Quality sliders are encoder settings</h2><p>A quality value is not a universal measurement. Different codecs and implementations map the same number to different compression behavior. A value of 80 in JPEG should not be treated as directly equivalent to 80 in WebP or AVIF.</p><h2>Generation loss matters</h2><p>If you repeatedly decode and re-encode a lossy image, each generation can introduce additional artifacts. For important source material, keep a master and create new delivery copies from that master rather than endlessly converting previous delivery copies.</p><h2>Resize before over-optimizing compression</h2><p>Pixel dimensions are often the biggest factor in image weight. If an image will never be displayed wider than 1200 pixels, shipping a 6000-pixel source wastes decoding memory and bandwidth regardless of the file extension.</p><h2>A tiny file is not always a successful result</h2><p>Compression can make a file impressively small while destroying text edges, skin texture, gradients, or fine product detail. Evaluate the image at the size people will actually see it.</p><h2>Conversion cannot restore missing information</h2><p>Saving a compressed JPG as PNG stops the new file from using JPEG compression, but it does not reconstruct detail already removed by the original JPG encode.</p><div class="callout"><strong>A practical workflow</strong><p>Keep a good source master. Resize for the destination. Choose the format based on compatibility and image content. Then tune quality until the delivery copy is small enough without obvious visual damage.</p></div></article></section>
+<SiteLayout title="Image Quality and Compression Guide | ConvertAnyFile" description="Understand lossy vs lossless compression, quality sliders, generation loss, resizing, pixel dimensions, file size, and practical image delivery workflows.">
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/guides/">Guides</a><span>/</span><span>Image quality</span></div><span class="eyebrow">Compression basics</span><h1>Smaller is useful only when the image still works.</h1><p>Compression is a tradeoff between bytes, visual quality, compatibility, dimensions, and the job the image needs to perform. The smallest file is not automatically the best result.</p></div></section>
+<ArticleFrame toc={toc} related={related} relatedTitle="Keep learning">
+  <div class="quick-answer"><strong>Quick answer</strong><p>Keep a good source master, resize for the destination, choose a format that matches the content, then tune compression while looking at the actual result. Do not treat a quality number as a universal percentage.</p></div>
+
+  <h2 id="lossy-lossless">Lossy and lossless compression make different promises</h2>
+  <p>Lossless formats preserve the represented pixel information through encoding and decoding. Lossy formats intentionally discard, simplify, or approximate some information to reduce file size. Neither category is automatically better: each is useful for different content and delivery goals.</p>
+  <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Type</th><th>Useful for</th><th>Tradeoff</th></tr></thead><tbody>
+    <tr><td>Lossy</td><td>Photos and compact delivery</td><td>Some image information is discarded; repeated re-encoding can add artifacts</td></tr>
+    <tr><td>Lossless</td><td>Graphics, text, screenshots, masters, transparency workflows</td><td>Can be much larger for complex photographic content</td></tr>
+  </tbody></table></div>
+  <p>JPG is the familiar lossy example. PNG is a familiar lossless example. WebP and AVIF can support more than one encoding mode depending on the tool and workflow.</p>
+
+  <h2 id="quality">What a quality slider actually means</h2>
+  <p>A quality slider controls an encoder. It is not a standardized measurement of how much “quality” the image contains. A value of 80 in JPEG should not be treated as equivalent to 80 in WebP or AVIF, and even two different encoders for the same format can behave differently.</p>
+  <p>The useful question is not “What is the perfect quality number?” but “At the intended display size, is the visual result acceptable for the bytes it costs?”</p>
+  <ul class="content-checklist">
+    <li>Inspect faces, text, fine texture, gradients, and hard edges after compression.</li>
+    <li>Compare the output at normal viewing size, not only extreme zoom.</li>
+    <li>Use representative images; one test photo does not describe every image.</li>
+    <li>Keep the source file so you can export again instead of re-compressing an old delivery copy.</li>
+  </ul>
+
+  <h2 id="generation-loss">Generation loss matters</h2>
+  <p>When a lossy image is decoded and encoded again, the new encoder works from pixels that already contain the effects of the earlier compression. Repeating that process can gradually add blockiness, ringing, smearing, or loss of fine detail.</p>
+  <p>This is why an original or high-quality master is valuable. Create a fresh delivery copy from the best available source rather than repeatedly converting yesterday's exported JPG into today's new JPG.</p>
+  <div class="callout"><strong>Important myth</strong><p>Saving a compressed JPG as PNG stops the new file from using JPEG compression, but it does not restore image information that the original JPG already lost.</p></div>
+
+  <h2 id="dimensions">Pixel dimensions can matter more than the format</h2>
+  <p>A 6000-pixel-wide image displayed at 1000 pixels wastes transfer bytes and decoding memory even if it is encoded efficiently. Resizing to an appropriate delivery size often produces a larger practical win than changing the extension.</p>
+  <p>Dimensions also affect browser memory. A compressed file that is only a few megabytes on disk can expand dramatically when decoded into raw pixels. A 12,000 × 9,000 RGBA image represents more than 400 million bytes of raw pixel data before temporary encoder buffers and the WebAssembly runtime are counted.</p>
+  <p>That is one reason browser-first converters need sensible batch and memory limits. File size alone does not describe the cost of processing an image.</p>
+
+  <h2 id="workflow">A practical image delivery workflow</h2>
+  <ol>
+    <li><strong>Keep a source master.</strong> Preserve the best original you have.</li>
+    <li><strong>Choose destination dimensions.</strong> Resize to what the website, email, app, or document actually needs.</li>
+    <li><strong>Choose the format by content.</strong> Photos, screenshots, transparency, and compatibility have different needs.</li>
+    <li><strong>Tune compression.</strong> Reduce file size while checking the visible result.</li>
+    <li><strong>Test the destination.</strong> Confirm the CMS, browser, recipient, or upload form accepts the output.</li>
+  </ol>
+  <p>This approach is more dependable than hunting for one universal file format or one universal quality setting.</p>
+
+  <h2 id="faq">Common compression questions</h2>
+  <h3>Does a smaller image file always load faster?</h3><p>Usually fewer transfer bytes help, but decode cost, caching, image dimensions, network conditions, and page layout also influence perceived performance.</p>
+  <h3>Is quality 100 lossless?</h3><p>Not necessarily. A maximum quality setting in a lossy encoder can still be lossy. The meaning depends on the codec and implementation.</p>
+  <h3>Should I convert every image to the newest format?</h3><p>No. Compatibility, editing workflow, transparency, content type, tooling, and actual visual results all matter.</p>
+  <h3>Why can a tiny JPG use a lot of memory?</h3><p>Compressed disk size and decoded pixel memory are different things. Large dimensions can require hundreds of megabytes after the image is expanded for processing.</p>
+</ArticleFrame>
 </SiteLayout>

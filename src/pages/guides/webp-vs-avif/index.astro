@@ -1,7 +1,63 @@
 ---
 import SiteLayout from '../../../layouts/SiteLayout.astro';
+import ArticleFrame from '../../../components/ArticleFrame.astro';
+const toc = [
+  { id: 'comparison', label: 'WebP vs AVIF at a glance' },
+  { id: 'webp', label: 'Where WebP fits' },
+  { id: 'avif', label: 'Where AVIF fits' },
+  { id: 'quality', label: 'Quality and file size' },
+  { id: 'delivery', label: 'Delivery strategy' },
+  { id: 'faq', label: 'Common questions' },
+];
+const related = [
+  { href: '/png-to-webp/', label: 'PNG to WebP' },
+  { href: '/jpg-to-webp/', label: 'JPG to WebP' },
+  { href: '/avif-to-jpg/', label: 'AVIF to JPG' },
+  { href: '/guides/image-quality-compression/', label: 'Compression guide' },
+];
 ---
-<SiteLayout title="WebP vs AVIF for the Web | ConvertAnyFile" description="Compare WebP and AVIF for modern image delivery, including compression, compatibility, decode cost, quality, and fallback strategy.">
-<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/guides/">Guides</a><span>/</span><span>WebP vs AVIF</span></div><span class="eyebrow">Modern web formats</span><h1>WebP vs AVIF: test the whole delivery workflow.</h1><p>Both formats can be excellent on the web. The better choice is the one that delivers the visual quality, file size, decode behavior, and compatibility your actual audience needs.</p></div></section>
-<section class="article-shell"><article class="site-container article"><h2>Why both formats exist</h2><p>Traditional JPG and PNG remain useful, but modern websites often want more compression efficiency. WebP and AVIF were created to provide more flexible or efficient image delivery while supporting features such as transparency that are not available in ordinary JPEG.</p><h2>WebP is a practical default for many sites</h2><p>WebP has mature browser support and can represent both lossy and lossless images. It is widely used for modern website delivery because it combines useful compression with broad compatibility in current browsers.</p><h2>AVIF can compress very efficiently</h2><p>AVIF can produce impressive results at small file sizes for some images. That does not mean every AVIF file will beat every WebP file. Encoder settings, source content, image dimensions, and the quality target all matter.</p><h2>Do not compare quality numbers across codecs</h2><p>A quality value of 80 in one encoder does not mean the same thing as 80 in another. Treat the slider as an encoder control, not a universal percentage of truth. Compare the rendered result and the resulting bytes.</p><h2>Dimensions often matter more than format</h2><p>A 5000-pixel-wide image displayed at 800 pixels is still wasteful even if it is encoded as AVIF. Resize for the intended display size before chasing tiny differences between codecs.</p><h2>Use fallbacks when the audience requires them</h2><p>A common web strategy is to serve a modern format to capable browsers while keeping a compatible fallback for environments that need it. The exact strategy depends on the browsers and platforms your product supports.</p><div class="callout"><strong>What to test</strong><p>Compare visual quality at real display size, transfer bytes, decode performance on slower devices, and compatibility with your CMS or image pipeline. The newest format is not automatically the best operational choice.</p></div></article></section>
+<SiteLayout title="WebP vs AVIF for the Web | ConvertAnyFile" description="Compare WebP and AVIF for modern image delivery, including compression, transparency, browser workflow, decode cost, quality testing, and fallback strategy.">
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/guides/">Guides</a><span>/</span><span>WebP vs AVIF</span></div><span class="eyebrow">Modern web formats</span><h1>WebP vs AVIF: test the whole delivery workflow.</h1><p>Both formats can reduce image weight on modern websites. The better choice depends on visual quality, file size, decode behavior, browser support, CMS tooling, and how much operational complexity you want.</p></div></section>
+<ArticleFrame toc={toc} related={related} relatedTitle="Related converters">
+  <div class="quick-answer"><strong>Quick answer</strong><p>WebP is a practical modern default for many sites because support and tooling are mature. AVIF can compress very efficiently for some images, but it should be evaluated with real source images and real devices rather than chosen only because it is newer.</p></div>
+
+  <h2 id="comparison">WebP vs AVIF at a glance</h2>
+  <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Area</th><th>WebP</th><th>AVIF</th></tr></thead><tbody>
+    <tr><td>Typical role</td><td>General modern web delivery</td><td>High-efficiency modern delivery</td></tr>
+    <tr><td>Lossy compression</td><td>Yes</td><td>Yes</td></tr>
+    <tr><td>Lossless workflows</td><td>Yes</td><td>Supported by the format, encoder support varies</td></tr>
+    <tr><td>Transparency</td><td>Yes</td><td>Yes</td></tr>
+    <tr><td>Tooling maturity</td><td>Very mature</td><td>Growing and increasingly common</td></tr>
+    <tr><td>Best decision method</td><td colspan="2">Encode representative images and compare the actual rendered result, bytes, and device behavior</td></tr>
+  </tbody></table></div>
+  <p>Neither format wins every image. A photograph, illustration, screenshot, transparent product cutout, and noisy low-light image can respond differently to the same encoder settings.</p>
+
+  <h2 id="webp">Where WebP fits well</h2>
+  <p>WebP is widely used for modern web delivery because it supports lossy and lossless workflows, transparency, and broad current-browser compatibility. It is supported by many content systems, CDNs, build tools, and image pipelines.</p>
+  <p>That maturity matters. A format that is slightly larger in one test can still be the better operational choice if every part of the publishing pipeline handles it reliably and the fallback strategy is simple.</p>
+
+  <h2 id="avif">Where AVIF can be attractive</h2>
+  <p>AVIF can deliver excellent compression efficiency, especially for some photographic or gradient-heavy material. It can be a strong choice when transfer size is important and your audience, image pipeline, and content management tools handle it well.</p>
+  <p>But a small file is not the only cost. Encoding time, decoding behavior on slower devices, content-management compatibility, and image transformation support can matter just as much as the final bytes.</p>
+
+  <h2 id="quality">Do not compare quality numbers across codecs</h2>
+  <p>A quality value of 80 in one encoder does not mean the same thing as 80 in another. Quality sliders are codec-specific controls, not universal percentages of visual truth. Compare the image itself at its actual display size.</p>
+  <p>Also check dimensions before obsessing over format. A 5000-pixel-wide source displayed at 900 pixels wastes bandwidth and decoding memory no matter how efficient the codec is. Resizing to an appropriate delivery size can produce a larger improvement than switching format.</p>
+  <ul class="content-checklist">
+    <li>Compare visible quality at realistic display size, not only at 400% zoom.</li>
+    <li>Measure final transfer bytes after your real build or CDN pipeline.</li>
+    <li>Test slower phones and laptops if they are part of your audience.</li>
+    <li>Verify that your CMS, image optimizer, and social preview tooling accept the format.</li>
+  </ul>
+
+  <h2 id="delivery">A practical delivery strategy</h2>
+  <p>Many sites use modern formats while retaining a compatible fallback. The exact implementation depends on the site stack, but the principle is simple: serve an efficient format where it is well supported and keep a dependable path for environments that need something else.</p>
+  <p>If you manage only a small site, operational simplicity may be worth more than squeezing the last few kilobytes from every image. If you operate at large traffic volume, even modest per-image savings can become meaningful, making careful testing worthwhile.</p>
+  <div class="callout"><strong>Choose from evidence, not fashion</strong><p>The newest format is not automatically the best format. Use representative images, real devices, real page layouts, and your actual publishing stack to make the decision.</p></div>
+
+  <h2 id="faq">Common WebP and AVIF questions</h2>
+  <h3>Is AVIF always smaller than WebP?</h3><p>No. Results depend on the image, encoder, settings, target quality, and dimensions. AVIF can be very efficient, but there is no guarantee for every source.</p>
+  <h3>Should every website replace JPG with AVIF?</h3><p>No. Compatibility, tooling, decode behavior, editorial workflow, and fallback requirements all matter. A mixed delivery strategy can be more practical.</p>
+  <h3>Can WebP and AVIF preserve transparency?</h3><p>Both formats can support transparency. Exact conversion behavior still depends on the source image and the encoder used by the workflow.</p>
+</ArticleFrame>
 </SiteLayout>

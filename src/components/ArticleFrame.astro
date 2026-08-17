@@ -1,0 +1,42 @@
+---
+interface TocItem { id: string; label: string }
+interface RelatedItem { href: string; label: string }
+interface Props {
+  toc?: TocItem[];
+  related?: RelatedItem[];
+  relatedTitle?: string;
+  asideNote?: string;
+}
+const {
+  toc = [],
+  related = [],
+  relatedTitle = 'Related',
+  asideNote,
+} = Astro.props;
+---
+<section class="article-shell content-article-shell">
+  <div class="site-container content-article-grid">
+    <article class="article content-article">
+      <slot />
+    </article>
+    {(toc.length > 0 || related.length > 0 || asideNote) && (
+      <aside class="content-aside" aria-label="Article navigation">
+        <div class="content-aside-sticky">
+          {toc.length > 0 && (
+            <nav class="toc-card" aria-label="On this page">
+              <strong>On this page</strong>
+              {toc.map((item) => <a href={`#${item.id}`}>{item.label}</a>)}
+            </nav>
+          )}
+          {related.length > 0 && (
+            <div class="aside-card">
+              <strong>{relatedTitle}</strong>
+              {related.map((item) => <a href={item.href}>{item.label}<span>→</span></a>)}
+            </div>
+          )}
+          {asideNote && <p class="aside-note">{asideNote}</p>}
+        </div>
+      </aside>
+    )}
+  </div>
+</section>

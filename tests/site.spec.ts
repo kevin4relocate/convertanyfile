@@ -136,19 +136,67 @@ test('desktop homepage keeps hero compact, drop zone above fold, and Converters 
     return top >= 64 && top <= 100;
   });
   await expect(page.getByRole('heading', { name: 'One interface. Multiple file categories.' })).toBeVisible();
+});
 
-  await page.goto('/about/');
-  const content = page.locator('.page-hero .site-container');
-  const box = await content.boundingBox();
-  expect(box).not.toBeNull();
-  expect(Math.round(box!.width)).toBe(1080);
+test('publish-quality content pages use the shared 1080px grid with readable article columns', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop content regression');
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  for (const path of ['/about/', '/guides/jpg-vs-png/', '/privacy/', '/terms/']) {
+    await page.goto(path);
+    const hero = page.locator('.page-hero .site-container');
+    const grid = page.locator('.content-article-grid');
+    const article = page.locator('.content-article');
+    const heroBox = await hero.boundingBox();
+    const gridBox = await grid.boundingBox();
+    const articleBox = await article.boundingBox();
+    expect(heroBox, `${path} hero should exist`).not.toBeNull();
+    expect(gridBox, `${path} content grid should exist`).not.toBeNull();
+    expect(articleBox, `${path} article should exist`).not.toBeNull();
+    expect(Math.round(heroBox!.width)).toBe(1080);
+    expect(Math.round(gridBox!.width)).toBe(1080);
+    expect(articleBox!.width).toBeGreaterThan(700);
+    expect(articleBox!.width).toBeLessThan(780);
+    expect(await article.locator('h2').count()).toBeGreaterThanOrEqual(4);
+    expect((await article.innerText()).length).toBeGreaterThan(1100);
+  }
+
+  await page.goto('/guides/jpg-vs-png/');
+  await expect(page.getByText('On this page', { exact: true })).toBeVisible();
+  await expect(page.locator('.comparison-table')).toBeVisible();
+  await expect(page.getByText('Quick answer', { exact: true })).toBeVisible();
+
+  await page.goto('/heic-to-jpg/');
+  await expect(page.locator('.content-article-grid')).toBeVisible();
+  await expect(page.locator('.comparison-table')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Understand the source and the output' })).toBeVisible();
+});
+
+test('wide content hubs use the 1080px grid and meaningful internal navigation', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop content regression');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  for (const path of ['/formats/', '/faq/', '/guides/', '/image-converter/']) {
+    await page.goto(path);
+    const container = page.locator('.content-wide-section .site-container').first();
+    const box = await container.boundingBox();
+    expect(box, `${path} wide content container should exist`).not.toBeNull();
+    expect(Math.round(box!.width)).toBe(1080);
+  }
+  await page.goto('/formats/');
+  await expect(page.locator('.comparison-table')).toBeVisible();
+  await expect(page.getByRole('link', { name: /JPG vs PNG guide/i })).toBeVisible();
 });
 
 test('mobile shell remains usable without horizontal overflow', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-mobile', 'Mobile layout regression');
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /Convert files fast/i })).toBeVisible();
-  const dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
+  let dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
   await expect(page.getByText('Choose files', { exact: true })).toBeVisible();
+
+  await page.goto('/guides/jpg-vs-png/');
+  dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+  await expect(page.locator('.content-article')).toBeVisible();
 });
