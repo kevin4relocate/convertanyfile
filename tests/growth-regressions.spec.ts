@@ -15,23 +15,23 @@ test('image converter keeps the complete drop zone in the first desktop viewport
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/image-converter/');
 
-  const hero = page.locator('.page-hero--converter');
-  const converter = page.locator('.converter-page-wrap--compact .converter-card--compact');
+  const frame = page.locator('[data-converter-page-frame]');
+  const converter = page.locator('.converter-page-tool .converter-card--compact');
   const dropZone = converter.locator('[data-role="drop-zone"]');
-  await expect(hero).toBeVisible();
+  await expect(frame).toBeVisible();
   await expect(converter).toBeVisible();
   await expect(dropZone).toBeVisible();
   await expect(page.getByText('Choose files', { exact: true })).toBeVisible();
   await expect(page.getByText('Files stay on your device during conversion', { exact: true })).toBeVisible();
 
-  const heroBox = await hero.boundingBox();
+  const frameBox = await frame.boundingBox();
   const converterBox = await converter.boundingBox();
   const dropBox = await dropZone.boundingBox();
-  expect(heroBox).not.toBeNull();
+  expect(frameBox).not.toBeNull();
   expect(converterBox).not.toBeNull();
   expect(dropBox).not.toBeNull();
-  expect(heroBox!.height).toBeLessThan(280);
-  expect(converterBox!.y).toBeLessThan(390);
+  expect(frameBox!.height).toBeLessThan(220);
+  expect(converterBox!.y).toBeLessThan(340);
   expect(dropBox!.y + dropBox!.height).toBeLessThanOrEqual(900);
 });
 
@@ -40,6 +40,7 @@ test('expanded image routes are real converter pages with substantive pair-speci
 
   for (const path of EXPANDED_IMAGE_ROUTES) {
     await page.goto(path);
+    await expect(page.locator('[data-converter-page-frame]')).toBeVisible();
     await expect(page.locator('[data-converter-app]')).toHaveCount(1);
     await expect(page.locator('.quick-answer')).toBeVisible();
     await expect(page.getByRole('heading', { name: /Understand the source and the output/i })).toBeVisible();
@@ -54,6 +55,7 @@ test('shared shell and converter controller bootstrap in Firefox and WebKit', as
   test.skip(!['firefox-desktop', 'webkit-desktop'].includes(testInfo.project.name), 'Cross-browser bootstrap regression');
   await page.goto('/image-converter/');
   const app = page.locator('[data-converter-app]');
+  await expect(page.locator('[data-converter-page-frame]')).toBeVisible();
   await expect(app).toHaveAttribute('data-initialized', 'true');
   await expect(app.locator('[data-role="drop-zone"]')).toBeVisible();
   await expect(page.getByText('Choose files', { exact: true })).toBeVisible();
