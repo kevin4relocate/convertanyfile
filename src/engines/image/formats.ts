@@ -22,6 +22,9 @@ export function normalizeImageExtension(value: string): string {
   if (ext === 'jpeg' || ext === 'jfif') return 'jpg';
   if (ext === 'tif') return 'tiff';
   if (ext === 'heif') return 'heic';
+  if (ext === 'j2k') return 'jp2';
+  if (ext === 'psb') return 'psd';
+  if (ext === 'ppm' || ext === 'pgm' || ext === 'pbm' || ext === 'pam') return 'pnm';
   return ext;
 }
 
