@@ -100,6 +100,12 @@ class ConverterController {
       event.preventDefault(); event.stopPropagation(); this.dropZone.classList.remove('is-dragging');
       if (event.dataTransfer?.files.length) void this.addFiles(Array.from(event.dataTransfer.files));
     });
+    this.workspace.addEventListener('dragenter', () => void this.ensureEngine());
+    this.workspace.addEventListener('dragover', (event) => event.preventDefault());
+    this.workspace.addEventListener('drop', (event) => {
+      event.preventDefault(); event.stopPropagation();
+      if (event.dataTransfer?.files.length) void this.addFiles(Array.from(event.dataTransfer.files));
+    });
     this.fileInput.addEventListener('change', () => {
       if (this.fileInput.files?.length) void this.addFiles(Array.from(this.fileInput.files));
       this.fileInput.value = '';
