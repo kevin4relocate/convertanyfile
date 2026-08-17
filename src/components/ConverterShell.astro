@@ -1,0 +1,38 @@
+---
+import type { ConverterDefinition } from '../platform/converter/types';
+interface Props { converter: ConverterDefinition; compact?: boolean; }
+const { converter, compact = false } = Astro.props;
+const policy = converter.batchPolicy;
+const acceptedHint = converter.category === 'image' ? (converter.input ? `${converter.input.toUpperCase()} files` : 'JPG, PNG, WebP, HEIC, AVIF, TIFF, RAW and more') : 'Supported files';
+---
+<div class:list={['converter-card', compact && 'converter-card--compact']}>
+  <div class="converter-topbar">
+    <div><span class="tool-kicker">Local converter</span><strong>{converter.input && converter.output ? `${converter.input.toUpperCase()} → ${converter.output.toUpperCase()}` : 'One simple batch workflow'}</strong></div>
+    <div class="engine-state" data-role="engine-state" data-state="idle"><span class="engine-dot" aria-hidden="true"></span><span data-engine-label>Loads when you add files</span></div>
+  </div>
+  <section class="converter-app" data-converter-app data-engine={converter.engine} data-input={converter.input ?? ''} data-output={converter.output ?? ''} data-quick-outputs={(converter.quickOutputs ?? []).join(',')} data-max-files={policy.maxFiles} data-max-total-bytes={policy.maxTotalBytes} data-max-file-bytes={policy.maxFileBytes}>
+    <div class="notice" data-role="notice" role="status" aria-live="polite" hidden></div>
+    <div class="drop-view" data-role="drop-view">
+      <button class="drop-zone" data-role="drop-zone" type="button">
+        <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" /></svg></span>
+        <h2>Drop your files here</h2><p>{acceptedHint}</p><span class="choose-button">Choose files</span><small><span class="privacy-dot" aria-hidden="true"></span> Files stay on your device during conversion</small>
+      </button>
+      <input data-role="file-input" type="file" multiple hidden />
+    </div>
+    <div class="workspace" data-role="workspace" hidden>
+      <header class="workspace-header">
+        <div><span class="workspace-label">Ready to convert</span><h2 data-role="batch-summary">0 files</h2><p>Processed locally in this browser session.</p></div>
+        <div class="workspace-actions"><button data-role="add-more" class="text-button strong" type="button">+ Add more</button><button data-role="clear-all" class="text-button" type="button">Clear all</button></div>
+      </header>
+      <section class="settings-card" aria-label="Conversion settings">
+        <label class="field"><span>Convert all to</span><select data-role="output-format" aria-label="Output format"></select></label>
+        <label class="field quality-field" data-role="quality-field"><span data-role="quality-label">Quality 90</span><input data-role="quality" type="range" min="1" max="100" value="90" aria-label="Output quality" /></label>
+        <div class="quick-field"><span>Quick output</span><div class="quick-outputs" data-role="quick-outputs"></div></div>
+      </section>
+      <div class="progress-wrap" data-role="progress" hidden aria-live="polite"><div class="progress-copy"><strong data-role="progress-text">Preparing…</strong><span>Keep this tab open</span></div><div class="progress-track"><span data-role="progress-bar"></span></div></div>
+      <div class="file-list" data-role="file-list" aria-label="Selected files"></div>
+      <footer class="batch-action-bar"><p class="result-summary" data-role="result-summary" hidden></p><div class="batch-buttons"><button data-role="cancel" class="secondary-button danger-button" type="button" hidden>Cancel</button><button data-role="download-zip" class="secondary-button" type="button" hidden>Download ZIP</button><button data-role="convert-all" class="primary-button" type="button">Preparing converter…</button></div></footer>
+    </div>
+  </section>
+</div>
+<script>import '../client/converter-app';</script>

@@ -1,0 +1,25 @@
+---
+import { FOOTER_GROUPS, SITE } from '../config/site';
+---
+<footer class="site-footer">
+  <div class="site-container footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="/">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span>{SITE.name}</span>
+      </a>
+      <p>{SITE.tagline}</p>
+      <span class="footer-note">Files are processed in your browser for supported local converters.</span>
+    </div>
+    {FOOTER_GROUPS.map((group) => (
+      <div class="footer-links">
+        <strong>{group.title}</strong>
+        {group.links.map((link) => <a href={link.href}>{link.label}</a>)}
+      </div>
+    ))}
+  </div>
+  <div class="site-container footer-bottom">
+    <span>© 2026 {SITE.name}</span>
+    <span>{SITE.domain}</span>
+  </div>
+</footer>

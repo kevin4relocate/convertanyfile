@@ -1,0 +1,57 @@
+---
+import '../styles/global.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { SITE } from '../config/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  noindex?: boolean;
+  schema?: Record<string, unknown> | Array<Record<string, unknown>>;
+}
+
+const {
+  title = `${SITE.name} — Fast, Private File Converter`,
+  description = SITE.description,
+  canonical = new URL(Astro.url.pathname, SITE.origin).toString(),
+  noindex = false,
+  schema,
+} = Astro.props;
+const schemas = Array.isArray(schema) ? schema : schema ? [schema] : [];
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE.name,
+  url: SITE.origin,
+  description: SITE.description,
+};
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <meta name="description" content={description} />
+    <meta name="robots" content={noindex ? 'noindex,nofollow' : 'index,follow,max-image-preview:large'} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <title>{title}</title>
+    <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>
+    {schemas.map((item) => <script type="application/ld+json" set:html={JSON.stringify(item)}></script>)}
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <SiteHeader />
+    <main id="main-content"><slot /></main>
+    <SiteFooter />
+  </body>
+</html>

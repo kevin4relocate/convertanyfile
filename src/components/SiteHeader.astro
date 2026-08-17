@@ -1,0 +1,15 @@
+---
+import { NAV_ITEMS, SITE } from '../config/site';
+---
+<header class="site-header">
+  <div class="site-container header-inner">
+    <a class="brand" href="/" aria-label={`${SITE.name} home`}>
+      <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span>{SITE.name}</span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      {NAV_ITEMS.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+    <a class="privacy-chip" href="/privacy/"><span aria-hidden="true"></span>Private by design</a>
+  </div>
+</header>
