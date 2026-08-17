@@ -2,7 +2,7 @@ import type { ConversionErrorCode } from '../../platform/converter/errors';
 
 export type ImageWorkerRequest =
   | { type: 'capabilities'; requestId: string }
-  | { type: 'convert'; requestId: string; input: ArrayBuffer; output: string; quality: number };
+  | { type: 'convert'; requestId: string; input: ArrayBuffer; inputFormat?: string; output: string; quality: number };
 
 type WorkerFailure = { requestId: string; ok: false; error: string; code: ConversionErrorCode; retryable: boolean };
 
