@@ -1,0 +1,10 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import FaqList from '../components/FaqList.astro';
+import { GENERAL_FAQ, IMAGE_FAQ } from '../content/faq';
+---
+<SiteLayout title="FAQ | ConvertAnyFile" description="Answers about private browser conversion, batch limits, image formats, retries, and how ConvertAnyFile handles files.">
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>FAQ</span></div><span class="eyebrow">Help</span><h1>Questions about ConvertAnyFile.</h1><p>How local conversion works, why the browser has safety limits, and what the current image engine can do.</p></div></section>
+<section class="content-section"><div class="site-container"><FaqList items={GENERAL_FAQ} title="Platform questions" /></div></section>
+<section class="content-section white"><div class="site-container"><FaqList items={IMAGE_FAQ} title="Image converter questions" /></div></section>
+</SiteLayout>

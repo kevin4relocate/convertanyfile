@@ -38,7 +38,7 @@ Astro produces crawlable static HTML while allowing shared layouts/components an
 
 ```bash
 npm install
-npm run dev
+npm run check
 npm run build
 npm run preview
 npm run test:e2e
@@ -51,7 +51,7 @@ Use a static Pages deployment:
 - Production branch: `main`
 - Build command: `npm run build`
 - Build output directory: `dist`
-- Node: `22.16.0`
+- Node: `22.19.0`
 
 No Pages Function, KV, D1, R2, or conversion backend is required for the current image converter.
 

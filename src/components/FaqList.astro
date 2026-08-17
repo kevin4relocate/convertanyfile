@@ -1,0 +1,9 @@
+---
+interface Faq { question: string; answer: string; }
+interface Props { items: readonly Faq[]; title?: string; intro?: string; }
+const { items, title = 'Frequently asked questions', intro } = Astro.props;
+---
+<section class="faq-block">
+  <div class="section-heading"><span class="section-kicker">FAQ</span><h2>{title}</h2>{intro && <p>{intro}</p>}</div>
+  <div class="faq-list">{items.map((item, index) => <details open={index === 0}><summary>{item.question}<span aria-hidden="true">+</span></summary><p>{item.answer}</p></details>)}</div>
+</section>

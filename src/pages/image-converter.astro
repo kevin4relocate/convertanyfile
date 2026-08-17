@@ -1,0 +1,16 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ConverterShell from '../components/ConverterShell.astro';
+import FaqList from '../components/FaqList.astro';
+import { getConverter, PAIR_CONVERTERS } from '../config/converters';
+import { IMAGE_FAQ } from '../content/faq';
+import { SITE } from '../config/site';
+const converter = getConverter('image-converter')!;
+const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'ConvertAnyFile Image Converter',url:`${SITE.origin}/image-converter/`,applicationCategory:'MultimediaApplication',operatingSystem:'Any',offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}};
+---
+<SiteLayout title={converter.title} description={converter.description} schema={schema}>
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Image Converter</span></div><span class="eyebrow">{converter.eyebrow}</span><h1>{converter.h1}</h1><p>{converter.intro} Originals stay unchanged on your device.</p></div></section>
+<section class="converter-page-wrap"><div class="site-container"><ConverterShell converter={converter} /><div class="converter-info-grid"><div class="converter-info-card"><strong>Batch safety</strong><span>Up to 50 files, 75 MB per file, and 300 MB total input.</span></div><div class="converter-info-card"><strong>Failure isolation</strong><span>One failed image does not stop the rest of the batch.</span></div><div class="converter-info-card"><strong>Local workflow</strong><span>Image bytes are processed in the browser rather than an upload queue.</span></div></div></div></section>
+<section class="content-section white"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Popular conversions</span><h2>Start with the format pair you need.</h2><p>Each route opens the same conversion engine with a useful preset. There is no duplicated converter backend.</p></div><div class="related-grid">{PAIR_CONVERTERS.slice(0,9).map((item)=><a class="related-card" href={`/${item.slug}/`}>{item.eyebrow} <span>→</span></a>)}</div></div></section>
+<section class="content-section"><div class="site-container"><FaqList items={IMAGE_FAQ} title="Image conversion questions" /></div></section>
+</SiteLayout>
