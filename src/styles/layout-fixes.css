@@ -145,6 +145,12 @@
   align-items: start;
 }
 
+.content-article-grid > *,
+.content-article,
+.content-aside {
+  min-width: 0;
+}
+
 .content-article {
   width: 100%;
   max-width: none;
@@ -193,6 +199,7 @@
 
 .toc-card,
 .aside-card {
+  min-width: 0;
   padding: 18px;
   border: 1px solid #e3e5ed;
   border-radius: 16px;
@@ -211,11 +218,13 @@
 .toc-card a,
 .aside-card a {
   display: flex;
+  min-width: 0;
   justify-content: space-between;
   gap: 10px;
   padding: 8px 0;
   border-top: 1px solid #eceef3;
   color: #656977;
+  overflow-wrap: anywhere;
   font-size: 12px;
   line-height: 1.35;
 }
@@ -258,7 +267,10 @@
 
 .comparison-table-wrap {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   margin: 24px 0 32px;
   border: 1px solid #e3e5ed;
   border-radius: 16px;
@@ -335,6 +347,7 @@
 }
 
 .content-summary-card {
+  min-width: 0;
   padding: 20px;
   border: 1px solid #e1e3eb;
   border-radius: 16px;
@@ -349,6 +362,7 @@
 .content-summary-card p {
   margin: 0;
   color: var(--muted);
+  overflow-wrap: anywhere;
   font-size: 13px;
   line-height: 1.65;
 }
@@ -360,15 +374,11 @@
 
   .content-article-grid,
   .content-intro-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .content-aside-sticky {
     position: static;
-  }
-
-  .content-aside {
-    order: -1;
   }
 
   .toc-card {
