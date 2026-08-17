@@ -1,7 +1,71 @@
 ---
 import SiteLayout from '../../../layouts/SiteLayout.astro';
+import ArticleFrame from '../../../components/ArticleFrame.astro';
+const toc = [
+  { id: 'quick-comparison', label: 'Quick comparison' },
+  { id: 'jpg', label: 'Where JPG is strong' },
+  { id: 'png', label: 'Where PNG is strong' },
+  { id: 'conversion', label: 'What conversion changes' },
+  { id: 'use-cases', label: 'Photos, screenshots, web & print' },
+  { id: 'faq', label: 'Common questions' },
+];
+const related = [
+  { href: '/png-to-jpg/', label: 'PNG to JPG' },
+  { href: '/jpg-to-png/', label: 'JPG to PNG' },
+  { href: '/jpg-to-webp/', label: 'JPG to WebP' },
+  { href: '/guides/image-quality-compression/', label: 'Image quality guide' },
+];
 ---
-<SiteLayout title="JPG vs PNG: Which Image Format Should You Use? | ConvertAnyFile" description="A practical JPG vs PNG guide covering photos, screenshots, transparency, file size, and what conversion can and cannot improve.">
-<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/guides/">Guides</a><span>/</span><span>JPG vs PNG</span></div><span class="eyebrow">Image formats</span><h1>JPG vs PNG: two formats for different jobs.</h1><p>JPG is usually the practical choice for photographs and small delivery files. PNG is usually the practical choice for lossless graphics, screenshots, and transparency.</p></div></section>
-<section class="article-shell"><article class="site-container article"><h2>Start with the content, not the extension</h2><p>There is no universal winner between JPG and PNG. The right choice depends on what the image contains and what you need to do with it next. A photograph with millions of subtle color transitions benefits from the compact lossy compression of JPEG. A logo, interface screenshot, diagram, or transparent graphic often benefits from PNG's lossless storage and alpha channel.</p><h2>Where JPG is strong</h2><p>JPEG was designed around photographic imagery. It can remove visual information that people are less likely to notice and produce a much smaller file than an uncompressed image. That makes JPG useful for websites, email attachments, camera exports, social uploads, and general sharing.</p><p>The tradeoff is that JPEG is lossy. Re-saving an already compressed JPG at a new quality setting can introduce another generation of compression artifacts. JPG also has no alpha transparency channel.</p><h2>Where PNG is strong</h2><p>PNG uses lossless compression. Re-encoding a PNG does not deliberately throw away pixel information in the way a normal JPEG encode does. It also supports transparency, which makes it useful for interface assets, logos, overlays, screenshots, and graphics with sharp edges.</p><p>For a full-resolution photograph, PNG can be dramatically larger than JPG because it is trying to preserve the pixel values rather than approximate them with a lossy photo codec.</p><h2>What happens when you convert JPG to PNG?</h2><p>The new PNG can store the current pixels without another lossy JPEG generation, but it cannot restore detail that JPEG compression already removed. The output may be larger while looking almost identical to the source JPG.</p><h2>What happens when you convert PNG to JPG?</h2><p>The output becomes lossy and loses any true alpha transparency. For photographs this can be a useful tradeoff because JPG may be much smaller. For logos, text, and UI screenshots, compression artifacts around hard edges can make JPG a worse fit.</p><div class="callout"><strong>A practical rule</strong><p>Use JPG for photographic delivery. Use PNG when lossless graphics or transparency matter. Keep an original master if the image is important, and create delivery copies for each destination.</p></div><p><a class="related-card" href="/png-to-jpg/">Convert PNG to JPG →</a> <a class="related-card" href="/jpg-to-png/">Convert JPG to PNG →</a></p></article></section>
+<SiteLayout title="JPG vs PNG: Which Image Format Should You Use? | ConvertAnyFile" description="A practical JPG vs PNG guide covering photos, screenshots, transparency, file size, web use, printing, conversion behavior, and common quality myths.">
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/guides/">Guides</a><span>/</span><span>JPG vs PNG</span></div><span class="eyebrow">Image formats</span><h1>JPG vs PNG: two formats for different jobs.</h1><p>JPG is usually the practical choice for photographs and compact delivery files. PNG is usually the practical choice for lossless graphics, screenshots, sharp edges, and transparency.</p></div></section>
+<ArticleFrame toc={toc} related={related} relatedTitle="Related tools & guides">
+  <div class="quick-answer"><strong>Quick answer</strong><p>Choose JPG for photos when smaller file size and broad compatibility matter. Choose PNG for graphics, screenshots, text-heavy images, or transparency. Converting between them changes storage and compatibility; it does not magically add missing image detail.</p></div>
+
+  <h2 id="quick-comparison">JPG vs PNG at a glance</h2>
+  <p>There is no universal winner. The right format depends on what the image contains, how it will be edited, and where it will be delivered. The biggest differences are compression type, transparency support, typical file size, and how each format handles sharp graphic detail.</p>
+  <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Feature</th><th>JPG</th><th>PNG</th></tr></thead><tbody>
+    <tr><td>Compression</td><td>Lossy</td><td>Lossless</td></tr>
+    <tr><td>Best fit</td><td>Photographs and compact delivery</td><td>Graphics, screenshots, text, transparency</td></tr>
+    <tr><td>Transparency</td><td>No alpha channel</td><td>Yes, including alpha transparency</td></tr>
+    <tr><td>Typical photo size</td><td>Usually much smaller</td><td>Often much larger</td></tr>
+    <tr><td>Repeated re-saving</td><td>Can add generation loss</td><td>Does not introduce lossy compression</td></tr>
+    <tr><td>Compatibility</td><td>Extremely broad</td><td>Extremely broad</td></tr>
+  </tbody></table></div>
+
+  <h2 id="jpg">Where JPG is strong</h2>
+  <p>JPEG was designed around photographic imagery. Photos contain many gradual changes in color and brightness, and JPEG compression can approximate some of that information to reduce file size dramatically while keeping the image visually useful.</p>
+  <p>That makes JPG practical for camera exports, websites, email attachments, social sharing, product photos, blog imagery, and upload forms that prioritize broad compatibility. A photograph saved as PNG can be many times larger while looking nearly identical at normal viewing size.</p>
+  <h3>What JPG gives up</h3>
+  <p>JPEG is lossy. When you encode an image as JPG, some image information is discarded or approximated. Repeatedly opening and re-saving an already compressed JPG can introduce another generation of artifacts. JPG also has no true alpha transparency, so it is not a good master format for logos or graphics that need transparent backgrounds.</p>
+
+  <h2 id="png">Where PNG is strong</h2>
+  <p>PNG uses lossless compression for its represented pixel data. It is particularly good at storing graphics with flat colors, crisp text, interface elements, diagrams, logos, and screenshots without the blocky or ringing artifacts that lossy photo compression can create around hard edges.</p>
+  <p>PNG also supports transparency. That is why it remains common for overlays, icons, UI assets, logos, and images that need to sit cleanly on different backgrounds.</p>
+  <h3>Why PNG photos get large</h3>
+  <p>Lossless compression has less freedom to throw information away. A full-resolution photograph contains complex detail and noise, so PNG often cannot shrink it nearly as aggressively as JPEG. A larger PNG file does not automatically mean better visible quality if the source was already a compressed JPG.</p>
+
+  <h2 id="conversion">What happens when you convert between JPG and PNG?</h2>
+  <h3>JPG to PNG</h3>
+  <p>The new PNG can store the current decoded pixels without another JPEG compression generation. It cannot recover detail that the original JPEG already removed. In many cases the PNG becomes much larger while looking almost the same as the source JPG.</p>
+  <h3>PNG to JPG</h3>
+  <p>The new JPG uses lossy compression and cannot preserve true alpha transparency. For photographs this tradeoff can be useful because the output may be much smaller. For screenshots, UI graphics, diagrams, or text-heavy images, JPEG artifacts can make the result look worse.</p>
+  <div class="callout"><strong>Common myth</strong><p>Converting a JPG to PNG does not increase the real quality of the image. The extension changes; missing detail does not come back.</p></div>
+
+  <h2 id="use-cases">Which should you use for common jobs?</h2>
+  <ul class="content-checklist">
+    <li><strong>Photos:</strong> JPG is usually the more efficient delivery format.</li>
+    <li><strong>Screenshots:</strong> PNG is often better for text, interfaces, and sharp lines.</li>
+    <li><strong>Logos and overlays:</strong> PNG is useful when transparency matters.</li>
+    <li><strong>Web delivery:</strong> JPG remains a strong fallback, while WebP or AVIF may be more efficient for modern delivery.</li>
+    <li><strong>Email and general sharing:</strong> JPG is usually smaller and broadly accepted.</li>
+    <li><strong>Print source files:</strong> Keep the highest-quality original available; do not assume a format conversion improves the source.</li>
+  </ul>
+  <p>For important images, keep a source master and create separate delivery copies for each destination. That is safer than repeatedly converting the previous exported copy.</p>
+
+  <h2 id="faq">Common JPG vs PNG questions</h2>
+  <h3>Is PNG always higher quality than JPG?</h3><p>No. PNG is lossless, but a PNG created from a low-quality JPG still contains the same already-damaged pixels. Lossless storage cannot reconstruct information that was removed earlier.</p>
+  <h3>Why is my PNG much larger than my JPG?</h3><p>Photographic detail is difficult to compress losslessly. JPEG can discard or approximate information to achieve a smaller file; PNG cannot use the same lossy tradeoff.</p>
+  <h3>Can JPG have a transparent background?</h3><p>Standard JPEG does not provide an alpha transparency channel. If transparency is required, PNG, WebP, or another transparency-capable format is usually a better fit.</p>
+  <h3>Should I convert every PNG on a website to JPG?</h3><p>No. Photos may benefit, but screenshots, logos, text, and transparent graphics can be worse as JPG. Choose based on content rather than extension alone.</p>
+</ArticleFrame>
 </SiteLayout>
