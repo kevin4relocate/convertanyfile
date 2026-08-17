@@ -1,6 +1,6 @@
 import type { ConversionArtifact, EngineAdapter, EngineCapabilities } from '../../platform/converter/types';
 import { detectImage } from './detect';
-import { IMAGE_INPUT_EXTENSIONS, IMAGE_OUTPUTS, normalizeImageExtension, runtimeImageOutputs, runtimeSupportsImageInput } from './formats';
+import { extensionFromFilename, IMAGE_INPUT_EXTENSIONS, IMAGE_OUTPUTS, normalizeImageExtension, runtimeImageOutputs, runtimeSupportsImageInput } from './formats';
 import { ImageWorkerClient } from './worker-client';
 
 let client = new ImageWorkerClient();
@@ -33,7 +33,8 @@ export const imageEngine: EngineAdapter = {
   availableOutputs(capabilities) { return runtimeImageOutputs(new Set(capabilities.writable)); },
   async convert(file, output, quality) {
     const config = outputFor(output); if (!config) throw new Error('Unsupported output format');
-    const converted = await client.convert(await file.arrayBuffer(), output, quality);
+    const inputFormat = normalizeImageExtension(extensionFromFilename(file.name));
+    const converted = await client.convert(await file.arrayBuffer(), inputFormat, output, quality);
     return { blob: new Blob([converted], { type: config.mime }), filename: replaceExtension(file.name, config.extension), output } satisfies ConversionArtifact;
   },
   reset(reason) { client.reset(reason); client = new ImageWorkerClient(); capabilitiesPromise = undefined; },
