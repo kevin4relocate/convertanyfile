@@ -11,14 +11,18 @@ export class ImageWorkerClient {
 
   private getWorker(): Worker {
     if (this.worker) return this.worker;
-    this.worker = new Worker(new URL('./image-engine.worker.ts', import.meta.url), { type: 'module' });
-    this.worker.addEventListener('message', (event: MessageEvent<ImageWorkerResponse>) => {
+    const worker = new Worker(new URL('./image-engine.worker.ts', import.meta.url), { type: 'module' });
+    this.worker = worker;
+    worker.addEventListener('message', (event: MessageEvent<ImageWorkerResponse>) => {
       const pending = this.pending.get(event.data.requestId); if (!pending) return;
       window.clearTimeout(pending.timeoutId); this.pending.delete(event.data.requestId); pending.resolve(event.data);
     });
-    this.worker.addEventListener('error', (event) => this.rejectAll(new Error(event.message || 'Image engine crashed')));
-    this.worker.addEventListener('messageerror', () => this.rejectAll(new Error('Image engine returned an unreadable response')));
-    return this.worker;
+    worker.addEventListener('error', (event) => {
+      event.preventDefault();
+      this.failWorker(new Error(event.message || 'Image engine crashed'));
+    });
+    worker.addEventListener('messageerror', () => this.failWorker(new Error('Image engine returned an unreadable response')));
+    return worker;
   }
 
   async capabilities(): Promise<EngineCapabilities> {
@@ -35,14 +39,14 @@ export class ImageWorkerClient {
   }
 
   reset(reason = 'Conversion cancelled'): void {
-    this.worker?.terminate(); this.worker = undefined; this.rejectAll(new Error(reason));
+    this.failWorker(new Error(reason));
   }
 
   private send(request: ImageWorkerRequest, transfer: Transferable[], timeoutMs: number): Promise<ImageWorkerResponse> {
     return new Promise((resolve, reject) => {
       const timeoutId = window.setTimeout(() => {
-        this.pending.delete(request.requestId);
-        reject(new Error(request.type === 'convert' ? 'Image conversion timed out' : 'Image engine startup timed out'));
+        const error = new Error(request.type === 'convert' ? 'Image conversion timed out' : 'Image engine startup timed out');
+        this.failWorker(error);
       }, timeoutMs);
       this.pending.set(request.requestId, { resolve, reject, timeoutId });
       try { this.getWorker().postMessage(request, transfer); }
@@ -51,6 +55,13 @@ export class ImageWorkerClient {
         reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
+  }
+
+  private failWorker(error: Error): void {
+    const worker = this.worker;
+    this.worker = undefined;
+    worker?.terminate();
+    this.rejectAll(error);
   }
 
   private rejectAll(error: Error): void {

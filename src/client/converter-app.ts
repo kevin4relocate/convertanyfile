@@ -180,10 +180,11 @@ class ConverterController {
     this.jobs = this.jobs.map((job) => ({ ...job, status: 'ready', error: undefined, result: undefined }));
   }
 
-  private async convertPending(): Promise<void> {
+  private async convertPending(targets?: readonly ConversionJob[]): Promise<void> {
     if (this.converting || !this.jobs.length) return;
     await this.ensureEngine(); if (!this.engine || !this.capabilities || this.engineError) return;
-    const pending = this.jobs.filter((job) => job.status !== 'success'); if (!pending.length) return;
+    const candidates = targets ?? this.jobs;
+    const pending = candidates.filter((job) => this.jobs.includes(job) && job.status !== 'success'); if (!pending.length) return;
     this.converting = true; this.cancelRequested = false; this.session = { total: pending.length, index: 0, activeName: '' };
     const output = this.outputSelect.value; const quality = Number(this.qualityInput.value); this.render();
     for (let index = 0; index < pending.length; index += 1) {
@@ -207,7 +208,7 @@ class ConverterController {
     window.setTimeout(() => void this.ensureEngine(), 50);
   }
 
-  private retry(job: ConversionJob): void { if (!this.converting) { job.status = 'ready'; job.error = undefined; job.result = undefined; void this.convertPending(); } }
+  private retry(job: ConversionJob): void { if (!this.converting) { job.status = 'ready'; job.error = undefined; job.result = undefined; void this.convertPending([job]); } }
 
   private async downloadZip(): Promise<void> {
     const successful = this.jobs.filter((job) => job.status === 'success' && job.result); if (!successful.length) return;
