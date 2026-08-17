@@ -46,8 +46,8 @@ const websiteSchema = {
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
     <title>{title}</title>
-    <script type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>
-    {schemas.map((item) => <script type="application/ld+json" set:html={JSON.stringify(item)}></script>)}
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>
+    {schemas.map((item) => <script is:inline type="application/ld+json" set:html={JSON.stringify(item)}></script>)}
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
