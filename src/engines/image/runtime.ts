@@ -6,6 +6,9 @@ import { ImageWorkerClient } from './worker-client';
 let client = new ImageWorkerClient();
 let capabilitiesPromise: Promise<EngineCapabilities> | undefined;
 
+const MAX_IMAGE_DIMENSION = 20_000;
+const MAX_ESTIMATED_DECODED_BYTES = 320 * 1024 * 1024;
+
 function outputFor(id: string) { return IMAGE_OUTPUTS.find((item) => item.id === id); }
 function replaceExtension(filename: string, extension: string): string {
   const slash = Math.max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
@@ -20,6 +23,11 @@ export const imageEngine: EngineAdapter = {
     const detected = await detectImage(file);
     if (!detected) return null;
     if (requiredInput && normalizeImageExtension(requiredInput) !== normalizeImageExtension(detected.extension)) return null;
+    if (detected.width && detected.height) {
+      if (detected.width > MAX_IMAGE_DIMENSION || detected.height > MAX_IMAGE_DIMENSION || (detected.estimatedDecodedBytes ?? 0) > MAX_ESTIMATED_DECODED_BYTES) {
+        throw new Error(`Image is too large to process safely in this browser (${detected.width}×${detected.height})`);
+      }
+    }
     return detected;
   },
   initialize() { capabilitiesPromise ??= client.capabilities(); return capabilitiesPromise; },
