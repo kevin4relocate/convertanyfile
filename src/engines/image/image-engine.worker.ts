@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import { ImageMagick, Magick, MagickFormat, initializeImageMagick, type MagickFormat as MagickFormatType } from '@imagemagick/magick-wasm';
+import { ImageMagick, Magick, MagickColors, MagickFormat, initializeImageMagick, type MagickFormat as MagickFormatType } from '@imagemagick/magick-wasm';
 import magickWasmUrl from '@imagemagick/magick-wasm/magick.wasm?url';
 import type { ImageWorkerRequest, ImageWorkerResponse } from './protocol';
 
@@ -34,6 +34,7 @@ async function convert(input: ArrayBuffer, output: string, quality: number): Pro
   if (!format) throw new Error('Unsupported output format');
   return ImageMagick.read(new Uint8Array(input), (image) => {
     image.autoOrient();
+    if (output === 'jpg' && !image.isOpaque) image.colorAlpha(MagickColors.White);
     if (output === 'jpg' || output === 'webp' || output === 'avif') image.quality = quality;
     return image.write(format, (data) => {
       const copy = new Uint8Array(data.length); copy.set(data); return copy.buffer;
