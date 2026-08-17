@@ -1,0 +1,42 @@
+---
+import ConverterShell from './ConverterShell.astro';
+import type { ConverterCategory, ConverterDefinition } from '../platform/converter/types';
+
+interface Props {
+  converter: ConverterDefinition;
+  introSuffix?: string;
+}
+
+const { converter, introSuffix = '' } = Astro.props;
+const isPair = Boolean(converter.input && converter.output);
+const categoryMeta: Record<ConverterCategory, { label: string; href: string }> = {
+  image: { label: 'Image Converter', href: '/image-converter/' },
+  audio: { label: 'Audio Converter', href: '/audio-converter/' },
+  archive: { label: 'Archive Converter', href: '/archive-converter/' },
+  data: { label: 'Data Converter', href: '/data-converter/' },
+  subtitle: { label: 'Subtitle Converter', href: '/subtitle-converter/' },
+  font: { label: 'Font Converter', href: '/font-converter/' },
+  other: { label: 'File Converter', href: '/#converters' },
+};
+const category = categoryMeta[converter.category];
+const intro = `${converter.intro}${introSuffix}`;
+---
+<section class="converter-page-hero" data-converter-page-frame>
+  <div class="site-container converter-page-hero-inner">
+    <div class="breadcrumbs converter-page-breadcrumbs">
+      <a href="/">Home</a>
+      <span>/</span>
+      {isPair ? <><a href={category.href}>{category.label}</a><span>/</span><span>{converter.eyebrow}</span></> : <span>{category.label}</span>}
+    </div>
+    <span class="eyebrow converter-page-eyebrow">{converter.eyebrow}</span>
+    <h1>{converter.h1}</h1>
+    <p>{intro}</p>
+  </div>
+</section>
+
+<section class="converter-page-tool">
+  <div class="site-container">
+    <ConverterShell converter={converter} compact />
+    <slot name="after-tool" />
+  </div>
+</section>
