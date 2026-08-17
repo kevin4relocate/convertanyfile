@@ -1,3 +1,4 @@
+import { ConverterError } from '../../platform/converter/errors';
 import type { EngineCapabilities } from '../../platform/converter/types';
 import type { ImageWorkerRequest, ImageWorkerResponse } from './protocol';
 
@@ -19,33 +20,39 @@ export class ImageWorkerClient {
     });
     worker.addEventListener('error', (event) => {
       event.preventDefault();
-      this.failWorker(new Error(event.message || 'Image engine crashed'));
+      this.failWorker(new ConverterError(event.message || 'Image engine crashed', 'engine-crash', true));
     });
-    worker.addEventListener('messageerror', () => this.failWorker(new Error('Image engine returned an unreadable response')));
+    worker.addEventListener('messageerror', () => this.failWorker(new ConverterError('Image engine returned an unreadable response', 'engine-crash', true)));
     return worker;
   }
 
   async capabilities(): Promise<EngineCapabilities> {
     const response = await this.send({ type: 'capabilities', requestId: crypto.randomUUID() }, [], STARTUP_TIMEOUT);
-    if (response.type !== 'capabilities-result' || !response.ok) throw new Error(response.ok ? 'Invalid image engine response' : response.error);
+    if (response.type !== 'capabilities-result' || !response.ok) {
+      if (!response.ok) throw new ConverterError(response.error, response.code, response.retryable);
+      throw new Error('Invalid image engine response');
+    }
     return { readable: response.readable, writable: response.writable, version: response.version };
   }
 
   async convert(input: ArrayBuffer, output: string, quality: number): Promise<ArrayBuffer> {
     const request: ImageWorkerRequest = { type: 'convert', requestId: crypto.randomUUID(), input, output, quality };
     const response = await this.send(request, [input], CONVERSION_TIMEOUT);
-    if (response.type !== 'convert-result' || !response.ok) throw new Error(response.ok ? 'Invalid image engine response' : response.error);
+    if (response.type !== 'convert-result' || !response.ok) {
+      if (!response.ok) throw new ConverterError(response.error, response.code, response.retryable);
+      throw new Error('Invalid image engine response');
+    }
     return response.output;
   }
 
   reset(reason = 'Conversion cancelled'): void {
-    this.failWorker(new Error(reason));
+    this.failWorker(new ConverterError(reason, 'engine-crash', true));
   }
 
   private send(request: ImageWorkerRequest, transfer: Transferable[], timeoutMs: number): Promise<ImageWorkerResponse> {
     return new Promise((resolve, reject) => {
       const timeoutId = window.setTimeout(() => {
-        const error = new Error(request.type === 'convert' ? 'Image conversion timed out' : 'Image engine startup timed out');
+        const error = new ConverterError(request.type === 'convert' ? 'Image conversion timed out' : 'Image engine startup timed out', 'timeout', true);
         this.failWorker(error);
       }, timeoutMs);
       this.pending.set(request.requestId, { resolve, reject, timeoutId });
