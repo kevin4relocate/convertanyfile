@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type APIRequestContext } from '@playwright/test';
 
 const STATIC_ROUTES = [
   '/',
@@ -36,6 +36,19 @@ function extractInternalLinks(html: string): string[] {
   return [...links];
 }
 
+async function getSitemapPagePaths(request: APIRequestContext): Promise<string[]> {
+  const indexResponse = await request.get('/sitemap-index.xml');
+  expect(indexResponse.ok()).toBeTruthy();
+  const sitemapUrls = extractLocs(await indexResponse.text());
+  const pagePaths = new Set<string>();
+  for (const sitemapUrl of sitemapUrls) {
+    const response = await request.get(localPath(sitemapUrl));
+    expect(response.ok(), `${sitemapUrl} should return 2xx`).toBeTruthy();
+    for (const pageUrl of extractLocs(await response.text())) pagePaths.add(localPath(pageUrl));
+  }
+  return [...pagePaths];
+}
+
 test('shared site shell and static SEO routes are healthy', async ({ page, request }) => {
   await page.goto('/');
 
@@ -59,18 +72,8 @@ test('shared site shell and static SEO routes are healthy', async ({ page, reque
 });
 
 test('generated sitemap pages keep valid canonicals, unique titles, descriptions, and internal links', async ({ request }) => {
-  const indexResponse = await request.get('/sitemap-index.xml');
-  expect(indexResponse.ok()).toBeTruthy();
-  const sitemapUrls = extractLocs(await indexResponse.text());
-  expect(sitemapUrls.length).toBeGreaterThan(0);
-
-  const pagePaths = new Set<string>();
-  for (const sitemapUrl of sitemapUrls) {
-    const response = await request.get(localPath(sitemapUrl));
-    expect(response.ok(), `${sitemapUrl} should return 2xx`).toBeTruthy();
-    for (const pageUrl of extractLocs(await response.text())) pagePaths.add(localPath(pageUrl));
-  }
-  expect(pagePaths.size).toBeGreaterThan(10);
+  const pagePaths = await getSitemapPagePaths(request);
+  expect(pagePaths.length).toBeGreaterThan(10);
 
   const titles = new Set<string>();
   const internalLinks = new Set<string>();
@@ -97,6 +100,20 @@ test('generated sitemap pages keep valid canonicals, unique titles, descriptions
     const response = await request.get(link);
     expect(response.ok(), `Internal link ${link} should return 2xx`).toBeTruthy();
   }
+});
+
+test('every live converter route uses the shared compact converter page contract', async ({ request }) => {
+  const pagePaths = await getSitemapPagePaths(request);
+  let converterPages = 0;
+  for (const path of pagePaths) {
+    const response = await request.get(path);
+    const html = await response.text();
+    if (!html.includes('data-converter-app')) continue;
+    converterPages += 1;
+    expect(html, `${path} must render through ConverterPageFrame`).toContain('data-converter-page-frame');
+    expect(html, `${path} must use the compact shared ConverterShell`).toContain('converter-card--compact');
+  }
+  expect(converterPages).toBeGreaterThan(10);
 });
 
 test('desktop homepage keeps hero compact, drop zone above fold, and Converters anchor at the section heading', async ({ page }, testInfo) => {
@@ -136,6 +153,36 @@ test('desktop homepage keeps hero compact, drop zone above fold, and Converters 
     return top >= 64 && top <= 100;
   });
   await expect(page.getByRole('heading', { name: 'One interface. Multiple file categories.' })).toBeVisible();
+});
+
+test('all converter routes keep the file picker in the first desktop viewport', async ({ page, request }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop converter-page contract');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const pagePaths = await getSitemapPagePaths(request);
+  const converterPaths: string[] = [];
+  for (const path of pagePaths) {
+    const response = await request.get(path);
+    const html = await response.text();
+    if (html.includes('data-converter-app')) converterPaths.push(path);
+  }
+  expect(converterPaths.length).toBeGreaterThan(10);
+
+  for (const path of converterPaths) {
+    await page.goto(path);
+    const frame = page.locator('[data-converter-page-frame]');
+    const title = frame.locator('h1');
+    const dropZone = page.locator('[data-role="drop-zone"]');
+    const choose = page.getByText('Choose files', { exact: true });
+    await expect(frame, `${path} shared converter frame`).toBeVisible();
+    await expect(dropZone, `${path} dropzone`).toBeVisible();
+    await expect(choose, `${path} choose-files control`).toBeVisible();
+    const titleBox = await title.boundingBox();
+    const dropBox = await dropZone.boundingBox();
+    expect(titleBox, `${path} title`).not.toBeNull();
+    expect(dropBox, `${path} dropzone`).not.toBeNull();
+    expect(titleBox!.height, `${path} title should stay compact`).toBeLessThanOrEqual(96);
+    expect(dropBox!.y + dropBox!.height, `${path} dropzone should fit above the fold`).toBeLessThanOrEqual(900);
+  }
 });
 
 test('publish-quality content pages use the shared 1080px grid with readable article columns', async ({ page }, testInfo) => {
