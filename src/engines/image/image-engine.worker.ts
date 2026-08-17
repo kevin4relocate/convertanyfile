@@ -2,6 +2,7 @@
 
 import { ImageMagick, Magick, MagickColors, MagickFormat, initializeImageMagick, type MagickFormat as MagickFormatType } from '@imagemagick/magick-wasm';
 import magickWasmUrl from '@imagemagick/magick-wasm/magick.wasm?url';
+import type { ConversionErrorCode } from '../../platform/converter/errors';
 import type { ImageWorkerRequest, ImageWorkerResponse } from './protocol';
 
 const scope = self as DedicatedWorkerGlobalScope;
@@ -20,12 +21,12 @@ function ensureInitialized(): Promise<void> {
   return initialization;
 }
 
-function friendlyError(error: unknown): string {
+function friendlyError(error: unknown): { message: string; code: ConversionErrorCode; retryable: boolean } {
   const message = error instanceof Error ? error.message : String(error);
-  if (/memory|out of bounds|allocation/i.test(message)) return 'Not enough browser memory for this image';
-  if (/delegate|unsupported|no images defined/i.test(message)) return 'Unsupported image codec';
-  if (/corrupt|improper|invalid|unexpected end|insufficient/i.test(message)) return 'The image appears to be corrupted';
-  return 'Unable to convert this image';
+  if (/memory|out of bounds|allocation/i.test(message)) return { message: 'Not enough browser memory for this image', code: 'memory-limit', retryable: false };
+  if (/delegate|unsupported|no images defined|no decode delegate/i.test(message)) return { message: 'Unsupported image codec', code: 'unsupported-input', retryable: false };
+  if (/corrupt|improper|invalid|unexpected end|insufficient|unexpected end-of-file/i.test(message)) return { message: 'The image appears to be corrupted or invalid', code: 'corrupt-input', retryable: false };
+  return { message: 'Unable to convert this image', code: 'conversion-failed', retryable: false };
 }
 
 async function convert(input: ArrayBuffer, output: string, quality: number): Promise<ArrayBuffer> {
@@ -60,9 +61,10 @@ scope.addEventListener('message', async (event: MessageEvent<ImageWorkerRequest>
     const response: ImageWorkerResponse = { type: 'convert-result', requestId: request.requestId, ok: true, output };
     scope.postMessage(response, [output]);
   } catch (error) {
+    const failure = friendlyError(error);
     const response: ImageWorkerResponse = {
       type: request.type === 'convert' ? 'convert-result' : 'capabilities-result',
-      requestId: request.requestId, ok: false, error: friendlyError(error),
+      requestId: request.requestId, ok: false, error: failure.message, code: failure.code, retryable: failure.retryable,
     } as ImageWorkerResponse;
     scope.postMessage(response);
   }
