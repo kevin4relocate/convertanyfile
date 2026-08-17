@@ -1,0 +1,13 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+const guides=[
+{href:'/guides/jpg-vs-png/',title:'JPG vs PNG: which format should you use?',text:'A practical comparison of photo compression, transparency, screenshots, and editing workflows.'},
+{href:'/guides/webp-vs-avif/',title:'WebP vs AVIF for modern websites',text:'How to think about compression, compatibility, quality testing, and fallback strategy.'},
+{href:'/guides/heic-explained/',title:'HEIC explained: why phones use it and when to convert',text:'What HEIC is, why compatibility problems happen, and when JPG or PNG makes more sense.'},
+{href:'/guides/image-quality-compression/',title:'Image quality and compression without the myths',text:'Lossy vs lossless, quality sliders, generation loss, dimensions, and practical delivery copies.'},
+];
+---
+<SiteLayout title="File Conversion Guides | ConvertAnyFile" description="Practical guides to image formats, compatibility, compression, and choosing the right conversion workflow.">
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Guides</span></div><span class="eyebrow">Conversion guides</span><h1>Understand the format before you convert it.</h1><p>Short, practical explanations designed to help you choose the right output instead of converting files blindly.</p></div></section>
+<section class="content-section"><div class="site-container"><div class="category-grid">{guides.map((guide)=><a class="category-card category-card--live" href={guide.href}><div class="category-icon">G</div><div><span class="live-badge">Guide</span><h3>{guide.title}</h3><p>{guide.text}</p></div><span class="category-arrow">→</span></a>)}</div></div></section>
+</SiteLayout>
