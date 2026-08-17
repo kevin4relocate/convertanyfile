@@ -19,6 +19,9 @@ export interface DetectedFile {
   extension: string;
   label: string;
   confidence: 'signature' | 'signature+extension';
+  width?: number;
+  height?: number;
+  estimatedDecodedBytes?: number;
 }
 
 export interface ConversionArtifact {
