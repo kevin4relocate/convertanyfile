@@ -151,6 +151,11 @@
   min-width: 0;
 }
 
+/* The aside must stretch to the full article row so its sticky child has room to remain pinned. */
+.content-aside {
+  align-self: stretch;
+}
+
 .content-article {
   width: 100%;
   max-width: none;
@@ -195,6 +200,10 @@
   top: 88px;
   display: grid;
   gap: 14px;
+  max-height: calc(100vh - 104px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .toc-card,
@@ -377,8 +386,15 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .content-aside {
+    align-self: auto;
+  }
+
   .content-aside-sticky {
     position: static;
+    max-height: none;
+    overflow-y: visible;
+    scrollbar-gutter: auto;
   }
 
   .toc-card {
