@@ -172,6 +172,39 @@ test('publish-quality content pages use the shared 1080px grid with readable art
   await expect(page.getByRole('heading', { name: 'Understand the source and the output' })).toBeVisible();
 });
 
+test('desktop article right navigation stays visible after deep anchor jumps', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop sticky-navigation regression');
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  for (const path of ['/guides/webp-vs-avif/', '/guides/jpg-vs-png/']) {
+    await page.goto(path);
+    const tocLinks = page.locator('.toc-card a');
+    const count = await tocLinks.count();
+    expect(count, `${path} should expose article navigation`).toBeGreaterThanOrEqual(4);
+
+    const deepLink = tocLinks.nth(3);
+    const href = await deepLink.getAttribute('href');
+    expect(href, `${path} deep navigation link should have an anchor`).toMatch(/^#/);
+    await deepLink.click();
+
+    await page.waitForFunction((selector) => {
+      const target = document.querySelector(selector);
+      if (!target) return false;
+      const top = target.getBoundingClientRect().top;
+      return top >= 70 && top <= 130;
+    }, href!);
+
+    const sticky = page.locator('.content-aside-sticky');
+    await expect(sticky).toBeVisible();
+    await expect(page.getByText('On this page', { exact: true })).toBeVisible();
+    const stickyBox = await sticky.boundingBox();
+    expect(stickyBox, `${path} sticky navigation should remain in the viewport`).not.toBeNull();
+    expect(stickyBox!.y).toBeGreaterThanOrEqual(86);
+    expect(stickyBox!.y).toBeLessThanOrEqual(90);
+    expect(stickyBox!.y + stickyBox!.height).toBeLessThanOrEqual(900);
+  }
+});
+
 test('wide content hubs use the 1080px grid and meaningful internal navigation', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop content regression');
   await page.setViewportSize({ width: 1440, height: 900 });
