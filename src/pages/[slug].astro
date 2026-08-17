@@ -2,25 +2,77 @@
 import SiteLayout from '../layouts/SiteLayout.astro';
 import ConverterShell from '../components/ConverterShell.astro';
 import FaqList from '../components/FaqList.astro';
+import ArticleFrame from '../components/ArticleFrame.astro';
 import { PAIR_CONVERTERS, getConverter } from '../config/converters';
 import { PAIR_CONTENT } from '../content/pair-content';
+import { FORMAT_REFERENCE } from '../content/format-reference';
 import { SITE } from '../config/site';
 
 export function getStaticPaths(){return PAIR_CONVERTERS.map((converter)=>({params:{slug:converter.slug},props:{converter}}));}
 const { converter } = Astro.props;
 const content = PAIR_CONTENT[converter.slug];
+const source = converter.input ? FORMAT_REFERENCE[converter.input] : undefined;
+const target = converter.output ? FORMAT_REFERENCE[converter.output] : undefined;
 const related = (converter.related ?? []).map((slug:string)=>getConverter(slug)).filter(Boolean);
+const asideRelated = related.map((item:any)=>({href:`/${item.slug}/`,label:item.eyebrow}));
+const inputLabel = converter.input?.toUpperCase();
+const outputLabel = converter.output?.toUpperCase();
+const toc = [
+  {id:'why',label:`Why convert ${inputLabel} to ${outputLabel}?`},
+  {id:'formats',label:'Source vs output'},
+  {id:'changes',label:'What changes in conversion'},
+  {id:'workflow',label:'How the local workflow works'},
+  {id:'faq',label:'Common questions'},
+];
 const faq = [
-  {question:`Can I convert ${converter.input?.toUpperCase()} to ${converter.output?.toUpperCase()} without uploading the file?`,answer:'Yes. This converter runs the supported image conversion workflow in your browser, so an image upload step is not required.'},
-  {question:`Can I batch convert ${converter.input?.toUpperCase()} files?`,answer:'Yes. Add multiple supported files, convert them sequentially for browser memory safety, then download successful results individually or together as a ZIP.'},
+  {question:`Can I convert ${inputLabel} to ${outputLabel} without uploading the file?`,answer:'Yes. This converter runs the supported image conversion workflow in your browser, so an image upload step is not required.'},
+  {question:`Can I batch convert ${inputLabel} files?`,answer:'Yes. Add multiple supported files, convert them sequentially for browser memory safety, then download successful results individually or together as a ZIP.'},
   {question:'Does conversion change my original files?',answer:'No. The original files remain unchanged. The browser creates new downloadable output files.'},
-  {question:'What if one file fails?',answer:'The batch continues. Failed files can be retried without throwing away successful results.'},
+  {question:'What if one file fails?',answer:'The batch continues. Failed files can be retried individually without throwing away successful results.'},
+  {question:`Will ${outputLabel} automatically improve the image?`,answer:'No. A format conversion changes how the existing image is encoded or stored. It cannot restore source detail that was already missing or lost in an earlier compression step.'},
 ];
 const schema={'@context':'https://schema.org','@type':'WebApplication',name:converter.h1,url:`${SITE.origin}/${converter.slug}/`,applicationCategory:'MultimediaApplication',operatingSystem:'Any',offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}};
 ---
 <SiteLayout title={converter.title} description={converter.description} schema={schema}>
 <section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/image-converter/">Image Converter</a><span>/</span><span>{converter.eyebrow}</span></div><span class="eyebrow">{converter.eyebrow}</span><h1>{converter.h1}</h1><p>{converter.intro}</p></div></section>
 <section class="converter-page-wrap"><div class="site-container"><ConverterShell converter={converter} /></div></section>
-<section class="content-section white"><div class="site-container article"><span class="section-kicker">Format decision</span><h2>Why convert {converter.input?.toUpperCase()} to {converter.output?.toUpperCase()}?</h2><p>{content?.why}</p><h3>When this conversion makes sense</h3><p>{content?.when}</p><div class="callout"><strong>Quality note</strong><p>{content?.note}</p></div>{related.length>0&&<><h3>Related image conversions</h3><div class="related-grid">{related.map((item:any)=><a class="related-card" href={`/${item.slug}/`}>{item.eyebrow} →</a>)}</div></>}</div></section>
-<section class="content-section"><div class="site-container"><FaqList items={faq} title={`${converter.input?.toUpperCase()} to ${converter.output?.toUpperCase()} FAQ`} /></div></section>
+
+<ArticleFrame toc={toc} related={asideRelated} relatedTitle="Related conversions" asideNote="The conversion engine checks the file signature and runtime codec capability before relying on the format extension.">
+  <div class="quick-answer"><strong>Quick answer</strong><p>{content?.when}</p></div>
+
+  <h2 id="why">Why convert {inputLabel} to {outputLabel}?</h2>
+  <p>{content?.why}</p>
+  <p>{content?.when}</p>
+
+  {source && target && <>
+    <h2 id="formats">Understand the source and the output</h2>
+    <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Format</th><th>Typical role</th><th>Compression</th><th>Transparency</th></tr></thead><tbody><tr><td><strong>{source.name}</strong></td><td>{source.role}</td><td>{source.compression}</td><td>{source.transparency}</td></tr><tr><td><strong>{target.name}</strong></td><td>{target.role}</td><td>{target.compression}</td><td>{target.transparency}</td></tr></tbody></table></div>
+    <h3>About the {source.name} source</h3><p>{source.summary} {source.compatibility}</p><p><strong>Typical use:</strong> {source.bestFor}</p>
+    <h3>About the {target.name} output</h3><p>{target.summary} {target.compatibility}</p><p><strong>Main trade-off:</strong> {target.tradeoffs}</p>
+  </>}
+
+  <h2 id="changes">What changes during {inputLabel} to {outputLabel} conversion?</h2>
+  <p>Conversion decodes the source image and creates a new file in the selected output format. The original file stays unchanged. The new file can differ in compression, file size, transparency support, metadata behavior, and compatibility even when the pixel dimensions remain the same.</p>
+  <div class="callout"><strong>Quality and format note</strong><p>{content?.note}</p></div>
+  <p>If the source is important, keep it as your master copy. A converted file is best treated as a delivery or compatibility copy unless you have verified that the new format preserves everything your workflow needs.</p>
+
+  <h2 id="workflow">How this browser-first conversion works</h2>
+  <ol>
+    <li><strong>Add files.</strong> Drag supported images onto the converter or choose them from your device.</li>
+    <li><strong>Choose {outputLabel}.</strong> The page is preset for this format pair, and a quality control appears only when the output codec uses one.</li>
+    <li><strong>Convert locally.</strong> Supported image bytes are processed in the browser with the image engine rather than sent through a conversion upload queue.</li>
+    <li><strong>Download results.</strong> Save individual files or package successful batch results into a ZIP.</li>
+  </ol>
+  <p>Batch conversion runs sequentially to reduce browser memory pressure. If one image fails, the rest of the batch can continue, and the failed row can be retried without re-running successful files.</p>
+
+  <h2 id="faq">Before you convert</h2>
+  <ul class="content-checklist">
+    <li>Keep important source files until you have checked the converted output.</li>
+    <li>Do not assume a larger output means the image gained real quality or detail.</li>
+    <li>Check transparency requirements before converting to a format that cannot represent alpha transparency.</li>
+    <li>For very large or unusual images, browser memory and runtime codec support can limit conversion even when the extension is recognized.</li>
+  </ul>
+</ArticleFrame>
+
+<section class="content-wide-section white"><div class="site-container"><FaqList items={faq} title={`${inputLabel} to ${outputLabel} FAQ`} intro={`Common questions about converting ${inputLabel} images to ${outputLabel} in the browser.`} /></div></section>
 </SiteLayout>
