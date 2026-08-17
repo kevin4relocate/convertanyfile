@@ -11,6 +11,10 @@ const OUTPUT_MAP: Record<string, MagickFormatType> = {
   jpg: MagickFormat.Jpeg, png: MagickFormat.Png, webp: MagickFormat.WebP, avif: MagickFormat.Avif,
   tiff: MagickFormat.Tiff, gif: MagickFormat.Gif, bmp: MagickFormat.Bmp, ico: MagickFormat.Ico,
 };
+const INPUT_HINT_MAP: Record<string, MagickFormatType> = {
+  pcx: MagickFormat.Pcx,
+  tga: MagickFormat.Tga,
+};
 
 function ensureInitialized(): Promise<void> {
   if (!initialization) initialization = (async () => {
@@ -29,18 +33,21 @@ function friendlyError(error: unknown): { message: string; code: ConversionError
   return { message: 'Unable to convert this image', code: 'conversion-failed', retryable: false };
 }
 
-async function convert(input: ArrayBuffer, output: string, quality: number): Promise<ArrayBuffer> {
+async function convert(input: ArrayBuffer, inputFormat: string | undefined, output: string, quality: number): Promise<ArrayBuffer> {
   await ensureInitialized();
   const format = OUTPUT_MAP[output];
   if (!format) throw new Error('Unsupported output format');
-  return ImageMagick.read(new Uint8Array(input), (image) => {
+  const bytes = new Uint8Array(input);
+  const process = (image: Parameters<Parameters<typeof ImageMagick.read>[1]>[0]) => {
     image.autoOrient();
     if (output === 'jpg' && !image.isOpaque) image.colorAlpha(MagickColors.White);
     if (output === 'jpg' || output === 'webp' || output === 'avif') image.quality = quality;
     return image.write(format, (data) => {
       const copy = new Uint8Array(data.length); copy.set(data); return copy.buffer;
     });
-  });
+  };
+  const hint = inputFormat ? INPUT_HINT_MAP[inputFormat] : undefined;
+  return hint ? ImageMagick.read(bytes, hint, process) : ImageMagick.read(bytes, process);
 }
 
 scope.addEventListener('message', async (event: MessageEvent<ImageWorkerRequest>) => {
@@ -57,7 +64,7 @@ scope.addEventListener('message', async (event: MessageEvent<ImageWorkerRequest>
       };
       scope.postMessage(response); return;
     }
-    const output = await convert(request.input, request.output, request.quality);
+    const output = await convert(request.input, request.inputFormat, request.output, request.quality);
     const response: ImageWorkerResponse = { type: 'convert-result', requestId: request.requestId, ok: true, output };
     scope.postMessage(response, [output]);
   } catch (error) {
