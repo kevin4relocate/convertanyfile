@@ -19,6 +19,10 @@ function tga1x1(): Buffer {
   return bytes;
 }
 
+function realMultiSizePngBackedIco(): Buffer {
+  return Buffer.from('AAABAAUAEBAAAAAAIACsAAAAVgAAABgYAAAAACAA1wAAAAIBAAAgIAAAAAAgAAoBAADZAQAAMDAAAAAAIACAAQAA4wIAAEBAAAAAACAA0QEAAGMEAACJUE5HDQoaCgAAAA1JSERSAAAAEAAAABAIAgAAAJXmVAAAAFhJREFUeJxjYBgFoyEwGqgDjEAsDAwM/4eFhYV/MIiI////D8QYGRn5////PwgTYGLgYGBYwMDA8P///38MDAz///8fA8P/////H4gxMTHx////fzAGBgYGEZABABvQHzUdO2gvAAAAAElFTkSuQmCCiVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAIAAADZQnYVAAAAnklEQVR4nO2SsQ3AIAxFj8QobmAEVmAEVsAEVsAIZmAEVmAEVmAET+EoTpI4iZN05X/v5wEKgNDnVhZzy8wiEoA8oAnIApKAOKAJyAKSgCxgArKABKAH2AC4gAooAQqAA6gAEgAFUAH0ABdAA6AAKoAeYAKygATgE4jVvzrku1xpr7b2xM/aStM9EHoQeQh8BEYgQhChCEKIIQYgiBiGKEIQoQhCiCEOIIgQhiiCEKMIQoohB/P8A+8kAiIH+KXoAAAAASUVORK5CYII=','base64');
+}
+
 function truncatedPng(): Buffer {
   const bytes = Buffer.alloc(24);
   Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,0x00,0x00,0x00,0x0d,0x49,0x48,0x44,0x52]).copy(bytes);
@@ -55,6 +59,11 @@ test('PCX converts through the real image engine', async ({ page }, testInfo) =>
 test('TGA converts through the real image engine', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run legacy WASM conversion once');
   await expectLegacyConversion(page, 'legacy.tga', 'image/x-tga', tga1x1());
+});
+
+test('real multi-size PNG-backed ICO converts through the real image engine', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run real ICO WASM conversion once');
+  await expectLegacyConversion(page, 'image.ico', 'image/x-icon', realMultiSizePngBackedIco());
 });
 
 test('deterministic corrupt-input failures do not offer pointless retry actions', async ({ page }, testInfo) => {
