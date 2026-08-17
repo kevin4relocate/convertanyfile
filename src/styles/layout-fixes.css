@@ -128,6 +128,31 @@
   margin-top: 10px;
 }
 
+/* Dedicated converter landing pages keep the tool visible in the first desktop viewport too. */
+.page-hero--converter {
+  padding: 28px 0 24px;
+}
+
+.page-hero--converter .breadcrumbs {
+  margin-bottom: 10px;
+}
+
+.page-hero--converter h1 {
+  margin: 9px 0 9px;
+  font-size: clamp(38px, 4vw, 52px);
+  line-height: .99;
+}
+
+.page-hero--converter p {
+  max-width: 900px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.converter-page-wrap--compact {
+  padding-top: 20px;
+}
+
 /* Anchor the navigation to the section heading rather than the category grid. */
 .converter-platform-section {
   scroll-margin-top: 76px;
@@ -455,6 +480,18 @@
 
   .hero-converter {
     margin-top: 18px;
+  }
+
+  .page-hero--converter {
+    padding: 28px 0 22px;
+  }
+
+  .page-hero--converter h1 {
+    font-size: clamp(36px, 10vw, 48px);
+  }
+
+  .converter-page-wrap--compact {
+    padding-top: 16px;
   }
 
   .converter-card--compact .drop-zone {
