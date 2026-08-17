@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 function pcx1x1(): Buffer {
   const bytes = Buffer.alloc(135);
@@ -26,26 +26,35 @@ function truncatedPng(): Buffer {
   return bytes;
 }
 
-test('PCX and TGA are runtime-gated inputs and convert through the real image engine', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run legacy WASM conversion once');
+async function expectLegacyConversion(page: Page, name: string, mimeType: string, buffer: Buffer): Promise<void> {
   await page.goto('/image-converter/');
   const app = page.locator('[data-converter-app]');
   await expect(app).toHaveAttribute('data-initialized', 'true');
-  await app.locator('[data-role="file-input"]').setInputFiles([
-    { name: 'legacy.pcx', mimeType: 'image/x-pcx', buffer: pcx1x1() },
-    { name: 'legacy.tga', mimeType: 'image/x-tga', buffer: tga1x1() },
-  ]);
-
-  await expect(app.locator('[data-role="batch-summary"]')).toContainText('2 files');
-  await expect(app.locator('[data-role="file-list"]')).toContainText('legacy.pcx');
-  await expect(app.locator('[data-role="file-list"]')).toContainText('legacy.tga');
+  await app.locator('[data-role="file-input"]').setInputFiles({ name, mimeType, buffer });
+  await expect(app.locator('[data-role="batch-summary"]')).toContainText('1 file');
+  await expect(app.locator('[data-role="file-list"]')).toContainText(name);
   const output = app.locator('[data-role="output-format"]');
   await expect(output).toBeEnabled({ timeout: 60_000 });
+  await expect(app.locator('[data-role="file-list"]')).toContainText(name);
   await output.selectOption('jpg');
   await app.locator('[data-role="convert-all"]').click();
-  await expect(app.locator('[data-role="result-summary"]')).toContainText('2/2 converted', { timeout: 60_000 });
-  await expect(app.locator('.status-success')).toHaveCount(2);
+  await expect(app.locator('[data-role="result-summary"]')).toBeVisible({ timeout: 60_000 });
+  const summary = await app.locator('[data-role="result-summary"]').innerText();
+  const rows = await app.locator('[data-role="file-list"]').innerText();
+  console.log(`[legacy-conversion] ${name} :: ${summary} :: ${rows.replace(/\n/g, ' | ')}`);
+  await expect(app.locator('[data-role="result-summary"]'), `${name}: ${rows}`).toContainText('1/1 converted');
+  await expect(app.locator('.status-success')).toHaveCount(1);
   await expect(app.locator('[data-role="file-list"]')).not.toContainText(/\d{4,}% larger/);
+}
+
+test('PCX converts through the real image engine', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run legacy WASM conversion once');
+  await expectLegacyConversion(page, 'legacy.pcx', 'image/x-pcx', pcx1x1());
+});
+
+test('TGA converts through the real image engine', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run legacy WASM conversion once');
+  await expectLegacyConversion(page, 'legacy.tga', 'image/x-tga', tga1x1());
 });
 
 test('deterministic corrupt-input failures do not offer pointless retry actions', async ({ page }, testInfo) => {
