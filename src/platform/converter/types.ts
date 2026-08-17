@@ -72,5 +72,7 @@ export interface ConversionJob {
   detected: DetectedFile;
   status: JobStatus;
   error?: string;
+  errorCode?: string;
+  errorRetryable?: boolean;
   result?: ConversionArtifact;
 }

@@ -1,6 +1,7 @@
 import { applyBatchPolicy } from '../platform/converter/batch-policy';
 import { downloadBlob } from '../platform/converter/download';
 import { loadEngine } from '../platform/converter/engine-registry';
+import { classifyConversionError } from '../platform/converter/errors';
 import { buildZip } from '../platform/converter/zip';
 import type { BatchPolicy, ConversionJob, EngineAdapter, EngineCapabilities, EngineId, OutputOption } from '../platform/converter/types';
 
@@ -10,6 +11,17 @@ const formatBytes = (value: number): string => {
   if (value < 1024 ** 2) return `${(value / 1024).toFixed(1)} KB`;
   if (value < 1024 ** 3) return `${(value / 1024 ** 2).toFixed(1)} MB`;
   return `${(value / 1024 ** 3).toFixed(1)} GB`;
+};
+const formatSizeDelta = (inputBytes: number, outputBytes: number): string => {
+  if (inputBytes <= 0 || outputBytes < 0) return '';
+  const ratio = outputBytes / inputBytes;
+  if (!Number.isFinite(ratio) || ratio === 1) return '';
+  if (ratio < 1) {
+    const percent = Math.round((1 - ratio) * 100);
+    return percent > 0 ? ` · ${percent}% smaller` : '';
+  }
+  const percent = Math.round((ratio - 1) * 100);
+  return ` · ${percent >= 1000 ? 'much larger' : `${percent}% larger`}`;
 };
 const escapeSelector = (value: string) => CSS.escape(value);
 
@@ -177,24 +189,28 @@ class ConverterController {
 
   private resetResults(): void {
     if (this.converting) return;
-    this.jobs = this.jobs.map((job) => ({ ...job, status: 'ready', error: undefined, result: undefined }));
+    this.jobs = this.jobs.map((job) => ({ ...job, status: 'ready', error: undefined, errorCode: undefined, errorRetryable: undefined, result: undefined }));
   }
 
   private async convertPending(targets?: readonly ConversionJob[]): Promise<void> {
     if (this.converting || !this.jobs.length) return;
     await this.ensureEngine(); if (!this.engine || !this.capabilities || this.engineError) return;
     const candidates = targets ?? this.jobs;
-    const pending = candidates.filter((job) => this.jobs.includes(job) && job.status !== 'success'); if (!pending.length) return;
+    const pending = candidates.filter((job) => this.jobs.includes(job) && (job.status === 'ready' || (job.status === 'error' && job.errorRetryable !== false))); if (!pending.length) return;
     this.converting = true; this.cancelRequested = false; this.session = { total: pending.length, index: 0, activeName: '' };
     const output = this.outputSelect.value; const quality = Number(this.qualityInput.value); this.render();
     for (let index = 0; index < pending.length; index += 1) {
       if (this.cancelRequested) break;
       const job = pending[index]!; this.session = { total: pending.length, index: index + 1, activeName: job.file.name };
-      job.status = 'converting'; job.error = undefined; job.result = undefined; this.render(); this.scrollActiveJobIntoView(job.id);
+      job.status = 'converting'; job.error = undefined; job.errorCode = undefined; job.errorRetryable = undefined; job.result = undefined; this.render(); this.scrollActiveJobIntoView(job.id);
       try { job.result = await this.engine.convert(job.file, output, quality); job.status = 'success'; }
       catch (error) {
-        if (this.cancelRequested) { job.status = 'ready'; job.error = undefined; }
-        else { console.error(`[ConvertAnyFile] Conversion failed: ${job.file.name}`, error); job.status = 'error'; job.error = error instanceof Error ? error.message : 'Conversion failed'; }
+        if (this.cancelRequested) { job.status = 'ready'; job.error = undefined; job.errorCode = undefined; job.errorRetryable = undefined; }
+        else {
+          console.error(`[ConvertAnyFile] Conversion failed: ${job.file.name}`, error);
+          const failure = classifyConversionError(error);
+          job.status = 'error'; job.error = failure.message; job.errorCode = failure.code; job.errorRetryable = failure.retryable;
+        }
       }
       this.render();
     }
@@ -208,7 +224,11 @@ class ConverterController {
     window.setTimeout(() => void this.ensureEngine(), 50);
   }
 
-  private retry(job: ConversionJob): void { if (!this.converting) { job.status = 'ready'; job.error = undefined; job.result = undefined; void this.convertPending([job]); } }
+  private retry(job: ConversionJob): void {
+    if (!this.converting && job.errorRetryable !== false) {
+      job.status = 'ready'; job.error = undefined; job.errorCode = undefined; job.errorRetryable = undefined; job.result = undefined; void this.convertPending([job]);
+    }
+  }
 
   private async downloadZip(): Promise<void> {
     const successful = this.jobs.filter((job) => job.status === 'success' && job.result); if (!successful.length) return;
@@ -221,7 +241,8 @@ class ConverterController {
     const hasJobs = this.jobs.length > 0; this.dropView.hidden = hasJobs; this.workspace.hidden = !hasJobs; if (!hasJobs) return;
     const inputBytes = this.jobs.reduce((sum, job) => sum + job.file.size, 0);
     const successful = this.jobs.filter((job) => job.status === 'success' && job.result); const failed = this.jobs.filter((job) => job.status === 'error');
-    const outputBytes = successful.reduce((sum, job) => sum + (job.result?.blob.size ?? 0), 0); const pending = this.jobs.filter((job) => job.status !== 'success').length;
+    const outputBytes = successful.reduce((sum, job) => sum + (job.result?.blob.size ?? 0), 0);
+    const pending = this.jobs.filter((job) => job.status === 'ready' || (job.status === 'error' && job.errorRetryable !== false)).length;
     this.batchSummary.textContent = `${this.jobs.length} ${this.jobs.length === 1 ? 'file' : 'files'} · ${formatBytes(inputBytes)}`;
     this.fileList.replaceChildren(...this.jobs.map((job) => this.renderJob(job)));
     this.addMore.disabled = this.converting; this.clearAll.disabled = this.converting; this.outputSelect.disabled = this.converting || !this.capabilities; this.qualityInput.disabled = this.converting || !this.capabilities;
@@ -233,11 +254,10 @@ class ConverterController {
       const progress = this.session.total ? Math.max(0, ((this.session.index - 1) / this.session.total) * 100) : 0; this.progressBar.style.width = `${progress}%`;
     }
     this.cancelButton.hidden = !this.converting; this.convertButton.hidden = this.converting || pending === 0; this.convertButton.disabled = !this.capabilities || Boolean(this.engineError);
-    this.convertButton.textContent = this.engineError ? 'Converter unavailable' : !this.capabilities ? 'Preparing converter…' : successful.length > 0 ? `Convert remaining ${pending}` : `Convert ${this.jobs.length} ${this.jobs.length === 1 ? 'File' : 'Files'}`;
+    this.convertButton.textContent = this.engineError ? 'Converter unavailable' : !this.capabilities ? 'Preparing converter…' : successful.length > 0 ? `Convert remaining ${pending}` : `Convert ${pending || this.jobs.length} ${(pending || this.jobs.length) === 1 ? 'File' : 'Files'}`;
     this.zipButton.hidden = this.converting || successful.length === 0; this.resultSummary.hidden = successful.length === 0 && failed.length === 0;
     if (!this.resultSummary.hidden) {
-      const delta = inputBytes > 0 && successful.length === this.jobs.length ? Math.round((1 - outputBytes / inputBytes) * 100) : null;
-      const sizeText = successful.length === this.jobs.length ? ` · ${formatBytes(inputBytes)} → ${formatBytes(outputBytes)}${delta !== null ? ` · ${Math.abs(delta)}% ${delta >= 0 ? 'smaller' : 'larger'}` : ''}` : '';
+      const sizeText = successful.length === this.jobs.length ? ` · ${formatBytes(inputBytes)} → ${formatBytes(outputBytes)}${formatSizeDelta(inputBytes, outputBytes)}` : '';
       this.resultSummary.textContent = `${successful.length}/${this.jobs.length} converted${failed.length ? ` · ${failed.length} failed` : ''}${sizeText}`;
     }
   }
@@ -248,15 +268,14 @@ class ConverterController {
     const text = document.createElement('div'); text.className = 'file-text'; const name = document.createElement('strong'); name.textContent = job.file.name; name.title = job.file.name;
     const meta = document.createElement('span'); meta.textContent = `${job.detected.label} · ${formatBytes(job.file.size)}`; text.append(name, meta); main.append(badge, text);
     const status = document.createElement('div'); status.className = 'file-status';
-    if (job.status === 'success' && job.result) {
-      const delta = Math.round((1 - job.result.blob.size / job.file.size) * 100); status.textContent = `Converted · ${formatBytes(job.result.blob.size)}${Number.isFinite(delta) ? ` · ${Math.abs(delta)}% ${delta >= 0 ? 'smaller' : 'larger'}` : ''}`;
-    } else if (job.status === 'error') status.textContent = job.error ?? 'Failed';
+    if (job.status === 'success' && job.result) status.textContent = `Converted · ${formatBytes(job.result.blob.size)}${formatSizeDelta(job.file.size, job.result.blob.size)}`;
+    else if (job.status === 'error') status.textContent = job.error ?? 'Failed';
     else if (job.status === 'converting') status.textContent = 'Converting…';
     else status.textContent = this.capabilities ? 'Ready' : 'Preparing converter…';
     const actions = document.createElement('div'); actions.className = 'row-actions';
     if (job.status === 'success' && job.result) {
       const download = document.createElement('button'); download.type = 'button'; download.className = 'row-action'; download.textContent = 'Download'; download.addEventListener('click', () => downloadBlob(job.result!.blob, job.result!.filename)); actions.append(download);
-    } else if (job.status === 'error') {
+    } else if (job.status === 'error' && job.errorRetryable !== false) {
       const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'row-action'; retry.textContent = 'Retry'; retry.disabled = this.converting; retry.addEventListener('click', () => this.retry(job)); actions.append(retry);
     }
     if (job.status !== 'converting' && job.status !== 'success') {
