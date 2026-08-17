@@ -1,0 +1,4 @@
+/* Shared content pages stay on the same 1080px site grid. Text itself remains readable through child max-width rules. */
+.page-hero .hero-inner {
+  max-width: none;
+}
