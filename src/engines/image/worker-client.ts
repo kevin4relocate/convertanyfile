@@ -35,8 +35,8 @@ export class ImageWorkerClient {
     return { readable: response.readable, writable: response.writable, version: response.version };
   }
 
-  async convert(input: ArrayBuffer, output: string, quality: number): Promise<ArrayBuffer> {
-    const request: ImageWorkerRequest = { type: 'convert', requestId: crypto.randomUUID(), input, output, quality };
+  async convert(input: ArrayBuffer, inputFormat: string | undefined, output: string, quality: number): Promise<ArrayBuffer> {
+    const request: ImageWorkerRequest = { type: 'convert', requestId: crypto.randomUUID(), input, inputFormat, output, quality };
     const response = await this.send(request, [input], CONVERSION_TIMEOUT);
     if (response.type !== 'convert-result' || !response.ok) {
       if (!response.ok) throw new ConverterError(response.error, response.code, response.retryable);
