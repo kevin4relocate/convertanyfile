@@ -43,7 +43,8 @@ export const imageEngine: EngineAdapter = {
   availableOutputs(capabilities) { return runtimeImageOutputs(new Set(capabilities.writable)); },
   async convert(file, output, settings) {
     const config = outputFor(output); if (!config) throw new Error('Unsupported output format');
-    const inputFormat = normalizeImageExtension(extensionFromFilename(file.name));
+    const detected = await detectImage(file);
+    const inputFormat = normalizeImageExtension(detected?.extension ?? extensionFromFilename(file.name));
     const qualityControl = config.controls?.find((control): control is RangeOutputControl => control.id === 'quality' && control.type === 'range');
     const requestedQuality = Number(settings.quality ?? qualityControl?.defaultValue ?? 90);
     const quality = Number.isFinite(requestedQuality)
