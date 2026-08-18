@@ -95,6 +95,93 @@ function dimensions(bytes: Uint8Array, extension: string): { width: number; heig
   return undefined;
 }
 
+function skipSubBlocks(bytes: Uint8Array, start: number): number {
+  let offset = start;
+  while (offset < bytes.length) {
+    const length = bytes[offset] ?? 0;
+    offset += 1;
+    if (length === 0) break;
+    offset += length;
+  }
+  return offset;
+}
+
+function gifFrameCount(bytes: Uint8Array): number | undefined {
+  if (bytes.length < 13 || !ascii(bytes, 0, 3).startsWith('GIF')) return undefined;
+  let offset = 13;
+  const packed = bytes[10] ?? 0;
+  if (packed & 0x80) offset += 3 * (2 ** ((packed & 0x07) + 1));
+  let frames = 0;
+  while (offset < bytes.length) {
+    const marker = bytes[offset++] ?? 0;
+    if (marker === 0x3b) break;
+    if (marker === 0x21) {
+      offset += 1; // extension label
+      offset = skipSubBlocks(bytes, offset);
+      continue;
+    }
+    if (marker === 0x2c) {
+      frames += 1;
+      if (offset + 9 > bytes.length) break;
+      const imagePacked = bytes[offset + 8] ?? 0;
+      offset += 9;
+      if (imagePacked & 0x80) offset += 3 * (2 ** ((imagePacked & 0x07) + 1));
+      offset += 1; // LZW minimum code size
+      offset = skipSubBlocks(bytes, offset);
+      continue;
+    }
+    break;
+  }
+  return frames || undefined;
+}
+
+function webpFrameCount(bytes: Uint8Array): number | undefined {
+  if (bytes.length < 20 || ascii(bytes, 0, 4) !== 'RIFF' || ascii(bytes, 8, 4) !== 'WEBP') return undefined;
+  let offset = 12;
+  let frames = 0;
+  while (offset + 8 <= bytes.length) {
+    const chunk = ascii(bytes, offset, 4);
+    const length = u32le(bytes, offset + 4);
+    if (chunk === 'ANMF') frames += 1;
+    offset += 8 + length + (length & 1);
+  }
+  return frames || undefined;
+}
+
+function tiffPageCount(bytes: Uint8Array): number | undefined {
+  if (bytes.length < 8) return undefined;
+  const little = starts(bytes, [0x49,0x49,0x2a,0x00]);
+  const big = starts(bytes, [0x4d,0x4d,0x00,0x2a]);
+  if (!little && !big) return undefined;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const read16 = (offset: number) => view.getUint16(offset, little);
+  const read32 = (offset: number) => view.getUint32(offset, little);
+  let offset = read32(4);
+  let pages = 0;
+  const visited = new Set<number>();
+  while (offset > 0 && offset + 2 <= bytes.length && !visited.has(offset) && pages < 100) {
+    visited.add(offset);
+    const entries = read16(offset);
+    const nextOffsetPosition = offset + 2 + entries * 12;
+    if (nextOffsetPosition + 4 > bytes.length) break;
+    pages += 1;
+    offset = read32(nextOffsetPosition);
+  }
+  return pages || undefined;
+}
+
+function withContainerInfo(result: DetectedFile, bytes: Uint8Array): DetectedFile {
+  const extension = normalizeImageExtension(result.extension);
+  let frameCount: number | undefined;
+  let frameKind: DetectedFile['frameKind'];
+  if (extension === 'gif') { frameCount = gifFrameCount(bytes); frameKind = 'frames'; }
+  else if (extension === 'webp') { frameCount = webpFrameCount(bytes); frameKind = 'frames'; }
+  else if (extension === 'tiff') { frameCount = tiffPageCount(bytes); frameKind = 'pages'; }
+  else if (extension === 'ico' && bytes.length >= 6) { frameCount = u16le(bytes, 4); frameKind = 'sizes'; }
+  if (!frameCount || frameCount <= 1 || !frameKind) return result;
+  return { ...result, frameCount, frameKind, label: `${result.label} · ${frameCount} ${frameKind}` };
+}
+
 const LABELS: Record<string, string> = {
   jpg: 'JPEG image', png: 'PNG image', webp: 'WebP image', avif: 'AVIF image', heic: 'HEIC/HEIF image', gif: 'GIF image',
   tiff: 'TIFF image', bmp: 'BMP image', ico: 'ICO image', jxl: 'JPEG XL image', jp2: 'JPEG 2000 image', svg: 'SVG image',
@@ -102,12 +189,14 @@ const LABELS: Record<string, string> = {
 };
 const RAW_EXTENSIONS = new Set(['3fr','arw','cr2','cr3','crw','dcr','dng','erf','fff','iiq','k25','kdc','mef','mos','mrw','nef','nrw','orf','pef','raf','raw','rw2','rwl','sr2','srf','srw','x3f']);
 
-function withDimensions(result: DetectedFile, bytes: Uint8Array): DetectedFile {
+function enrich(result: DetectedFile, bytes: Uint8Array): DetectedFile {
+  let enriched = withContainerInfo(result, bytes);
   const size = dimensions(bytes, normalizeImageExtension(result.extension));
-  if (!size || size.width <= 0 || size.height <= 0) return result;
+  if (!size || size.width <= 0 || size.height <= 0) return enriched;
   const estimatedDecodedBytes = size.width * size.height * 4;
-  if (!Number.isSafeInteger(estimatedDecodedBytes)) return result;
-  return { ...result, ...size, estimatedDecodedBytes };
+  if (!Number.isSafeInteger(estimatedDecodedBytes)) return enriched;
+  enriched = { ...enriched, ...size, estimatedDecodedBytes };
+  return enriched;
 }
 
 export async function detectImage(file: File): Promise<DetectedFile | null> {
@@ -115,12 +204,12 @@ export async function detectImage(file: File): Promise<DetectedFile | null> {
   const bytes = new Uint8Array(await file.slice(0, 64 * 1024).arrayBuffer());
   const signature = sniff(bytes);
   if (RAW_EXTENSIONS.has(extension) && (signature === 'tiff' || signature === 'cr3')) {
-    return withDimensions({ extension, label: `${extension.toUpperCase()} RAW image`, confidence: 'signature+extension' }, bytes);
+    return enrich({ extension, label: `${extension.toUpperCase()} RAW image`, confidence: 'signature+extension' }, bytes);
   }
   if (!signature) return detectLegacyImage(file, extension, bytes);
   const normalizedSignature = normalizeImageExtension(signature);
   const compatible = extension === normalizedSignature || (extension === 'heic' && normalizedSignature === 'heic') || (extension === 'tiff' && normalizedSignature === 'tiff');
   if (!compatible && extension) return null;
   if (normalizedSignature === 'ico' && !(await validateIcoFile(file, bytes))) return null;
-  return withDimensions({ extension: normalizedSignature, label: LABELS[normalizedSignature] ?? `${normalizedSignature.toUpperCase()} image`, confidence: extension ? 'signature+extension' : 'signature' }, bytes);
+  return enrich({ extension: normalizedSignature, label: LABELS[normalizedSignature] ?? `${normalizedSignature.toUpperCase()} image`, confidence: extension ? 'signature+extension' : 'signature' }, bytes);
 }

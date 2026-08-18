@@ -31,9 +31,14 @@ export const imageEngine: EngineAdapter = {
   initialize() { capabilitiesPromise ??= client.capabilities(); return capabilitiesPromise; },
   supportsInput(extension, capabilities) { return runtimeSupportsImageInput(normalizeImageExtension(extension), new Set(capabilities.readable)); },
   availableOutputs(capabilities) { return runtimeImageOutputs(new Set(capabilities.writable)); },
-  async convert(file, output, quality) {
+  async convert(file, output, settings) {
     const config = outputFor(output); if (!config) throw new Error('Unsupported output format');
     const inputFormat = normalizeImageExtension(extensionFromFilename(file.name));
+    const qualityControl = config.controls?.find((control) => control.id === 'quality' && control.type === 'range');
+    const requestedQuality = Number(settings.quality ?? qualityControl?.defaultValue ?? 90);
+    const quality = Number.isFinite(requestedQuality)
+      ? Math.min(qualityControl?.max ?? 100, Math.max(qualityControl?.min ?? 1, requestedQuality))
+      : qualityControl?.defaultValue ?? 90;
     const converted = await client.convert(await file.arrayBuffer(), inputFormat, output, quality);
     return { blob: new Blob([converted], { type: config.mime }), filename: replaceExtension(file.name, config.extension), output } satisfies ConversionArtifact;
   },

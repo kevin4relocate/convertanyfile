@@ -17,7 +17,7 @@ export const GENERAL_FAQ = [
   },
   {
     question: 'What happens if one file fails?',
-    answer: 'A failed file does not stop the rest of the batch. You can retry that failed file while keeping successful results.',
+    answer: 'A failed file does not stop the rest of the batch. Retry is only offered for failures that may recover; deterministic invalid or unsupported files are not placed in a pointless retry loop.',
   },
   {
     question: 'Can I cancel a conversion?',
@@ -44,23 +44,35 @@ export const GENERAL_FAQ = [
 export const IMAGE_FAQ = [
   {
     question: 'Which image formats can I add?',
-    answer: 'The converter recognizes common formats such as JPG, PNG, WebP, HEIC, AVIF, GIF, TIFF, BMP, ICO and additional image or camera formats. Runtime codec support is verified before conversion.',
+    answer: 'The image engine recognizes 57 filename extensions across common raster, specialist, legacy, and camera RAW families. A file still has to pass signature validation and runtime decoder checks before it is treated as supported.',
+  },
+  {
+    question: 'Which image formats can I convert to?',
+    answer: 'The production output catalog contains 16 formats: JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO, JXL, JP2, HDR, EXR, PCX, TGA, QOI, and PNM. The browser only shows a format when the packaged ImageMagick runtime also reports that encoder as writable.',
+  },
+  {
+    question: 'Why can I open HEIC but not choose HEIC as an output?',
+    answer: 'Input and output capability are separate. The current packaged WASM runtime can expose HEIC/HEIF decoding for compatible source files, but its runtime writer scan does not expose a HEIC encoder. ConvertAnyFile therefore keeps HEIC as an input family and does not advertise HEIC output in this release.',
   },
   {
     question: 'How many images can I convert in one batch?',
-    answer: 'The current safety policy allows up to 50 files, up to 75 MB per file, and up to 300 MB total input per batch.',
+    answer: 'The current safety policy allows up to 50 files, up to 75 MB per file, and up to 300 MB total input per batch. You can also drag or add more files after the initial batch as long as the limits are not exceeded.',
   },
   {
-    question: 'Why does JPG, WebP, or AVIF show a quality control?',
-    answer: 'Lossy encoders expose a quality setting because output quality and file size can be traded against each other. Formats without a comparable quality control do not show the slider.',
+    question: 'Why do some outputs show a quality control?',
+    answer: 'Lossy outputs such as JPG, WebP, AVIF, JXL, and JP2 can use an encoder quality setting. Formats without a comparable quality control do not show the slider.',
   },
   {
     question: 'Does converting JPG to PNG restore lost detail?',
     answer: 'No. Changing the container format cannot restore image detail already lost through earlier JPEG compression.',
   },
   {
-    question: 'What happens to PNG transparency when converting to JPG?',
-    answer: 'JPG has no true alpha transparency channel. Transparent source pixels must be flattened or otherwise represented without alpha by the encoder workflow, so transparency should not be expected to survive as transparency.',
+    question: 'What happens to transparency when converting to an opaque format?',
+    answer: 'Outputs without a useful alpha channel use a deterministic white background instead of leaving transparent pixels undefined. JPG is the most common example.',
+  },
+  {
+    question: 'What happens to animated, multi-page, layered, or multi-size files?',
+    answer: 'The current product creates one output image per input file. Animated GIF/WebP, multi-page TIFF, layered sources, and multi-size icon containers are therefore flattened to a single image representation. ICO inputs use the best available embedded icon frame when possible.',
   },
   {
     question: 'Can I convert HEIC photos to JPG?',
@@ -68,15 +80,15 @@ export const IMAGE_FAQ = [
   },
   {
     question: 'Can a RAW camera file fail even if its extension is recognized?',
-    answer: 'Yes. RAW families vary by camera and decoder requirements. Recognition of the extension does not guarantee that the packaged browser runtime can decode every variant.',
+    answer: 'Yes. RAW families vary by camera and decoder requirements. Recognition of the extension does not guarantee that the packaged browser runtime can decode every variant, so RAW remains a best-effort input path until more real-camera fixtures are certified.',
   },
   {
     question: 'Why can a small image file still use a lot of browser memory?',
-    answer: 'Compressed file size and decoded pixel memory are different. A very high-resolution image can expand to hundreds of megabytes after decoding even when the source file is only a few megabytes on disk.',
+    answer: 'Compressed file size and decoded pixel memory are different. A very high-resolution image can expand to hundreds of megabytes after decoding even when the source file is only a few megabytes on disk. The image engine rejects extreme dimensions or estimated decoded memory before conversion.',
   },
   {
     question: 'Can I download all successful images together?',
-    answer: 'Yes. Successful batch results can be packaged into a ZIP while failed files remain available for retry.',
+    answer: 'Yes. Successful batch results can be packaged into a ZIP while failed files remain isolated from the rest of the batch.',
   },
   {
     question: 'Does converting an image make it higher resolution?',

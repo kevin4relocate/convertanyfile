@@ -7,12 +7,28 @@ export interface BatchPolicy {
   maxFileBytes: number;
 }
 
+export type ConversionSettingValue = string | number | boolean;
+export type ConversionSettings = Record<string, ConversionSettingValue>;
+
+export interface RangeOutputControl {
+  id: string;
+  type: 'range';
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  defaultValue: number;
+}
+
+export type OutputControl = RangeOutputControl;
+
 export interface OutputOption {
   id: string;
   label: string;
   extension: string;
   mime: string;
-  supportsQuality: boolean;
+  group?: string;
+  controls?: readonly OutputControl[];
 }
 
 export interface DetectedFile {
@@ -22,6 +38,8 @@ export interface DetectedFile {
   width?: number;
   height?: number;
   estimatedDecodedBytes?: number;
+  frameCount?: number;
+  frameKind?: 'frames' | 'pages' | 'sizes';
 }
 
 export interface ConversionArtifact {
@@ -44,7 +62,7 @@ export interface EngineAdapter {
   initialize(): Promise<EngineCapabilities>;
   supportsInput(extension: string, capabilities: EngineCapabilities): boolean;
   availableOutputs(capabilities: EngineCapabilities): OutputOption[];
-  convert(file: File, output: string, quality: number): Promise<ConversionArtifact>;
+  convert(file: File, output: string, settings: ConversionSettings): Promise<ConversionArtifact>;
   reset(reason?: string): void;
 }
 
