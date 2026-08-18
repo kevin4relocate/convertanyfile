@@ -21,7 +21,6 @@ export const IMAGE_OUTPUTS: readonly OutputOption[] = [
   { id: 'png', label: 'PNG', extension: 'png', mime: 'image/png', group: POPULAR },
   { id: 'webp', label: 'WebP', extension: 'webp', mime: 'image/webp', group: POPULAR, controls: LOSSY_CONTROLS },
   { id: 'avif', label: 'AVIF', extension: 'avif', mime: 'image/avif', group: POPULAR, controls: LOSSY_CONTROLS },
-  { id: 'heic', label: 'HEIC', extension: 'heic', mime: 'image/heic', group: POPULAR, controls: LOSSY_CONTROLS },
   { id: 'tiff', label: 'TIFF', extension: 'tiff', mime: 'image/tiff', group: POPULAR },
   { id: 'gif', label: 'GIF', extension: 'gif', mime: 'image/gif', group: POPULAR },
   { id: 'bmp', label: 'BMP', extension: 'bmp', mime: 'image/bmp', group: POPULAR },
