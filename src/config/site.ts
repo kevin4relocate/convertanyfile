@@ -4,7 +4,7 @@ export const SITE = {
   origin: 'https://convertanyfile.net',
   tagline: 'Fast, private file conversion in your browser.',
   description:
-    'Convert supported files directly in your browser. Start with image conversion today, with a platform designed for more local file types over time.',
+    'Convert supported image and structured-data files directly in your browser with local processing, batch workflows, and no account required.',
 } as const;
 
 export const NAV_ITEMS = [
@@ -20,9 +20,10 @@ export const FOOTER_GROUPS = [
     title: 'Convert',
     links: [
       { label: 'Image Converter', href: '/image-converter/' },
+      { label: 'Data Converter', href: '/data-converter/' },
       { label: 'HEIC to JPG', href: '/heic-to-jpg/' },
-      { label: 'WebP to PNG', href: '/webp-to-png/' },
-      { label: 'PNG to WebP', href: '/png-to-webp/' },
+      { label: 'CSV to JSON', href: '/csv-to-json/' },
+      { label: 'JSON to CSV', href: '/json-to-csv/' },
     ],
   },
   {
@@ -52,10 +53,11 @@ export const PLATFORM_CATEGORIES = [
     href: '/image-converter/',
   },
   {
-    id: 'audio',
-    label: 'Audio',
-    status: 'planned',
-    description: 'A browser-first audio converter is planned for a later release.',
+    id: 'data',
+    label: 'Data',
+    status: 'live',
+    description: 'CSV, TSV, JSON, JSONL and NDJSON conversion in your browser.',
+    href: '/data-converter/',
   },
   {
     id: 'archive',
@@ -64,9 +66,9 @@ export const PLATFORM_CATEGORIES = [
     description: 'ZIP, RAR, 7Z and archive workflows are planned for a later release.',
   },
   {
-    id: 'data',
-    label: 'Data',
+    id: 'audio',
+    label: 'Audio',
     status: 'planned',
-    description: 'CSV, JSON, XML and spreadsheet conversion is planned for a later release.',
+    description: 'A browser-first audio converter is planned for a later release.',
   },
 ] as const;

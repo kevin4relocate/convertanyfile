@@ -1,4 +1,4 @@
-import type { ConversionArtifact, EngineAdapter, EngineCapabilities } from '../../platform/converter/types';
+import type { ConversionArtifact, EngineAdapter, EngineCapabilities, RangeOutputControl } from '../../platform/converter/types';
 import { detectImage } from './detect';
 import { extensionFromFilename, IMAGE_INPUT_EXTENSIONS, IMAGE_OUTPUTS, normalizeImageExtension, runtimeImageOutputs, runtimeSupportsImageInput } from './formats';
 import { ImageWorkerClient } from './worker-client';
@@ -34,7 +34,7 @@ export const imageEngine: EngineAdapter = {
   async convert(file, output, settings) {
     const config = outputFor(output); if (!config) throw new Error('Unsupported output format');
     const inputFormat = normalizeImageExtension(extensionFromFilename(file.name));
-    const qualityControl = config.controls?.find((control) => control.id === 'quality' && control.type === 'range');
+    const qualityControl = config.controls?.find((control): control is RangeOutputControl => control.id === 'quality' && control.type === 'range');
     const requestedQuality = Number(settings.quality ?? qualityControl?.defaultValue ?? 90);
     const quality = Number.isFinite(requestedQuality)
       ? Math.min(qualityControl?.max ?? 100, Math.max(qualityControl?.min ?? 1, requestedQuality))

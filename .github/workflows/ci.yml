@@ -19,6 +19,6 @@ jobs:
       - run: npm run check
       - run: npm run build
       - name: Install browsers
-        run: npx playwright install --with-deps chromium firefox webkit
+        run: npx playwright install --with-deps chromium firefox webkit >/dev/null 2>&1
       - name: Browser smoke tests
         run: npm run test:e2e

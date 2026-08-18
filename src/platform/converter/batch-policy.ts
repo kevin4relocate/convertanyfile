@@ -8,6 +8,12 @@ export const IMAGE_BATCH_POLICY: BatchPolicy = {
   maxFileBytes: 75 * MIB,
 };
 
+export const DATA_BATCH_POLICY: BatchPolicy = {
+  maxFiles: 50,
+  maxTotalBytes: 100 * MIB,
+  maxFileBytes: 20 * MIB,
+};
+
 export interface AdmissionResult {
   accepted: File[];
   rejected: Array<{ file: File; reason: 'file-size' | 'file-count' | 'total-size' }>;
