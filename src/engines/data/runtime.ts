@@ -3,13 +3,13 @@ import { decodeUtf8, validateDataSample, type DataFormat } from './codec';
 import { DATA_INPUT_EXTENSIONS, DATA_OUTPUTS, dataLabel, extensionFromFilename, normalizeDataExtension } from './formats';
 import { DataWorkerClient } from './worker-client';
 
-const CAPABILITIES: EngineCapabilities = {
+const CAPABILITIES: Omit<EngineCapabilities, 'version'> = {
   readable: ['csv', 'tsv', 'json', 'jsonl'],
   writable: ['csv', 'tsv', 'json', 'jsonl'],
-  version: 'browser-text-v1',
 };
 const SAMPLE_BYTES = 64 * 1024;
 let client = new DataWorkerClient();
+let capabilitiesPromise: Promise<EngineCapabilities> | undefined;
 
 function outputFor(id: string) { return DATA_OUTPUTS.find((item) => item.id === id); }
 function replaceExtension(filename: string, extension: string): string {
@@ -57,7 +57,10 @@ export const dataEngine: EngineAdapter = {
     if (!validSample) return null;
     return { extension, label: dataLabel(extension), confidence: 'extension+content' };
   },
-  async initialize() { return CAPABILITIES; },
+  initialize() {
+    capabilitiesPromise ??= client.ready().then((version) => ({ ...CAPABILITIES, version }));
+    return capabilitiesPromise;
+  },
   supportsInput(extension, capabilities) {
     const normalized = normalizeDataExtension(extension);
     return Boolean(normalized && capabilities.readable.includes(normalized));
@@ -79,5 +82,6 @@ export const dataEngine: EngineAdapter = {
   reset(reason) {
     client.reset(reason);
     client = new DataWorkerClient();
+    capabilitiesPromise = undefined;
   },
 };
