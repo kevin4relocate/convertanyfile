@@ -121,32 +121,37 @@ test('every dedicated live converter route uses the shared compact converter pag
   expect(converterPages).toBeGreaterThan(35);
 });
 
-test('desktop homepage keeps hero compact, drop zone above fold, and Converters anchor at the section heading', async ({ page }, testInfo) => {
+test('desktop homepage keeps universal converter compact, active picker above fold, and Converters anchor at the section heading', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop layout regression');
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
 
   const heroTitle = page.locator('.hero h1');
-  const converter = page.locator('.hero-converter .converter-card');
-  const dropZone = page.locator('.hero-converter [data-role="drop-zone"]');
-  const choose = page.getByText('Choose files', { exact: true });
-  const privacyHint = page.getByText('Files stay on your device during conversion', { exact: true });
+  const universal = page.locator('[data-home-converter]');
+  const imagePanel = page.locator('[data-home-panel="image"]');
+  const converter = imagePanel.locator('.converter-card');
+  const dropZone = imagePanel.locator('[data-role="drop-zone"]');
+  const choose = imagePanel.getByText('Choose files', { exact: true });
+  const privacyHint = imagePanel.getByText('Files stay on your device during conversion', { exact: true });
 
   await expect(heroTitle).toHaveText('Convert files fast. Keep them private.');
   const heroTitleBox = await heroTitle.boundingBox();
   expect(heroTitleBox).not.toBeNull();
   expect(heroTitleBox!.height).toBeLessThan(70);
 
+  await expect(universal).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Images' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tab', { name: 'Data' })).toHaveAttribute('aria-selected', 'false');
   await expect(converter).toBeVisible();
   await expect(dropZone).toBeVisible();
   await expect(choose).toBeVisible();
   await expect(privacyHint).toBeVisible();
 
-  const converterBox = await converter.boundingBox();
+  const universalBox = await universal.boundingBox();
   const dropBox = await dropZone.boundingBox();
-  expect(converterBox).not.toBeNull();
+  expect(universalBox).not.toBeNull();
   expect(dropBox).not.toBeNull();
-  expect(converterBox!.y).toBeLessThan(400);
+  expect(universalBox!.y).toBeLessThan(400);
   expect(dropBox!.y + dropBox!.height).toBeLessThanOrEqual(900);
 
   await page.getByRole('link', { name: 'Converters', exact: true }).click();
@@ -289,7 +294,8 @@ test('mobile shell remains usable without horizontal overflow', async ({ page },
   await expect(page.getByRole('heading', { name: /Convert files fast/i })).toBeVisible();
   let dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
-  await expect(page.getByText('Choose files', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-home-panel="image"]').getByText('Choose files', { exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Data' })).toBeVisible();
 
   await page.goto('/data-converter/');
   dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
