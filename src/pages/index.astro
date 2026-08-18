@@ -16,6 +16,27 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'C
 <section class="closing-cta"><div class="site-container closing-card"><div><span class="section-kicker light-kicker">Available now</span><h2>Choose the converter that matches your file.</h2></div><a class="cta-button" href="/#converters">Browse converters →</a></div></section>
 </SiteLayout>
 
+<script>
+  const polishHomepageActionLabels = (): void => {
+    document.querySelectorAll<HTMLElement>('.converter-card--compact').forEach((root) => {
+      const sync = (): void => {
+        for (const role of ['convert-top', 'convert-sticky']) {
+          const button = root.querySelector<HTMLButtonElement>(`[data-role="${role}"]`);
+          if (!button) continue;
+          const match = button.textContent?.trim().match(/^Convert remaining (\d+)$/i);
+          if (!match) continue;
+          const count = Number(match[1]);
+          button.textContent = `Convert ${count} ${count === 1 ? 'File' : 'Files'}`;
+        }
+      };
+      const source = root.querySelector<HTMLElement>('[data-role="convert-all"]');
+      if (source) new MutationObserver(sync).observe(source, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'disabled'] });
+      sync();
+    });
+  };
+  polishHomepageActionLabels();
+</script>
+
 <style>
   .hero { padding-top: 22px; padding-bottom: 20px; }
   .hero h1 { margin: 0 0 7px; font-size: clamp(38px, 4.65vw, 58px); }
@@ -23,11 +44,42 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'C
   .hero-trust { margin-top: 8px; gap: 15px; }
   .hero-converter { margin-top: 14px; }
   :global(.converter-card--compact .settings-convert-button) {
-    min-height: 38px;
-    min-width: 148px;
-    padding: 7px 14px;
+    width: auto !important;
+    min-width: 118px !important;
+    max-width: 160px !important;
+    min-height: 40px;
+    padding: 0 16px !important;
     border-radius: 10px;
     font-size: 12px;
+  }
+  :global(.converter-card--compact select) {
+    min-height: 40px;
+    padding: 0 34px 0 13px;
+    border: 1px solid #d9dbe4;
+    border-radius: 10px;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m5.5 7.5 4.5 4.5 4.5-4.5' stroke='%23575b68' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px 12px;
+    color: #252732;
+    appearance: none;
+    -webkit-appearance: none;
+    box-shadow: 0 1px 2px rgba(24, 26, 38, .025);
+  }
+  :global(.converter-card--compact select:hover:not(:disabled)) {
+    border-color: #c7cad5;
+  }
+  :global(.converter-card--compact select:focus-visible) {
+    outline: 2px solid rgba(99, 91, 255, .2);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  :global(.converter-card--compact .output-field select) {
+    min-width: 104px;
+  }
+  :global(.converter-card--compact .setting-field select) {
+    min-width: 94px;
   }
   :global(.converter-card--compact .conversion-policy-note) {
     margin-top: 10px;
@@ -89,8 +141,15 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'C
     .hero-trust { margin-top: 7px; }
     .hero-converter { margin-top: 12px; }
     :global(.converter-card--compact .settings-convert-button) {
+      width: 100% !important;
+      max-width: none !important;
       min-height: 44px;
       font-size: 13px;
+    }
+    :global(.converter-card--compact select) {
+      min-height: 42px;
+      background-position: right 13px center;
+      padding-right: 36px;
     }
     :global(.converter-card--compact .batch-action-bar) {
       align-items: stretch;
