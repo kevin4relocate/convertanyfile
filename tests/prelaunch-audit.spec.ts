@@ -141,7 +141,7 @@ test('homepage cannot hide an active conversion by switching categories', async 
     buffer: Buffer.from('id,name\n1,Alice'),
   });
   await expect(app.locator('[data-role="output-format"]')).toBeEnabled();
-  await delayFullFileReads(page, 1200);
+  await delayFullFileReads(page, 5000);
   await app.locator('[data-role="convert-all"]').click();
   await expect(app.locator('[data-role="cancel"]')).toBeVisible();
   await expect(imageTab).toHaveAttribute('aria-disabled', 'true');
