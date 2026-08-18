@@ -37,7 +37,7 @@ test('batch-limit feedback stays concise and the workspace drop overlay always c
   await expect(workspace).not.toHaveClass(/is-dragging/);
   const notice = app.locator('[data-role="notice"]');
   await expect(notice).toBeVisible();
-  await expect(notice).toHaveText('50-file limit reached — 3 files not added.');
+  await expect(notice).toHaveText('3 files skipped — 50-file limit reached.');
   await expect(notice).not.toContainText('overflow-');
 
   const noticeBox = await notice.boundingBox();
