@@ -19,6 +19,11 @@ function replaceExtension(filename: string, extension: string): string {
 
 export const imageEngine: EngineAdapter = {
   id: 'image', acceptedExtensions: IMAGE_INPUT_EXTENSIONS, outputs: IMAGE_OUTPUTS,
+  acceptedExtensionsFor(requiredInput) {
+    if (!requiredInput) return IMAGE_INPUT_EXTENSIONS;
+    const normalized = normalizeImageExtension(requiredInput);
+    return IMAGE_INPUT_EXTENSIONS.filter((extension) => normalizeImageExtension(extension) === normalized);
+  },
   async validate(file, requiredInput) {
     const detected = await detectImage(file);
     if (!detected) return null;
