@@ -30,6 +30,7 @@ The first Data release intentionally targets UTF-8 structured text. It does not 
 - Nested plain JSON objects flatten with dot notation for CSV/TSV output.
 - Arrays and complex values remain JSON text inside tabular cells.
 - JSONL/NDJSON uses one complete JSON value per non-empty line.
+- JSON numbers that would silently change through browser numeric precision are rejected; exact precision-sensitive values should be strings.
 - CSV/TSV output supports header on/off, LF/CRLF, and optional UTF-8 BOM.
 - JSON output supports pretty print on/off.
 
@@ -39,9 +40,12 @@ The first Data release intentionally targets UTF-8 structured text. It does not 
 - 20 MB maximum per file.
 - 100 MB maximum input per batch.
 - Parsing/serialization runs in a browser worker.
+- Lightweight 64 KB admission sampling must not reject a valid file merely because the sample ends inside a UTF-8 character or a long JSONL record.
+- Full worker parsing remains authoritative after lightweight admission.
 - One failed file does not stop the batch.
-- Deterministic parse errors are permanent and do not show Retry.
+- Deterministic parse/precision errors are permanent and do not show Retry.
 - Worker crash/timeout remains recoverable through the shared engine lifecycle.
+- Cancel remains authoritative even when it races with source-file reading or worker completion.
 
 ## Shared-platform proof
 
@@ -67,9 +71,14 @@ Data-specific settings must be declared by the engine through generic output con
 - [ ] CSV → JSON quoted-comma / escaped-quote / embedded-newline regression
 - [ ] JSON → CSV nested-object + array-value regression
 - [ ] NDJSON alias → JSON regression
+- [ ] >64 KB single-record JSONL admission and conversion regression
+- [ ] UTF-8 multibyte sample-boundary regression
+- [ ] JSON unsafe-integer and high-precision decimal rejection regressions
 - [ ] CSV output control byte regression for header / CRLF / BOM
 - [ ] deterministic malformed CSV failure has no Retry loop
+- [ ] cancellation race cannot produce a result after Cancel
 - [ ] multi-file Data batch reaches shared ZIP workflow
+- [ ] local conversion performs no source-file upload or external-origin request
 - [ ] all Data routes use the shared compact converter-page contract
 - [ ] generated sitemap, canonical, title, description, and internal-link tests stay green
 - [ ] Image Production RC regression suite stays green unchanged
