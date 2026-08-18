@@ -146,7 +146,7 @@ test('homepage cannot hide an active conversion by switching categories', async 
   await expect(app.locator('[data-role="cancel"]')).toBeVisible();
   await expect(imageTab).toHaveAttribute('aria-disabled', 'true');
 
-  await imageTab.click();
+  await imageTab.dispatchEvent('click');
   await expect(dataTab).toHaveAttribute('aria-selected', 'true');
   await expect(dataPanel).toBeVisible();
   await expect(imagePanel).toBeHidden();
