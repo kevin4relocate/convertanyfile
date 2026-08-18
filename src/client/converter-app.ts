@@ -3,7 +3,7 @@ import { downloadBlob } from '../platform/converter/download';
 import { loadEngine } from '../platform/converter/engine-registry';
 import { classifyConversionError } from '../platform/converter/errors';
 import { buildZip } from '../platform/converter/zip';
-import type { BatchPolicy, ConversionJob, EngineAdapter, EngineCapabilities, EngineId, OutputOption } from '../platform/converter/types';
+import type { BatchPolicy, ConversionJob, ConversionSettings, EngineAdapter, EngineCapabilities, EngineId, OutputOption, RangeOutputControl } from '../platform/converter/types';
 
 interface SessionState { total: number; index: number; activeName: string; }
 const formatBytes = (value: number): string => {
@@ -24,6 +24,8 @@ const formatSizeDelta = (inputBytes: number, outputBytes: number): string => {
   return ` · ${percent >= 1000 ? 'much larger' : `${percent}% larger`}`;
 };
 const escapeSelector = (value: string) => CSS.escape(value);
+const rangeControl = (output: OutputOption | undefined, id: string): RangeOutputControl | undefined =>
+  output?.controls?.find((control): control is RangeOutputControl => control.id === id && control.type === 'range');
 
 class ConverterController {
   private readonly root: HTMLElement;
@@ -90,6 +92,10 @@ class ConverterController {
     this.bindEvents(); this.render();
   }
 
+  private selectedOutput(): OutputOption | undefined {
+    return this.engine?.outputs.find((item) => item.id === this.outputSelect.value);
+  }
+
   private bindEvents(): void {
     const openPicker = () => { void this.ensureEngine(); this.fileInput.click(); };
     this.dropZone.addEventListener('click', openPicker);
@@ -113,7 +119,11 @@ class ConverterController {
     this.addMore.addEventListener('click', openPicker);
     this.clearAll.addEventListener('click', () => { if (!this.converting) { this.jobs = []; this.render(); } });
     this.outputSelect.addEventListener('change', () => { this.resetResults(); this.render(); });
-    this.qualityInput.addEventListener('input', () => { this.qualityLabel.textContent = `Quality ${this.qualityInput.value}`; this.resetResults(); this.render(); });
+    this.qualityInput.addEventListener('input', () => {
+      const control = rangeControl(this.selectedOutput(), 'quality');
+      this.qualityLabel.textContent = `${control?.label ?? 'Quality'} ${this.qualityInput.value}`;
+      this.resetResults(); this.render();
+    });
     this.convertButton.addEventListener('click', () => void this.convertPending());
     this.cancelButton.addEventListener('click', () => this.cancel());
     this.zipButton.addEventListener('click', () => void this.downloadZip());
@@ -198,18 +208,25 @@ class ConverterController {
     this.jobs = this.jobs.map((job) => ({ ...job, status: 'ready', error: undefined, errorCode: undefined, errorRetryable: undefined, result: undefined }));
   }
 
+  private settingsForSelectedOutput(): ConversionSettings {
+    const settings: ConversionSettings = {};
+    const quality = rangeControl(this.selectedOutput(), 'quality');
+    if (quality) settings[quality.id] = Number(this.qualityInput.value || quality.defaultValue);
+    return settings;
+  }
+
   private async convertPending(targets?: readonly ConversionJob[]): Promise<void> {
     if (this.converting || !this.jobs.length) return;
     await this.ensureEngine(); if (!this.engine || !this.capabilities || this.engineError) return;
     const candidates = targets ?? this.jobs;
     const pending = candidates.filter((job) => this.jobs.includes(job) && (job.status === 'ready' || (job.status === 'error' && job.errorRetryable !== false))); if (!pending.length) return;
     this.converting = true; this.cancelRequested = false; this.session = { total: pending.length, index: 0, activeName: '' };
-    const output = this.outputSelect.value; const quality = Number(this.qualityInput.value); this.render();
+    const output = this.outputSelect.value; const settings = this.settingsForSelectedOutput(); this.render();
     for (let index = 0; index < pending.length; index += 1) {
       if (this.cancelRequested) break;
       const job = pending[index]!; this.session = { total: pending.length, index: index + 1, activeName: job.file.name };
       job.status = 'converting'; job.error = undefined; job.errorCode = undefined; job.errorRetryable = undefined; job.result = undefined; this.render(); this.scrollActiveJobIntoView(job.id);
-      try { job.result = await this.engine.convert(job.file, output, quality); job.status = 'success'; }
+      try { job.result = await this.engine.convert(job.file, output, settings); job.status = 'success'; }
       catch (error) {
         if (this.cancelRequested) { job.status = 'ready'; job.error = undefined; job.errorCode = undefined; job.errorRetryable = undefined; }
         else {
@@ -251,8 +268,17 @@ class ConverterController {
     const pending = this.jobs.filter((job) => job.status === 'ready' || (job.status === 'error' && job.errorRetryable !== false)).length;
     this.batchSummary.textContent = `${this.jobs.length} ${this.jobs.length === 1 ? 'file' : 'files'} · ${formatBytes(inputBytes)}`;
     this.fileList.replaceChildren(...this.jobs.map((job) => this.renderJob(job)));
-    this.addMore.disabled = this.converting; this.clearAll.disabled = this.converting; this.outputSelect.disabled = this.converting || !this.capabilities; this.qualityInput.disabled = this.converting || !this.capabilities;
-    const output = this.engine?.outputs.find((item) => item.id === this.outputSelect.value); this.qualityField.hidden = !output?.supportsQuality; this.qualityLabel.textContent = `Quality ${this.qualityInput.value}`;
+    this.addMore.disabled = this.converting; this.clearAll.disabled = this.converting; this.outputSelect.disabled = this.converting || !this.capabilities;
+    const output = this.selectedOutput();
+    const quality = rangeControl(output, 'quality');
+    this.qualityField.hidden = !quality;
+    this.qualityInput.disabled = this.converting || !this.capabilities || !quality;
+    if (quality) {
+      this.qualityInput.min = String(quality.min); this.qualityInput.max = String(quality.max); this.qualityInput.step = String(quality.step);
+      const current = Number(this.qualityInput.value);
+      if (!Number.isFinite(current) || current < quality.min || current > quality.max) this.qualityInput.value = String(quality.defaultValue);
+      this.qualityLabel.textContent = `${quality.label} ${this.qualityInput.value}`;
+    }
     for (const button of this.quickOutputsWrap.querySelectorAll<HTMLButtonElement>('.quick-output')) { button.disabled = this.converting; button.classList.toggle('is-active', button.dataset.output === this.outputSelect.value); }
     this.progressWrap.hidden = !this.converting;
     if (this.converting) {
