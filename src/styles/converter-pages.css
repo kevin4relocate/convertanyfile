@@ -47,6 +47,13 @@
   margin-top: 12px;
 }
 
+.conversion-policy-note {
+  margin: 10px 2px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 /*
  * The compact shell is the default visual density for every converter page.
  * These rules are shared with the homepage compact shell rather than copied
@@ -114,5 +121,9 @@
 
   .converter-page-tool .converter-card--compact .drop-zone {
     min-height: 250px;
+  }
+
+  .conversion-policy-note {
+    font-size: 11px;
   }
 }
