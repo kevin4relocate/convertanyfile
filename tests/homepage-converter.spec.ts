@@ -98,8 +98,20 @@ test('homepage keeps the primary convert action visible near settings and uses a
   });
 
   const topConvert = dataPanel.locator('[data-role="convert-top"]');
+  const output = dataPanel.locator('[data-role="output-format"]');
   await expect(topConvert).toBeVisible();
   await expect(topConvert).toBeEnabled();
-  await expect(topConvert).toContainText('Convert 1 File');
-  await expect(dataPanel.locator('.settings-card')).toContainText('Convert 1 File');
+  await expect(topConvert).toHaveText('Convert 1 File');
+  await expect(dataPanel.locator('[data-role="workspace-label"]')).toHaveText('Ready to convert');
+
+  const selectStyle = await output.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { backgroundImage: style.backgroundImage, paddingRight: Number.parseFloat(style.paddingRight) };
+  });
+  expect(selectStyle.backgroundImage).not.toBe('none');
+  expect(selectStyle.paddingRight).toBeGreaterThanOrEqual(34);
+
+  await topConvert.click();
+  await expect(dataPanel.locator('[data-role="result-summary"]')).toContainText('1/1 converted');
+  await expect(dataPanel.locator('[data-role="workspace-label"]')).toHaveText('Conversion complete');
 });
