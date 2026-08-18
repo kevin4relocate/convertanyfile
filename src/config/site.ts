@@ -49,7 +49,7 @@ export const PLATFORM_CATEGORIES = [
     id: 'image',
     label: 'Images',
     status: 'live',
-    description: 'JPG, PNG, WebP, HEIC, AVIF, TIFF, RAW and more.',
+    description: 'JPG, PNG, WebP, HEIC, AVIF, TIFF and more.',
     href: '/image-converter/',
   },
   {
@@ -58,17 +58,5 @@ export const PLATFORM_CATEGORIES = [
     status: 'live',
     description: 'CSV, TSV, JSON, JSONL and NDJSON conversion in your browser.',
     href: '/data-converter/',
-  },
-  {
-    id: 'archive',
-    label: 'Archives',
-    status: 'planned',
-    description: 'ZIP, RAR, 7Z and archive workflows are planned for a later release.',
-  },
-  {
-    id: 'audio',
-    label: 'Audio',
-    status: 'planned',
-    description: 'A browser-first audio converter is planned for a later release.',
   },
 ] as const;
