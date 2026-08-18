@@ -93,6 +93,23 @@ function rowsToTable(rows: string[][]): { rows: Row[]; columns: string[] } {
   return { rows: records, columns };
 }
 
+function canonicalJsonNumber(raw: string): string | null {
+  const match = raw.match(/^(-?)(\d+)(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+  if (!match) return null;
+  const fraction = match[3] ?? '';
+  const exponentPart = Number(match[4] ?? '0');
+  if (!Number.isSafeInteger(exponentPart)) return null;
+
+  let exponent = exponentPart - fraction.length;
+  let digits = `${match[2] ?? ''}${fraction}`.replace(/^0+/, '');
+  if (!digits) return '0';
+  while (digits.endsWith('0')) {
+    digits = digits.slice(0, -1);
+    exponent += 1;
+  }
+  return `${match[1] === '-' ? '-' : ''}${digits}e${exponent}`;
+}
+
 function assertSafeJsonNumbers(text: string): void {
   let inString = false;
   let escaped = false;
@@ -122,12 +139,21 @@ function assertSafeJsonNumbers(text: string): void {
       if (text[cursor] === '+' || text[cursor] === '-') cursor += 1;
       while (cursor < text.length && text[cursor]! >= '0' && text[cursor]! <= '9') cursor += 1;
     }
+
     const raw = text.slice(index, cursor);
     const numeric = Number(raw);
-    if (Number.isFinite(numeric) && Math.abs(numeric) <= Number.MAX_SAFE_INTEGER) { index = cursor - 1; continue; }
-    if (!Number.isNaN(numeric)) {
+    if (!Number.isNaN(numeric) && (!Number.isFinite(numeric) || Math.abs(numeric) > Number.MAX_SAFE_INTEGER)) {
       throw new Error('JSON contains a numeric value outside the safe browser range. Quote large identifiers or exact large integers as strings before conversion.');
     }
+
+    if (Number.isFinite(numeric)) {
+      const sourceValue = canonicalJsonNumber(raw);
+      const browserValue = canonicalJsonNumber(String(numeric));
+      if (sourceValue && browserValue && sourceValue !== browserValue) {
+        throw new Error('JSON contains a numeric value that would lose precision in the browser. Quote exact decimal or high-precision values as strings before conversion.');
+      }
+    }
+    index = cursor - 1;
   }
 }
 
@@ -139,7 +165,7 @@ function parseJsonl(text: string): unknown[] {
     if (!line) continue;
     try { assertSafeJsonNumbers(line); values.push(JSON.parse(line)); }
     catch (error) {
-      if (error instanceof Error && /safe browser range/i.test(error.message)) throw error;
+      if (error instanceof Error && /safe browser range|lose precision/i.test(error.message)) throw error;
       throw new Error(`Invalid JSONL at line ${index + 1}`);
     }
   }
@@ -214,7 +240,7 @@ function parseSource(text: string, inputFormat: DataFormat): StructuredSource {
   if (inputFormat === 'json') {
     try { assertSafeJsonNumbers(text); return { kind: 'json', value: JSON.parse(text) }; }
     catch (error) {
-      if (error instanceof Error && /safe browser range/i.test(error.message)) throw error;
+      if (error instanceof Error && /safe browser range|lose precision/i.test(error.message)) throw error;
       throw new Error('Invalid JSON input');
     }
   }
