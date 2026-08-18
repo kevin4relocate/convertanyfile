@@ -81,7 +81,7 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
   };
 
   const compactSkippedNotice = (root: HTMLElement, raw: string): string => {
-    const match = raw.match(/^(\d+) files? skipped(?::| because)/i);
+    const match = raw.match(/^(\d+) files? skipped:/i);
     if (!match) return raw;
     const count = Number(match[1]);
     const noun = count === 1 ? 'file' : 'files';
@@ -89,11 +89,10 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
     const maxFileBytes = Number(root.dataset.maxFileBytes || 0);
     const maxTotalBytes = Number(root.dataset.maxTotalBytes || 0);
 
-    if (raw.includes(`over the ${maxFiles}-file limit`)) return `${maxFiles}-file limit reached — ${count} ${noun} not added.`;
-    if (raw.includes('unsupported or invalid') || raw.includes('cannot read this format')) return `${count} ${noun} not added — unsupported or invalid format.`;
-    if (raw.includes('per file') && maxFileBytes > 0) return `${count} ${noun} not added — max ${prettyLimit(maxFileBytes)} per file.`;
-    if (raw.includes('batch limit') && maxTotalBytes > 0) return `${count} ${noun} not added — batch limit ${prettyLimit(maxTotalBytes)}.`;
-    return `${count} ${noun} not added — check file type and batch limits.`;
+    if (raw.includes(`over the ${maxFiles}-file limit`)) return `${count} ${noun} skipped — ${maxFiles}-file limit reached.`;
+    if (raw.includes('per file') && maxFileBytes > 0) return `${count} ${noun} skipped — max ${prettyLimit(maxFileBytes)} per file.`;
+    if (raw.includes('batch limit') && maxTotalBytes > 0) return `${count} ${noun} skipped — batch limit ${prettyLimit(maxTotalBytes)}.`;
+    return raw;
   };
 
   const showSuccessNotice = (root: HTMLElement, message: string): void => {
