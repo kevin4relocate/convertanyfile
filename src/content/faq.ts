@@ -48,7 +48,11 @@ export const IMAGE_FAQ = [
   },
   {
     question: 'Which image formats can I convert to?',
-    answer: 'The production output catalog contains JPG, PNG, WebP, AVIF, HEIC, JXL, JP2, TIFF, GIF, BMP, ICO, PCX, TGA, QOI, PNM, HDR, and EXR. The browser only shows a format when the packaged ImageMagick runtime also reports that encoder as writable.',
+    answer: 'The production output catalog contains 16 formats: JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO, JXL, JP2, HDR, EXR, PCX, TGA, QOI, and PNM. The browser only shows a format when the packaged ImageMagick runtime also reports that encoder as writable.',
+  },
+  {
+    question: 'Why can I open HEIC but not choose HEIC as an output?',
+    answer: 'Input and output capability are separate. The current packaged WASM runtime can expose HEIC/HEIF decoding for compatible source files, but its runtime writer scan does not expose a HEIC encoder. ConvertAnyFile therefore keeps HEIC as an input family and does not advertise HEIC output in this release.',
   },
   {
     question: 'How many images can I convert in one batch?',
@@ -56,7 +60,7 @@ export const IMAGE_FAQ = [
   },
   {
     question: 'Why do some outputs show a quality control?',
-    answer: 'Lossy outputs such as JPG, WebP, AVIF, HEIC, JXL, and JP2 can use an encoder quality setting. Formats without a comparable quality control do not show the slider.',
+    answer: 'Lossy outputs such as JPG, WebP, AVIF, JXL, and JP2 can use an encoder quality setting. Formats without a comparable quality control do not show the slider.',
   },
   {
     question: 'Does converting JPG to PNG restore lost detail?',
