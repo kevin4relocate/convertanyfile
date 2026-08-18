@@ -40,9 +40,12 @@ class ConverterController {
   private engineError?: string;
   private jobs: ConversionJob[] = [];
   private converting = false;
+  private addingFiles = false;
   private cancelRequested = false;
   private session: SessionState = { total: 0, index: 0, activeName: '' };
   private noticeTimer?: number;
+  private fileAdmissionQueue: Promise<void> = Promise.resolve();
+  private workspaceDragDepth = 0;
   private readonly dropView: HTMLElement;
   private readonly dropZone: HTMLButtonElement;
   private readonly fileInput: HTMLInputElement;
@@ -101,24 +104,38 @@ class ConverterController {
     const openPicker = () => { void this.ensureEngine(); this.fileInput.click(); };
     this.dropZone.addEventListener('click', openPicker);
     this.dropZone.addEventListener('dragenter', () => void this.ensureEngine());
-    this.dropZone.addEventListener('dragover', (event) => { event.preventDefault(); this.dropZone.classList.add('is-dragging'); });
+    this.dropZone.addEventListener('dragover', (event) => { event.preventDefault(); if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'; this.dropZone.classList.add('is-dragging'); });
     this.dropZone.addEventListener('dragleave', () => this.dropZone.classList.remove('is-dragging'));
     this.dropZone.addEventListener('drop', (event) => {
       event.preventDefault(); event.stopPropagation(); this.dropZone.classList.remove('is-dragging');
-      if (event.dataTransfer?.files.length) void this.addFiles(Array.from(event.dataTransfer.files));
+      if (event.dataTransfer?.files.length) this.enqueueFiles(Array.from(event.dataTransfer.files));
     });
-    this.workspace.addEventListener('dragenter', () => void this.ensureEngine());
-    this.workspace.addEventListener('dragover', (event) => event.preventDefault());
+    this.workspace.addEventListener('dragenter', (event) => {
+      if (!event.dataTransfer?.types.includes('Files')) return;
+      event.preventDefault();
+      this.workspaceDragDepth += 1;
+      this.workspace.classList.add('is-dragging');
+      void this.ensureEngine();
+    });
+    this.workspace.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    });
+    this.workspace.addEventListener('dragleave', () => {
+      this.workspaceDragDepth = Math.max(0, this.workspaceDragDepth - 1);
+      if (this.workspaceDragDepth === 0) this.workspace.classList.remove('is-dragging');
+    });
     this.workspace.addEventListener('drop', (event) => {
       event.preventDefault(); event.stopPropagation();
-      if (event.dataTransfer?.files.length) void this.addFiles(Array.from(event.dataTransfer.files));
+      this.workspaceDragDepth = 0; this.workspace.classList.remove('is-dragging');
+      if (event.dataTransfer?.files.length) this.enqueueFiles(Array.from(event.dataTransfer.files));
     });
     this.fileInput.addEventListener('change', () => {
-      if (this.fileInput.files?.length) void this.addFiles(Array.from(this.fileInput.files));
+      if (this.fileInput.files?.length) this.enqueueFiles(Array.from(this.fileInput.files));
       this.fileInput.value = '';
     });
     this.addMore.addEventListener('click', openPicker);
-    this.clearAll.addEventListener('click', () => { if (!this.converting) { this.jobs = []; this.render(); } });
+    this.clearAll.addEventListener('click', () => { if (!this.converting && !this.addingFiles) { this.jobs = []; this.render(); } });
     this.outputSelect.addEventListener('change', () => { this.resetResults(); this.renderOutputControls(); this.render(); });
     this.qualityInput.addEventListener('input', () => {
       const control = rangeControl(this.selectedOutput(), 'quality');
@@ -129,7 +146,22 @@ class ConverterController {
     this.cancelButton.addEventListener('click', () => this.cancel());
     this.zipButton.addEventListener('click', () => void this.downloadZip());
     this.root.addEventListener('paste', (event: ClipboardEvent) => {
-      const files = Array.from(event.clipboardData?.files ?? []); if (files.length && !this.converting) void this.addFiles(files);
+      const files = Array.from(event.clipboardData?.files ?? []); if (files.length && !this.converting) this.enqueueFiles(files);
+    });
+  }
+
+  private enqueueFiles(incoming: File[]): void {
+    if (!incoming.length || this.converting) return;
+    this.fileAdmissionQueue = this.fileAdmissionQueue.then(async () => {
+      if (this.converting) return;
+      this.addingFiles = true; this.render();
+      try { await this.addFilesNow(incoming); }
+      catch (error) {
+        console.error('[ConvertAnyFile] Could not add files', error);
+        this.showNotice('Some files could not be added. Try them again.', 'error');
+      } finally {
+        this.addingFiles = false; this.render();
+      }
     });
   }
 
@@ -139,7 +171,7 @@ class ConverterController {
     this.enginePromise = (async () => {
       try {
         this.engine = await loadEngine(this.engineId);
-        this.fileInput.accept = this.engine.acceptedExtensions.map((ext) => `.${ext}`).join(',');
+        this.fileInput.accept = this.engine.acceptedExtensionsFor(this.requiredInput).map((ext) => `.${ext}`).join(',');
         this.renderEngineState('loading', 'Preparing private converter…');
         this.capabilities = await this.engine.initialize();
         this.configureOutputs(this.engine.availableOutputs(this.capabilities));
@@ -204,8 +236,7 @@ class ConverterController {
     }
   }
 
-  private async addFiles(incoming: File[]): Promise<void> {
-    if (this.converting) return;
+  private async addFilesNow(incoming: File[]): Promise<void> {
     void this.ensureEngine();
     const admission = applyBatchPolicy(incoming, this.jobs.map((job) => job.file), this.policy);
     const rejected: string[] = [];
@@ -214,16 +245,17 @@ class ConverterController {
       rejected.push(`${item.file.name} (${label})`);
     }
     const engine = this.engine ?? await loadEngine(this.engineId); this.engine = engine;
+    this.fileInput.accept = engine.acceptedExtensionsFor(this.requiredInput).map((ext) => `.${ext}`).join(',');
     for (const file of admission.accepted) {
       const detected = await engine.validate(file, this.requiredInput);
       if (!detected) { rejected.push(`${file.name} (unsupported or invalid)`); continue; }
       this.jobs.push({ id: crypto.randomUUID(), file, detected, status: 'ready' });
+      this.render();
     }
     if (rejected.length) {
       const preview = rejected.slice(0, 3).join(', '); const more = rejected.length > 3 ? ` +${rejected.length - 3} more` : '';
       this.showNotice(`${rejected.length} file${rejected.length === 1 ? '' : 's'} skipped: ${preview}${more}`, 'warning');
     }
-    this.render();
   }
 
   private pruneUnsupportedRuntimeFiles(): void {
@@ -235,7 +267,7 @@ class ConverterController {
   }
 
   private resetResults(): void {
-    if (this.converting) return;
+    if (this.converting || this.addingFiles) return;
     this.jobs = this.jobs.map((job) => ({ ...job, status: 'ready', error: undefined, errorCode: undefined, errorRetryable: undefined, result: undefined }));
   }
 
@@ -254,7 +286,7 @@ class ConverterController {
   }
 
   private async convertPending(targets?: readonly ConversionJob[]): Promise<void> {
-    if (this.converting || !this.jobs.length) return;
+    if (this.converting || this.addingFiles || !this.jobs.length) return;
     await this.ensureEngine(); if (!this.engine || !this.capabilities || this.engineError) return;
     const candidates = targets ?? this.jobs;
     const pending = candidates.filter((job) => this.jobs.includes(job) && (job.status === 'ready' || (job.status === 'error' && job.errorRetryable !== false))); if (!pending.length) return;
@@ -286,47 +318,61 @@ class ConverterController {
   }
 
   private retry(job: ConversionJob): void {
-    if (!this.converting && job.errorRetryable !== false) {
+    if (!this.converting && !this.addingFiles && job.errorRetryable !== false) {
       job.status = 'ready'; job.error = undefined; job.errorCode = undefined; job.errorRetryable = undefined; job.result = undefined; void this.convertPending([job]);
     }
   }
 
   private async downloadZip(): Promise<void> {
-    const successful = this.jobs.filter((job) => job.status === 'success' && job.result); if (!successful.length) return;
+    const successful = this.jobs.filter((job) => job.status === 'success' && job.result); if (successful.length < 2) return;
     this.zipButton.disabled = true; const oldText = this.zipButton.textContent; this.zipButton.textContent = 'Preparing ZIP…';
     try { downloadBlob(await buildZip(successful), 'convertanyfile-converted.zip'); }
     finally { this.zipButton.disabled = false; this.zipButton.textContent = oldText ?? 'Download ZIP'; }
   }
 
   private render(): void {
-    const hasJobs = this.jobs.length > 0; this.dropView.hidden = hasJobs; this.workspace.hidden = !hasJobs; if (!hasJobs) return;
+    const busy = this.converting || this.addingFiles;
+    this.root.setAttribute('aria-busy', busy ? 'true' : 'false');
+    const hasJobs = this.jobs.length > 0; this.dropView.hidden = hasJobs; this.workspace.hidden = !hasJobs;
+    if (!hasJobs) {
+      this.progressWrap.hidden = true;
+      this.progressWrap.setAttribute('aria-valuenow', '0');
+      return;
+    }
     const inputBytes = this.jobs.reduce((sum, job) => sum + job.file.size, 0);
     const successful = this.jobs.filter((job) => job.status === 'success' && job.result); const failed = this.jobs.filter((job) => job.status === 'error');
     const outputBytes = successful.reduce((sum, job) => sum + (job.result?.blob.size ?? 0), 0);
     const pending = this.jobs.filter((job) => job.status === 'ready' || (job.status === 'error' && job.errorRetryable !== false)).length;
     this.batchSummary.textContent = `${this.jobs.length} ${this.jobs.length === 1 ? 'file' : 'files'} · ${formatBytes(inputBytes)}`;
     this.fileList.replaceChildren(...this.jobs.map((job) => this.renderJob(job)));
-    this.addMore.disabled = this.converting; this.clearAll.disabled = this.converting; this.outputSelect.disabled = this.converting || !this.capabilities;
+    this.addMore.disabled = busy; this.clearAll.disabled = busy; this.outputSelect.disabled = busy || !this.capabilities;
     const output = this.selectedOutput();
     const quality = rangeControl(output, 'quality');
     this.qualityField.hidden = !quality;
-    this.qualityInput.disabled = this.converting || !this.capabilities || !quality;
+    this.qualityInput.disabled = busy || !this.capabilities || !quality;
     if (quality) {
       this.qualityInput.min = String(quality.min); this.qualityInput.max = String(quality.max); this.qualityInput.step = String(quality.step);
       const current = Number(this.qualityInput.value);
       if (!Number.isFinite(current) || current < quality.min || current > quality.max) this.qualityInput.value = String(quality.defaultValue);
       this.qualityLabel.textContent = `${quality.label} ${this.qualityInput.value}`;
     }
-    for (const element of this.extraControls.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-setting-id]')) element.disabled = this.converting || !this.capabilities;
-    for (const button of this.quickOutputsWrap.querySelectorAll<HTMLButtonElement>('.quick-output')) { button.disabled = this.converting; button.classList.toggle('is-active', button.dataset.output === this.outputSelect.value); }
+    for (const element of this.extraControls.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-setting-id]')) element.disabled = busy || !this.capabilities;
+    for (const button of this.quickOutputsWrap.querySelectorAll<HTMLButtonElement>('.quick-output')) { button.disabled = busy; button.classList.toggle('is-active', button.dataset.output === this.outputSelect.value); }
     this.progressWrap.hidden = !this.converting;
     if (this.converting) {
       this.progressText.textContent = `Converting ${this.session.index} of ${this.session.total} · ${this.session.activeName}`;
-      const progress = this.session.total ? Math.max(0, ((this.session.index - 1) / this.session.total) * 100) : 0; this.progressBar.style.width = `${progress}%`;
+      const hasActiveJob = this.jobs.some((job) => job.status === 'converting');
+      const completed = Math.max(0, this.session.index - (hasActiveJob ? 1 : 0));
+      const progress = this.session.total ? Math.min(100, (completed / this.session.total) * 100) : 0;
+      this.progressBar.style.width = `${progress}%`;
+      this.progressWrap.setAttribute('aria-valuenow', String(Math.round(progress)));
+    } else {
+      this.progressWrap.setAttribute('aria-valuenow', '0');
     }
-    this.cancelButton.hidden = !this.converting; this.convertButton.hidden = this.converting || pending === 0; this.convertButton.disabled = !this.capabilities || Boolean(this.engineError);
-    this.convertButton.textContent = this.engineError ? 'Converter unavailable' : !this.capabilities ? 'Preparing converter…' : successful.length > 0 ? `Convert remaining ${pending}` : `Convert ${pending || this.jobs.length} ${(pending || this.jobs.length) === 1 ? 'File' : 'Files'}`;
-    this.zipButton.hidden = this.converting || successful.length === 0; this.resultSummary.hidden = successful.length === 0 && failed.length === 0;
+    this.cancelButton.hidden = !this.converting; this.convertButton.hidden = this.converting || pending === 0;
+    this.convertButton.disabled = this.addingFiles || !this.capabilities || Boolean(this.engineError);
+    this.convertButton.textContent = this.engineError ? 'Converter unavailable' : this.addingFiles ? 'Adding files…' : !this.capabilities ? 'Preparing converter…' : successful.length > 0 ? `Convert remaining ${pending}` : `Convert ${pending || this.jobs.length} ${(pending || this.jobs.length) === 1 ? 'File' : 'Files'}`;
+    this.zipButton.hidden = this.converting || successful.length < 2; this.resultSummary.hidden = successful.length === 0 && failed.length === 0;
     if (!this.resultSummary.hidden) {
       const sizeText = successful.length === this.jobs.length ? ` · ${formatBytes(inputBytes)} → ${formatBytes(outputBytes)}${formatSizeDelta(inputBytes, outputBytes)}` : '';
       this.resultSummary.textContent = `${successful.length}/${this.jobs.length} converted${failed.length ? ` · ${failed.length} failed` : ''}${sizeText}`;
@@ -350,10 +396,10 @@ class ConverterController {
     if (job.status === 'success' && job.result) {
       const download = document.createElement('button'); download.type = 'button'; download.className = 'row-action'; download.textContent = 'Download'; download.addEventListener('click', () => downloadBlob(job.result!.blob, job.result!.filename)); actions.append(download);
     } else if (job.status === 'error' && job.errorRetryable !== false) {
-      const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'row-action'; retry.textContent = 'Retry'; retry.disabled = this.converting; retry.addEventListener('click', () => this.retry(job)); actions.append(retry);
+      const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'row-action'; retry.textContent = 'Retry'; retry.disabled = busyState(this); retry.addEventListener('click', () => this.retry(job)); actions.append(retry);
     }
     if (job.status !== 'converting' && job.status !== 'success') {
-      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'remove-action'; remove.textContent = '×'; remove.setAttribute('aria-label', `Remove ${job.file.name}`); remove.disabled = this.converting;
+      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'remove-action'; remove.textContent = '×'; remove.setAttribute('aria-label', `Remove ${job.file.name}`); remove.disabled = busyState(this);
       remove.addEventListener('click', () => { this.jobs = this.jobs.filter((item) => item.id !== job.id); this.render(); }); actions.append(remove);
     }
     row.append(main, status, actions); return row;
@@ -367,6 +413,10 @@ class ConverterController {
     this.noticeTimer = window.setTimeout(() => { this.notice.hidden = true; }, duration);
   }
   private scrollActiveJobIntoView(id: string): void { this.fileList.querySelector<HTMLElement>(`[data-job-id="${escapeSelector(id)}"]`)?.scrollIntoView({ block: 'nearest' }); }
+}
+
+function busyState(controller: ConverterController): boolean {
+  return controller['converting'] || controller['addingFiles'];
 }
 
 export function initConverters(): void {
