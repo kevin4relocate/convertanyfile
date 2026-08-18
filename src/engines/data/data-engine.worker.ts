@@ -8,7 +8,7 @@ const SUPPORTED = new Set<DataFormat>(['csv', 'tsv', 'json', 'jsonl']);
 
 function classify(error: unknown): { error: string; code: ConversionErrorCode; retryable: boolean } {
   const message = error instanceof Error ? error.message : String(error || 'Data conversion failed');
-  if (/invalid json|invalid jsonl|unclosed quoted|utf-8|encoded data|malformed/i.test(message)) {
+  if (/invalid json|invalid jsonl|unclosed quoted|utf-8|encoded data|malformed|safe browser range|precision|numeric value/i.test(message)) {
     return { error: message, code: 'corrupt-input', retryable: false };
   }
   if (/unsupported/i.test(message)) return { error: message, code: 'unsupported-input', retryable: false };
