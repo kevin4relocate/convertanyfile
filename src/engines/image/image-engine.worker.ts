@@ -19,7 +19,6 @@ const OUTPUT_MAP: Record<string, MagickFormatType> = {
   png: MagickFormat.Png,
   webp: MagickFormat.WebP,
   avif: MagickFormat.Avif,
-  heic: MagickFormat.Heic,
   jxl: MagickFormat.Jxl,
   jp2: MagickFormat.Jp2,
   tiff: MagickFormat.Tiff,
@@ -40,7 +39,7 @@ const INPUT_HINT_MAP: Record<string, MagickFormatType> = {
   tga: MagickFormat.Tga,
 };
 
-const QUALITY_OUTPUTS = new Set(['jpg', 'webp', 'avif', 'heic', 'jxl', 'jp2']);
+const QUALITY_OUTPUTS = new Set(['jpg', 'webp', 'avif', 'jxl', 'jp2']);
 const OPAQUE_OUTPUTS = new Set(['jpg', 'bmp', 'pcx', 'pnm', 'hdr']);
 
 function ensureInitialized(): Promise<void> {
@@ -66,26 +65,14 @@ async function convert(input: ArrayBuffer, inputFormat: string | undefined, outp
   if (!format) throw new Error('Unsupported output format');
   const bytes = new Uint8Array(input);
   const process = (image: Parameters<Parameters<typeof ImageMagick.read>[1]>[0]) => {
-    // Normalize EXIF orientation into pixels before writing so the result looks the
-    // same even when the destination format does not carry orientation metadata.
     image.autoOrient();
-
-    // Formats without useful alpha support get a deterministic white background.
-    // This avoids black/undefined backgrounds when users convert transparent art.
     if (OPAQUE_OUTPUTS.has(output) && !image.isOpaque) image.colorAlpha(MagickColors.White);
-
     if (QUALITY_OUTPUTS.has(output)) image.quality = Math.min(100, Math.max(1, quality));
-
     return image.write(format, (data) => {
-      const copy = new Uint8Array(data.length);
-      copy.set(data);
-      return copy.buffer;
+      const copy = new Uint8Array(data.length); copy.set(data); return copy.buffer;
     });
   };
 
-  // ICO files can contain several size variants. For a single-image conversion,
-  // decode the largest PNG-backed frame directly instead of asking ImageMagick to
-  // collapse a multi-image container. Legacy DIB/BMP ICOs fall back to the coder.
   if (inputFormat === 'ico') {
     const pngFrame = extractBestPngIcoFrame(bytes);
     if (pngFrame) return ImageMagick.read(pngFrame, MagickFormat.Png, process);
@@ -100,8 +87,6 @@ scope.addEventListener('message', async (event: MessageEvent<ImageWorkerRequest>
   try {
     await ensureInitialized();
     if (request.type === 'capabilities') {
-      // Full runtime scan. The platform receives every readable/writable coder and
-      // then intersects it with the product-certified catalog in formats.ts.
       const formats = Magick.supportedFormats;
       const response: ImageWorkerResponse = {
         type: 'capabilities-result', requestId: request.requestId, ok: true,
@@ -109,8 +94,7 @@ scope.addEventListener('message', async (event: MessageEvent<ImageWorkerRequest>
         writable: formats.filter((f) => f.supportsWriting).map((f) => f.format),
         version: Magick.imageMagickVersion,
       };
-      scope.postMessage(response);
-      return;
+      scope.postMessage(response); return;
     }
     const output = await convert(request.input, request.inputFormat, request.output, request.quality);
     const response: ImageWorkerResponse = { type: 'convert-result', requestId: request.requestId, ok: true, output };
