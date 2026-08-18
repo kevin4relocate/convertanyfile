@@ -1,69 +1,75 @@
 # ConvertAnyFile
 
-ConvertAnyFile.net is a browser-first file conversion platform designed around a shared static site shell and pluggable local converter engines.
+ConvertAnyFile.net is a browser-first file conversion platform built around one shared static site shell and pluggable local converter engines.
 
-## Current production category
+## Current production categories
 
-Image conversion is the first release-ready category:
+### Image
 
 - 57 recognized image filename extensions across common raster, specialist, legacy, and camera RAW families.
-- 16 product-certified output formats: JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO, JXL, JP2, HDR, EXR, PCX, TGA, QOI, and PNM.
-- HEIC/HEIF remains an input family: the packaged WASM runtime can expose its decoder, but the current runtime scan does not expose a HEIC writer, so ConvertAnyFile does not advertise HEIC output.
-- Every browser session performs a full ImageMagick readable/writable codec scan; the UI only exposes outputs that are both in the certified catalog and writable in the packaged runtime.
-- 100% browser-side conversion for the current image workflow.
-- Batch queue with sequential processing and failure isolation.
-- 50 files / 75 MB per file / 300 MB per batch safety policy.
-- Dimension and estimated decoded-memory guards before conversion.
-- Progress, cancel, recoverable-only retry, per-file download, and ZIP download.
-- File signature validation before queue admission.
-- Runtime codec capability checks before conversion.
-- EXIF orientation normalized into pixels before output.
-- Deterministic white flattening when converting transparent input to an opaque output.
-- Container awareness for multi-frame GIF/WebP, multi-page TIFF, and multi-size ICO; the current product deliberately creates one image per input file rather than claiming animation/page/layer preservation.
+- 16 product-certified outputs: JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO, JXL, JP2, HDR, EXR, PCX, TGA, QOI, and PNM.
+- HEIC/HEIF remains input-only because the packaged WASM runtime does not expose a HEIC writer.
+- Runtime readable/writable codec scan plus a product-certified output whitelist.
+- Browser-side ImageMagick WASM conversion.
+- 50 files / 75 MB per file / 300 MB per batch.
+- Dimension and estimated decoded-memory guards.
+- EXIF orientation normalization and deterministic white flattening for opaque destinations.
+- Explicit single-image policy for animated, multi-page, layered, and multi-size sources.
 - ICO hardening for multi-size PNG-backed icons plus legacy DIB/BMP fallback.
-- Drag-and-drop can append files after the first batch is already loaded.
-- Generic engine-declared conversion controls instead of an image-only quality field in the shared `EngineAdapter` contract.
+- Certified output encode + decode-back browser matrix.
 
-### Certified vs recognized
+### Data
 
-"Recognized input" and "certified output" are intentionally different concepts.
+- Inputs: CSV, TSV, JSON, JSONL, and NDJSON.
+- Outputs: CSV, TSV, JSON, and JSONL.
+- UTF-8 validation with optional input BOM support.
+- Parsing and serialization run in a browser worker.
+- Quoted CSV/TSV fields support embedded delimiters, escaped quotes, CRLF/LF, and embedded line breaks.
+- First delimited row becomes headers; empty and duplicate headers are normalized safely.
+- CSV/TSV values remain strings instead of using risky automatic type inference.
+- JSON nested plain objects flatten with dot notation for tabular output.
+- Arrays and complex JSON values remain JSON strings inside CSV/TSV cells.
+- JSONL and NDJSON share the one-JSON-value-per-line input path.
+- CSV/TSV controls: header row, LF/CRLF, optional UTF-8 BOM.
+- JSON control: pretty print.
+- 50 files / 20 MB per file / 100 MB per batch.
 
-A recognized input extension still has to pass signature validation and runtime decoder checks. Camera RAW support remains best-effort because decoder compatibility can vary by camera model and file variant.
-
-A certified output must satisfy both gates:
-
-1. it is explicitly included in the ConvertAnyFile product output catalog; and
-2. the packaged ImageMagick WASM runtime reports a writable encoder for it.
-
-The Chromium release matrix then converts a real PNG fixture to every certified output and feeds the generated file back through the public converter path to prove it can be decoded again.
+Both categories reuse the same batch queue, append-by-drag behavior, progress, cancel, recoverable-only retry, per-file download, ZIP packaging, compact converter page frame, sitemap, SEO shell, and browser-layout regressions.
 
 ## Architecture
 
 ```text
 src/
-  components/            shared Header, Footer, ConverterPageFrame, ConverterShell, FAQ UI
-  config/                one site config + one converter route registry
-  content/               reusable FAQ and conversion guidance
-  layouts/               one shared Astro page shell / SEO metadata layer
-  platform/converter/    generic queue policy, engine registry, ZIP/downloads
+  components/            shared Header, Footer, ConverterPageFrame, ConverterShell, FAQ/content UI
+  config/                site config + category route registries + combined converter registry
+  content/               reusable FAQ and category/pair guidance
+  layouts/               shared Astro page shell / SEO metadata layer
+  platform/converter/    generic batch policy, engine registry, controls, ZIP/downloads
   engines/image/         image detection, codec policy, ImageMagick WASM worker
-  client/                generic converter controller
-  pages/                 static routes and SEO conversion presets
+  engines/data/          UTF-8 validation, delimited/JSON codec, browser worker
+  client/                category-agnostic converter controller
+  pages/                 static category routes and real SEO conversion presets
 ```
 
-New file categories should implement the shared `EngineAdapter` instead of duplicating the website or queue UI. Output-specific settings are declared by each engine through generic control metadata, so a future audio engine can expose bitrate/sample rate and a data engine can expose delimiter/encoding without inheriting image-specific concepts.
+A new file category implements `EngineAdapter` rather than duplicating the website or queue UI. Output settings are engine-declared through generic controls:
 
-### Converter page contract
+- Image declares range controls such as quality.
+- Data declares checkbox/select controls such as header output, line endings, BOM, and pretty printing.
+- Future Archive/Audio engines can declare compression, bitrate, sample rate, or other category settings without adding those concepts to the shared queue.
 
-Every live converter route must render through `ConverterPageFrame`. The frame owns the compact breadcrumb/eyebrow/title/intro region and renders the shared `ConverterShell` in compact mode so the file picker remains the primary first-screen action.
+See `ARCHITECTURE.md` for the platform contract.
 
-Do not create category-specific hero or converter spacing for new engines. A future Data, Archive, Audio, Subtitle, Font, or other converter page should reuse `ConverterPageFrame`; only the engine, route definition, settings, and category-specific content should change.
+## Converter page contract
 
-CI reads the generated sitemap and enforces this contract for every page that contains a live converter. It also checks at 1440×900 that every live converter route keeps the drop zone and Choose files control inside the first desktop viewport.
+Every live dedicated converter route renders through `ConverterPageFrame`. The frame owns the compact breadcrumb/eyebrow/title/intro region and renders the shared `ConverterShell` in compact mode so the primary file action remains inside the first desktop viewport.
+
+Category-specific explanations belong below the tool. Category-specific converter shells, queue implementations, and duplicated download logic are not allowed.
+
+CI reads the generated sitemap and enforces this contract for every page containing a live converter.
 
 ## Why Astro
 
-Astro produces crawlable static HTML while allowing shared layouts/components and client-side converter scripts. Conversion engines are lazy-loaded only when a user interacts with the converter.
+Astro produces crawlable static HTML while allowing shared layouts/components and client-side converter scripts. Conversion engines are lazy-loaded only when a user interacts with a converter.
 
 ## Local commands
 
@@ -84,40 +90,50 @@ Use a static Pages deployment:
 - Build output directory: `dist`
 - Node: `22.19.0`
 
-No Pages Function, KV, D1, R2, or conversion backend is required for the current image converter.
+No Pages Function, KV, D1, R2, or conversion backend is required for the current Image or Data converters.
 
 ## SEO model
 
 - Canonicals are generated from `https://convertanyfile.net`.
 - `@astrojs/sitemap` generates the sitemap from actual static routes.
 - `robots.txt` reads the same site config and points to the generated sitemap index.
-- Pair pages are real converter presets backed by one converter engine, not copied converter implementations.
-- Header, footer, FAQ UI, layout, metadata shell, converter page frame, and converter shell are shared components.
+- Pair pages are real converter presets backed by category engines, not copied converter implementations.
+- Image routes live in `src/config/converters.ts`.
+- Data routes live in `src/config/data-converters.ts`.
+- `src/config/converter-registry.ts` combines live pair routes for shared static generation.
+- Placeholder routes are not published for planned categories.
 
-## Image release gates
+## Production release gates
 
-The image category is not considered releasable unless all of the following are green in CI:
+All categories must keep these shared gates green:
 
-- Astro type/content diagnostics (`npm run check`)
+- Astro diagnostics (`npm run check`)
 - production static build (`npm run build`)
-- sitemap/canonical/internal-link/site-layout regressions
-- Chromium real ImageMagick conversion tests
-- Firefox and WebKit controller/bootstrap coverage
-- 50-file batch and decoded-memory safety checks
-- append-by-drag regression
-- PCX, TGA, and real multi-size ICO regressions
-- transparent PNG to JPG white-background pixel regression
-- certified output encode + decode-back matrix
-- deterministic invalid/unsupported failures do not offer pointless retries
+- sitemap/canonical/title/description/internal-link regressions
+- shared converter-frame and first-viewport regressions
+- desktop/mobile layout checks
+- Chromium/Firefox/WebKit browser coverage
+- batch admission, append-by-drag, cancellation, failure isolation, retry semantics and ZIP behavior
+- previous production category regressions
+
+Image additionally requires its certified output encode/decode-back matrix and image-specific fidelity/memory regressions.
+
+Data additionally requires byte-level tests for quoted delimited fields, nested JSON flattening, JSONL/NDJSON, output controls, permanent parse errors, and shared batch/ZIP reuse.
+
+See:
+- `IMAGE_RELEASE_CHECKLIST.md`
+- `DATA_RELEASE_CHECKLIST.md`
 
 ## Expansion rule
 
-Future categories such as audio, archives, and data should be added only when they can provide a dependable browser-first workflow. Avoid adding unsupported placeholder conversion routes to Search.
+Archive, Audio, Subtitle, Font, and other categories should be added only when they provide a dependable browser-first workflow with their own safety policy and category-specific conversion tests.
 
-For every future live converter category:
+For every future live category:
 
-1. implement or register its engine adapter;
-2. define real converter routes and settings;
-3. render the category and pair routes through `ConverterPageFrame`;
-4. keep category-specific guidance below the tool rather than pushing the file picker down;
-5. let sitemap, canonical, internal-link, shared-frame, first-viewport, and category-specific conversion CI tests validate the new routes automatically.
+1. implement/register its engine adapter;
+2. define real input/output formats and engine-declared controls;
+3. define real converter routes;
+4. render category and pair routes through `ConverterPageFrame`;
+5. keep category-specific guidance below the tool;
+6. add deterministic conversion, safety, and error regressions;
+7. let sitemap, canonical, shared-frame, viewport, and existing-category CI tests validate the full product before merge.
