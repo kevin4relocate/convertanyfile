@@ -17,7 +17,11 @@ export const DATA_FAQ = [
   },
   {
     question: 'How are nested JSON objects converted to CSV or TSV?',
-    answer: 'Nested plain objects are flattened with dot notation, for example profile.city. Arrays and other complex values are serialized as JSON text inside a cell.',
+    answer: 'Nested plain objects are flattened with dot notation, for example profile.city. Literal dots and backslashes in source property names are escaped so they cannot collide with paths created from nested objects. Arrays and other complex values are serialized as JSON text inside a cell.',
+  },
+  {
+    question: 'What happens to very large JSON numbers?',
+    answer: 'ConvertAnyFile rejects unquoted JSON numbers outside the browser safe-integer range instead of silently rounding them through JavaScript number precision. Large identifiers or exact large integers should be represented as JSON strings before conversion.',
   },
   {
     question: 'What is the difference between JSONL and NDJSON here?',
