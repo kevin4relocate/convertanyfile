@@ -3,10 +3,14 @@ import { expect, test, type APIRequestContext } from '@playwright/test';
 const STATIC_ROUTES = [
   '/',
   '/image-converter/',
+  '/data-converter/',
   '/heic-to-jpg/',
   '/webp-to-png/',
   '/png-to-webp/',
   '/avif-to-jpg/',
+  '/csv-to-json/',
+  '/json-to-csv/',
+  '/jsonl-to-json/',
   '/formats/',
   '/faq/',
   '/guides/',
@@ -56,6 +60,7 @@ test('shared site shell and static SEO routes are healthy', async ({ page, reque
   await expect(page.getByRole('link', { name: 'ConvertAnyFile home' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Formats' }).first()).toBeVisible();
   await expect(page.locator('footer')).toContainText('ConvertAnyFile');
+  await expect(page.locator('footer')).toContainText('Data Converter');
   await expect(page.locator('footer')).toContainText('Privacy');
   await expect(page.locator('footer')).toContainText('Terms');
 
@@ -73,7 +78,7 @@ test('shared site shell and static SEO routes are healthy', async ({ page, reque
 
 test('generated sitemap pages keep valid canonicals, unique titles, descriptions, and internal links', async ({ request }) => {
   const pagePaths = await getSitemapPagePaths(request);
-  expect(pagePaths.length).toBeGreaterThan(10);
+  expect(pagePaths.length).toBeGreaterThan(45);
 
   const titles = new Set<string>();
   const internalLinks = new Set<string>();
@@ -113,7 +118,7 @@ test('every dedicated live converter route uses the shared compact converter pag
     expect(html, `${path} must render through ConverterPageFrame`).toContain('data-converter-page-frame');
     expect(html, `${path} must use the compact shared ConverterShell`).toContain('converter-card--compact');
   }
-  expect(converterPages).toBeGreaterThan(10);
+  expect(converterPages).toBeGreaterThan(35);
 });
 
 test('desktop homepage keeps hero compact, drop zone above fold, and Converters anchor at the section heading', async ({ page }, testInfo) => {
@@ -153,6 +158,7 @@ test('desktop homepage keeps hero compact, drop zone above fold, and Converters 
     return top >= 64 && top <= 100;
   });
   await expect(page.getByRole('heading', { name: 'One interface. Multiple file categories.' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Data/ })).toBeVisible();
 });
 
 test('all dedicated converter routes keep the file picker in the first desktop viewport', async ({ page, request }, testInfo) => {
@@ -165,7 +171,7 @@ test('all dedicated converter routes keep the file picker in the first desktop v
     const html = await response.text();
     if (path !== '/' && html.includes('data-converter-app')) converterPaths.push(path);
   }
-  expect(converterPaths.length).toBeGreaterThan(10);
+  expect(converterPaths.length).toBeGreaterThan(35);
 
   for (const path of converterPaths) {
     await page.goto(path);
@@ -217,13 +223,19 @@ test('publish-quality content pages use the shared 1080px grid with readable art
   await expect(page.locator('.content-article-grid')).toBeVisible();
   await expect(page.locator('.comparison-table')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Understand the source and the output' })).toBeVisible();
+
+  await page.goto('/csv-to-json/');
+  await expect(page.locator('.content-article-grid')).toBeVisible();
+  await expect(page.locator('.comparison-table')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'How the data structure changes' })).toBeVisible();
+  expect((await page.locator('.content-article').innerText()).length).toBeGreaterThan(1600);
 });
 
 test('desktop article right navigation stays visible after deep anchor jumps', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop sticky-navigation regression');
   await page.setViewportSize({ width: 1440, height: 900 });
 
-  for (const path of ['/guides/webp-vs-avif/', '/guides/jpg-vs-png/']) {
+  for (const path of ['/guides/webp-vs-avif/', '/guides/jpg-vs-png/', '/csv-to-json/']) {
     await page.goto(path);
     const tocLinks = page.locator('.toc-card a');
     const count = await tocLinks.count();
@@ -255,7 +267,7 @@ test('desktop article right navigation stays visible after deep anchor jumps', a
 test('wide content hubs use the 1080px grid and meaningful internal navigation', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop content regression');
   await page.setViewportSize({ width: 1440, height: 900 });
-  for (const path of ['/formats/', '/faq/', '/guides/', '/image-converter/']) {
+  for (const path of ['/formats/', '/faq/', '/guides/', '/image-converter/', '/data-converter/']) {
     await page.goto(path);
     const container = page.locator('.content-wide-section .site-container').first();
     const box = await container.boundingBox();
@@ -263,8 +275,9 @@ test('wide content hubs use the 1080px grid and meaningful internal navigation',
     expect(Math.round(box!.width)).toBe(1080);
   }
   await page.goto('/formats/');
-  await expect(page.locator('.comparison-table')).toBeVisible();
+  await expect(page.locator('.comparison-table').first()).toBeVisible();
   await expect(page.getByRole('link', { name: /JPG vs PNG guide/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Open Data Converter/i })).toBeVisible();
 });
 
 test('mobile shell remains usable without horizontal overflow', async ({ page }, testInfo) => {
@@ -272,6 +285,11 @@ test('mobile shell remains usable without horizontal overflow', async ({ page },
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /Convert files fast/i })).toBeVisible();
   let dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
+  await expect(page.getByText('Choose files', { exact: true })).toBeVisible();
+
+  await page.goto('/data-converter/');
+  dimensions = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
   await expect(page.getByText('Choose files', { exact: true })).toBeVisible();
 
