@@ -7,7 +7,8 @@ ConvertAnyFile.net is a browser-first file conversion platform designed around a
 Image conversion is the first release-ready category:
 
 - 57 recognized image filename extensions across common raster, specialist, legacy, and camera RAW families.
-- 17 product-certified output formats: JPG, PNG, WebP, AVIF, HEIC, JXL, JP2, TIFF, GIF, BMP, ICO, PCX, TGA, QOI, PNM, HDR, and EXR.
+- 16 product-certified output formats: JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO, JXL, JP2, HDR, EXR, PCX, TGA, QOI, and PNM.
+- HEIC/HEIF remains an input family: the packaged WASM runtime can expose its decoder, but the current runtime scan does not expose a HEIC writer, so ConvertAnyFile does not advertise HEIC output.
 - Every browser session performs a full ImageMagick readable/writable codec scan; the UI only exposes outputs that are both in the certified catalog and writable in the packaged runtime.
 - 100% browser-side conversion for the current image workflow.
 - Batch queue with sequential processing and failure isolation.
@@ -21,6 +22,7 @@ Image conversion is the first release-ready category:
 - Container awareness for multi-frame GIF/WebP, multi-page TIFF, and multi-size ICO; the current product deliberately creates one image per input file rather than claiming animation/page/layer preservation.
 - ICO hardening for multi-size PNG-backed icons plus legacy DIB/BMP fallback.
 - Drag-and-drop can append files after the first batch is already loaded.
+- Generic engine-declared conversion controls instead of an image-only quality field in the shared `EngineAdapter` contract.
 
 ### Certified vs recognized
 
@@ -49,7 +51,7 @@ src/
   pages/                 static routes and SEO conversion presets
 ```
 
-New file categories should implement the shared `EngineAdapter` instead of duplicating the website or queue UI.
+New file categories should implement the shared `EngineAdapter` instead of duplicating the website or queue UI. Output-specific settings are declared by each engine through generic control metadata, so a future audio engine can expose bitrate/sample rate and a data engine can expose delimiter/encoding without inheriting image-specific concepts.
 
 ### Converter page contract
 
