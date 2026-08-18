@@ -8,15 +8,40 @@ import type { ImageWorkerRequest, ImageWorkerResponse } from './protocol';
 
 const scope = self as DedicatedWorkerGlobalScope;
 let initialization: Promise<void> | undefined;
+
+/**
+ * This is deliberately a product whitelist, not a mirror of every ImageMagick
+ * writer. A format belongs here only when it is also present in IMAGE_OUTPUTS
+ * and covered by the browser round-trip matrix.
+ */
 const OUTPUT_MAP: Record<string, MagickFormatType> = {
-  jpg: MagickFormat.Jpeg, png: MagickFormat.Png, webp: MagickFormat.WebP, avif: MagickFormat.Avif,
-  tiff: MagickFormat.Tiff, gif: MagickFormat.Gif, bmp: MagickFormat.Bmp, ico: MagickFormat.Ico,
+  jpg: MagickFormat.Jpeg,
+  png: MagickFormat.Png,
+  webp: MagickFormat.WebP,
+  avif: MagickFormat.Avif,
+  heic: MagickFormat.Heic,
+  jxl: MagickFormat.Jxl,
+  jp2: MagickFormat.Jp2,
+  tiff: MagickFormat.Tiff,
+  gif: MagickFormat.Gif,
+  bmp: MagickFormat.Bmp,
+  ico: MagickFormat.Ico,
+  pcx: MagickFormat.Pcx,
+  tga: MagickFormat.Tga,
+  qoi: MagickFormat.Qoi,
+  pnm: MagickFormat.Pnm,
+  hdr: MagickFormat.Hdr,
+  exr: MagickFormat.Exr,
 };
+
 const INPUT_HINT_MAP: Record<string, MagickFormatType> = {
   ico: MagickFormat.Ico,
   pcx: MagickFormat.Pcx,
   tga: MagickFormat.Tga,
 };
+
+const QUALITY_OUTPUTS = new Set(['jpg', 'webp', 'avif', 'heic', 'jxl', 'jp2']);
+const OPAQUE_OUTPUTS = new Set(['jpg', 'bmp', 'pcx', 'pnm', 'hdr']);
 
 function ensureInitialized(): Promise<void> {
   if (!initialization) initialization = (async () => {
@@ -30,7 +55,7 @@ function ensureInitialized(): Promise<void> {
 function friendlyError(error: unknown): { message: string; code: ConversionErrorCode; retryable: boolean } {
   const message = error instanceof Error ? error.message : String(error);
   if (/memory|out of bounds|allocation/i.test(message)) return { message: 'Not enough browser memory for this image', code: 'memory-limit', retryable: false };
-  if (/delegate|unsupported|no images defined|no decode delegate/i.test(message)) return { message: 'Unsupported image codec', code: 'unsupported-input', retryable: false };
+  if (/delegate|unsupported|no images defined|no decode delegate|no encode delegate/i.test(message)) return { message: 'Unsupported image codec', code: 'unsupported-input', retryable: false };
   if (/corrupt|improper|invalid|unexpected end|insufficient|unexpected end-of-file/i.test(message)) return { message: 'The image appears to be corrupted or invalid', code: 'corrupt-input', retryable: false };
   return { message: 'Unable to convert this image', code: 'conversion-failed', retryable: false };
 }
@@ -41,16 +66,26 @@ async function convert(input: ArrayBuffer, inputFormat: string | undefined, outp
   if (!format) throw new Error('Unsupported output format');
   const bytes = new Uint8Array(input);
   const process = (image: Parameters<Parameters<typeof ImageMagick.read>[1]>[0]) => {
+    // Normalize EXIF orientation into pixels before writing so the result looks the
+    // same even when the destination format does not carry orientation metadata.
     image.autoOrient();
-    if (output === 'jpg' && !image.isOpaque) image.colorAlpha(MagickColors.White);
-    if (output === 'jpg' || output === 'webp' || output === 'avif') image.quality = quality;
+
+    // Formats without useful alpha support get a deterministic white background.
+    // This avoids black/undefined backgrounds when users convert transparent art.
+    if (OPAQUE_OUTPUTS.has(output) && !image.isOpaque) image.colorAlpha(MagickColors.White);
+
+    if (QUALITY_OUTPUTS.has(output)) image.quality = Math.min(100, Math.max(1, quality));
+
     return image.write(format, (data) => {
-      const copy = new Uint8Array(data.length); copy.set(data); return copy.buffer;
+      const copy = new Uint8Array(data.length);
+      copy.set(data);
+      return copy.buffer;
     });
   };
 
-  // ICO files can contain several size variants. For a single-image conversion, decode the
-  // largest PNG-backed frame directly instead of asking ImageMagick to collapse the container.
+  // ICO files can contain several size variants. For a single-image conversion,
+  // decode the largest PNG-backed frame directly instead of asking ImageMagick to
+  // collapse a multi-image container. Legacy DIB/BMP ICOs fall back to the coder.
   if (inputFormat === 'ico') {
     const pngFrame = extractBestPngIcoFrame(bytes);
     if (pngFrame) return ImageMagick.read(pngFrame, MagickFormat.Png, process);
@@ -65,6 +100,8 @@ scope.addEventListener('message', async (event: MessageEvent<ImageWorkerRequest>
   try {
     await ensureInitialized();
     if (request.type === 'capabilities') {
+      // Full runtime scan. The platform receives every readable/writable coder and
+      // then intersects it with the product-certified catalog in formats.ts.
       const formats = Magick.supportedFormats;
       const response: ImageWorkerResponse = {
         type: 'capabilities-result', requestId: request.requestId, ok: true,
@@ -72,7 +109,8 @@ scope.addEventListener('message', async (event: MessageEvent<ImageWorkerRequest>
         writable: formats.filter((f) => f.supportsWriting).map((f) => f.format),
         version: Magick.imageMagickVersion,
       };
-      scope.postMessage(response); return;
+      scope.postMessage(response);
+      return;
     }
     const output = await convert(request.input, request.inputFormat, request.output, request.quality);
     const response: ImageWorkerResponse = { type: 'convert-result', requestId: request.requestId, ok: true, output };
