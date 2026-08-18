@@ -1,0 +1,315 @@
+---
+import ConverterShell from './ConverterShell.astro';
+import { getConverter } from '../config/converters';
+import { getDataConverter } from '../config/data-converters';
+import { acceptedExtensionsForConverter } from '../config/converter-registry';
+
+const imageConverter = getConverter('image-converter')!;
+const dataConverter = getDataConverter('data-converter')!;
+const imageExtensions = acceptedExtensionsForConverter(imageConverter).join(',');
+const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
+---
+<div
+  class="home-converter-switcher"
+  data-home-converter
+  data-active-category="image"
+  data-image-extensions={imageExtensions}
+  data-data-extensions={dataExtensions}
+>
+  <div class="home-converter-category-bar">
+    <div class="home-converter-category-copy">
+      <span>Converter type</span>
+      <strong>Choose a category</strong>
+    </div>
+    <div class="home-converter-tabs" role="tablist" aria-label="Converter category">
+      <button
+        class="home-converter-tab is-active"
+        type="button"
+        role="tab"
+        id="home-converter-image-tab"
+        aria-selected="true"
+        aria-controls="home-converter-image-panel"
+        tabindex="0"
+        data-home-category="image"
+      >
+        <span class="home-converter-tab-dot" aria-hidden="true"></span>
+        Images
+      </button>
+      <button
+        class="home-converter-tab"
+        type="button"
+        role="tab"
+        id="home-converter-data-tab"
+        aria-selected="false"
+        aria-controls="home-converter-data-panel"
+        tabindex="-1"
+        data-home-category="data"
+      >
+        <span class="home-converter-tab-dot" aria-hidden="true"></span>
+        Data
+      </button>
+    </div>
+    <span class="home-converter-auto-hint">Drop a supported file — category auto-detects</span>
+  </div>
+
+  <div
+    class="home-converter-panel"
+    id="home-converter-image-panel"
+    role="tabpanel"
+    aria-labelledby="home-converter-image-tab"
+    data-home-panel="image"
+  >
+    <ConverterShell converter={imageConverter} compact />
+  </div>
+
+  <div
+    class="home-converter-panel"
+    id="home-converter-data-panel"
+    role="tabpanel"
+    aria-labelledby="home-converter-data-tab"
+    data-home-panel="data"
+    hidden
+  >
+    <ConverterShell converter={dataConverter} compact />
+  </div>
+</div>
+
+<script>
+  type HomeCategory = 'image' | 'data';
+
+  const extensionFromName = (name: string): string => {
+    const dot = name.lastIndexOf('.');
+    return dot >= 0 && dot < name.length - 1 ? name.slice(dot + 1).toLowerCase() : '';
+  };
+
+  function initHomepageConverters(): void {
+    document.querySelectorAll<HTMLElement>('[data-home-converter]').forEach((root) => {
+      if (root.dataset.homeConverterReady === 'true') return;
+      root.dataset.homeConverterReady = 'true';
+
+      const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-home-category]'));
+      const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-home-panel]'));
+      const imageExtensions = new Set((root.dataset.imageExtensions ?? '').split(',').filter(Boolean));
+      const dataExtensions = new Set((root.dataset.dataExtensions ?? '').split(',').filter(Boolean));
+
+      const activeCategory = (): HomeCategory => root.dataset.activeCategory === 'data' ? 'data' : 'image';
+
+      const activate = (category: HomeCategory, focus = false): void => {
+        root.dataset.activeCategory = category;
+        for (const tab of tabs) {
+          const selected = tab.dataset.homeCategory === category;
+          tab.classList.toggle('is-active', selected);
+          tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+          tab.tabIndex = selected ? 0 : -1;
+          if (selected && focus) tab.focus();
+        }
+        for (const panel of panels) panel.hidden = panel.dataset.homePanel !== category;
+      };
+
+      const classify = (files: readonly File[]): HomeCategory => {
+        let imageMatches = 0;
+        let dataMatches = 0;
+        for (const file of files) {
+          const extension = extensionFromName(file.name);
+          if (imageExtensions.has(extension)) imageMatches += 1;
+          if (dataExtensions.has(extension)) dataMatches += 1;
+        }
+        if (dataMatches > 0 && imageMatches === 0) return 'data';
+        if (imageMatches > 0 && dataMatches === 0) return 'image';
+        return activeCategory();
+      };
+
+      const admitFiles = (files: File[]): void => {
+        if (!files.length) return;
+        const category = classify(files);
+        activate(category);
+        const panel = panels.find((item) => item.dataset.homePanel === category);
+        const input = panel?.querySelector<HTMLInputElement>('[data-role="file-input"]');
+        if (!input) return;
+        const transfer = new DataTransfer();
+        for (const file of files) transfer.items.add(file);
+        input.files = transfer.files;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => activate(tab.dataset.homeCategory === 'data' ? 'data' : 'image'));
+        tab.addEventListener('keydown', (event) => {
+          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+          event.preventDefault();
+          let targetIndex = index;
+          if (event.key === 'ArrowLeft') targetIndex = (index - 1 + tabs.length) % tabs.length;
+          if (event.key === 'ArrowRight') targetIndex = (index + 1) % tabs.length;
+          if (event.key === 'Home') targetIndex = 0;
+          if (event.key === 'End') targetIndex = tabs.length - 1;
+          const target = tabs[targetIndex];
+          if (target) activate(target.dataset.homeCategory === 'data' ? 'data' : 'image', true);
+        });
+      });
+
+      root.addEventListener('dragover', (event) => {
+        if (!event.dataTransfer?.types.includes('Files')) return;
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+      }, true);
+
+      root.addEventListener('drop', (event) => {
+        const files = Array.from(event.dataTransfer?.files ?? []);
+        if (!files.length) return;
+        event.preventDefault();
+        event.stopPropagation();
+        admitFiles(files);
+      }, true);
+
+      root.addEventListener('paste', (event) => {
+        const clipboardEvent = event as ClipboardEvent;
+        const files = Array.from(clipboardEvent.clipboardData?.files ?? []);
+        if (!files.length) return;
+        event.preventDefault();
+        event.stopPropagation();
+        admitFiles(files);
+      }, true);
+    });
+  }
+
+  initHomepageConverters();
+</script>
+
+<style>
+  .home-converter-category-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding: 7px 9px 7px 14px;
+    border: 1px solid #e1e2ea;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .8);
+    box-shadow: 0 10px 34px rgba(30, 32, 52, .045);
+    backdrop-filter: blur(10px);
+  }
+
+  .home-converter-category-copy {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    white-space: nowrap;
+  }
+
+  .home-converter-category-copy span {
+    color: #8a8d99;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .home-converter-category-copy strong {
+    color: #383b47;
+    font-size: 12px;
+  }
+
+  .home-converter-tabs {
+    display: inline-flex;
+    gap: 3px;
+    padding: 3px;
+    border: 1px solid #e1e2e9;
+    border-radius: 11px;
+    background: #f2f3f7;
+  }
+
+  .home-converter-tab {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 13px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #666a77;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    transition: background .14s ease, box-shadow .14s ease, color .14s ease;
+  }
+
+  .home-converter-tab:hover {
+    color: var(--accent-dark);
+  }
+
+  .home-converter-tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .home-converter-tab.is-active {
+    background: #fff;
+    color: #242631;
+    box-shadow: 0 2px 8px rgba(34, 36, 52, .08);
+  }
+
+  .home-converter-tab-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #b7bac5;
+  }
+
+  .home-converter-tab.is-active .home-converter-tab-dot {
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .home-converter-auto-hint {
+    margin-left: auto;
+    color: #858895;
+    font-size: 11px;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+
+  .home-converter-panel[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 760px) {
+    .home-converter-category-bar {
+      gap: 9px;
+      padding-left: 10px;
+    }
+
+    .home-converter-category-copy span {
+      display: none;
+    }
+
+    .home-converter-category-copy strong {
+      font-size: 11px;
+    }
+
+    .home-converter-auto-hint {
+      display: none;
+    }
+
+    .home-converter-tabs {
+      margin-left: auto;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .home-converter-category-copy {
+      display: none;
+    }
+
+    .home-converter-tabs {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .home-converter-tab {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+</style>
