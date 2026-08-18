@@ -27,9 +27,12 @@ test('prototype-sensitive CSV headers remain ordinary data fields', async ({ pag
   const result = await convertAndDownload(page, '/csv-to-json/', {
     name: 'special-headers.csv', mimeType: 'text/csv', buffer: Buffer.from('__proto__,constructor,prototype\none,two,three'),
   });
-  const parsed = JSON.parse(result.text);
-  expect(parsed).toEqual([{ __proto__: 'one', constructor: 'two', prototype: 'three' }]);
-  expect(Object.prototype.polluted).toBeUndefined();
+  const parsed = JSON.parse(result.text) as Array<Record<string, unknown>>;
+  expect(parsed).toHaveLength(1);
+  expect(Object.prototype.hasOwnProperty.call(parsed[0], '__proto__')).toBe(true);
+  expect(parsed[0]?.['__proto__']).toBe('one');
+  expect(parsed[0]?.constructor).toBe('two');
+  expect(parsed[0]?.prototype).toBe('three');
 });
 
 test('literal dots in JSON keys cannot collide with nested-object dot paths', async ({ page }) => {
