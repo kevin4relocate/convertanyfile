@@ -1,0 +1,64 @@
+---
+import ArticleFrame from './ArticleFrame.astro';
+import FaqList from './FaqList.astro';
+import type { ConverterDefinition } from '../platform/converter/types';
+import { DATA_PAIR_CONTENT } from '../content/data-pair-content';
+import { getAnyConverter } from '../config/converter-registry';
+
+interface Props { converter: ConverterDefinition; }
+const { converter } = Astro.props;
+const content = DATA_PAIR_CONTENT[converter.slug];
+const inputLabel = converter.input?.toUpperCase() ?? 'DATA';
+const outputLabel = converter.output?.toUpperCase() ?? 'DATA';
+const related = (converter.related ?? []).map((slug) => getAnyConverter(slug)).filter(Boolean);
+const asideRelated = related.map((item) => ({ href: `/${item!.slug}/`, label: item!.eyebrow }));
+const toc = [
+  { id: 'why', label: `Why convert ${inputLabel} to ${outputLabel}?` },
+  { id: 'structure', label: 'How structure changes' },
+  { id: 'rules', label: 'Conversion rules' },
+  { id: 'workflow', label: 'Local workflow' },
+  { id: 'faq', label: 'Common questions' },
+];
+const faq = [
+  { question: `Can I convert ${inputLabel} to ${outputLabel} without uploading the file?`, answer: 'Yes. The structured-data engine runs in a browser worker. Supported source bytes stay in the browser session instead of being sent to a conversion queue.' },
+  { question: 'Does the converter guess data types?', answer: 'CSV and TSV cell values remain strings. This avoids silently turning identifiers, leading-zero values, dates, or formatted codes into a different type.' },
+  { question: 'What happens to nested JSON?', answer: 'When JSON is converted to a tabular format, nested plain-object keys are flattened with dot notation. Arrays and other complex values are kept as JSON text inside a cell.' },
+  { question: 'Are JSONL and NDJSON the same here?', answer: 'Yes. Both extensions use the JSON Lines input family: one complete JSON value per non-empty line.' },
+  { question: 'What encoding is supported?', answer: 'The production data converter expects valid UTF-8 text, with an optional UTF-8 BOM. Binary files and invalid UTF-8 are rejected.' },
+];
+---
+<ArticleFrame toc={toc} related={asideRelated} relatedTitle="Related data conversions" asideNote="Structured-data conversion is local and deterministic: the converter avoids hidden type inference and documents how headers, nesting, arrays, and line-oriented JSON are represented.">
+  <div class="quick-answer"><strong>Quick answer</strong><p>{content?.when}</p></div>
+
+  <h2 id="why">Why convert {inputLabel} to {outputLabel}?</h2>
+  <p>{content?.why}</p>
+  <p>{content?.when}</p>
+
+  <h2 id="structure">How the data structure changes</h2>
+  <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Concern</th><th>{inputLabel} source</th><th>{outputLabel} output</th></tr></thead><tbody><tr><td><strong>Records</strong></td><td>Read according to the source format.</td><td>Rewritten into the destination format without changing the original file.</td></tr><tr><td><strong>Text encoding</strong></td><td>Valid UTF-8, optional BOM.</td><td>UTF-8; tabular outputs can optionally include a BOM.</td></tr><tr><td><strong>Types</strong></td><td>Native JSON types are preserved where the target can represent them.</td><td>CSV/TSV cells are text; complex JSON values remain explicit JSON strings.</td></tr><tr><td><strong>Schema</strong></td><td>Headers or object keys define fields.</td><td>Headers, object keys, or line records are generated predictably.</td></tr></tbody></table></div>
+  <p>The converter is intentionally conservative. It does not try to infer that a value such as <code>00123</code> is a number or that <code>2026-08-18</code> is a date. Silent inference can damage identifiers and formatting, so delimited text stays text unless the source was already JSON with explicit native types.</p>
+
+  <h2 id="rules">Conversion rules you can rely on</h2>
+  <p>{content?.note}</p>
+  <ul class="content-checklist">
+    <li><strong>CSV and TSV headers:</strong> the first row defines column names. Empty headings receive stable column names and duplicates are made unique.</li>
+    <li><strong>Quoted delimited fields:</strong> delimiters, escaped quotes, CRLF/LF, and embedded newlines inside quoted fields are parsed before output is produced.</li>
+    <li><strong>Nested JSON:</strong> plain nested objects become dot-notation columns such as <code>profile.city</code> for CSV or TSV output.</li>
+    <li><strong>Arrays and complex values:</strong> they are serialized as JSON text when a tabular cell cannot represent the structure directly.</li>
+    <li><strong>JSONL / NDJSON:</strong> blank lines are ignored and every non-empty line must contain one complete JSON value.</li>
+  </ul>
+  <div class="callout"><strong>No hidden schema guessing</strong><p>Conversion changes representation, not meaning. Keep the source file as the authoritative copy and verify the output before importing it into another system with its own schema or type rules.</p></div>
+
+  <h2 id="workflow">How the browser-first data workflow works</h2>
+  <ol>
+    <li><strong>Add files.</strong> Drag supported UTF-8 CSV, TSV, JSON, JSONL, or NDJSON files into the shared converter workspace.</li>
+    <li><strong>Choose the output.</strong> The page can be preset for {outputLabel}; CSV and TSV expose header, line-ending, and optional BOM controls, while JSON can be pretty-printed.</li>
+    <li><strong>Convert locally.</strong> Parsing and serialization run inside a browser worker so larger text files do not unnecessarily block the main interface.</li>
+    <li><strong>Download results.</strong> Save successful outputs individually or package a batch into a ZIP using the same platform download system as the image converter.</li>
+  </ol>
+  <p>The data category uses its own safety policy: up to 50 files, 20 MB per file, and 100 MB total input per batch. These limits protect the browser because parsing structured text can expand substantially in memory even though no conversion server is involved.</p>
+
+  <h2 id="faq">Before you use the converted file</h2>
+  <p>Different applications impose different expectations on delimiters, newline style, column names, nested data, and type coercion. ConvertAnyFile creates a predictable general-purpose representation, but the final importing application remains authoritative. For spreadsheet-oriented CSV output, enable the UTF-8 BOM only when the destination benefits from it; otherwise plain UTF-8 is the cleaner default.</p>
+</ArticleFrame>
+<section class="content-wide-section white"><div class="site-container"><FaqList items={faq} title={`${inputLabel} to ${outputLabel} FAQ`} intro={`Practical details about converting ${inputLabel} to ${outputLabel} locally, including encoding, schema, nested values, and JSON Lines behavior.`} /></div></section>

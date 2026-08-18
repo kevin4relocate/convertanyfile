@@ -3,7 +3,13 @@ import type { ConverterDefinition } from '../platform/converter/types';
 interface Props { converter: ConverterDefinition; compact?: boolean; }
 const { converter, compact = false } = Astro.props;
 const policy = converter.batchPolicy;
-const acceptedHint = converter.category === 'image' ? (converter.input ? `${converter.input.toUpperCase()} files` : 'JPG, PNG, WebP, HEIC, AVIF, TIFF, RAW and 40+ more image extensions') : 'Supported files';
+const acceptedHint = converter.input
+  ? `${converter.input.toUpperCase()} files`
+  : converter.category === 'image'
+    ? 'JPG, PNG, WebP, HEIC, AVIF, TIFF, RAW and 40+ more image extensions'
+    : converter.category === 'data'
+      ? 'CSV, TSV, JSON, JSONL and NDJSON files'
+      : 'Supported files';
 ---
 <div
   class:list={['converter-card', compact && 'converter-card--compact']}
@@ -37,10 +43,16 @@ const acceptedHint = converter.category === 'image' ? (converter.input ? `${conv
       <section class="settings-card" aria-label="Conversion settings">
         <label class="field output-field"><span>Convert all to</span><select data-role="output-format" aria-label="Output format"></select></label>
         <div class="quick-field"><span>Popular outputs</span><div class="quick-outputs" data-role="quick-outputs"></div></div>
-        <label class="field quality-field" data-role="quality-field"><span data-role="quality-label">Quality 90</span><input data-role="quality" type="range" min="1" max="100" value="90" aria-label="Output quality" /></label>
+        <div class="output-controls" data-role="output-controls">
+          <label class="field quality-field" data-role="quality-field"><span data-role="quality-label">Quality 90</span><input data-role="quality" type="range" min="1" max="100" value="90" aria-label="Output quality" /></label>
+          <div class="extra-output-controls" data-role="extra-controls"></div>
+        </div>
       </section>
       {converter.category === 'image' && (
         <p class="conversion-policy-note">Certified output formats are filtered against the image engine running in your browser. Animated, multi-page, or layered inputs are currently exported as a single image; ICO inputs use the best available icon frame.</p>
+      )}
+      {converter.category === 'data' && (
+        <p class="conversion-policy-note">UTF-8 structured text is processed locally. CSV/TSV use the first row as headers; nested JSON objects use dot-notation columns for tabular output, while arrays remain explicit JSON text.</p>
       )}
       <div class="progress-wrap" data-role="progress" hidden aria-live="polite"><div class="progress-copy"><strong data-role="progress-text">Preparing…</strong><span>Keep this tab open</span></div><div class="progress-track"><span data-role="progress-bar"></span></div></div>
       <div class="file-list" data-role="file-list" aria-label="Selected files"></div>
@@ -49,3 +61,7 @@ const acceptedHint = converter.category === 'image' ? (converter.input ? `${conv
   </section>
 </div>
 <script src="../client/converter-app.ts"></script>
+<style is:global>
+  .output-controls{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;min-width:0}.extra-output-controls{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}.setting-field{white-space:nowrap}.setting-field select{min-width:78px}.setting-field--checkbox{gap:6px}.setting-field--checkbox input{width:15px;height:15px;margin:0;accent-color:var(--accent)}
+  @media(max-width:900px){.output-controls,.extra-output-controls{justify-content:flex-start}.setting-field{white-space:normal}}
+</style>

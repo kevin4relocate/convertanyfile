@@ -1,19 +1,19 @@
 export const GENERAL_FAQ = [
   {
     question: 'Are my files uploaded to a conversion server?',
-    answer: 'For the local converters currently available on ConvertAnyFile, supported files are processed in your browser. The current image converter does not require an image upload step.',
+    answer: 'For the local converters currently available on ConvertAnyFile, supported files are processed in your browser. The live Image and Data categories do not require a file upload step.',
   },
   {
     question: 'Do I need an account?',
-    answer: 'No. The core browser converter is designed to work without registration, sign-in, or a cloud project.',
+    answer: 'No. The core browser converters are designed to work without registration, sign-in, or a cloud project.',
   },
   {
     question: 'Can I convert multiple files at once?',
-    answer: 'Yes. The image converter supports batches, per-file status, individual downloads, and ZIP download for successful results.',
+    answer: 'Yes. Live converters use the shared batch workspace with per-file status, individual downloads, append-by-drag, and ZIP download for successful results.',
   },
   {
     question: 'Why are there batch limits?',
-    answer: 'Local conversion uses the memory and CPU of your device. Batch limits reduce the chance that an unusually large file, high-resolution image, or oversized batch makes the browser tab unstable.',
+    answer: 'Local conversion uses the memory and CPU of your device. Each category defines limits that reduce the chance that unusually large files or oversized batches make the browser tab unstable.',
   },
   {
     question: 'What happens if one file fails?',
@@ -28,16 +28,16 @@ export const GENERAL_FAQ = [
     answer: 'No. Conversion creates a new downloadable output. Your original local file is not overwritten by the website.',
   },
   {
-    question: 'Why does the first conversion sometimes take longer?',
-    answer: 'Some converters use WebAssembly engines that are loaded only when needed. The first use can include engine startup and browser caching work; later conversions in the same environment may start faster.',
+    question: 'Why can the first conversion take longer?',
+    answer: 'Some categories load a browser or WebAssembly engine only when needed. First use can include engine startup and caching work; later conversions in the same environment may start faster.',
   },
   {
-    question: 'Will ConvertAnyFile support more than images?',
-    answer: 'The platform is designed for multiple local converter engines. Additional categories will only be marked live when their browser workflow is reliable enough to test, explain, and protect with sensible limits.',
+    question: 'Which converter categories are live?',
+    answer: 'Image and structured Data conversion are live. Archive and Audio remain planned until their browser workflows have their own production validation, safety limits, and regression tests.',
   },
   {
     question: 'Why not process every file type on a server?',
-    answer: 'Server conversion can be useful for some heavy or specialized workflows, but it adds upload time, temporary storage, cleanup, and infrastructure cost. ConvertAnyFile prefers browser-first processing when the user experience is dependable.',
+    answer: 'Server conversion can be useful for heavy or specialized workflows, but it adds upload time, temporary storage, cleanup, and infrastructure cost. ConvertAnyFile prefers browser-first processing when the user experience is dependable.',
   },
 ] as const;
 

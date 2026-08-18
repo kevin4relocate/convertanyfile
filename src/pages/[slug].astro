@@ -3,17 +3,18 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 import ConverterPageFrame from '../components/ConverterPageFrame.astro';
 import FaqList from '../components/FaqList.astro';
 import ArticleFrame from '../components/ArticleFrame.astro';
-import { PAIR_CONVERTERS, getConverter } from '../config/converters';
+import DataPairContent from '../components/DataPairContent.astro';
+import { ALL_PAIR_CONVERTERS, getAnyConverter } from '../config/converter-registry';
 import { PAIR_CONTENT } from '../content/pair-content';
 import { FORMAT_REFERENCE } from '../content/format-reference';
 import { SITE } from '../config/site';
 
-export function getStaticPaths(){return PAIR_CONVERTERS.map((converter)=>({params:{slug:converter.slug},props:{converter}}));}
+export function getStaticPaths(){return ALL_PAIR_CONVERTERS.map((converter)=>({params:{slug:converter.slug},props:{converter}}));}
 const { converter } = Astro.props;
 const content = PAIR_CONTENT[converter.slug];
 const source = converter.input ? FORMAT_REFERENCE[converter.input] : undefined;
 const target = converter.output ? FORMAT_REFERENCE[converter.output] : undefined;
-const related = (converter.related ?? []).map((slug:string)=>getConverter(slug)).filter(Boolean);
+const related = (converter.related ?? []).map((slug:string)=>getAnyConverter(slug)).filter(Boolean);
 const asideRelated = related.map((item:any)=>({href:`/${item.slug}/`,label:item.eyebrow}));
 const inputLabel = converter.input?.toUpperCase();
 const outputLabel = converter.output?.toUpperCase();
@@ -28,14 +29,15 @@ const faq = [
   {question:`Can I convert ${inputLabel} to ${outputLabel} without uploading the file?`,answer:'Yes. This converter runs the supported image conversion workflow in your browser, so an image upload step is not required.'},
   {question:`Can I batch convert ${inputLabel} files?`,answer:'Yes. Add multiple supported files, convert them sequentially for browser memory safety, then download successful results individually or together as a ZIP.'},
   {question:'Does conversion change my original files?',answer:'No. The original files remain unchanged. The browser creates new downloadable output files.'},
-  {question:'What if one file fails?',answer:'The batch continues. Failed files can be retried individually without throwing away successful results.'},
+  {question:'What if one file fails?',answer:'The batch continues. Failed files can be retried individually when the failure may recover without throwing away successful results.'},
   {question:`Will ${outputLabel} automatically improve the image?`,answer:'No. A format conversion changes how the existing image is encoded or stored. It cannot restore source detail that was already missing or lost in an earlier compression step.'},
 ];
-const schema={'@context':'https://schema.org','@type':'WebApplication',name:converter.h1,url:`${SITE.origin}/${converter.slug}/`,applicationCategory:'MultimediaApplication',operatingSystem:'Any',offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}};
+const schema={'@context':'https://schema.org','@type':'WebApplication',name:converter.h1,url:`${SITE.origin}/${converter.slug}/`,applicationCategory:converter.category === 'data' ? 'UtilitiesApplication' : 'MultimediaApplication',operatingSystem:'Any',offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}};
 ---
 <SiteLayout title={converter.title} description={converter.description} schema={schema}>
 <ConverterPageFrame converter={converter} />
 
+{converter.category === 'data' ? <DataPairContent converter={converter} /> : <>
 <ArticleFrame toc={toc} related={asideRelated} relatedTitle="Related conversions" asideNote="The conversion engine checks the file signature and runtime codec capability before relying on the format extension.">
   <div class="quick-answer"><strong>Quick answer</strong><p>{content?.when}</p></div>
 
@@ -62,7 +64,7 @@ const schema={'@context':'https://schema.org','@type':'WebApplication',name:conv
     <li><strong>Convert locally.</strong> Supported image bytes are processed in the browser with the image engine rather than sent through a conversion upload queue.</li>
     <li><strong>Download results.</strong> Save individual files or package successful batch results into a ZIP.</li>
   </ol>
-  <p>Batch conversion runs sequentially to reduce browser memory pressure. If one image fails, the rest of the batch can continue, and the failed row can be retried without re-running successful files.</p>
+  <p>Batch conversion runs sequentially to reduce browser memory pressure. If one image fails, the rest of the batch can continue, and recoverable failures can be retried without re-running successful files.</p>
 
   <h2 id="faq">Before you convert</h2>
   <ul class="content-checklist">
@@ -74,4 +76,5 @@ const schema={'@context':'https://schema.org','@type':'WebApplication',name:conv
 </ArticleFrame>
 
 <section class="content-wide-section white"><div class="site-container"><FaqList items={faq} title={`${inputLabel} to ${outputLabel} FAQ`} intro={`Common questions about converting ${inputLabel} images to ${outputLabel} in the browser.`} /></div></section>
+</>}
 </SiteLayout>

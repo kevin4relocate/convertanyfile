@@ -1,5 +1,5 @@
 export type ConverterCategory = 'image' | 'audio' | 'archive' | 'data' | 'subtitle' | 'font' | 'other';
-export type EngineId = 'image';
+export type EngineId = 'image' | 'data';
 
 export interface BatchPolicy {
   maxFiles: number;
@@ -20,7 +20,22 @@ export interface RangeOutputControl {
   defaultValue: number;
 }
 
-export type OutputControl = RangeOutputControl;
+export interface SelectOutputControl {
+  id: string;
+  type: 'select';
+  label: string;
+  options: readonly { value: string; label: string }[];
+  defaultValue: string;
+}
+
+export interface CheckboxOutputControl {
+  id: string;
+  type: 'checkbox';
+  label: string;
+  defaultValue: boolean;
+}
+
+export type OutputControl = RangeOutputControl | SelectOutputControl | CheckboxOutputControl;
 
 export interface OutputOption {
   id: string;
@@ -34,7 +49,7 @@ export interface OutputOption {
 export interface DetectedFile {
   extension: string;
   label: string;
-  confidence: 'signature' | 'signature+extension';
+  confidence: 'signature' | 'signature+extension' | 'extension+content';
   width?: number;
   height?: number;
   estimatedDecodedBytes?: number;
