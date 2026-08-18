@@ -20,8 +20,8 @@ export const DATA_FAQ = [
     answer: 'Nested plain objects are flattened with dot notation, for example profile.city. Literal dots and backslashes in source property names are escaped so they cannot collide with paths created from nested objects. Arrays and other complex values are serialized as JSON text inside a cell.',
   },
   {
-    question: 'What happens to very large JSON numbers?',
-    answer: 'ConvertAnyFile rejects unquoted JSON numbers outside the browser safe-integer range instead of silently rounding them through JavaScript number precision. Large identifiers or exact large integers should be represented as JSON strings before conversion.',
+    question: 'How are precision-sensitive JSON numbers handled?',
+    answer: 'ConvertAnyFile rejects unquoted JSON numbers that would be rounded by the browser, including integers outside the safe range and high-precision decimals or exponents that cannot round-trip without changing value. Exact identifiers, money values, or other precision-sensitive numbers should be represented as JSON strings before conversion.',
   },
   {
     question: 'What is the difference between JSONL and NDJSON here?',
