@@ -4,6 +4,9 @@ const QUALITY_CONTROL: RangeOutputControl = {
   id: 'quality', type: 'range', label: 'Quality', min: 1, max: 100, step: 1, defaultValue: 90,
 };
 const LOSSY_CONTROLS = [QUALITY_CONTROL] as const;
+const POPULAR = 'Popular';
+const ADVANCED = 'Professional & advanced';
+const TECHNICAL = 'Legacy & technical';
 
 /**
  * Public output contract for the image product.
@@ -14,23 +17,23 @@ const LOSSY_CONTROLS = [QUALITY_CONTROL] as const;
  * second gate, so a format is hidden if the deployed WASM build cannot write it.
  */
 export const IMAGE_OUTPUTS: readonly OutputOption[] = [
-  { id: 'jpg', label: 'JPG', extension: 'jpg', mime: 'image/jpeg', controls: LOSSY_CONTROLS },
-  { id: 'png', label: 'PNG', extension: 'png', mime: 'image/png' },
-  { id: 'webp', label: 'WebP', extension: 'webp', mime: 'image/webp', controls: LOSSY_CONTROLS },
-  { id: 'avif', label: 'AVIF', extension: 'avif', mime: 'image/avif', controls: LOSSY_CONTROLS },
-  { id: 'heic', label: 'HEIC', extension: 'heic', mime: 'image/heic', controls: LOSSY_CONTROLS },
-  { id: 'jxl', label: 'JXL', extension: 'jxl', mime: 'image/jxl', controls: LOSSY_CONTROLS },
-  { id: 'jp2', label: 'JP2', extension: 'jp2', mime: 'image/jp2', controls: LOSSY_CONTROLS },
-  { id: 'tiff', label: 'TIFF', extension: 'tiff', mime: 'image/tiff' },
-  { id: 'gif', label: 'GIF', extension: 'gif', mime: 'image/gif' },
-  { id: 'bmp', label: 'BMP', extension: 'bmp', mime: 'image/bmp' },
-  { id: 'ico', label: 'ICO', extension: 'ico', mime: 'image/x-icon' },
-  { id: 'pcx', label: 'PCX', extension: 'pcx', mime: 'image/x-pcx' },
-  { id: 'tga', label: 'TGA', extension: 'tga', mime: 'image/x-tga' },
-  { id: 'qoi', label: 'QOI', extension: 'qoi', mime: 'image/qoi' },
-  { id: 'pnm', label: 'PNM', extension: 'pnm', mime: 'image/x-portable-anymap' },
-  { id: 'hdr', label: 'HDR', extension: 'hdr', mime: 'image/vnd.radiance' },
-  { id: 'exr', label: 'EXR', extension: 'exr', mime: 'image/x-exr' },
+  { id: 'jpg', label: 'JPG', extension: 'jpg', mime: 'image/jpeg', group: POPULAR, controls: LOSSY_CONTROLS },
+  { id: 'png', label: 'PNG', extension: 'png', mime: 'image/png', group: POPULAR },
+  { id: 'webp', label: 'WebP', extension: 'webp', mime: 'image/webp', group: POPULAR, controls: LOSSY_CONTROLS },
+  { id: 'avif', label: 'AVIF', extension: 'avif', mime: 'image/avif', group: POPULAR, controls: LOSSY_CONTROLS },
+  { id: 'heic', label: 'HEIC', extension: 'heic', mime: 'image/heic', group: POPULAR, controls: LOSSY_CONTROLS },
+  { id: 'tiff', label: 'TIFF', extension: 'tiff', mime: 'image/tiff', group: POPULAR },
+  { id: 'gif', label: 'GIF', extension: 'gif', mime: 'image/gif', group: POPULAR },
+  { id: 'bmp', label: 'BMP', extension: 'bmp', mime: 'image/bmp', group: POPULAR },
+  { id: 'ico', label: 'ICO', extension: 'ico', mime: 'image/x-icon', group: POPULAR },
+  { id: 'jxl', label: 'JXL', extension: 'jxl', mime: 'image/jxl', group: ADVANCED, controls: LOSSY_CONTROLS },
+  { id: 'jp2', label: 'JP2', extension: 'jp2', mime: 'image/jp2', group: ADVANCED, controls: LOSSY_CONTROLS },
+  { id: 'hdr', label: 'HDR', extension: 'hdr', mime: 'image/vnd.radiance', group: ADVANCED },
+  { id: 'exr', label: 'EXR', extension: 'exr', mime: 'image/x-exr', group: ADVANCED },
+  { id: 'pcx', label: 'PCX', extension: 'pcx', mime: 'image/x-pcx', group: TECHNICAL },
+  { id: 'tga', label: 'TGA', extension: 'tga', mime: 'image/x-tga', group: TECHNICAL },
+  { id: 'qoi', label: 'QOI', extension: 'qoi', mime: 'image/qoi', group: TECHNICAL },
+  { id: 'pnm', label: 'PNM', extension: 'pnm', mime: 'image/x-portable-anymap', group: TECHNICAL },
 ];
 
 export const IMAGE_CERTIFIED_OUTPUT_IDS = IMAGE_OUTPUTS.map((output) => output.id) as readonly string[];
