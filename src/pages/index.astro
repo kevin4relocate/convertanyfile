@@ -15,3 +15,16 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'C
 <section class="content-section"><div class="site-container"><FaqList items={GENERAL_FAQ} title="Built for quick, private conversion" intro="The platform is deliberately browser-first: simple for users, explicit about support, and lightweight to operate." /></div></section>
 <section class="closing-cta"><div class="site-container closing-card"><div><span class="section-kicker light-kicker">Available now</span><h2>Choose the converter that matches your file.</h2></div><a class="cta-button" href="/#converters">Browse converters →</a></div></section>
 </SiteLayout>
+
+<style>
+  .hero { padding-top: 28px; padding-bottom: 24px; }
+  .hero h1 { margin: 0 0 9px; font-size: clamp(40px, 5vw, 62px); }
+  .hero-lead { font-size: clamp(14px, 1.5vw, 16px); line-height: 1.45; }
+  .hero-trust { margin-top: 11px; gap: 16px; }
+  .hero-converter { margin-top: 18px; }
+  @media (max-width: 760px) {
+    .hero { padding-top: 20px; padding-bottom: 18px; }
+    .hero h1 { font-size: clamp(34px, 10vw, 48px); }
+    .hero-converter { margin-top: 14px; }
+  }
+</style>
