@@ -8,6 +8,7 @@ type StructuredSource =
   | { kind: 'json'; value: unknown };
 
 const encoder = new TextEncoder();
+const createRow = (): Row => Object.create(null) as Row;
 
 export function decodeUtf8(bytes: ArrayBuffer | Uint8Array): string {
   const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
@@ -85,7 +86,7 @@ function rowsToTable(rows: string[][]): { rows: Row[]; columns: string[] } {
   const width = Math.max(...rows.map((row) => row.length));
   const columns = normalizeHeaders(rows[0] ?? [], width);
   const records = rows.slice(1).map((values) => {
-    const record: Row = {};
+    const record = createRow();
     for (let index = 0; index < columns.length; index += 1) record[columns[index]!] = values[index] ?? '';
     return record;
   });
@@ -112,7 +113,7 @@ function escapePathSegment(key: string): string {
   return key.replaceAll('\\', '\\\\').replaceAll('.', '\\.');
 }
 
-function flattenObject(value: Record<string, unknown>, prefix = '', target: Row = {}): Row {
+function flattenObject(value: Record<string, unknown>, prefix = '', target: Row = createRow()): Row {
   for (const [key, item] of Object.entries(value)) {
     const segment = escapePathSegment(key);
     const path = prefix ? `${prefix}.${segment}` : segment;
@@ -126,7 +127,9 @@ function valuesToRows(value: unknown): Row[] {
   const source = Array.isArray(value) ? value : [value];
   return source.map((item) => {
     if (isPlainObject(item)) return flattenObject(item);
-    return { value: item as RecordValue };
+    const row = createRow();
+    row.value = item as RecordValue;
+    return row;
   });
 }
 
