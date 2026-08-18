@@ -3,6 +3,9 @@ import type { ConversionSettings } from '../../platform/converter/types';
 export type DataFormat = 'csv' | 'tsv' | 'json' | 'jsonl';
 type RecordValue = string | number | boolean | null | unknown[] | Record<string, unknown>;
 type Row = Record<string, RecordValue>;
+type StructuredSource =
+  | { kind: 'table'; rows: Row[]; columns: string[] }
+  | { kind: 'json'; value: unknown };
 
 const encoder = new TextEncoder();
 
@@ -63,27 +66,30 @@ function parseDelimited(text: string, delimiter: ',' | '\t'): string[][] {
 }
 
 function normalizeHeaders(source: string[], width: number): string[] {
-  const used = new Map<string, number>();
+  const used = new Set<string>();
   const headers: string[] = [];
   for (let index = 0; index < width; index += 1) {
     const raw = (source[index] ?? '').trim();
     const base = raw || `column_${index + 1}`;
-    const count = (used.get(base) ?? 0) + 1;
-    used.set(base, count);
-    headers.push(count === 1 ? base : `${base}_${count}`);
+    let candidate = base;
+    let suffix = 2;
+    while (used.has(candidate)) candidate = `${base}_${suffix++}`;
+    used.add(candidate);
+    headers.push(candidate);
   }
   return headers;
 }
 
-function rowsToRecords(rows: string[][]): Row[] {
-  if (!rows.length || (rows.length === 1 && rows[0]!.every((value) => value === ''))) return [];
+function rowsToTable(rows: string[][]): { rows: Row[]; columns: string[] } {
+  if (!rows.length || (rows.length === 1 && rows[0]!.every((value) => value === ''))) return { rows: [], columns: [] };
   const width = Math.max(...rows.map((row) => row.length));
-  const headers = normalizeHeaders(rows[0] ?? [], width);
-  return rows.slice(1).filter((row) => row.some((value) => value !== '')).map((values) => {
+  const columns = normalizeHeaders(rows[0] ?? [], width);
+  const records = rows.slice(1).map((values) => {
     const record: Row = {};
-    for (let index = 0; index < headers.length; index += 1) record[headers[index]!] = values[index] ?? '';
+    for (let index = 0; index < columns.length; index += 1) record[columns[index]!] = values[index] ?? '';
     return record;
   });
+  return { rows: records, columns };
 }
 
 function parseJsonl(text: string): unknown[] {
@@ -102,9 +108,14 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+function escapePathSegment(key: string): string {
+  return key.replaceAll('\\', '\\\\').replaceAll('.', '\\.');
+}
+
 function flattenObject(value: Record<string, unknown>, prefix = '', target: Row = {}): Row {
   for (const [key, item] of Object.entries(value)) {
-    const path = prefix ? `${prefix}.${key}` : key;
+    const segment = escapePathSegment(key);
+    const path = prefix ? `${prefix}.${segment}` : segment;
     if (isPlainObject(item)) flattenObject(item, path, target);
     else target[path] = item as RecordValue;
   }
@@ -144,8 +155,8 @@ function quoteCell(value: string, delimiter: ',' | '\t'): string {
   return `"${value.replaceAll('"', '""')}"`;
 }
 
-function serializeDelimited(rows: Row[], delimiter: ',' | '\t', settings: ConversionSettings): string {
-  const columns = columnsForRows(rows);
+function serializeDelimited(rows: Row[], delimiter: ',' | '\t', settings: ConversionSettings, preferredColumns?: string[]): string {
+  const columns = preferredColumns?.length ? preferredColumns : columnsForRows(rows);
   if (!columns.length) return '';
   const includeHeader = settings.includeHeader !== false;
   const lineEnding = settings.lineEnding === 'crlf' ? '\r\n' : '\n';
@@ -155,13 +166,18 @@ function serializeDelimited(rows: Row[], delimiter: ',' | '\t', settings: Conver
   return lines.join(lineEnding);
 }
 
-function sourceValue(text: string, inputFormat: DataFormat): unknown {
+function parseSource(text: string, inputFormat: DataFormat): StructuredSource {
   if (inputFormat === 'json') {
-    try { return JSON.parse(text); }
+    try { return { kind: 'json', value: JSON.parse(text) }; }
     catch { throw new Error('Invalid JSON input'); }
   }
-  if (inputFormat === 'jsonl') return parseJsonl(text);
-  return rowsToRecords(parseDelimited(text, inputFormat === 'csv' ? ',' : '\t'));
+  if (inputFormat === 'jsonl') return { kind: 'json', value: parseJsonl(text) };
+  const table = rowsToTable(parseDelimited(text, inputFormat === 'csv' ? ',' : '\t'));
+  return { kind: 'table', ...table };
+}
+
+function sourceJsonValue(source: StructuredSource): unknown {
+  return source.kind === 'table' ? source.rows : source.value;
 }
 
 function jsonlValues(value: unknown): unknown[] {
@@ -170,7 +186,8 @@ function jsonlValues(value: unknown): unknown[] {
 
 export function convertDataBytes(input: ArrayBuffer, inputFormat: DataFormat, output: DataFormat, settings: ConversionSettings): ArrayBuffer {
   const text = decodeUtf8(input);
-  const value = sourceValue(text, inputFormat);
+  const source = parseSource(text, inputFormat);
+  const value = sourceJsonValue(source);
   let rendered: string;
 
   if (output === 'json') {
@@ -178,7 +195,9 @@ export function convertDataBytes(input: ArrayBuffer, inputFormat: DataFormat, ou
   } else if (output === 'jsonl') {
     rendered = jsonlValues(value).map((item) => JSON.stringify(item)).join('\n');
   } else {
-    rendered = serializeDelimited(valuesToRows(value), output === 'csv' ? ',' : '\t', settings);
+    const rows = source.kind === 'table' ? source.rows : valuesToRows(source.value);
+    const columns = source.kind === 'table' ? source.columns : undefined;
+    rendered = serializeDelimited(rows, output === 'csv' ? ',' : '\t', settings, columns);
     if (settings.bom === true) rendered = `\uFEFF${rendered}`;
   }
 
