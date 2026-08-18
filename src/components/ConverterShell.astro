@@ -37,6 +37,7 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
   </div>
   <section class="converter-app">
     <div class="notice" data-role="notice" role="status" aria-live="polite" hidden></div>
+    <div class="notice" data-role="success-notice" data-type="success" role="status" aria-live="polite" hidden></div>
     <div class="drop-view" data-role="drop-view">
       <button class="drop-zone" data-role="drop-zone" type="button" aria-label={`Choose or drop ${acceptedHint.toLowerCase()}`}>
         <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" /></svg></span>
@@ -71,7 +72,93 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
   </section>
 </div>
 <script src="../client/converter-app.ts"></script>
+<script>
+  const feedbackTimers = new WeakMap<HTMLElement, number>();
+
+  const prettyLimit = (bytes: number): string => {
+    const mib = bytes / (1024 * 1024);
+    return Number.isInteger(mib) ? `${mib} MB` : `${mib.toFixed(1)} MB`;
+  };
+
+  const compactSkippedNotice = (root: HTMLElement, raw: string): string => {
+    const match = raw.match(/^(\d+) files? skipped:/i);
+    if (!match) return raw;
+    const count = Number(match[1]);
+    const noun = count === 1 ? 'file' : 'files';
+    const maxFiles = Number(root.dataset.maxFiles || 50);
+    const maxFileBytes = Number(root.dataset.maxFileBytes || 0);
+    const maxTotalBytes = Number(root.dataset.maxTotalBytes || 0);
+
+    if (raw.includes(`over the ${maxFiles}-file limit`)) return `${count} ${noun} skipped — ${maxFiles}-file limit reached.`;
+    if (raw.includes('per file') && maxFileBytes > 0) return `${count} ${noun} skipped — max ${prettyLimit(maxFileBytes)} per file.`;
+    if (raw.includes('batch limit') && maxTotalBytes > 0) return `${count} ${noun} skipped — batch limit ${prettyLimit(maxTotalBytes)}.`;
+    return raw;
+  };
+
+  const showSuccessNotice = (root: HTMLElement, message: string): void => {
+    const notice = root.querySelector<HTMLElement>('[data-role="success-notice"]');
+    const warningNotice = root.querySelector<HTMLElement>('[data-role="notice"]');
+    if (!notice) return;
+    const previous = feedbackTimers.get(notice);
+    if (previous) window.clearTimeout(previous);
+    if (warningNotice) warningNotice.hidden = true;
+    notice.textContent = message;
+    notice.hidden = false;
+    feedbackTimers.set(notice, window.setTimeout(() => { notice.hidden = true; }, 4600));
+  };
+
+  const clearDragVisuals = (): void => {
+    document.querySelectorAll<HTMLElement>('.workspace.is-dragging, .drop-zone.is-dragging').forEach((element) => element.classList.remove('is-dragging'));
+  };
+
+  const initConverterFeedback = (): void => {
+    document.querySelectorAll<HTMLElement>('[data-converter-app]').forEach((root) => {
+      if (root.dataset.feedbackReady === 'true') return;
+      root.dataset.feedbackReady = 'true';
+
+      const notice = root.querySelector<HTMLElement>('[data-role="notice"]');
+      const result = root.querySelector<HTMLElement>('[data-role="result-summary"]');
+      if (notice) {
+        const noticeObserver = new MutationObserver(() => {
+          if (notice.hidden) return;
+          const raw = notice.textContent?.trim() ?? '';
+          const compact = compactSkippedNotice(root, raw);
+          if (compact !== raw) notice.textContent = compact;
+        });
+        noticeObserver.observe(notice, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+      }
+
+      if (result) {
+        let lastSuccess = '';
+        const resultObserver = new MutationObserver(() => {
+          if (result.hidden) return;
+          const text = result.textContent?.trim() ?? '';
+          const match = text.match(/^(\d+)\/(\d+) converted\b/i);
+          if (!match || match[1] !== match[2] || Number(match[2]) < 1) return;
+          const total = Number(match[2]);
+          const key = `${total}:${text}`;
+          if (key === lastSuccess) return;
+          lastSuccess = key;
+          showSuccessNotice(root, `${total} ${total === 1 ? 'file' : 'files'} converted successfully.`);
+        });
+        resultObserver.observe(result, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+      }
+    });
+
+    const html = document.documentElement;
+    if (html.dataset.converterDragRecoveryReady !== 'true') {
+      html.dataset.converterDragRecoveryReady = 'true';
+      document.addEventListener('drop', () => queueMicrotask(clearDragVisuals), true);
+      document.addEventListener('dragend', clearDragVisuals, true);
+      window.addEventListener('blur', clearDragVisuals);
+    }
+  };
+
+  initConverterFeedback();
+</script>
 <style is:global>
   .settings-card{padding-left:26px;padding-right:28px;column-gap:24px}.output-field{padding-left:2px;padding-right:4px}.output-controls{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;min-width:0;padding-right:2px}.extra-output-controls{display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-wrap:wrap}.setting-field{white-space:nowrap}.setting-field select{min-width:88px}.setting-field--checkbox{gap:8px;margin-right:2px}.setting-field--checkbox input{width:15px;height:15px;margin:0;accent-color:var(--accent)}
+  .notice{width:min(760px,calc(100vw - 40px));max-width:760px;text-align:center;line-height:1.45;overflow-wrap:anywhere}.notice[data-type=success]{color:#166b49;background:#eefaf4;border-color:#bfe8d2;box-shadow:0 12px 35px rgba(24,122,85,.12)}
   @media(max-width:900px){.settings-card{padding-left:18px;padding-right:18px}.output-controls,.extra-output-controls{justify-content:flex-start;padding-right:0}.setting-field{white-space:normal}.setting-field--checkbox{margin-right:0}}
+  @media(max-width:760px){.notice{width:calc(100vw - 24px);max-width:calc(100vw - 24px);padding:10px 12px;font-size:11px}}
 </style>
