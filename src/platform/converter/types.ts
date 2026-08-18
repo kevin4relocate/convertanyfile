@@ -27,6 +27,7 @@ export interface OutputOption {
   label: string;
   extension: string;
   mime: string;
+  group?: string;
   controls?: readonly OutputControl[];
 }
 
