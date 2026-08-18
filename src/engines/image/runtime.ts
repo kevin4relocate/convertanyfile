@@ -1,3 +1,4 @@
+import { ConverterError } from '../../platform/converter/errors';
 import type { ConversionArtifact, EngineAdapter, EngineCapabilities, RangeOutputControl } from '../../platform/converter/types';
 import { detectImage } from './detect';
 import { extensionFromFilename, IMAGE_INPUT_EXTENSIONS, IMAGE_OUTPUTS, normalizeImageExtension, runtimeImageOutputs, runtimeSupportsImageInput } from './formats';
@@ -5,6 +6,7 @@ import { ImageWorkerClient } from './worker-client';
 
 let client = new ImageWorkerClient();
 let capabilitiesPromise: Promise<EngineCapabilities> | undefined;
+let generation = 0;
 
 const MAX_IMAGE_DIMENSION = 20_000;
 const MAX_ESTIMATED_DECODED_BYTES = 320 * 1024 * 1024;
@@ -15,6 +17,9 @@ function replaceExtension(filename: string, extension: string): string {
   const dot = filename.lastIndexOf('.');
   const base = dot > slash ? filename.slice(0, dot) : filename;
   return `${base}.${extension}`;
+}
+function cancelledError(): ConverterError {
+  return new ConverterError('Conversion was cancelled', 'engine-crash', true);
 }
 
 export const imageEngine: EngineAdapter = {
@@ -44,8 +49,22 @@ export const imageEngine: EngineAdapter = {
     const quality = Number.isFinite(requestedQuality)
       ? Math.min(qualityControl?.max ?? 100, Math.max(qualityControl?.min ?? 1, requestedQuality))
       : qualityControl?.defaultValue ?? 90;
-    const converted = await client.convert(await file.arrayBuffer(), inputFormat, output, quality);
+
+    const runGeneration = generation;
+    const input = await file.arrayBuffer();
+    if (runGeneration !== generation) throw cancelledError();
+
+    const activeClient = client;
+    const converted = await activeClient.convert(input, inputFormat, output, quality);
+    if (runGeneration !== generation) throw cancelledError();
+
     return { blob: new Blob([converted], { type: config.mime }), filename: replaceExtension(file.name, config.extension), output } satisfies ConversionArtifact;
   },
-  reset(reason) { client.reset(reason); client = new ImageWorkerClient(); capabilitiesPromise = undefined; },
+  reset(reason) {
+    generation += 1;
+    const previousClient = client;
+    client = new ImageWorkerClient();
+    capabilitiesPromise = undefined;
+    previousClient.reset(reason);
+  },
 };
