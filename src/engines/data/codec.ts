@@ -9,6 +9,7 @@ type StructuredSource =
 
 const encoder = new TextEncoder();
 const createRow = (): Row => Object.create(null) as Row;
+const JSON_NUMBER_PATTERN = /^(-?)(\d+)(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/;
 
 export function decodeUtf8(bytes: ArrayBuffer | Uint8Array): string {
   const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
@@ -94,7 +95,7 @@ function rowsToTable(rows: string[][]): { rows: Row[]; columns: string[] } {
 }
 
 function canonicalJsonNumber(raw: string): string | null {
-  const match = raw.match(/^(-?)(\d+)(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+  const match = raw.match(JSON_NUMBER_PATTERN);
   if (!match) return null;
   const fraction = match[3] ?? '';
   const exponentPart = Number(match[4] ?? '0');
@@ -103,10 +104,9 @@ function canonicalJsonNumber(raw: string): string | null {
   let exponent = exponentPart - fraction.length;
   let digits = `${match[2] ?? ''}${fraction}`.replace(/^0+/, '');
   if (!digits) return '0';
-  while (digits.endsWith('0')) {
-    digits = digits.slice(0, -1);
-    exponent += 1;
-  }
+  const withoutTrailingZeros = digits.replace(/0+$/, '');
+  exponent += digits.length - withoutTrailingZeros.length;
+  digits = withoutTrailingZeros;
   return `${match[1] === '-' ? '-' : ''}${digits}e${exponent}`;
 }
 
@@ -149,7 +149,7 @@ function assertSafeJsonNumbers(text: string): void {
     if (Number.isFinite(numeric)) {
       const sourceValue = canonicalJsonNumber(raw);
       const browserValue = canonicalJsonNumber(String(numeric));
-      if (sourceValue && browserValue && sourceValue !== browserValue) {
+      if ((JSON_NUMBER_PATTERN.test(raw) && !sourceValue) || (sourceValue && browserValue && sourceValue !== browserValue)) {
         throw new Error('JSON contains a numeric value that would lose precision in the browser. Quote exact decimal or high-precision values as strings before conversion.');
       }
     }
