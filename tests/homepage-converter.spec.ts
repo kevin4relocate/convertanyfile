@@ -79,3 +79,27 @@ test('homepage keeps independent Image and Data queues while switching tabs', as
   await expect(dataPanel.locator('.file-row')).toHaveCount(1);
   await expect(dataPanel.locator('[data-role="file-list"]')).toContainText('records.json');
 });
+
+test('homepage keeps the primary convert action visible near settings and uses a compact hero', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Homepage conversion CTA regression');
+  await page.goto('/');
+
+  await expect(page.locator('.hero .eyebrow')).toHaveCount(0);
+  await expect(page.locator('.hero-lead')).toHaveText('Convert images and structured data locally in your browser.');
+  await expect(page.locator('.hero-trust span')).toHaveCount(3);
+
+  const dataTab = page.getByRole('tab', { name: 'Data' });
+  await dataTab.click();
+  const dataPanel = page.locator('[data-home-panel="data"]');
+  await dataPanel.locator('[data-role="file-input"]').setInputFiles({
+    name: 'records.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('[{"id":1,"name":"Alice"}]'),
+  });
+
+  const topConvert = dataPanel.locator('[data-role="convert-top"]');
+  await expect(topConvert).toBeVisible();
+  await expect(topConvert).toBeEnabled();
+  await expect(topConvert).toContainText('Convert 1 File');
+  await expect(dataPanel.locator('.settings-card')).toContainText('Convert 1 File');
+});
