@@ -17,11 +17,11 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'C
 </SiteLayout>
 
 <style>
-  .hero { padding-top: 28px; padding-bottom: 24px; }
-  .hero h1 { margin: 0 0 9px; font-size: clamp(40px, 5vw, 62px); }
-  .hero-lead { font-size: clamp(14px, 1.5vw, 16px); line-height: 1.45; }
-  .hero-trust { margin-top: 11px; gap: 16px; }
-  .hero-converter { margin-top: 18px; }
+  .hero { padding-top: 22px; padding-bottom: 20px; }
+  .hero h1 { margin: 0 0 7px; font-size: clamp(38px, 4.65vw, 58px); }
+  .hero-lead { font-size: clamp(14px, 1.45vw, 16px); line-height: 1.4; }
+  .hero-trust { margin-top: 8px; gap: 15px; }
+  .hero-converter { margin-top: 14px; }
   :global(.converter-card--compact .settings-convert-button) {
     min-height: 38px;
     min-width: 148px;
@@ -29,9 +29,44 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'C
     border-radius: 10px;
     font-size: 12px;
   }
+  :global(.converter-card--compact .conversion-policy-note) {
+    margin-top: 10px;
+    margin-bottom: 8px;
+    font-size: 0;
+    line-height: 1.35;
+  }
+  :global(.converter-card--compact .conversion-policy-note::after) {
+    font-size: 12px;
+    color: #6b6f7c;
+  }
+  :global(.converter-card--compact[data-engine="image"] .conversion-policy-note::after) {
+    content: 'Animated, multi-page and layered images export as a single image.';
+  }
+  :global(.converter-card--compact[data-engine="data"] .conversion-policy-note::after) {
+    content: 'UTF-8 data stays local. CSV/TSV use the first row as headers.';
+  }
+  :global(.converter-card--compact .batch-action-bar) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 14px;
+  }
+  :global(.converter-card--compact .batch-action-bar .result-summary) {
+    order: 1;
+    margin: 0;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 760;
+    color: #555a68;
+  }
+  :global(.converter-card--compact .batch-action-bar .batch-buttons) {
+    order: 2;
+    margin-left: auto;
+  }
   :global(.converter-card--compact [data-role="download-zip"]) {
-    min-height: 42px;
-    padding: 9px 17px;
+    min-height: 40px;
+    padding: 8px 16px;
     border-color: #171822;
     background: linear-gradient(180deg, #20212d, #14151d);
     color: #fff;
@@ -44,50 +79,32 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'C
     box-shadow: 0 10px 24px rgba(23, 24, 34, .2);
     transform: translateY(-1px);
   }
-  :global(.converter-card--compact .file-list) {
-    counter-reset: file-sequence;
-  }
-  :global(.converter-card--compact .file-row) {
-    counter-increment: file-sequence;
-  }
-  :global(.converter-card--compact .file-main::before) {
-    content: counter(file-sequence, decimal-leading-zero);
-    width: 24px;
-    flex: 0 0 24px;
-    color: #a0a3af;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: .03em;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-  }
-  :global(.converter-card--compact .sticky-convert-bar) {
-    width: min(660px, calc(100vw - 32px));
-  }
-  :global(.converter-card--compact .sticky-convert-bar > span) {
-    color: #4f5260;
-    font-weight: 820;
+  :global(.proof-strip .proof-grid > div) {
+    padding-top: 17px;
+    padding-bottom: 17px;
   }
   @media (max-width: 760px) {
-    .hero { padding-top: 20px; padding-bottom: 18px; }
-    .hero h1 { font-size: clamp(34px, 10vw, 48px); }
-    .hero-converter { margin-top: 14px; }
+    .hero { padding-top: 16px; padding-bottom: 16px; }
+    .hero h1 { font-size: clamp(33px, 9.6vw, 46px); }
+    .hero-trust { margin-top: 7px; }
+    .hero-converter { margin-top: 12px; }
     :global(.converter-card--compact .settings-convert-button) {
       min-height: 44px;
       font-size: 13px;
     }
+    :global(.converter-card--compact .batch-action-bar) {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 10px;
+    }
+    :global(.converter-card--compact .batch-action-bar .batch-buttons) {
+      width: 100%;
+      margin-left: 0;
+    }
     :global(.converter-card--compact [data-role="download-zip"]) {
+      width: 100%;
       min-height: 44px;
       font-size: 13px;
-    }
-    :global(.converter-card--compact .file-main::before) {
-      width: 20px;
-      flex-basis: 20px;
-      font-size: 9px;
-    }
-    :global(.converter-card--compact .sticky-convert-bar) {
-      bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-      width: calc(100vw - 20px);
     }
   }
 </style>
