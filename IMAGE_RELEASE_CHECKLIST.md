@@ -31,21 +31,20 @@ This checklist is the release contract for the first production category on Conv
 2. PNG
 3. WebP
 4. AVIF
-5. HEIC
-6. JXL
-7. JP2
-8. TIFF
-9. GIF
-10. BMP
-11. ICO
-12. PCX
-13. TGA
-14. QOI
-15. PNM
-16. HDR
-17. EXR
+5. TIFF
+6. GIF
+7. BMP
+8. ICO
+9. JXL
+10. JP2
+11. HDR
+12. EXR
+13. PCX
+14. TGA
+15. QOI
+16. PNM
 
-The runtime scan is still authoritative. If the packaged WASM build does not report a writer, the option must be hidden and CI must fail until the certified catalog is reconciled.
+The runtime scan is authoritative. HEIC/HEIF is intentionally **input-only** in this release because the packaged ImageMagick WASM build does not report a HEIC writer. ConvertAnyFile must not advertise an encoder that the deployed runtime does not actually provide.
 
 ## Input policy
 
@@ -73,7 +72,7 @@ Automated fixtures protect engineering behavior, but a final launch smoke should
 - [ ] WebP photo
 - [ ] transparent WebP graphic
 - [ ] AVIF image
-- [ ] HEIC photo from iPhone
+- [ ] HEIC photo from iPhone → JPG/PNG/WebP/AVIF (input path only)
 - [ ] GIF still
 - [ ] animated GIF — verify single-image policy is understandable
 - [ ] TIFF from a scanner/editor
