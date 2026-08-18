@@ -44,6 +44,30 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'C
     box-shadow: 0 10px 24px rgba(23, 24, 34, .2);
     transform: translateY(-1px);
   }
+  :global(.converter-card--compact .file-list) {
+    counter-reset: file-sequence;
+  }
+  :global(.converter-card--compact .file-row) {
+    counter-increment: file-sequence;
+  }
+  :global(.converter-card--compact .file-main::before) {
+    content: counter(file-sequence, decimal-leading-zero);
+    width: 24px;
+    flex: 0 0 24px;
+    color: #a0a3af;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .03em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  :global(.converter-card--compact .sticky-convert-bar) {
+    width: min(660px, calc(100vw - 32px));
+  }
+  :global(.converter-card--compact .sticky-convert-bar > span) {
+    color: #4f5260;
+    font-weight: 820;
+  }
   @media (max-width: 760px) {
     .hero { padding-top: 20px; padding-bottom: 18px; }
     .hero h1 { font-size: clamp(34px, 10vw, 48px); }
@@ -55,6 +79,15 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'C
     :global(.converter-card--compact [data-role="download-zip"]) {
       min-height: 44px;
       font-size: 13px;
+    }
+    :global(.converter-card--compact .file-main::before) {
+      width: 20px;
+      flex-basis: 20px;
+      font-size: 9px;
+    }
+    :global(.converter-card--compact .sticky-convert-bar) {
+      bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      width: calc(100vw - 20px);
     }
   }
 </style>
