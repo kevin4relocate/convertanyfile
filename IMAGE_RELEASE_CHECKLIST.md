@@ -16,6 +16,7 @@ This checklist is the release contract for the first production category on Conv
 - [ ] transparent PNG → JPG produces white background pixels
 - [ ] 50-file batch cap and internally scrollable queue
 - [ ] append-by-drag: 10 initial files + 5 dropped files = 15 jobs
+- [ ] cancellation race cannot produce a result after Cancel, including while source bytes are still being read
 - [ ] PCX → JPG real WASM regression
 - [ ] TGA → JPG real WASM regression
 - [ ] real multi-size PNG-backed ICO → JPG regression
@@ -50,7 +51,7 @@ The runtime scan is authoritative. HEIC/HEIF is intentionally **input-only** in 
 
 The detector recognizes 57 filename extensions, but recognition is not a guarantee that every real-world variant decodes. Admission also requires signature validation and runtime decoder capability.
 
-Camera RAW remains best-effort until representative real-camera fixtures are added model by model.
+Camera RAW remains best-effort until representative real-camera fixtures are added model by model. Public launch copy should not imply that every RAW family is certified merely because the extension has a detector path.
 
 ## Fidelity policy
 

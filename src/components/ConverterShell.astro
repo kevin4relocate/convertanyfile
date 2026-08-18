@@ -7,7 +7,7 @@ const policy = converter.batchPolicy;
 const acceptedHint = converter.input
   ? `${converter.input.toUpperCase()} files`
   : converter.category === 'image'
-    ? 'JPG, PNG, WebP, HEIC, AVIF, TIFF, RAW and 40+ more image extensions'
+    ? 'JPG, PNG, WebP, HEIC, AVIF, TIFF and other supported images'
     : converter.category === 'data'
       ? 'CSV, TSV, JSON, JSONL and NDJSON files'
       : 'Supported files';

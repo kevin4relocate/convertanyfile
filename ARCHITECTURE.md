@@ -25,7 +25,7 @@ Live engines:
 - `src/engines/image/` — ImageMagick WASM image conversion.
 - `src/engines/data/` — UTF-8 structured-text conversion for CSV, TSV, JSON and JSON Lines.
 
-Output controls are declared by the engine through the shared control schema. Image uses a range control for lossy quality. Data uses select and checkbox controls for line endings, headers, BOM and JSON pretty printing. Category-specific settings must not be hard-coded into the shared queue.
+Output controls are declared by the engine through the shared control schema. Image uses a range control for lossy quality. Data uses select and checkbox controls for line endings, headers, BOM and pretty printing. Category-specific settings must not be hard-coded into the shared queue.
 
 ## Image codec contract
 
@@ -65,8 +65,11 @@ The contract is deliberately deterministic:
 - JSON objects flatten with dot notation for tabular output.
 - Arrays and complex JSON values remain JSON strings inside table cells.
 - JSONL and NDJSON share one line-oriented input family: one complete JSON value per non-empty line.
+- JSON numeric tokens that would change value through JavaScript precision are rejected rather than silently rounded; exact precision-sensitive values belong in JSON strings.
 - CSV/TSV output can include/exclude the header, choose LF/CRLF, and optionally emit a UTF-8 BOM.
 - JSON output can be pretty or compact.
+
+The 64 KB admission sample is only a lightweight filter. Sampling uses streaming UTF-8 decoding so a valid multibyte character split at the sample boundary is not mistaken for corrupt text, and truncated JSONL tails are not treated as complete records. Full parsing in the worker remains authoritative.
 
 This engine is a format converter, not an ETL engine. It does not join files, execute spreadsheet formulas, infer relational schemas or apply business mappings.
 
@@ -79,7 +82,9 @@ Policies are supplied by converter definitions rather than hard-coded in UI comp
 
 Compressed or serialized input size is not a sufficient memory signal. Images expand into pixels; JSON/CSV can expand into JavaScript strings, arrays, objects and generated output.
 
-Worker crash, message corruption, and timeout tear down the active worker. A later request initializes a fresh worker. Deterministic corrupt/unsupported/memory failures are permanent and must not expose Retry; transient engine crash/timeout failures may expose Retry.
+Worker crash, message corruption, and timeout tear down the active worker. A later request initializes a fresh worker. Deterministic corrupt/unsupported/memory/precision failures are permanent and must not expose Retry; transient engine crash/timeout failures may expose Retry.
+
+Engine reset also invalidates the generation of any in-flight conversion. Cancel must remain authoritative if it races with `File.arrayBuffer()` or worker completion: a stale generation cannot publish a successful artifact after reset.
 
 Future archive/audio/subtitle engines can define different limits without changing shared UI code.
 
@@ -99,4 +104,4 @@ A category is production-ready only when static checks, browser UX regressions, 
 
 Image additionally requires the full certified-output matrix to encode every public output and decode generated files back through the public converter path.
 
-Data additionally requires real byte-level regressions for quoted delimited fields, nested JSON flattening, JSONL/NDJSON, output controls, deterministic parse failures, and shared batch/ZIP reuse. See `IMAGE_RELEASE_CHECKLIST.md` and `DATA_RELEASE_CHECKLIST.md`.
+Data additionally requires real byte-level regressions for quoted delimited fields, nested JSON flattening, JSONL/NDJSON, output controls, deterministic parse failures, numeric fidelity, safe admission sampling, cancellation, and shared batch/ZIP reuse. See `IMAGE_RELEASE_CHECKLIST.md` and `DATA_RELEASE_CHECKLIST.md`.

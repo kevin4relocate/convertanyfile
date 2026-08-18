@@ -9,6 +9,7 @@ type StructuredSource =
 
 const encoder = new TextEncoder();
 const createRow = (): Row => Object.create(null) as Row;
+const JSON_NUMBER_PATTERN = /^(-?)(\d+)(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/;
 
 export function decodeUtf8(bytes: ArrayBuffer | Uint8Array): string {
   const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
@@ -70,8 +71,8 @@ function normalizeHeaders(source: string[], width: number): string[] {
   const used = new Set<string>();
   const headers: string[] = [];
   for (let index = 0; index < width; index += 1) {
-    const raw = (source[index] ?? '').trim();
-    const base = raw || `column_${index + 1}`;
+    const raw = source[index] ?? '';
+    const base = raw.trim() ? raw : `column_${index + 1}`;
     let candidate = base;
     let suffix = 2;
     while (used.has(candidate)) candidate = `${base}_${suffix++}`;
@@ -91,6 +92,22 @@ function rowsToTable(rows: string[][]): { rows: Row[]; columns: string[] } {
     return record;
   });
   return { rows: records, columns };
+}
+
+function canonicalJsonNumber(raw: string): string | null {
+  const match = raw.match(JSON_NUMBER_PATTERN);
+  if (!match) return null;
+  const fraction = match[3] ?? '';
+  const exponentPart = Number(match[4] ?? '0');
+  if (!Number.isSafeInteger(exponentPart)) return null;
+
+  let exponent = exponentPart - fraction.length;
+  let digits = `${match[2] ?? ''}${fraction}`.replace(/^0+/, '');
+  if (!digits) return '0';
+  const withoutTrailingZeros = digits.replace(/0+$/, '');
+  exponent += digits.length - withoutTrailingZeros.length;
+  digits = withoutTrailingZeros;
+  return `${match[1] === '-' ? '-' : ''}${digits}e${exponent}`;
 }
 
 function assertSafeJsonNumbers(text: string): void {
@@ -122,12 +139,21 @@ function assertSafeJsonNumbers(text: string): void {
       if (text[cursor] === '+' || text[cursor] === '-') cursor += 1;
       while (cursor < text.length && text[cursor]! >= '0' && text[cursor]! <= '9') cursor += 1;
     }
+
     const raw = text.slice(index, cursor);
     const numeric = Number(raw);
-    if (Number.isFinite(numeric) && Math.abs(numeric) <= Number.MAX_SAFE_INTEGER) { index = cursor - 1; continue; }
-    if (!Number.isNaN(numeric)) {
+    if (!Number.isNaN(numeric) && (!Number.isFinite(numeric) || Math.abs(numeric) > Number.MAX_SAFE_INTEGER)) {
       throw new Error('JSON contains a numeric value outside the safe browser range. Quote large identifiers or exact large integers as strings before conversion.');
     }
+
+    if (Number.isFinite(numeric)) {
+      const sourceValue = canonicalJsonNumber(raw);
+      const browserValue = canonicalJsonNumber(String(numeric));
+      if ((JSON_NUMBER_PATTERN.test(raw) && !sourceValue) || (sourceValue && browserValue && sourceValue !== browserValue)) {
+        throw new Error('JSON contains a numeric value that would lose precision in the browser. Quote exact decimal or high-precision values as strings before conversion.');
+      }
+    }
+    index = cursor - 1;
   }
 }
 
@@ -139,7 +165,7 @@ function parseJsonl(text: string): unknown[] {
     if (!line) continue;
     try { assertSafeJsonNumbers(line); values.push(JSON.parse(line)); }
     catch (error) {
-      if (error instanceof Error && /safe browser range/i.test(error.message)) throw error;
+      if (error instanceof Error && /safe browser range|lose precision/i.test(error.message)) throw error;
       throw new Error(`Invalid JSONL at line ${index + 1}`);
     }
   }
@@ -158,8 +184,12 @@ function flattenObject(value: Record<string, unknown>, prefix = '', target: Row 
   for (const [key, item] of Object.entries(value)) {
     const segment = escapePathSegment(key);
     const path = prefix ? `${prefix}.${segment}` : segment;
-    if (isPlainObject(item)) flattenObject(item, path, target);
-    else target[path] = item as RecordValue;
+    if (isPlainObject(item)) {
+      if (Object.keys(item).length === 0) target[path] = item;
+      else flattenObject(item, path, target);
+    } else {
+      target[path] = item as RecordValue;
+    }
   }
   return target;
 }
@@ -167,7 +197,12 @@ function flattenObject(value: Record<string, unknown>, prefix = '', target: Row 
 function valuesToRows(value: unknown): Row[] {
   const source = Array.isArray(value) ? value : [value];
   return source.map((item) => {
-    if (isPlainObject(item)) return flattenObject(item);
+    if (isPlainObject(item)) {
+      if (Object.keys(item).length > 0) return flattenObject(item);
+      const emptyObjectRow = createRow();
+      emptyObjectRow.value = item;
+      return emptyObjectRow;
+    }
     const row = createRow();
     row.value = item as RecordValue;
     return row;
@@ -214,7 +249,7 @@ function parseSource(text: string, inputFormat: DataFormat): StructuredSource {
   if (inputFormat === 'json') {
     try { assertSafeJsonNumbers(text); return { kind: 'json', value: JSON.parse(text) }; }
     catch (error) {
-      if (error instanceof Error && /safe browser range/i.test(error.message)) throw error;
+      if (error instanceof Error && /safe browser range|lose precision/i.test(error.message)) throw error;
       throw new Error('Invalid JSON input');
     }
   }

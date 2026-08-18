@@ -49,7 +49,7 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
         Data
       </button>
     </div>
-    <span class="home-converter-auto-hint">Drop a supported file — category auto-detects</span>
+    <span class="home-converter-auto-hint" data-home-auto-hint role="status" aria-live="polite" aria-atomic="true">Drop a supported file — category auto-detects</span>
   </div>
 
   <div
@@ -91,10 +91,49 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
       const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-home-panel]'));
       const imageExtensions = new Set((root.dataset.imageExtensions ?? '').split(',').filter(Boolean));
       const dataExtensions = new Set((root.dataset.dataExtensions ?? '').split(',').filter(Boolean));
+      const hint = root.querySelector<HTMLElement>('[data-home-auto-hint]');
+      const defaultHint = hint?.textContent?.trim() ?? 'Drop a supported file — category auto-detects';
+      let hintTimer: number | undefined;
 
       const activeCategory = (): HomeCategory => root.dataset.activeCategory === 'data' ? 'data' : 'image';
+      const panelFor = (category: HomeCategory): HTMLElement | undefined => panels.find((item) => item.dataset.homePanel === category);
+      const activeApp = (): HTMLElement | null => panelFor(activeCategory())?.querySelector<HTMLElement>('[data-converter-app]') ?? null;
+      const currentBusy = (): boolean => activeApp()?.getAttribute('aria-busy') === 'true';
+      const currentConverting = (): boolean => {
+        const cancel = activeApp()?.querySelector<HTMLButtonElement>('[data-role="cancel"]');
+        return Boolean(cancel && !cancel.hidden);
+      };
 
-      const activate = (category: HomeCategory, focus = false): void => {
+      const showHint = (message: string): void => {
+        if (!hint) return;
+        if (hintTimer) window.clearTimeout(hintTimer);
+        hint.textContent = message;
+        hint.classList.add('is-message');
+        hintTimer = window.setTimeout(() => {
+          hint.textContent = defaultHint;
+          hint.classList.remove('is-message');
+        }, 4200);
+      };
+
+      const syncBusyState = (): void => {
+        const busy = currentBusy();
+        root.dataset.busy = busy ? 'true' : 'false';
+        for (const tab of tabs) {
+          const inactive = tab.dataset.homeCategory !== activeCategory();
+          if (busy && inactive) tab.setAttribute('aria-disabled', 'true');
+          else tab.removeAttribute('aria-disabled');
+        }
+      };
+
+      const activate = (category: HomeCategory, focus = false): boolean => {
+        if (category !== activeCategory() && currentBusy()) {
+          showHint(currentConverting()
+            ? 'Finish or cancel the current conversion before switching.'
+            : 'Wait for the current files to finish adding before switching.');
+          syncBusyState();
+          return false;
+        }
+
         root.dataset.activeCategory = category;
         for (const tab of tabs) {
           const selected = tab.dataset.homeCategory === category;
@@ -104,6 +143,8 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
           if (selected && focus) tab.focus();
         }
         for (const panel of panels) panel.hidden = panel.dataset.homePanel !== category;
+        syncBusyState();
+        return true;
       };
 
       const classify = (files: readonly File[]): HomeCategory => {
@@ -122,9 +163,16 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
       const admitFiles = (files: File[]): void => {
         if (!files.length) return;
         const category = classify(files);
-        activate(category);
-        const panel = panels.find((item) => item.dataset.homePanel === category);
-        const input = panel?.querySelector<HTMLInputElement>('[data-role="file-input"]');
+        if (currentConverting()) {
+          showHint('Finish or cancel the current conversion before adding more files.');
+          return;
+        }
+        if (category !== activeCategory() && currentBusy()) {
+          showHint('Wait for the current files to finish adding before switching categories.');
+          return;
+        }
+        if (!activate(category)) return;
+        const input = panelFor(category)?.querySelector<HTMLInputElement>('[data-role="file-input"]');
         if (!input) return;
         const transfer = new DataTransfer();
         for (const file of files) transfer.items.add(file);
@@ -169,6 +217,13 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
         event.stopPropagation();
         admitFiles(files);
       }, true);
+
+      const busyObserver = new MutationObserver(syncBusyState);
+      for (const panel of panels) {
+        const app = panel.querySelector<HTMLElement>('[data-converter-app]');
+        if (app) busyObserver.observe(app, { attributes: true, attributeFilter: ['aria-busy'] });
+      }
+      syncBusyState();
     });
   }
 
@@ -179,6 +234,7 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
   .home-converter-category-bar {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 12px;
     margin-bottom: 10px;
     padding: 7px 9px 7px 14px;
@@ -232,7 +288,7 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
     font: inherit;
     font-size: 12px;
     font-weight: 800;
-    transition: background .14s ease, box-shadow .14s ease, color .14s ease;
+    transition: background .14s ease, box-shadow .14s ease, color .14s ease, opacity .14s ease;
   }
 
   .home-converter-tab:hover {
@@ -248,6 +304,11 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
     background: #fff;
     color: #242631;
     box-shadow: 0 2px 8px rgba(34, 36, 52, .08);
+  }
+
+  .home-converter-switcher[data-busy="true"] .home-converter-tab[aria-disabled="true"] {
+    opacity: .48;
+    cursor: not-allowed;
   }
 
   .home-converter-tab-dot {
@@ -270,6 +331,11 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
     white-space: nowrap;
   }
 
+  .home-converter-auto-hint.is-message {
+    color: var(--accent-dark);
+    font-weight: 760;
+  }
+
   .home-converter-panel[hidden] {
     display: none;
   }
@@ -290,6 +356,14 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
 
     .home-converter-auto-hint {
       display: none;
+    }
+
+    .home-converter-auto-hint.is-message {
+      display: block;
+      flex-basis: 100%;
+      margin-left: 0;
+      text-align: center;
+      white-space: normal;
     }
 
     .home-converter-tabs {
