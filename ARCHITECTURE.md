@@ -2,7 +2,7 @@
 
 ## Principle
 
-The website shell and the conversion engine are separate products inside one repository.
+The website shell and category conversion engines are separate products inside one repository.
 
 A new converter category must not require copying the header, footer, FAQ markup, batch queue, download logic, sitemap, robots file, or page layout.
 
@@ -10,7 +10,7 @@ A new converter category must not require copying the header, footer, FAQ markup
 
 `SiteLayout.astro` owns document metadata, canonical URLs, structured data hooks, header and footer.
 
-`ConverterShell.astro` owns the reusable dropzone, settings area, scrollable queue, progress area and sticky action bar.
+`ConverterShell.astro` owns the reusable dropzone, engine-declared settings area, scrollable queue, progress area and sticky action bar.
 
 `converter-app.ts` owns generic batch lifecycle: admission, append-by-drop, queue state, progress, cancel, retry, result statistics and ZIP download.
 
@@ -18,9 +18,14 @@ A new converter category must not require copying the header, footer, FAQ markup
 
 ## Engine contract
 
-A future engine provides accepted extensions, lightweight validation, lazy runtime initialization, runtime capabilities, available outputs, conversion implementation and reset/cancel behavior.
+Each engine provides accepted extensions, lightweight validation, lazy runtime initialization, capabilities, available outputs, output controls, conversion implementation and reset/cancel behavior.
 
-The image implementation lives entirely under `src/engines/image/`.
+Live engines:
+
+- `src/engines/image/` — ImageMagick WASM image conversion.
+- `src/engines/data/` — UTF-8 structured-text conversion for CSV, TSV, JSON and JSON Lines.
+
+Output controls are declared by the engine through the shared control schema. Image uses a range control for lossy quality. Data uses select and checkbox controls for line endings, headers, BOM and JSON pretty printing. Category-specific settings must not be hard-coded into the shared queue.
 
 ## Image codec contract
 
@@ -46,24 +51,52 @@ The current image product creates one output image per input file.
 
 If full animation, page, or layer preservation is implemented later, it must be an explicit product mode with its own tests rather than an accidental side effect of a codec.
 
+## Structured Data contract
+
+The first Data production release accepts CSV, TSV, JSON, JSONL and NDJSON input and produces CSV, TSV, JSON and JSONL.
+
+The contract is deliberately deterministic:
+
+- Input text must be valid UTF-8; a UTF-8 BOM is accepted.
+- CSV/TSV first row defines headers.
+- Empty and duplicate headers are normalized so fields are not lost.
+- Delimited cells remain strings; the engine does not guess numbers, dates or booleans.
+- Quoted delimited fields support embedded delimiters, escaped quotes and embedded CRLF/LF newlines.
+- JSON objects flatten with dot notation for tabular output.
+- Arrays and complex JSON values remain JSON strings inside table cells.
+- JSONL and NDJSON share one line-oriented input family: one complete JSON value per non-empty line.
+- CSV/TSV output can include/exclude the header, choose LF/CRLF, and optionally emit a UTF-8 BOM.
+- JSON output can be pretty or compact.
+
+This engine is a format converter, not an ETL engine. It does not join files, execute spreadsheet formulas, infer relational schemas or apply business mappings.
+
 ## Browser safety
 
-Policies are supplied by the converter definition rather than hard-coded in UI components. Image currently uses 50 files, 75 MB per file, 300 MB total, and sequential processing.
+Policies are supplied by converter definitions rather than hard-coded in UI components.
 
-The image adapter additionally rejects extreme decoded dimensions / estimated pixel memory before conversion. Compressed input bytes are not a sufficient safety signal.
+- Image: 50 files, 75 MB per file, 300 MB total, sequential processing, plus decoded-pixel memory/dimension guards.
+- Data: 50 files, 20 MB per file, 100 MB total, sequential processing in a browser worker.
 
-Worker crash, message corruption, and timeout tear down the worker. A later request initializes a fresh worker. Deterministic corrupt/unsupported/memory failures are permanent and must not expose Retry; transient engine crash/timeout failures may expose Retry.
+Compressed or serialized input size is not a sufficient memory signal. Images expand into pixels; JSON/CSV can expand into JavaScript strings, arrays, objects and generated output.
 
-Future audio/archive/data engines can define different limits without changing shared UI code.
+Worker crash, message corruption, and timeout tear down the active worker. A later request initializes a fresh worker. Deterministic corrupt/unsupported/memory failures are permanent and must not expose Retry; transient engine crash/timeout failures may expose Retry.
+
+Future archive/audio/subtitle engines can define different limits without changing shared UI code.
 
 ## Routing and SEO
 
-`src/config/converters.ts` is the route registry for real converter pages. Static pair pages are generated from that registry and reuse the same converter shell.
+`src/config/converters.ts` owns Image routes. `src/config/data-converters.ts` owns Data routes. `src/config/converter-registry.ts` is the combined registry used by shared dynamic pair routing.
 
 Do not create a route until the conversion is real, testable, and useful. This avoids thin placeholder pages and keeps sitemap output aligned with product capability.
 
 All dedicated converter pages render through `ConverterPageFrame` so the primary file action remains above the first desktop viewport. The homepage is the intentional marketing-layout exception and has its own viewport regression.
 
+Pair pages can provide category-specific explanation below the shared frame, but may not duplicate the queue or engine backend.
+
 ## Release gate
 
-A category is production-ready only when static checks, browser UX regressions, category-specific real conversion tests, safety limits, and error semantics are green. The image release additionally requires the full certified-output matrix to encode every public output and decode that generated file back through the public converter path.
+A category is production-ready only when static checks, browser UX regressions, category-specific real conversion tests, safety limits, deterministic error semantics, sitemap/canonical/internal-link tests, and existing-category regressions are green.
+
+Image additionally requires the full certified-output matrix to encode every public output and decode generated files back through the public converter path.
+
+Data additionally requires real byte-level regressions for quoted delimited fields, nested JSON flattening, JSONL/NDJSON, output controls, deterministic parse failures, and shared batch/ZIP reuse. See `IMAGE_RELEASE_CHECKLIST.md` and `DATA_RELEASE_CHECKLIST.md`.
