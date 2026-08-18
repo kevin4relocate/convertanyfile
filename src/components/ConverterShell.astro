@@ -3,7 +3,7 @@ import type { ConverterDefinition } from '../platform/converter/types';
 interface Props { converter: ConverterDefinition; compact?: boolean; }
 const { converter, compact = false } = Astro.props;
 const policy = converter.batchPolicy;
-const acceptedHint = converter.category === 'image' ? (converter.input ? `${converter.input.toUpperCase()} files` : 'JPG, PNG, WebP, HEIC, AVIF, TIFF, RAW and more') : 'Supported files';
+const acceptedHint = converter.category === 'image' ? (converter.input ? `${converter.input.toUpperCase()} files` : 'JPG, PNG, WebP, HEIC, AVIF, TIFF, RAW and 40+ more image extensions') : 'Supported files';
 ---
 <div
   class:list={['converter-card', compact && 'converter-card--compact']}
@@ -39,6 +39,9 @@ const acceptedHint = converter.category === 'image' ? (converter.input ? `${conv
         <div class="quick-field"><span>Popular outputs</span><div class="quick-outputs" data-role="quick-outputs"></div></div>
         <label class="field quality-field" data-role="quality-field"><span data-role="quality-label">Quality 90</span><input data-role="quality" type="range" min="1" max="100" value="90" aria-label="Output quality" /></label>
       </section>
+      {converter.category === 'image' && (
+        <p class="conversion-policy-note">Certified output formats are filtered against the image engine running in your browser. Animated, multi-page, or layered inputs are currently exported as a single image; ICO inputs use the best available icon frame.</p>
+      )}
       <div class="progress-wrap" data-role="progress" hidden aria-live="polite"><div class="progress-copy"><strong data-role="progress-text">Preparing…</strong><span>Keep this tab open</span></div><div class="progress-track"><span data-role="progress-bar"></span></div></div>
       <div class="file-list" data-role="file-list" aria-label="Selected files"></div>
       <div class="batch-action-bar"><p class="result-summary" data-role="result-summary" hidden></p><div class="batch-buttons"><button data-role="cancel" class="secondary-button danger-button" type="button" hidden>Cancel</button><button data-role="download-zip" class="secondary-button" type="button" hidden>Download ZIP</button><button data-role="convert-all" class="primary-button" type="button">Preparing converter…</button></div></div>
