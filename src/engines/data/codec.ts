@@ -93,14 +93,55 @@ function rowsToTable(rows: string[][]): { rows: Row[]; columns: string[] } {
   return { rows: records, columns };
 }
 
+function assertSafeJsonNumbers(text: string): void {
+  let inString = false;
+  let escaped = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index]!;
+    if (inString) {
+      if (escaped) { escaped = false; continue; }
+      if (char === '\\') { escaped = true; continue; }
+      if (char === '"') inString = false;
+      continue;
+    }
+    if (char === '"') { inString = true; continue; }
+    if (char !== '-' && (char < '0' || char > '9')) continue;
+
+    let cursor = index;
+    if (text[cursor] === '-') cursor += 1;
+    const integerStart = cursor;
+    if (text[cursor] === '0') cursor += 1;
+    else while (cursor < text.length && text[cursor]! >= '0' && text[cursor]! <= '9') cursor += 1;
+    if (cursor === integerStart) continue;
+    if (text[cursor] === '.') {
+      cursor += 1;
+      while (cursor < text.length && text[cursor]! >= '0' && text[cursor]! <= '9') cursor += 1;
+    }
+    if (text[cursor] === 'e' || text[cursor] === 'E') {
+      cursor += 1;
+      if (text[cursor] === '+' || text[cursor] === '-') cursor += 1;
+      while (cursor < text.length && text[cursor]! >= '0' && text[cursor]! <= '9') cursor += 1;
+    }
+    const raw = text.slice(index, cursor);
+    const numeric = Number(raw);
+    if (Number.isFinite(numeric) && Math.abs(numeric) <= Number.MAX_SAFE_INTEGER) { index = cursor - 1; continue; }
+    if (!Number.isNaN(numeric)) {
+      throw new Error('JSON contains a numeric value outside the safe browser range. Quote large identifiers or exact large integers as strings before conversion.');
+    }
+  }
+}
+
 function parseJsonl(text: string): unknown[] {
   const values: unknown[] = [];
   const lines = text.split(/\r?\n|\r/);
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!.trim();
     if (!line) continue;
-    try { values.push(JSON.parse(line)); }
-    catch { throw new Error(`Invalid JSONL at line ${index + 1}`); }
+    try { assertSafeJsonNumbers(line); values.push(JSON.parse(line)); }
+    catch (error) {
+      if (error instanceof Error && /safe browser range/i.test(error.message)) throw error;
+      throw new Error(`Invalid JSONL at line ${index + 1}`);
+    }
   }
   return values;
 }
@@ -171,8 +212,11 @@ function serializeDelimited(rows: Row[], delimiter: ',' | '\t', settings: Conver
 
 function parseSource(text: string, inputFormat: DataFormat): StructuredSource {
   if (inputFormat === 'json') {
-    try { return { kind: 'json', value: JSON.parse(text) }; }
-    catch { throw new Error('Invalid JSON input'); }
+    try { assertSafeJsonNumbers(text); return { kind: 'json', value: JSON.parse(text) }; }
+    catch (error) {
+      if (error instanceof Error && /safe browser range/i.test(error.message)) throw error;
+      throw new Error('Invalid JSON input');
+    }
   }
   if (inputFormat === 'jsonl') return { kind: 'json', value: parseJsonl(text) };
   const table = rowsToTable(parseDelimited(text, inputFormat === 'csv' ? ',' : '\t'));
