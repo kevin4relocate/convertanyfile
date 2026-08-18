@@ -23,6 +23,15 @@ test('duplicate and already-suffixed CSV headers cannot overwrite one another', 
   expect(JSON.parse(result.text)).toEqual([{ a: 'first', a_2: 'second', a_3: 'third' }]);
 });
 
+test('prototype-sensitive CSV headers remain ordinary data fields', async ({ page }) => {
+  const result = await convertAndDownload(page, '/csv-to-json/', {
+    name: 'special-headers.csv', mimeType: 'text/csv', buffer: Buffer.from('__proto__,constructor,prototype\none,two,three'),
+  });
+  const parsed = JSON.parse(result.text);
+  expect(parsed).toEqual([{ __proto__: 'one', constructor: 'two', prototype: 'three' }]);
+  expect(Object.prototype.polluted).toBeUndefined();
+});
+
 test('literal dots in JSON keys cannot collide with nested-object dot paths', async ({ page }) => {
   const result = await convertAndDownload(page, '/json-to-csv/', {
     name: 'paths.json', mimeType: 'application/json', buffer: Buffer.from('[{"a.b":"literal","a":{"b":"nested"}}]'),
