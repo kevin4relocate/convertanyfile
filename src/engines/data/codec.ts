@@ -70,8 +70,8 @@ function normalizeHeaders(source: string[], width: number): string[] {
   const used = new Set<string>();
   const headers: string[] = [];
   for (let index = 0; index < width; index += 1) {
-    const raw = (source[index] ?? '').trim();
-    const base = raw || `column_${index + 1}`;
+    const raw = source[index] ?? '';
+    const base = raw.trim() ? raw : `column_${index + 1}`;
     let candidate = base;
     let suffix = 2;
     while (used.has(candidate)) candidate = `${base}_${suffix++}`;
@@ -184,8 +184,12 @@ function flattenObject(value: Record<string, unknown>, prefix = '', target: Row 
   for (const [key, item] of Object.entries(value)) {
     const segment = escapePathSegment(key);
     const path = prefix ? `${prefix}.${segment}` : segment;
-    if (isPlainObject(item)) flattenObject(item, path, target);
-    else target[path] = item as RecordValue;
+    if (isPlainObject(item)) {
+      if (Object.keys(item).length === 0) target[path] = item;
+      else flattenObject(item, path, target);
+    } else {
+      target[path] = item as RecordValue;
+    }
   }
   return target;
 }
@@ -193,7 +197,12 @@ function flattenObject(value: Record<string, unknown>, prefix = '', target: Row 
 function valuesToRows(value: unknown): Row[] {
   const source = Array.isArray(value) ? value : [value];
   return source.map((item) => {
-    if (isPlainObject(item)) return flattenObject(item);
+    if (isPlainObject(item)) {
+      if (Object.keys(item).length > 0) return flattenObject(item);
+      const emptyObjectRow = createRow();
+      emptyObjectRow.value = item;
+      return emptyObjectRow;
+    }
     const row = createRow();
     row.value = item as RecordValue;
     return row;
