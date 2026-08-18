@@ -1,5 +1,6 @@
 ---
 import type { ConverterDefinition } from '../platform/converter/types';
+import { acceptedExtensionsForConverter } from '../config/converter-registry';
 interface Props { converter: ConverterDefinition; compact?: boolean; }
 const { converter, compact = false } = Astro.props;
 const policy = converter.batchPolicy;
@@ -17,6 +18,7 @@ const toolLabel = converter.input && converter.output
     : converter.category === 'data'
       ? 'Data Converter'
       : 'File Converter';
+const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${extension}`).join(',');
 ---
 <div
   class:list={['converter-card', compact && 'converter-card--compact']}
@@ -40,7 +42,7 @@ const toolLabel = converter.input && converter.output
         <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" /></svg></span>
         <span class="drop-title">Drop your files here</span><span class="drop-copy">{acceptedHint}</span><span class="choose-button">Choose files</span><span class="drop-privacy"><span class="privacy-dot" aria-hidden="true"></span> Files stay on your device during conversion</span>
       </button>
-      <input data-role="file-input" type="file" multiple hidden />
+      <input data-role="file-input" type="file" multiple accept={accept} hidden />
     </div>
     <div class="workspace" data-role="workspace" hidden>
       <div class="workspace-drop-hint" data-role="workspace-drop-hint" aria-hidden="true"><span>Drop to add files</span></div>
