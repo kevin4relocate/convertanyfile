@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 function diagnostics(page: Page): string[] {
   const errors: string[] = [];
@@ -9,13 +9,13 @@ function diagnostics(page: Page): string[] {
   return errors;
 }
 
-async function appReady(page: Page) {
+async function appReady(page: Page): Promise<Locator> {
   const app = page.locator('[data-converter-app]');
   await expect(app).toHaveAttribute('data-initialized', 'true');
   return app;
 }
 
-async function downloadText(page: Page, app: ReturnType<Page['locator']>): Promise<{ name: string; bytes: Buffer; text: string }> {
+async function downloadText(page: Page, app: Locator): Promise<{ name: string; bytes: Buffer; text: string }> {
   const downloadPromise = page.waitForEvent('download');
   await app.getByRole('button', { name: 'Download', exact: true }).click();
   const download = await downloadPromise;
