@@ -58,6 +58,7 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
           <label class="field quality-field" data-role="quality-field"><span data-role="quality-label">Quality 90</span><input data-role="quality" type="range" min="1" max="100" value="90" aria-label="Output quality" /></label>
           <div class="extra-output-controls" data-role="extra-controls"></div>
         </div>
+        {compact && <button data-role="convert-top" class="primary-button settings-convert-button" type="button">Preparing converter…</button>}
       </section>
       {converter.category === 'image' && (
         <p class="conversion-policy-note">Certified output formats are filtered against the image engine running in your browser. Animated, multi-page, or layered inputs are currently exported as a single image; ICO inputs use the best available icon frame.</p>
@@ -69,6 +70,7 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
       <div class="file-list" data-role="file-list" aria-label="Selected files"></div>
       <div class="batch-action-bar"><p class="result-summary" data-role="result-summary" hidden></p><div class="batch-buttons"><button data-role="cancel" class="secondary-button danger-button" type="button" hidden>Cancel</button><button data-role="download-zip" class="secondary-button" type="button" hidden>Download ZIP</button><button data-role="convert-all" class="primary-button" type="button">Preparing converter…</button></div></div>
     </div>
+    {compact && <div class="sticky-convert-bar" data-role="sticky-convert-bar" hidden><span data-role="sticky-summary">Ready to convert</span><button data-role="convert-sticky" class="primary-button" type="button">Convert</button></div>}
   </section>
 </div>
 <script src="../client/converter-app.ts"></script>
@@ -111,10 +113,49 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
     document.querySelectorAll<HTMLElement>('.workspace.is-dragging, .drop-zone.is-dragging').forEach((element) => element.classList.remove('is-dragging'));
   };
 
+  const initCompactConvertActions = (root: HTMLElement): void => {
+    if (!root.classList.contains('converter-card--compact') || root.dataset.compactActionsReady === 'true') return;
+    root.dataset.compactActionsReady = 'true';
+    const source = root.querySelector<HTMLButtonElement>('[data-role="convert-all"]');
+    const top = root.querySelector<HTMLButtonElement>('[data-role="convert-top"]');
+    const sticky = root.querySelector<HTMLButtonElement>('[data-role="convert-sticky"]');
+    const stickyBar = root.querySelector<HTMLElement>('[data-role="sticky-convert-bar"]');
+    const stickySummary = root.querySelector<HTMLElement>('[data-role="sticky-summary"]');
+    const workspace = root.querySelector<HTMLElement>('[data-role="workspace"]');
+    const batchSummary = root.querySelector<HTMLElement>('[data-role="batch-summary"]');
+    if (!source || !top || !sticky || !stickyBar || !workspace) return;
+
+    let topVisible = true;
+    const sync = (): void => {
+      const unavailable = source.disabled || source.hidden;
+      top.textContent = source.textContent || 'Convert';
+      top.disabled = source.disabled;
+      top.hidden = source.hidden;
+      sticky.textContent = source.textContent || 'Convert';
+      sticky.disabled = source.disabled;
+      if (stickySummary) stickySummary.textContent = batchSummary?.textContent?.trim() || 'Ready to convert';
+      stickyBar.hidden = workspace.hidden || unavailable || topVisible;
+    };
+
+    top.addEventListener('click', () => source.click());
+    sticky.addEventListener('click', () => source.click());
+    const observer = new MutationObserver(sync);
+    observer.observe(source, { attributes: true, attributeFilter: ['disabled', 'hidden'], childList: true, characterData: true, subtree: true });
+    observer.observe(workspace, { attributes: true, attributeFilter: ['hidden'] });
+    if (batchSummary) observer.observe(batchSummary, { childList: true, characterData: true, subtree: true });
+    const visibility = new IntersectionObserver((entries) => {
+      topVisible = entries[0]?.isIntersecting ?? true;
+      sync();
+    }, { threshold: 0.15 });
+    visibility.observe(top);
+    sync();
+  };
+
   const initConverterFeedback = (): void => {
     document.querySelectorAll<HTMLElement>('[data-converter-app]').forEach((root) => {
       if (root.dataset.feedbackReady === 'true') return;
       root.dataset.feedbackReady = 'true';
+      initCompactConvertActions(root);
 
       const notice = root.querySelector<HTMLElement>('[data-role="notice"]');
       const result = root.querySelector<HTMLElement>('[data-role="result-summary"]');
@@ -159,6 +200,7 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
 <style is:global>
   .settings-card{padding-left:26px;padding-right:28px;column-gap:24px}.output-field{padding-left:2px;padding-right:4px}.output-controls{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;min-width:0;padding-right:2px}.extra-output-controls{display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-wrap:wrap}.setting-field{white-space:nowrap}.setting-field select{min-width:88px}.setting-field--checkbox{gap:8px;margin-right:2px}.setting-field--checkbox input{width:15px;height:15px;margin:0;accent-color:var(--accent)}
   .notice{width:min(760px,calc(100vw - 40px));max-width:760px;text-align:center;line-height:1.45;overflow-wrap:anywhere}.notice[data-type=success]{color:#166b49;background:#eefaf4;border-color:#bfe8d2;box-shadow:0 12px 35px rgba(24,122,85,.12)}
-  @media(max-width:900px){.settings-card{padding-left:18px;padding-right:18px}.output-controls,.extra-output-controls{justify-content:flex-start;padding-right:0}.setting-field{white-space:normal}.setting-field--checkbox{margin-right:0}}
-  @media(max-width:760px){.notice{width:calc(100vw - 24px);max-width:calc(100vw - 24px);padding:10px 12px;font-size:11px}}
+  .converter-card--compact .settings-card{grid-template-columns:auto minmax(180px,1fr) auto;grid-template-areas:"output controls action" "quick quick quick";row-gap:12px}.converter-card--compact .output-field{grid-area:output}.converter-card--compact .quick-field{grid-area:quick;border-top:1px solid #e7e8ef;padding-top:11px}.converter-card--compact .output-controls{grid-area:controls}.converter-card--compact .settings-convert-button{grid-area:action;min-height:42px;min-width:170px;padding:9px 18px;white-space:nowrap}.converter-card--compact .batch-buttons [data-role="convert-all"]{display:none}.converter-card--compact .batch-action-bar:has(.batch-buttons button:not([hidden])){padding-top:10px}.sticky-convert-bar{position:fixed;left:50%;bottom:16px;z-index:65;transform:translateX(-50%);width:min(760px,calc(100vw - 32px));display:flex;align-items:center;gap:14px;padding:10px 10px 10px 16px;border:1px solid #dedfe8;border-radius:16px;background:rgba(255,255,255,.94);box-shadow:0 18px 48px rgba(23,24,34,.18);backdrop-filter:blur(16px)}.sticky-convert-bar>span{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#616573;font-size:12px;font-weight:760}.sticky-convert-bar .primary-button{flex:0 0 auto;min-height:42px;min-width:190px;padding:9px 18px}
+  @media(max-width:900px){.settings-card{padding-left:18px;padding-right:18px}.output-controls,.extra-output-controls{justify-content:flex-start;padding-right:0}.setting-field{white-space:normal}.setting-field--checkbox{margin-right:0}.converter-card--compact .settings-card{grid-template-columns:1fr auto;grid-template-areas:"output action" "controls controls" "quick quick"}.converter-card--compact .settings-convert-button{min-width:160px}}
+  @media(max-width:760px){.notice{width:calc(100vw - 24px);max-width:calc(100vw - 24px);padding:10px 12px;font-size:11px}.converter-card--compact .settings-card{grid-template-columns:1fr;grid-template-areas:"output" "controls" "action" "quick"}.converter-card--compact .settings-convert-button{width:100%;min-height:48px}.sticky-convert-bar{bottom:10px;width:calc(100vw - 20px);padding:8px 8px 8px 12px}.sticky-convert-bar>span{font-size:11px}.sticky-convert-bar .primary-button{min-width:150px}}
 </style>
