@@ -44,11 +44,11 @@ export const FORMAT_REFERENCE: Record<string, FormatReference> = {
     compatibility: 'Good in modern browsers, but legacy applications and older workflows may still require a fallback.',
   },
   heic: {
-    id: 'heic', name: 'HEIC', role: 'Efficient phone photography',
-    summary: 'A common HEIF-family image container used by modern Apple devices for efficient photo storage.',
+    id: 'heic', name: 'HEIC', role: 'Efficient phone photography input',
+    summary: 'A common HEIF-family image container used by modern Apple devices for efficient photo storage. It is an input family in the current ConvertAnyFile release rather than a certified output.',
     compression: 'Typically high-efficiency lossy photo compression', transparency: 'Container capabilities vary',
-    bestFor: 'Keeping efficient originals inside ecosystems that understand HEIC/HEIF well.',
-    tradeoffs: 'Compatibility outside modern phone and photo ecosystems is less universal than JPG or PNG.',
+    bestFor: 'Keeping efficient originals inside ecosystems that understand HEIC/HEIF well, then converting to a more broadly accepted delivery format when needed.',
+    tradeoffs: 'The packaged WASM runtime does not currently expose a HEIC writer, so HEIC is not offered as an output.',
     compatibility: 'Common on Apple devices, but many upload forms and older desktop applications still prefer JPG or PNG.',
   },
   jxl: {
@@ -149,4 +149,4 @@ export const FORMAT_REFERENCE: Record<string, FormatReference> = {
   },
 };
 
-export const PRIMARY_FORMATS = ['jpg','png','webp','avif','heic','jxl','jp2','tiff','gif','bmp','ico','pcx','tga','qoi','pnm','hdr','exr'] as const;
+export const PRIMARY_FORMATS = ['jpg','png','webp','avif','tiff','gif','bmp','ico','jxl','jp2','hdr','exr','pcx','tga','qoi','pnm'] as const;
