@@ -5,6 +5,7 @@ import type { DataWorkerRequest, DataWorkerResponse } from './protocol';
 
 const scope = self as DedicatedWorkerGlobalScope;
 const SUPPORTED = new Set<DataFormat>(['csv', 'tsv', 'json', 'jsonl']);
+const VERSION = 'browser-text-v1';
 
 function classify(error: unknown): { error: string; code: ConversionErrorCode; retryable: boolean } {
   const message = error instanceof Error ? error.message : String(error || 'Data conversion failed');
@@ -18,7 +19,12 @@ function classify(error: unknown): { error: string; code: ConversionErrorCode; r
 
 scope.addEventListener('message', (event: MessageEvent<DataWorkerRequest>) => {
   const request = event.data;
-  if (request.type !== 'convert') return;
+  if (request.type === 'ready') {
+    const response: DataWorkerResponse = { type: 'ready-result', requestId: request.requestId, ok: true, version: VERSION };
+    scope.postMessage(response);
+    return;
+  }
+
   try {
     if (!SUPPORTED.has(request.inputFormat as DataFormat) || !SUPPORTED.has(request.output as DataFormat)) {
       throw new Error('Unsupported data format');

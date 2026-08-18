@@ -238,15 +238,23 @@ class ConverterController {
 
   private async addFilesNow(incoming: File[]): Promise<void> {
     void this.ensureEngine();
-    const admission = applyBatchPolicy(incoming, this.jobs.map((job) => job.file), this.policy);
     const rejected: string[] = [];
-    for (const item of admission.rejected) {
-      const label = item.reason === 'file-size' ? `over ${formatBytes(this.policy.maxFileBytes)} per file` : item.reason === 'file-count' ? `over the ${this.policy.maxFiles}-file limit` : `over the ${formatBytes(this.policy.maxTotalBytes)} batch limit`;
-      rejected.push(`${item.file.name} (${label})`);
-    }
     const engine = this.engine ?? await loadEngine(this.engineId); this.engine = engine;
     this.fileInput.accept = engine.acceptedExtensionsFor(this.requiredInput).map((ext) => `.${ext}`).join(',');
-    for (const file of admission.accepted) {
+
+    for (const file of incoming) {
+      const admission = applyBatchPolicy([file], this.jobs.map((job) => job.file), this.policy);
+      const rejectedByPolicy = admission.rejected[0];
+      if (rejectedByPolicy) {
+        const label = rejectedByPolicy.reason === 'file-size'
+          ? `over ${formatBytes(this.policy.maxFileBytes)} per file`
+          : rejectedByPolicy.reason === 'file-count'
+            ? `over the ${this.policy.maxFiles}-file limit`
+            : `over the ${formatBytes(this.policy.maxTotalBytes)} batch limit`;
+        rejected.push(`${file.name} (${label})`);
+        continue;
+      }
+
       const detected = await engine.validate(file, this.requiredInput);
       if (!detected) { rejected.push(`${file.name} (unsupported or invalid)`); continue; }
       this.jobs.push({ id: crypto.randomUUID(), file, detected, status: 'ready' });
@@ -380,6 +388,7 @@ class ConverterController {
   }
 
   private renderJob(job: ConversionJob): HTMLElement {
+    const busy = this.converting || this.addingFiles;
     const row = document.createElement('article'); row.className = `file-row status-${job.status}`; row.dataset.jobId = job.id;
     const main = document.createElement('div'); main.className = 'file-main'; const badge = document.createElement('span'); badge.className = 'format-badge'; badge.textContent = job.detected.extension.toUpperCase().slice(0, 5);
     const text = document.createElement('div'); text.className = 'file-text'; const name = document.createElement('strong'); name.textContent = job.file.name; name.title = job.file.name;
@@ -396,10 +405,10 @@ class ConverterController {
     if (job.status === 'success' && job.result) {
       const download = document.createElement('button'); download.type = 'button'; download.className = 'row-action'; download.textContent = 'Download'; download.addEventListener('click', () => downloadBlob(job.result!.blob, job.result!.filename)); actions.append(download);
     } else if (job.status === 'error' && job.errorRetryable !== false) {
-      const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'row-action'; retry.textContent = 'Retry'; retry.disabled = busyState(this); retry.addEventListener('click', () => this.retry(job)); actions.append(retry);
+      const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'row-action'; retry.textContent = 'Retry'; retry.disabled = busy; retry.addEventListener('click', () => this.retry(job)); actions.append(retry);
     }
     if (job.status !== 'converting' && job.status !== 'success') {
-      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'remove-action'; remove.textContent = '×'; remove.setAttribute('aria-label', `Remove ${job.file.name}`); remove.disabled = busyState(this);
+      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'remove-action'; remove.textContent = '×'; remove.setAttribute('aria-label', `Remove ${job.file.name}`); remove.disabled = busy;
       remove.addEventListener('click', () => { this.jobs = this.jobs.filter((item) => item.id !== job.id); this.render(); }); actions.append(remove);
     }
     row.append(main, status, actions); return row;
@@ -413,10 +422,6 @@ class ConverterController {
     this.noticeTimer = window.setTimeout(() => { this.notice.hidden = true; }, duration);
   }
   private scrollActiveJobIntoView(id: string): void { this.fileList.querySelector<HTMLElement>(`[data-job-id="${escapeSelector(id)}"]`)?.scrollIntoView({ block: 'nearest' }); }
-}
-
-function busyState(controller: ConverterController): boolean {
-  return controller['converting'] || controller['addingFiles'];
 }
 
 export function initConverters(): void {

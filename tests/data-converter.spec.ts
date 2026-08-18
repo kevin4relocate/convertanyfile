@@ -25,6 +25,17 @@ async function downloadText(page: Page, app: Locator): Promise<{ name: string; b
   return { name: download.suggestedFilename(), bytes, text: bytes.toString('utf8') };
 }
 
+test('Data ready state is backed by a live worker handshake', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run readiness handshake once');
+  const errors = diagnostics(page);
+  await page.goto('/data-converter/');
+  const app = await appReady(page);
+  await app.locator('[data-role="file-input"]').setInputFiles({ name: 'ready.csv', mimeType: 'text/csv', buffer: Buffer.from('id,name\n1,Alice') });
+  await expect(app.locator('[data-engine-label]')).toHaveText('Private converter ready');
+  await expect(app.locator('[data-role="output-format"]')).toBeEnabled();
+  expect(errors).toEqual([]);
+});
+
 test('CSV to JSON parses quoted commas, escaped quotes, and embedded newlines locally', async ({ page }) => {
   const errors = diagnostics(page);
   await page.goto('/csv-to-json/');
@@ -103,6 +114,26 @@ test('Data output controls are engine-declared and affect CSV bytes', async ({ p
   expect(Array.from(result.bytes.subarray(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
   expect(result.text.replace(/^\uFEFF/, '')).toBe('Alice\r\nBob');
   expect(errors).toEqual([]);
+});
+
+test('invalid files do not consume valid batch capacity', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run shared admission-capacity regression once');
+  await page.goto('/data-converter/');
+  const app = await appReady(page);
+  const files = [
+    { name: 'invalid.bin', mimeType: 'application/octet-stream', buffer: Buffer.from('not structured data') },
+    ...Array.from({ length: 50 }, (_, index) => ({
+      name: `valid-${index + 1}.csv`,
+      mimeType: 'text/csv',
+      buffer: Buffer.from(`id,name\n${index + 1},Person ${index + 1}`),
+    })),
+  ];
+  await app.locator('[data-role="file-input"]').setInputFiles(files);
+  await expect(app.locator('.file-row')).toHaveCount(50, { timeout: 30_000 });
+  await expect(app.locator('[data-role="batch-summary"]')).toContainText('50 files');
+  await expect(app.locator('[data-role="file-list"]')).toContainText('valid-50.csv');
+  await expect(app.locator('[data-role="notice"]')).toContainText('1 file skipped');
+  await expect(app.locator('[data-role="notice"]')).toContainText('invalid.bin');
 });
 
 test('malformed delimited input fails permanently without a retry loop', async ({ page }) => {

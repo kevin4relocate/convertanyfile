@@ -8,6 +8,7 @@ interface PendingRequest {
   timeoutId: number;
 }
 
+const STARTUP_TIMEOUT = 10_000;
 const CONVERSION_TIMEOUT = 60_000;
 
 export class DataWorkerClient {
@@ -33,11 +34,18 @@ export class DataWorkerClient {
     return worker;
   }
 
+  async ready(): Promise<string> {
+    const response = await this.send({ type: 'ready', requestId: crypto.randomUUID() }, [], STARTUP_TIMEOUT);
+    if (response.type !== 'ready-result' || !response.ok) throw new Error('Invalid data engine readiness response');
+    return response.version;
+  }
+
   async convert(input: ArrayBuffer, inputFormat: string, output: string, settings: ConversionSettings): Promise<ArrayBuffer> {
     const request: DataWorkerRequest = {
       type: 'convert', requestId: crypto.randomUUID(), input, inputFormat, output, settings,
     };
-    const response = await this.send(request, [input]);
+    const response = await this.send(request, [input], CONVERSION_TIMEOUT);
+    if (response.type !== 'convert-result') throw new Error('Invalid data conversion response');
     if (!response.ok) throw new ConverterError(response.error, response.code, response.retryable);
     return response.output;
   }
@@ -46,11 +54,12 @@ export class DataWorkerClient {
     this.failWorker(new ConverterError(reason, 'engine-crash', true));
   }
 
-  private send(request: DataWorkerRequest, transfer: Transferable[]): Promise<DataWorkerResponse> {
+  private send(request: DataWorkerRequest, transfer: Transferable[], timeoutMs: number): Promise<DataWorkerResponse> {
     return new Promise((resolve, reject) => {
       const timeoutId = window.setTimeout(() => {
-        this.failWorker(new ConverterError('Data conversion timed out', 'timeout', true));
-      }, CONVERSION_TIMEOUT);
+        const message = request.type === 'ready' ? 'Data engine startup timed out' : 'Data conversion timed out';
+        this.failWorker(new ConverterError(message, 'timeout', true));
+      }, timeoutMs);
       this.pending.set(request.requestId, { resolve, reject, timeoutId });
       try { this.getWorker().postMessage(request, transfer); }
       catch (error) {
