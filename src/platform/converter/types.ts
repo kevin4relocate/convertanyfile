@@ -22,6 +22,8 @@ export interface DetectedFile {
   width?: number;
   height?: number;
   estimatedDecodedBytes?: number;
+  frameCount?: number;
+  frameKind?: 'frames' | 'pages' | 'sizes';
 }
 
 export interface ConversionArtifact {
