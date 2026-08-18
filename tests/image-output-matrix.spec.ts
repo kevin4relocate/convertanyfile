@@ -1,15 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
+import { FORMAT_REFERENCE } from '../src/content/format-reference';
+import { IMAGE_OUTPUTS } from '../src/engines/image/formats';
 
 const PNG_16 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAIUlEQVR4nGNkIAD+MzD8xyfPRMgAQmDUgFEDRg0YLAYAABitAh61MMBjAAAAAElFTkSuQmCC',
   'base64',
 );
 
-const CERTIFIED_OUTPUTS = [
-  'jpg', 'png', 'webp', 'avif', 'heic', 'jxl', 'jp2', 'tiff', 'gif',
-  'bmp', 'ico', 'pcx', 'tga', 'qoi', 'pnm', 'hdr', 'exr',
-] as const;
+const CERTIFIED_OUTPUTS = IMAGE_OUTPUTS.map((output) => output.id);
 
 async function addSource(page: import('@playwright/test').Page) {
   const app = page.locator('[data-converter-app]');
@@ -21,6 +20,12 @@ async function addSource(page: import('@playwright/test').Page) {
   await expect(app.locator('[data-role="batch-summary"]')).toContainText('1 file');
   return app;
 }
+
+test('every certified output has a public format reference', () => {
+  for (const output of IMAGE_OUTPUTS) {
+    expect(FORMAT_REFERENCE[output.id], `${output.id} needs format documentation`).toBeTruthy();
+  }
+});
 
 test('every public image output is writable and its result can be decoded again', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run the full WASM codec matrix once');
@@ -39,7 +44,7 @@ test('every public image output is writable and its result can be decoded again'
   expect(optionValues).toEqual(CERTIFIED_OUTPUTS);
 
   for (const format of CERTIFIED_OUTPUTS) {
-    output.selectOption(format);
+    await output.selectOption(format);
     const convert = app.locator('[data-role="convert-all"]');
     await expect(convert, `${format} convert button`).toBeEnabled({ timeout: 60_000 });
     await convert.click();
@@ -58,7 +63,11 @@ test('every public image output is writable and its result can be decoded again'
     // catches writers that return bytes but produce a file our packaged runtime
     // cannot subsequently read.
     await app.locator('[data-role="clear-all"]').click();
-    await app.locator('[data-role="file-input"]').setInputFiles(path!);
+    await app.locator('[data-role="file-input"]').setInputFiles({
+      name: `roundtrip.${format}`,
+      mimeType: 'application/octet-stream',
+      buffer: encoded,
+    });
     await expect(app.locator('[data-role="batch-summary"]'), `${format} decode admission`).toContainText('1 file');
     await output.selectOption('jpg');
     await app.locator('[data-role="convert-all"]').click();
