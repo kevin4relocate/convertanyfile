@@ -29,11 +29,30 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'C
     border-radius: 10px;
     font-size: 12px;
   }
+  :global(.converter-card--compact [data-role="download-zip"]) {
+    min-height: 42px;
+    padding: 9px 17px;
+    border-color: #171822;
+    background: linear-gradient(180deg, #20212d, #14151d);
+    color: #fff;
+    box-shadow: 0 7px 18px rgba(23, 24, 34, .15);
+    font-size: 12px;
+    font-weight: 820;
+  }
+  :global(.converter-card--compact [data-role="download-zip"]:hover:not(:disabled)) {
+    background: #0f1017;
+    box-shadow: 0 10px 24px rgba(23, 24, 34, .2);
+    transform: translateY(-1px);
+  }
   @media (max-width: 760px) {
     .hero { padding-top: 20px; padding-bottom: 18px; }
     .hero h1 { font-size: clamp(34px, 10vw, 48px); }
     .hero-converter { margin-top: 14px; }
     :global(.converter-card--compact .settings-convert-button) {
+      min-height: 44px;
+      font-size: 13px;
+    }
+    :global(.converter-card--compact [data-role="download-zip"]) {
       min-height: 44px;
       font-size: 13px;
     }
