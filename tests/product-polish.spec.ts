@@ -114,6 +114,34 @@ test('rapid consecutive drops cannot bypass the 50-file batch limit', async ({ p
   await expect(app.locator('[data-role="notice"]')).toContainText('10 files skipped');
 });
 
+test('data settings keep comfortable horizontal insets from the settings card border', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop converter spacing regression');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/data-converter/');
+  const app = await appReady(page);
+  await app.locator('[data-role="file-input"]').setInputFiles({
+    name: 'spacing.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('[{"id":1,"name":"Alice"}]'),
+  });
+  await expect(app.getByLabel('UTF-8 BOM')).toBeVisible();
+
+  const card = app.locator('.settings-card');
+  const outputField = app.locator('.output-field');
+  const bomField = app.getByLabel('UTF-8 BOM').locator('xpath=..');
+  const [cardBox, outputBox, bomBox] = await Promise.all([
+    card.boundingBox(),
+    outputField.boundingBox(),
+    bomField.boundingBox(),
+  ]);
+
+  expect(cardBox).not.toBeNull();
+  expect(outputBox).not.toBeNull();
+  expect(bomBox).not.toBeNull();
+  expect(outputBox!.x - cardBox!.x).toBeGreaterThanOrEqual(24);
+  expect(cardBox!.x + cardBox!.width - (bomBox!.x + bomBox!.width)).toBeGreaterThanOrEqual(24);
+});
+
 test('shared progress surface exposes progressbar semantics', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Accessibility contract regression');
   await page.goto('/data-converter/');
