@@ -116,7 +116,7 @@ function gifFrameCount(bytes: Uint8Array): number | undefined {
     const marker = bytes[offset++] ?? 0;
     if (marker === 0x3b) break;
     if (marker === 0x21) {
-      offset += 1; // extension label
+      offset += 1;
       offset = skipSubBlocks(bytes, offset);
       continue;
     }
@@ -126,7 +126,7 @@ function gifFrameCount(bytes: Uint8Array): number | undefined {
       const imagePacked = bytes[offset + 8] ?? 0;
       offset += 9;
       if (imagePacked & 0x80) offset += 3 * (2 ** ((imagePacked & 0x07) + 1));
-      offset += 1; // LZW minimum code size
+      offset += 1;
       offset = skipSubBlocks(bytes, offset);
       continue;
     }
@@ -179,7 +179,7 @@ function withContainerInfo(result: DetectedFile, bytes: Uint8Array): DetectedFil
   else if (extension === 'tiff') { frameCount = tiffPageCount(bytes); frameKind = 'pages'; }
   else if (extension === 'ico' && bytes.length >= 6) { frameCount = u16le(bytes, 4); frameKind = 'sizes'; }
   if (!frameCount || frameCount <= 1 || !frameKind) return result;
-  return { ...result, frameCount, frameKind, label: `${result.label} · ${frameCount} ${frameKind}` };
+  return { ...result, frameCount, frameKind };
 }
 
 const LABELS: Record<string, string> = {

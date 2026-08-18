@@ -72,6 +72,7 @@ export interface EngineCapabilities {
 export interface EngineAdapter {
   id: EngineId;
   acceptedExtensions: readonly string[];
+  acceptedExtensionsFor(requiredInput?: string): readonly string[];
   outputs: readonly OutputOption[];
   validate(file: File, requiredInput?: string): Promise<DetectedFile | null>;
   initialize(): Promise<EngineCapabilities>;

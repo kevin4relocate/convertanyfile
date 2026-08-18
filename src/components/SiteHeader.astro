@@ -11,5 +11,13 @@ import { NAV_ITEMS, SITE } from '../config/site';
       {NAV_ITEMS.map((item) => <a href={item.href}>{item.label}</a>)}
     </nav>
     <a class="privacy-chip" href="/privacy/"><span aria-hidden="true"></span>Private by design</a>
+    <details class="mobile-nav">
+      <summary><span class="mobile-nav-icon" aria-hidden="true"><span></span><span></span><span></span></span><span>Menu</span></summary>
+      <nav aria-label="Mobile navigation">
+        {NAV_ITEMS.map((item) => <a href={item.href}>{item.label}</a>)}
+        <a href="/image-converter/">Image Converter</a>
+        <a href="/data-converter/">Data Converter</a>
+      </nav>
+    </details>
   </div>
 </header>

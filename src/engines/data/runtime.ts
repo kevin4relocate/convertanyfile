@@ -19,6 +19,11 @@ function replaceExtension(filename: string, extension: string): string {
   return `${base}.${extension}`;
 }
 
+function looksLikeJsonValue(text: string): boolean {
+  const first = text.trimStart()[0];
+  return first === '{' || first === '[' || first === '"' || first === '-' || first === 't' || first === 'f' || first === 'n' || Boolean(first && first >= '0' && first <= '9');
+}
+
 async function sampleText(file: File, format: DataFormat): Promise<string | null> {
   try {
     const length = Math.min(file.size, SAMPLE_BYTES);
@@ -36,13 +41,20 @@ async function sampleText(file: File, format: DataFormat): Promise<string | null
 export const dataEngine: EngineAdapter = {
   id: 'data',
   acceptedExtensions: DATA_INPUT_EXTENSIONS,
+  acceptedExtensionsFor(requiredInput) {
+    if (!requiredInput) return DATA_INPUT_EXTENSIONS;
+    const normalized = normalizeDataExtension(requiredInput);
+    return DATA_INPUT_EXTENSIONS.filter((extension) => normalizeDataExtension(extension) === normalized);
+  },
   outputs: DATA_OUTPUTS,
   async validate(file, requiredInput) {
     const extension = normalizeDataExtension(extensionFromFilename(file.name));
     if (!extension || !CAPABILITIES.readable.includes(extension)) return null;
     if (requiredInput && normalizeDataExtension(requiredInput) !== extension) return null;
     const text = await sampleText(file, extension as DataFormat);
-    if (text === null || !validateDataSample(text, extension as DataFormat)) return null;
+    if (text === null) return null;
+    const validSample = validateDataSample(text, extension as DataFormat) || (extension === 'json' && looksLikeJsonValue(text));
+    if (!validSample) return null;
     return { extension, label: dataLabel(extension), confidence: 'extension+content' };
   },
   async initialize() { return CAPABILITIES; },
