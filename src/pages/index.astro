@@ -16,154 +16,17 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'C
 <section class="closing-cta"><div class="site-container closing-card"><div><span class="section-kicker light-kicker">Available now</span><h2>Choose the converter that matches your file.</h2></div><a class="cta-button" href="/#converters">Browse converters →</a></div></section>
 </SiteLayout>
 
-<script>
-  const polishHomepageActionLabels = (): void => {
-    document.querySelectorAll<HTMLElement>('.converter-card--compact').forEach((root) => {
-      const sync = (): void => {
-        for (const role of ['convert-top', 'convert-sticky']) {
-          const button = root.querySelector<HTMLButtonElement>(`[data-role="${role}"]`);
-          if (!button) continue;
-          const match = button.textContent?.trim().match(/^Convert remaining (\d+)$/i);
-          if (!match) continue;
-          const count = Number(match[1]);
-          button.textContent = `Convert ${count} ${count === 1 ? 'File' : 'Files'}`;
-        }
-      };
-      const source = root.querySelector<HTMLElement>('[data-role="convert-all"]');
-      if (source) new MutationObserver(sync).observe(source, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['hidden', 'disabled'] });
-      sync();
-    });
-  };
-  polishHomepageActionLabels();
-</script>
-
 <style>
   .hero { padding-top: 22px; padding-bottom: 20px; }
   .hero h1 { margin: 0 0 7px; font-size: clamp(38px, 4.65vw, 58px); }
   .hero-lead { font-size: clamp(14px, 1.45vw, 16px); line-height: 1.4; }
   .hero-trust { margin-top: 8px; gap: 15px; }
   .hero-converter { margin-top: 14px; }
-  :global(.converter-card--compact .settings-convert-button) {
-    width: auto !important;
-    min-width: 118px !important;
-    max-width: 160px !important;
-    min-height: 40px;
-    padding: 0 16px !important;
-    border-radius: 10px;
-    font-size: 12px;
-  }
-  :global(.converter-card--compact select) {
-    min-height: 40px;
-    padding: 0 34px 0 13px;
-    border: 1px solid #d9dbe4;
-    border-radius: 10px;
-    background-color: #fff;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m5.5 7.5 4.5 4.5 4.5-4.5' stroke='%23575b68' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 12px 12px;
-    color: #252732;
-    appearance: none;
-    -webkit-appearance: none;
-    box-shadow: 0 1px 2px rgba(24, 26, 38, .025);
-  }
-  :global(.converter-card--compact select:hover:not(:disabled)) {
-    border-color: #c7cad5;
-  }
-  :global(.converter-card--compact select:focus-visible) {
-    outline: 2px solid rgba(99, 91, 255, .2);
-    outline-offset: 1px;
-    border-color: var(--accent);
-  }
-  :global(.converter-card--compact .output-field select) {
-    min-width: 104px;
-  }
-  :global(.converter-card--compact .setting-field select) {
-    min-width: 94px;
-  }
-  :global(.converter-card--compact .conversion-policy-note) {
-    margin-top: 10px;
-    margin-bottom: 8px;
-    font-size: 0;
-    line-height: 1.35;
-  }
-  :global(.converter-card--compact .conversion-policy-note::after) {
-    font-size: 12px;
-    color: #6b6f7c;
-  }
-  :global(.converter-card--compact[data-engine="image"] .conversion-policy-note::after) {
-    content: 'Animated, multi-page and layered images export as a single image.';
-  }
-  :global(.converter-card--compact[data-engine="data"] .conversion-policy-note::after) {
-    content: 'UTF-8 data stays local. CSV/TSV use the first row as headers.';
-  }
-  :global(.converter-card--compact .batch-action-bar) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding-top: 14px;
-  }
-  :global(.converter-card--compact .batch-action-bar .result-summary) {
-    order: 1;
-    margin: 0;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 760;
-    color: #555a68;
-  }
-  :global(.converter-card--compact .batch-action-bar .batch-buttons) {
-    order: 2;
-    margin-left: auto;
-  }
-  :global(.converter-card--compact [data-role="download-zip"]) {
-    min-height: 40px;
-    padding: 8px 16px;
-    border-color: #171822;
-    background: linear-gradient(180deg, #20212d, #14151d);
-    color: #fff;
-    box-shadow: 0 7px 18px rgba(23, 24, 34, .15);
-    font-size: 12px;
-    font-weight: 820;
-  }
-  :global(.converter-card--compact [data-role="download-zip"]:hover:not(:disabled)) {
-    background: #0f1017;
-    box-shadow: 0 10px 24px rgba(23, 24, 34, .2);
-    transform: translateY(-1px);
-  }
-  :global(.proof-strip .proof-grid > div) {
-    padding-top: 17px;
-    padding-bottom: 17px;
-  }
+  :global(.proof-strip .proof-grid > div) { padding-top: 17px; padding-bottom: 17px; }
   @media (max-width: 760px) {
     .hero { padding-top: 16px; padding-bottom: 16px; }
     .hero h1 { font-size: clamp(33px, 9.6vw, 46px); }
     .hero-trust { margin-top: 7px; }
     .hero-converter { margin-top: 12px; }
-    :global(.converter-card--compact .settings-convert-button) {
-      width: 100% !important;
-      max-width: none !important;
-      min-height: 44px;
-      font-size: 13px;
-    }
-    :global(.converter-card--compact select) {
-      min-height: 42px;
-      background-position: right 13px center;
-      padding-right: 36px;
-    }
-    :global(.converter-card--compact .batch-action-bar) {
-      align-items: stretch;
-      flex-direction: column;
-      gap: 10px;
-    }
-    :global(.converter-card--compact .batch-action-bar .batch-buttons) {
-      width: 100%;
-      margin-left: 0;
-    }
-    :global(.converter-card--compact [data-role="download-zip"]) {
-      width: 100%;
-      min-height: 44px;
-      font-size: 13px;
-    }
   }
 </style>
