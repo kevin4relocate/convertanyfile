@@ -61,3 +61,16 @@ test('invalid UTF-8 data is rejected before entering the queue', async ({ page }
   await expect(app.locator('[data-role="workspace"]')).toBeHidden();
   await expect(app.locator('[data-role="notice"]')).toContainText('unsupported or invalid');
 });
+
+test('unsafe large JSON integers fail permanently before browser precision can change them', async ({ page }) => {
+  await page.goto('/json-to-csv/');
+  const app = page.locator('[data-converter-app]');
+  await expect(app).toHaveAttribute('data-initialized', 'true');
+  await app.locator('[data-role="file-input"]').setInputFiles({
+    name: 'large-id.json', mimeType: 'application/json', buffer: Buffer.from('[{"id":9007199254740993,"name":"exact id"}]'),
+  });
+  await app.locator('[data-role="convert-all"]').click();
+  await expect(app.locator('.status-error')).toContainText('outside the safe browser range');
+  await expect(app.getByRole('button', { name: 'Retry', exact: true })).toHaveCount(0);
+  await expect(app.locator('[data-role="convert-all"]')).toBeHidden();
+});
