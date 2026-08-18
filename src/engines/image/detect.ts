@@ -209,7 +209,10 @@ export async function detectImage(file: File): Promise<DetectedFile | null> {
   if (!signature) return detectLegacyImage(file, extension, bytes);
   const normalizedSignature = normalizeImageExtension(signature);
   const compatible = extension === normalizedSignature || (extension === 'heic' && normalizedSignature === 'heic') || (extension === 'tiff' && normalizedSignature === 'tiff');
-  if (!compatible && extension) return null;
   if (normalizedSignature === 'ico' && !(await validateIcoFile(file, bytes))) return null;
-  return enrich({ extension: normalizedSignature, label: LABELS[normalizedSignature] ?? `${normalizedSignature.toUpperCase()} image`, confidence: extension ? 'signature+extension' : 'signature' }, bytes);
+  return enrich({
+    extension: normalizedSignature,
+    label: LABELS[normalizedSignature] ?? `${normalizedSignature.toUpperCase()} image`,
+    confidence: compatible && extension ? 'signature+extension' : 'signature',
+  }, bytes);
 }
