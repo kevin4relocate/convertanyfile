@@ -158,7 +158,7 @@ test('desktop homepage keeps hero compact, drop zone above fold, and Converters 
     return top >= 64 && top <= 100;
   });
   await expect(page.getByRole('heading', { name: 'One interface. Multiple file categories.' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Data/ })).toBeVisible();
+  await expect(page.locator('#converters a[href="/data-converter/"]')).toBeVisible();
 });
 
 test('all dedicated converter routes keep the file picker in the first desktop viewport', async ({ page, request }, testInfo) => {
@@ -277,7 +277,10 @@ test('wide content hubs use the 1080px grid and meaningful internal navigation',
   await page.goto('/formats/');
   await expect(page.locator('.comparison-table').first()).toBeVisible();
   await expect(page.getByRole('link', { name: /JPG vs PNG guide/i })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Open Data Converter/i })).toBeVisible();
+  const dataFormatsSection = page
+    .getByRole('heading', { name: 'CSV, TSV, JSON, JSONL, and NDJSON.' })
+    .locator('xpath=ancestor::section[1]');
+  await expect(dataFormatsSection.getByRole('link', { name: /Open Data Converter/i })).toBeVisible();
 });
 
 test('mobile shell remains usable without horizontal overflow', async ({ page }, testInfo) => {
