@@ -1,3 +1,4 @@
+import { ConverterError } from '../../platform/converter/errors';
 import type { ConversionArtifact, EngineAdapter, EngineCapabilities } from '../../platform/converter/types';
 import { decodeUtf8, validateDataSample, type DataFormat } from './codec';
 import { DATA_INPUT_EXTENSIONS, DATA_OUTPUTS, dataLabel, extensionFromFilename, normalizeDataExtension } from './formats';
@@ -10,6 +11,7 @@ const CAPABILITIES: Omit<EngineCapabilities, 'version'> = {
 const SAMPLE_BYTES = 64 * 1024;
 let client = new DataWorkerClient();
 let capabilitiesPromise: Promise<EngineCapabilities> | undefined;
+let generation = 0;
 
 function outputFor(id: string) { return DATA_OUTPUTS.find((item) => item.id === id); }
 function replaceExtension(filename: string, extension: string): string {
@@ -38,6 +40,10 @@ async function sampleText(file: File, format: DataFormat): Promise<string | null
   }
 }
 
+function cancelledError(): ConverterError {
+  return new ConverterError('Conversion was cancelled', 'engine-crash', true);
+}
+
 export const dataEngine: EngineAdapter = {
   id: 'data',
   acceptedExtensions: DATA_INPUT_EXTENSIONS,
@@ -53,7 +59,13 @@ export const dataEngine: EngineAdapter = {
     if (requiredInput && normalizeDataExtension(requiredInput) !== extension) return null;
     const text = await sampleText(file, extension as DataFormat);
     if (text === null) return null;
-    const validSample = validateDataSample(text, extension as DataFormat) || (extension === 'json' && looksLikeJsonValue(text));
+    const truncatedJsonlRecord = extension === 'jsonl'
+      && file.size > SAMPLE_BYTES
+      && !/[\r\n]/.test(text)
+      && looksLikeJsonValue(text);
+    const validSample = validateDataSample(text, extension as DataFormat)
+      || (extension === 'json' && looksLikeJsonValue(text))
+      || truncatedJsonlRecord;
     if (!validSample) return null;
     return { extension, label: dataLabel(extension), confidence: 'extension+content' };
   },
@@ -72,7 +84,15 @@ export const dataEngine: EngineAdapter = {
     const config = outputFor(output);
     const inputFormat = normalizeDataExtension(extensionFromFilename(file.name));
     if (!config || !inputFormat || !CAPABILITIES.readable.includes(inputFormat)) throw new Error('Unsupported data format');
-    const converted = await client.convert(await file.arrayBuffer(), inputFormat, output, settings);
+
+    const runGeneration = generation;
+    const input = await file.arrayBuffer();
+    if (runGeneration !== generation) throw cancelledError();
+
+    const activeClient = client;
+    const converted = await activeClient.convert(input, inputFormat, output, settings);
+    if (runGeneration !== generation) throw cancelledError();
+
     return {
       blob: new Blob([converted], { type: config.mime }),
       filename: replaceExtension(file.name, config.extension),
@@ -80,8 +100,10 @@ export const dataEngine: EngineAdapter = {
     } satisfies ConversionArtifact;
   },
   reset(reason) {
-    client.reset(reason);
+    generation += 1;
+    const previousClient = client;
     client = new DataWorkerClient();
     capabilitiesPromise = undefined;
+    previousClient.reset(reason);
   },
 };
