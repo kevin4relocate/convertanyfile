@@ -55,9 +55,8 @@
 }
 
 /*
- * The compact shell is the default visual density for every converter page.
- * These rules are shared with the homepage compact shell rather than copied
- * per route or per file category.
+ * Compact landing density for dedicated converter pages. Shared interaction
+ * controls stay in ConverterShell so homepage and pair pages do not drift.
  */
 .converter-page-tool .converter-card--compact .converter-topbar {
   min-height: 50px;
@@ -80,20 +79,8 @@
   margin-bottom: 10px;
 }
 
-.converter-page-tool .converter-card--compact .drop-zone h2 {
-  font-size: clamp(25px, 2.35vw, 30px);
-}
-
-.converter-page-tool .converter-card--compact .drop-zone p {
-  margin: 7px 0 12px;
-}
-
 .converter-page-tool .converter-card--compact .choose-button {
   padding: 10px 17px;
-}
-
-.converter-page-tool .converter-card--compact .drop-zone small {
-  margin-top: 9px;
 }
 
 @media (max-width: 760px) {

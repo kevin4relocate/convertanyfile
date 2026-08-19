@@ -48,7 +48,7 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
     <div class="workspace" data-role="workspace" hidden>
       <div class="workspace-drop-hint" data-role="workspace-drop-hint" aria-hidden="true"><span>Drop to add files</span></div>
       <header class="workspace-header">
-        <div><span class="workspace-label">Ready to convert</span><h2 data-role="batch-summary">0 files</h2><p>Processed locally in this browser session.</p></div>
+        <div><span class="workspace-label" data-role="workspace-label">Ready to convert</span><h2 data-role="batch-summary">0 files</h2><p>Processed locally in this browser session.</p></div>
         <div class="workspace-actions"><button data-role="add-more" class="text-button strong" type="button">+ Add more</button><button data-role="clear-all" class="text-button" type="button">Clear all</button></div>
       </header>
       <section class="settings-card" aria-label="Conversion settings">
@@ -58,17 +58,19 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
           <label class="field quality-field" data-role="quality-field"><span data-role="quality-label">Quality 90</span><input data-role="quality" type="range" min="1" max="100" value="90" aria-label="Output quality" /></label>
           <div class="extra-output-controls" data-role="extra-controls"></div>
         </div>
+        {compact && <button data-role="convert-all" class="primary-button settings-convert-button" type="button">Preparing converter…</button>}
       </section>
       {converter.category === 'image' && (
-        <p class="conversion-policy-note">Certified output formats are filtered against the image engine running in your browser. Animated, multi-page, or layered inputs are currently exported as a single image; ICO inputs use the best available icon frame.</p>
+        <p class="conversion-policy-note">Animated, multi-page and layered images export as a single image. ICO uses the best available frame.</p>
       )}
       {converter.category === 'data' && (
-        <p class="conversion-policy-note">UTF-8 structured text is processed locally. CSV/TSV use the first row as headers; nested JSON objects use dot-notation columns for tabular output, while arrays remain explicit JSON text.</p>
+        <p class="conversion-policy-note">UTF-8 data stays local. CSV/TSV use the first row as headers; nested JSON uses dot-notation columns.</p>
       )}
       <div class="progress-wrap" data-role="progress" hidden role="progressbar" aria-label="Conversion progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-copy"><strong data-role="progress-text">Preparing…</strong><span>Keep this tab open</span></div><div class="progress-track"><span data-role="progress-bar"></span></div></div>
       <div class="file-list" data-role="file-list" aria-label="Selected files"></div>
-      <div class="batch-action-bar"><p class="result-summary" data-role="result-summary" hidden></p><div class="batch-buttons"><button data-role="cancel" class="secondary-button danger-button" type="button" hidden>Cancel</button><button data-role="download-zip" class="secondary-button" type="button" hidden>Download ZIP</button><button data-role="convert-all" class="primary-button" type="button">Preparing converter…</button></div></div>
+      <div class="batch-action-bar"><p class="result-summary" data-role="result-summary" hidden></p><div class="batch-buttons"><button data-role="cancel" class="secondary-button danger-button" type="button" hidden>Cancel</button><button data-role="download-zip" class="secondary-button" type="button" hidden>Download ZIP</button>{!compact && <button data-role="convert-all" class="primary-button" type="button">Preparing converter…</button>}</div></div>
     </div>
+    {compact && <div class="sticky-convert-bar" data-role="sticky-convert-bar" hidden><span data-role="sticky-summary">Ready to convert</span><button data-role="convert-sticky" class="primary-button" type="button">Convert</button></div>}
   </section>
 </div>
 <script src="../client/converter-app.ts"></script>
@@ -111,10 +113,68 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
     document.querySelectorAll<HTMLElement>('.workspace.is-dragging, .drop-zone.is-dragging').forEach((element) => element.classList.remove('is-dragging'));
   };
 
+  const normalizeConvertLabel = (raw: string): string => {
+    const match = raw.trim().match(/^Convert remaining (\d+)$/i);
+    if (!match) return raw;
+    const count = Number(match[1]);
+    return `Convert ${count} ${count === 1 ? 'File' : 'Files'}`;
+  };
+
+  const initCompactConvertActions = (root: HTMLElement): void => {
+    if (!root.classList.contains('converter-card--compact') || root.dataset.compactActionsReady === 'true') return;
+    root.dataset.compactActionsReady = 'true';
+    const source = root.querySelector<HTMLButtonElement>('[data-role="convert-all"]');
+    const sticky = root.querySelector<HTMLButtonElement>('[data-role="convert-sticky"]');
+    const stickyBar = root.querySelector<HTMLElement>('[data-role="sticky-convert-bar"]');
+    const stickySummary = root.querySelector<HTMLElement>('[data-role="sticky-summary"]');
+    const workspace = root.querySelector<HTMLElement>('[data-role="workspace"]');
+    const workspaceLabel = root.querySelector<HTMLElement>('[data-role="workspace-label"]');
+    const batchSummary = root.querySelector<HTMLElement>('[data-role="batch-summary"]');
+    const resultSummary = root.querySelector<HTMLElement>('[data-role="result-summary"]');
+    const cancel = root.querySelector<HTMLButtonElement>('[data-role="cancel"]');
+    if (!source || !sticky || !stickyBar || !workspace) return;
+
+    let topVisible = true;
+    const sync = (): void => {
+      const unavailable = source.disabled || source.hidden;
+      const actionLabel = normalizeConvertLabel(source.textContent || 'Convert');
+      if (source.textContent !== actionLabel) source.textContent = actionLabel;
+      sticky.textContent = actionLabel;
+      sticky.disabled = source.disabled;
+      if (stickySummary) stickySummary.textContent = batchSummary?.textContent?.trim() || 'Ready to convert';
+      stickyBar.hidden = workspace.hidden || unavailable || topVisible;
+
+      if (workspaceLabel) {
+        const resultText = !resultSummary?.hidden ? resultSummary?.textContent?.trim() ?? '' : '';
+        const resultMatch = resultText.match(/^(\d+)\/(\d+) converted\b/i);
+        if (cancel && !cancel.hidden) workspaceLabel.textContent = 'Converting';
+        else if (/^Adding files/i.test(source.textContent ?? '')) workspaceLabel.textContent = 'Adding files';
+        else if (resultMatch && resultMatch[1] === resultMatch[2] && !/failed/i.test(resultText)) workspaceLabel.textContent = 'Conversion complete';
+        else if (resultText && source.hidden) workspaceLabel.textContent = 'Conversion finished';
+        else workspaceLabel.textContent = 'Ready to convert';
+      }
+    };
+
+    sticky.addEventListener('click', () => source.click());
+    const observer = new MutationObserver(sync);
+    observer.observe(source, { attributes: true, attributeFilter: ['disabled', 'hidden'], childList: true, characterData: true, subtree: true });
+    observer.observe(workspace, { attributes: true, attributeFilter: ['hidden'] });
+    if (batchSummary) observer.observe(batchSummary, { childList: true, characterData: true, subtree: true });
+    if (resultSummary) observer.observe(resultSummary, { attributes: true, attributeFilter: ['hidden'], childList: true, characterData: true, subtree: true });
+    if (cancel) observer.observe(cancel, { attributes: true, attributeFilter: ['hidden'] });
+    const visibility = new IntersectionObserver((entries) => {
+      topVisible = entries[0]?.isIntersecting ?? true;
+      sync();
+    }, { threshold: 0.15 });
+    visibility.observe(source);
+    sync();
+  };
+
   const initConverterFeedback = (): void => {
     document.querySelectorAll<HTMLElement>('[data-converter-app]').forEach((root) => {
       if (root.dataset.feedbackReady === 'true') return;
       root.dataset.feedbackReady = 'true';
+      initCompactConvertActions(root);
 
       const notice = root.querySelector<HTMLElement>('[data-role="notice"]');
       const result = root.querySelector<HTMLElement>('[data-role="result-summary"]');
@@ -159,6 +219,13 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
 <style is:global>
   .settings-card{padding-left:26px;padding-right:28px;column-gap:24px}.output-field{padding-left:2px;padding-right:4px}.output-controls{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;min-width:0;padding-right:2px}.extra-output-controls{display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-wrap:wrap}.setting-field{white-space:nowrap}.setting-field select{min-width:88px}.setting-field--checkbox{gap:8px;margin-right:2px}.setting-field--checkbox input{width:15px;height:15px;margin:0;accent-color:var(--accent)}
   .notice{width:min(760px,calc(100vw - 40px));max-width:760px;text-align:center;line-height:1.45;overflow-wrap:anywhere}.notice[data-type=success]{color:#166b49;background:#eefaf4;border-color:#bfe8d2;box-shadow:0 12px 35px rgba(24,122,85,.12)}
-  @media(max-width:900px){.settings-card{padding-left:18px;padding-right:18px}.output-controls,.extra-output-controls{justify-content:flex-start;padding-right:0}.setting-field{white-space:normal}.setting-field--checkbox{margin-right:0}}
-  @media(max-width:760px){.notice{width:calc(100vw - 24px);max-width:calc(100vw - 24px);padding:10px 12px;font-size:11px}}
+  .converter-card--compact .settings-card{grid-template-columns:auto minmax(180px,1fr) auto;grid-template-areas:"output controls action" "quick quick quick";row-gap:12px}.converter-card--compact .output-field{grid-area:output}.converter-card--compact .quick-field{grid-area:quick;border-top:1px solid #e7e8ef;padding-top:11px}.converter-card--compact .output-controls{grid-area:controls}
+  .converter-card.converter-card--compact .settings-card .settings-convert-button{grid-area:action;width:auto;min-width:118px;max-width:160px;height:40px;min-height:40px;max-height:40px;padding:0 16px;border-radius:10px;font-size:12px;line-height:1;white-space:nowrap;align-self:center}
+  .converter-card--compact select{min-height:40px;padding:0 36px 0 13px;border:1px solid #d9dbe4;border-radius:10px;background-color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m5.5 7.5 4.5 4.5 4.5-4.5' stroke='%23575b68' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:12px 12px;color:#252732;appearance:none;-webkit-appearance:none;box-shadow:0 1px 2px rgba(24,26,38,.025)}
+  .converter-card--compact select:hover:not(:disabled){border-color:#c7cad5}.converter-card--compact select:focus-visible{outline:2px solid rgba(99,91,255,.2);outline-offset:1px;border-color:var(--accent)}.converter-card--compact .output-field select{min-width:104px}.converter-card--compact .setting-field select{min-width:94px}
+  .converter-card--compact .file-list{counter-reset:file-row}.converter-card--compact .file-row{counter-increment:file-row}.converter-card--compact .file-main::before{content:counter(file-row,decimal-leading-zero);width:24px;flex:0 0 24px;color:#a0a3af;font-size:10px;font-weight:780;font-variant-numeric:tabular-nums;text-align:right}
+  .converter-card--compact .batch-action-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:14px}.converter-card--compact .batch-action-bar .result-summary{order:1;margin:0;text-align:left;font-size:12px;font-weight:760;color:#555a68}.converter-card--compact .batch-action-bar .batch-buttons{order:2;margin-left:auto}.converter-card--compact [data-role="download-zip"]{min-height:40px;padding:8px 16px;border-color:#171822;background:linear-gradient(180deg,#20212d,#14151d);color:#fff;box-shadow:0 7px 18px rgba(23,24,34,.15);font-size:12px;font-weight:820}.converter-card--compact [data-role="download-zip"]:hover:not(:disabled){background:#0f1017;box-shadow:0 10px 24px rgba(23,24,34,.2);transform:translateY(-1px)}
+  .sticky-convert-bar{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));z-index:65;transform:translateX(-50%);width:min(660px,calc(100vw - 32px));display:flex;align-items:center;gap:14px;padding:9px 9px 9px 15px;border:1px solid #dedfe8;border-radius:15px;background:rgba(255,255,255,.94);box-shadow:0 18px 48px rgba(23,24,34,.18);backdrop-filter:blur(16px)}.sticky-convert-bar>span{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#555a68;font-size:12px;font-weight:800}.sticky-convert-bar .primary-button{flex:0 0 auto;min-height:40px;min-width:170px;padding:8px 17px}
+  @media(max-width:900px){.settings-card{padding-left:18px;padding-right:18px}.output-controls,.extra-output-controls{justify-content:flex-start;padding-right:0}.setting-field{white-space:normal}.setting-field--checkbox{margin-right:0}.converter-card--compact .settings-card{grid-template-columns:1fr auto;grid-template-areas:"output action" "controls controls" "quick quick"}.converter-card.converter-card--compact .settings-card .settings-convert-button{min-width:118px;max-width:150px}}
+  @media(max-width:760px){.notice{width:calc(100vw - 24px);max-width:calc(100vw - 24px);padding:10px 12px;font-size:11px}.converter-card--compact .settings-card{grid-template-columns:1fr;grid-template-areas:"output" "controls" "action" "quick"}.converter-card.converter-card--compact .settings-card .settings-convert-button{width:100%;min-width:0;max-width:none;height:44px;min-height:44px;max-height:44px;font-size:13px}.converter-card--compact select{min-height:42px;padding-right:38px;background-position:right 13px center}.converter-card--compact .batch-action-bar{align-items:stretch;flex-direction:column;gap:10px}.converter-card--compact .batch-action-bar .batch-buttons{width:100%;margin-left:0}.converter-card--compact [data-role="download-zip"]{width:100%;min-height:44px;font-size:13px}.sticky-convert-bar{bottom:max(8px,env(safe-area-inset-bottom));width:calc(100vw - 20px);padding:8px 8px 8px 12px}.sticky-convert-bar>span{font-size:11px}.sticky-convert-bar .primary-button{min-width:145px}}
 </style>

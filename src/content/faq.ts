@@ -33,7 +33,7 @@ export const GENERAL_FAQ = [
   },
   {
     question: 'Which converter categories are live?',
-    answer: 'Image and structured Data conversion are live. Archive and Audio remain planned until their browser workflows have their own production validation, safety limits, and regression tests.',
+    answer: 'Image and structured data conversion are live today. Additional categories will only appear after their browser workflows have production validation, safety limits, and regression coverage.',
   },
   {
     question: 'Why not process every file type on a server?',
