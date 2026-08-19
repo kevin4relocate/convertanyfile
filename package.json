@@ -10,7 +10,8 @@
     "check": "astro check",
     "build": "astro build",
     "preview": "astro preview",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:production": "playwright test --config=playwright.production.config.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.3",
