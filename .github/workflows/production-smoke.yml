@@ -8,6 +8,13 @@ on:
         required: true
         default: https://convertanyfile.net
         type: string
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/production-smoke.yml'
+      - 'production-tests/**'
+      - 'playwright.production.config.ts'
+      - 'package.json'
 
 permissions:
   contents: read
