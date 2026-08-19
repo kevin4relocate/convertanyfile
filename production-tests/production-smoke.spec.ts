@@ -15,6 +15,12 @@ async function readyApp(page: Page): Promise<Locator> {
   return app;
 }
 
+test.beforeEach(async ({ context }) => {
+  // Production smoke should verify the GA bootstrap without creating synthetic GA4 users/sessions.
+  await context.route(/https:\/\/www\.googletagmanager\.com\/.*/, (route) => route.abort());
+  await context.route(/https:\/\/(?:[^/]+\.)?google-analytics\.com\/.*/, (route) => route.abort());
+});
+
 test('production shell, analytics, robots, sitemap and 404 are healthy', async ({ page, request }) => {
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBe(200);
