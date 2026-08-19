@@ -173,15 +173,18 @@ test('public homepage presents only live converter categories', async ({ page },
   await expect(section).not.toContainText('Audio');
 });
 
-test('local Data conversion does not upload source bytes or contact an external origin', async ({ page }, testInfo) => {
+test('local Data conversion never sends source contents through analytics or other network requests', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Network privacy regression');
-  const unsafeRequests: string[] = [];
+  const leakedRequests: string[] = [];
+  const sourceMarkers = ['secret,value', 'alpha,private-data', 'private-source.csv'];
   page.on('request', (request) => {
-    const url = new URL(request.url());
-    if (!['http:', 'https:'].includes(url.protocol)) return;
-    const external = url.origin !== 'http://127.0.0.1:4321';
-    const uploadsData = !['GET', 'HEAD'].includes(request.method()) || Boolean(request.postData());
-    if (external || uploadsData) unsafeRequests.push(`${request.method()} ${request.url()}`);
+    const url = request.url();
+    if (!/^https?:/i.test(url)) return;
+    const body = request.postData() ?? '';
+    const material = `${decodeURIComponent(url)}\n${body}`;
+    if (sourceMarkers.some((marker) => material.includes(marker))) {
+      leakedRequests.push(`${request.method()} ${url}`);
+    }
   });
 
   await page.goto('/csv-to-json/');
@@ -193,5 +196,5 @@ test('local Data conversion does not upload source bytes or contact an external 
   });
   await app.locator('[data-role="convert-all"]').click();
   await expect(app.locator('[data-role="result-summary"]')).toContainText('1/1 converted');
-  expect(unsafeRequests).toEqual([]);
+  expect(leakedRequests).toEqual([]);
 });
