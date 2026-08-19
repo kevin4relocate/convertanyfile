@@ -48,6 +48,13 @@ const websiteSchema = {
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary" />
     <title>{title}</title>
+    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-LX78XZ9FH2"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-LX78XZ9FH2');
+    </script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>
     {schemas.map((item) => <script is:inline type="application/ld+json" set:html={JSON.stringify(item)}></script>)}
   </head>
