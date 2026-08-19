@@ -1,0 +1,42 @@
+name: Production Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Production URL to test
+        required: true
+        default: https://convertanyfile.net
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Production smoke (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ inputs.base_url }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.19.0'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run production smoke tests
+        run: npm run test:production
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-smoke-diagnostics
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
