@@ -8,10 +8,7 @@ on:
 jobs:
   build-and-browser-smoke:
     runs-on: ubuntu-latest
-    # The launch regression suite covers 264 tests across desktop/mobile Chromium,
-    # Firefox, and WebKit. Keep a single deterministic Playwright worker and give
-    # the full gate enough time to finish instead of cancelling a healthy run.
-    timeout-minutes: 35
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
