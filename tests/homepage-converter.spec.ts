@@ -97,7 +97,7 @@ test('homepage keeps the primary convert action visible near settings and uses a
     buffer: Buffer.from('[{"id":1,"name":"Alice"}]'),
   });
 
-  const topConvert = dataPanel.locator('[data-role="convert-top"]');
+  const topConvert = dataPanel.locator('[data-role="convert-all"]');
   const output = dataPanel.locator('[data-role="output-format"]');
   await expect(topConvert).toBeVisible();
   await expect(topConvert).toBeEnabled();
