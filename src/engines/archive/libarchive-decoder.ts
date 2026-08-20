@@ -22,10 +22,15 @@ interface DecodeGuards {
 
 const RUNTIME_MODULE_URL = '/vendor/libarchive-wasm/libarchive.js';
 const RUNTIME_WASM_URL = '/vendor/libarchive-wasm/libarchive.wasm';
+const MAX_WASM_SOURCE_BYTES = 75 * 1024 * 1024;
 let modulePromise: Promise<LibarchiveModule> | undefined;
 
 function runtimeError(message: string): Error {
   return new Error(`Archive decoder runtime unavailable: ${message}`);
+}
+
+function browserMemoryError(): Error {
+  return new Error('Archive decoder ran out of browser memory');
 }
 
 async function loadModule(): Promise<LibarchiveModule> {
@@ -85,77 +90,98 @@ function unsupportedEntry(type: number): Error {
   return new Error(`Archive contains an unsupported ${label}`);
 }
 
+function normalizeDecoderFailure(error: unknown): Error {
+  const message = error instanceof Error ? error.message : String(error || 'Archive decoder failed');
+  if (/decoder runtime unavailable/i.test(message)) return error instanceof Error ? error : new Error(message);
+  if (/^Archive (?:contains|entry|expands|path)/i.test(message) || /75 MB browser-decoder safety limit|ran out of browser memory/i.test(message)) {
+    return error instanceof Error ? error : new Error(message);
+  }
+  if (/password|passphrase|encrypted/i.test(message)) return new Error('Password-protected 7Z/RAR archives are not supported');
+  if (/truncated|unexpected eof|unexpected end|short read|end of file|damaged|corrupt|invalid header|unrecognized archive|ended before|invalid, corrupt/i.test(message)) {
+    return new Error('The 7Z/RAR archive is corrupt or incomplete');
+  }
+  if (/unsupported|not supported|compression method|compression|codec|filter/i.test(message)) {
+    return new Error('This 7Z/RAR archive uses an unsupported compression method or feature');
+  }
+  if (/invalid/i.test(message)) return new Error('The 7Z/RAR archive is corrupt or unsupported');
+  return new Error(`Unable to read the 7Z/RAR archive: ${message}`);
+}
+
 export async function libarchiveVersion(): Promise<string> {
   const module = await loadModule();
   return String(bindings(module).version());
 }
 
 export async function decodeWithLibarchive(input: ArrayBuffer, guards: DecodeGuards): Promise<LibarchiveDecodedEntry[]> {
-  const module = await loadModule();
-  const api = bindings(module);
-  const bytes = new Int8Array(input);
-  const inputPointer = module._malloc(bytes.byteLength || 1);
-  module.HEAP8.set(bytes, inputPointer);
+  if (input.byteLength > MAX_WASM_SOURCE_BYTES) throw new Error('7Z/RAR source exceeds the 75 MB browser-decoder safety limit');
 
-  let archive = 0;
   try {
-    archive = Number(api.readNewMemory(inputPointer, bytes.byteLength, undefined));
-    if (!archive) throw new Error('Invalid, corrupt, encrypted, or unsupported 7Z/RAR archive');
-    if (api.readHasEncrypted(archive) > 0) throw new Error('Encrypted archives are not supported');
+    const module = await loadModule();
+    const api = bindings(module);
+    const bytes = new Int8Array(input);
+    const inputPointer = module._malloc(bytes.byteLength || 1);
+    if (!inputPointer) throw browserMemoryError();
 
-    const entries: LibarchiveDecodedEntry[] = [];
-    let total = 0;
-    for (;;) {
-      const entryPointer = Number(api.readNextEntry(archive));
-      if (!entryPointer) {
-        const readError = String(api.errorString(archive) || '').trim();
-        if (readError) throw new Error(readError);
-        break;
+    let archive = 0;
+    try {
+      module.HEAP8.set(bytes, inputPointer);
+      archive = Number(api.readNewMemory(inputPointer, bytes.byteLength, undefined));
+      if (!archive) throw new Error('Invalid, corrupt, or unsupported 7Z/RAR archive');
+      if (api.readHasEncrypted(archive) > 0) throw new Error('Encrypted archives are not supported');
+
+      const entries: LibarchiveDecodedEntry[] = [];
+      let total = 0;
+      for (;;) {
+        const entryPointer = Number(api.readNextEntry(archive));
+        if (!entryPointer) {
+          const readError = String(api.errorString(archive) || '').trim();
+          if (readError) throw new Error(readError);
+          break;
+        }
+
+        const path = guards.requireSafePath(String(api.entryPathname(entryPointer) || ''));
+        if (api.entryEncrypted(entryPointer)) throw new Error('Encrypted archive entries are not supported');
+        if (api.entrySymlink(entryPointer) || api.entryHardlink(entryPointer)) throw new Error('Archive contains unsupported links');
+
+        const type = Number(api.entryFiletype(entryPointer));
+        const mtimeSeconds = Number(api.entryMtime(entryPointer));
+        const modified = Number.isFinite(mtimeSeconds) && mtimeSeconds > 0 ? new Date(mtimeSeconds * 1000) : undefined;
+
+        if (type === DIRECTORY_TYPE) {
+          guards.ensureBudget(entries.length + 1, total, 0);
+          api.readSkip(archive);
+          entries.push({ path, kind: 'directory', data: new Uint8Array(), modified });
+          continue;
+        }
+        if (type !== FILE_TYPE) throw unsupportedEntry(type);
+
+        const declaredSize = Number(api.entrySize(entryPointer));
+        if (!Number.isFinite(declaredSize) || declaredSize < 0) throw new Error('Archive entry has an invalid extracted size');
+        guards.ensureBudget(entries.length + 1, total, declaredSize);
+
+        const dataPointer = module._malloc(Math.max(declaredSize, 1));
+        if (!dataPointer) throw browserMemoryError();
+        try {
+          const bytesRead = Number(api.readData(archive, dataPointer, declaredSize));
+          if (!Number.isFinite(bytesRead) || bytesRead < 0 || bytesRead !== declaredSize) throw new Error('Archive entry ended before its declared size');
+          const data = new Uint8Array(module.HEAP8.buffer, dataPointer, bytesRead).slice();
+          guards.ensureBudget(entries.length + 1, total, data.byteLength);
+          total += data.byteLength;
+          entries.push({ path, kind: 'file', data, modified });
+        } finally {
+          module._free(dataPointer);
+        }
       }
 
-      const path = guards.requireSafePath(String(api.entryPathname(entryPointer) || ''));
-      if (api.entryEncrypted(entryPointer)) throw new Error('Encrypted archive entries are not supported');
-      if (api.entrySymlink(entryPointer) || api.entryHardlink(entryPointer)) throw new Error('Archive contains unsupported links');
-
-      const type = Number(api.entryFiletype(entryPointer));
-      const mtimeSeconds = Number(api.entryMtime(entryPointer));
-      const modified = Number.isFinite(mtimeSeconds) && mtimeSeconds > 0 ? new Date(mtimeSeconds * 1000) : undefined;
-
-      if (type === DIRECTORY_TYPE) {
-        guards.ensureBudget(entries.length + 1, total, 0);
-        api.readSkip(archive);
-        entries.push({ path, kind: 'directory', data: new Uint8Array(), modified });
-        continue;
+      if (!entries.length) throw new Error('Archive does not contain extractable files or directories');
+      return entries;
+    } finally {
+      if (archive) {
+        try { api.readFree(archive); } catch { /* worker teardown remains authoritative */ }
       }
-      if (type !== FILE_TYPE) throw unsupportedEntry(type);
-
-      const declaredSize = Number(api.entrySize(entryPointer));
-      if (!Number.isFinite(declaredSize) || declaredSize < 0) throw new Error('Archive entry has an invalid extracted size');
-      guards.ensureBudget(entries.length + 1, total, declaredSize);
-
-      const dataPointer = module._malloc(Math.max(declaredSize, 1));
-      try {
-        const bytesRead = Number(api.readData(archive, dataPointer, declaredSize));
-        if (!Number.isFinite(bytesRead) || bytesRead < 0 || bytesRead !== declaredSize) throw new Error('Archive entry ended before its declared size');
-        const data = new Uint8Array(module.HEAP8.buffer, dataPointer, bytesRead).slice();
-        guards.ensureBudget(entries.length + 1, total, data.byteLength);
-        total += data.byteLength;
-        entries.push({ path, kind: 'file', data, modified });
-      } finally {
-        module._free(dataPointer);
-      }
+      module._free(inputPointer);
     }
-
-    if (!entries.length) throw new Error('Archive does not contain extractable files or directories');
-    return entries;
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error || 'Archive decoder failed');
-    if (/password|passphrase|encrypted/i.test(message)) throw new Error('Encrypted archives are not supported');
-    throw error;
-  } finally {
-    if (archive) {
-      try { api.readFree(archive); } catch { /* worker teardown remains authoritative */ }
-    }
-    module._free(inputPointer);
+    throw normalizeDecoderFailure(error);
   }
 }

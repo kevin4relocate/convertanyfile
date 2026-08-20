@@ -12,7 +12,7 @@ const acceptedHint = converter.input
     : converter.category === 'data'
       ? 'CSV, TSV, JSON, JSONL and NDJSON files'
       : converter.category === 'archive'
-        ? 'ZIP, TAR, TAR.GZ, TGZ, GZIP and GZ files'
+        ? '7Z, RAR, ZIP, TAR, TAR.GZ, TGZ, GZIP and GZ files'
         : 'Supported files';
 const toolLabel = converter.input && converter.output
   ? `${displayFormat(converter.input)} → ${displayFormat(converter.output)}`
@@ -72,7 +72,7 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
         <p class="conversion-policy-note">UTF-8 data stays local. CSV/TSV use the first row as headers; nested JSON uses dot-notation columns.</p>
       )}
       {converter.category === 'archive' && (
-        <p class="conversion-policy-note">Archive contents stay local. Unsafe paths, corrupt containers and archives that exceed expanded-size safety limits are rejected.</p>
+        <p class="conversion-policy-note">Archive contents stay local. Unsafe or duplicate paths, corrupt or password-protected containers, unsupported special entries, and archives over browser safety limits are rejected.</p>
       )}
       <div class="progress-wrap" data-role="progress" hidden role="progressbar" aria-label="Conversion progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-copy"><strong data-role="progress-text">Preparing…</strong><span>Keep this tab open</span></div><div class="progress-track"><span data-role="progress-bar"></span></div></div>
       <div class="file-list" data-role="file-list" aria-label="Selected files"></div>

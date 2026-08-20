@@ -20,6 +20,7 @@ export interface ArchiveRepackOptions {
 const MAX_ENTRIES = 2_000;
 const MAX_ENTRY_BYTES = 100 * 1024 * 1024;
 const MAX_EXTRACTED_BYTES = 250 * 1024 * 1024;
+const MAX_PATH_BYTES = 4_096;
 const TAR_BLOCK = 512;
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -28,18 +29,15 @@ function archiveError(message: string): Error {
   return new Error(message);
 }
 
-function safePath(input: string): string | null {
-  if (!input || input.includes('\0')) return null;
-  const slashNormalized = input.replace(/\\/g, '/');
-  if (slashNormalized.startsWith('/') || /^[A-Za-z]:\//.test(slashNormalized)) return null;
-  const parts = slashNormalized.split('/').filter((part) => part && part !== '.');
-  if (!parts.length || parts.some((part) => part === '..')) return null;
-  return parts.join('/');
-}
-
 function requireSafePath(input: string): string {
-  const path = safePath(input);
-  if (!path) throw archiveError('Archive contains an unsafe file path');
+  if (!input) throw archiveError('Archive contains an unsafe file path');
+  if (/[\u0000-\u001f\u007f]/.test(input)) throw archiveError('Archive path contains control characters');
+  const slashNormalized = input.replace(/\\/g, '/');
+  if (slashNormalized.startsWith('/') || /^[A-Za-z]:\//.test(slashNormalized)) throw archiveError('Archive contains an unsafe file path');
+  const parts = slashNormalized.split('/').filter((part) => part && part !== '.');
+  if (!parts.length || parts.some((part) => part === '..')) throw archiveError('Archive contains an unsafe file path');
+  const path = parts.join('/');
+  if (encoder.encode(path).byteLength > MAX_PATH_BYTES) throw archiveError(`Archive path exceeds the ${MAX_PATH_BYTES}-byte safety limit`);
   return path;
 }
 
@@ -47,6 +45,15 @@ function ensureBudget(count: number, total: number, next: number): void {
   if (count > MAX_ENTRIES) throw archiveError(`Archive contains more than ${MAX_ENTRIES} entries`);
   if (next > MAX_ENTRY_BYTES) throw archiveError('Archive entry exceeds the 100 MB extracted-size limit');
   if (total + next > MAX_EXTRACTED_BYTES) throw archiveError('Archive expands beyond the 250 MB safety limit');
+}
+
+function assertUniquePaths(entries: readonly ArchiveEntry[]): void {
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    const key = entry.path.normalize('NFC');
+    if (seen.has(key)) throw archiveError(`Archive contains duplicate path: ${entry.path}`);
+    seen.add(key);
+  }
 }
 
 function permissionMode(value: unknown, fallback: number): number {
@@ -134,6 +141,19 @@ function parsePax(data: Uint8Array): Record<string, string> {
   return fields;
 }
 
+function unsupportedTarEntry(type: string): Error {
+  const label = type === '1'
+    ? 'hard link'
+    : type === '2'
+      ? 'symbolic link'
+      : type === '3' || type === '4'
+        ? 'device entry'
+        : type === '6'
+          ? 'FIFO entry'
+          : `special entry type ${JSON.stringify(type)}`;
+  return archiveError(`TAR archive contains an unsupported ${label}`);
+}
+
 function untar(bytes: Uint8Array): ArchiveEntry[] {
   const entries: ArchiveEntry[] = [];
   let offset = 0;
@@ -185,6 +205,8 @@ function untar(bytes: Uint8Array): ArchiveEntry[] {
     } else if (type === '5') {
       ensureBudget(entries.length + 1, total, 0);
       entries.push({ path, kind: 'directory', data: new Uint8Array(), modified, mode });
+    } else {
+      throw unsupportedTarEntry(type);
     }
 
     pendingPax = {};
@@ -310,6 +332,7 @@ function zipOptions(compression: ArchiveRepackOptions['zipCompression']): { comp
 
 export async function repackArchive(input: ArrayBuffer, inputFormat: ArchiveInputFormat, outputFormat: ArchiveFormat, options: ArchiveRepackOptions = {}): Promise<ArrayBuffer> {
   const entries = await readEntries(input, inputFormat, options.sourceName);
+  assertUniquePaths(entries);
   if (outputFormat === 'zip') {
     const zip = new JSZip();
     for (const entry of entries) {

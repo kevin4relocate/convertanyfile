@@ -24,6 +24,21 @@ Use this checklist before promoting the Archive category from Preview to product
 - [ ] TAR.GZ / TGZ gzip stream + TAR validation.
 - [ ] Single-file GZIP / GZ stream handling with deterministic recovered filename.
 
+## V4 production-hardening gates
+
+- [ ] TAR hard links, symbolic links, device entries, FIFOs, and unknown special entry types are rejected instead of silently disappearing.
+- [ ] Duplicate NFC-normalized archive paths are rejected before any output writer runs.
+- [ ] Archive paths containing ASCII control characters are rejected.
+- [ ] Archive paths over the 4,096-byte browser safety ceiling are rejected before output.
+- [ ] Truncated real 7Z input passes signature admission but fails conversion permanently as corrupt/incomplete.
+- [ ] Truncated real RAR input passes signature admission but fails conversion permanently as corrupt/incomplete.
+- [ ] Password-protected 7Z/RAR failures classify as `unsupported-input`, not `corrupt-input`.
+- [ ] Missing/failed libarchive runtime classifies as retryable `engine-crash` and exposes Retry.
+- [ ] Unicode filenames and zero-byte regular files survive certified native repacking.
+- [ ] The main Archive dropzone visibly lists 7Z and RAR in addition to native formats.
+- [ ] The WASM path independently enforces the 75 MB source-file ceiling before copying bytes into WASM memory.
+- [ ] Do not lower the 7Z/RAR source limit below the shared 75 MB policy without measured browser-memory evidence from Preview testing.
+
 ## WASM supply chain
 
 - [ ] libarchive-wasm source is pinned to an immutable upstream commit.
@@ -51,6 +66,8 @@ Use this checklist before promoting the Archive category from Preview to product
 - [ ] Basic Unix permission bits survive native ZIP/TAR paths where compatible metadata is available.
 - [ ] 7Z/RAR entries receive deterministic safe target permissions when portable mode metadata is not exposed.
 - [ ] File payload bytes remain byte-identical after supported repacking paths.
+- [ ] Unicode filenames survive supported repacking without mojibake.
+- [ ] Zero-byte regular files remain zero-byte regular files.
 - [ ] Product copy does not promise preservation of symlinks, hard links, UID/GID ownership, ACLs, xattrs, sparse-file metadata, or vendor-specific metadata.
 - [ ] Unsupported links and special entries are rejected instead of silently disappearing.
 
@@ -59,12 +76,13 @@ Use this checklist before promoting the Archive category from Preview to product
 - [ ] Reject `../` parent traversal.
 - [ ] Reject absolute POSIX paths.
 - [ ] Reject Windows drive-root paths.
-- [ ] Reject null-containing paths.
+- [ ] Reject null-containing paths and other ASCII control characters.
+- [ ] Reject duplicate normalized paths.
 - [ ] Reject corrupt ZIP CRCs.
 - [ ] Reject invalid TAR checksums.
 - [ ] Reject encrypted or unsupported ZIP input with a permanent error.
 - [ ] Reject encrypted/password-protected 7Z/RAR input with a permanent error.
-- [ ] Reject symlink, hard-link, device-node, socket, pipe, and unsupported special entries on the WASM input path.
+- [ ] Reject symlink, hard-link, device-node, socket, pipe, FIFO, and unsupported special entries on every parser path that can expose them.
 - [ ] Maximum 2,000 archive entries.
 - [ ] Maximum 100 MB expanded size for one file entry.
 - [ ] Maximum 250 MB total expanded content per source archive.
@@ -85,7 +103,7 @@ Use this checklist before promoting the Archive category from Preview to product
 ## UX and SEO
 
 - [ ] Main Archive page identifies itself as `Archive Converter`, not generic `File Converter`.
-- [ ] Archive selection accepts 7Z, RAR, ZIP, TAR, TAR.GZ/TGZ and GZIP/GZ accurately.
+- [ ] Archive selection and visible dropzone copy accurately list 7Z, RAR, ZIP, TAR, TAR.GZ/TGZ and GZIP/GZ.
 - [ ] Pair pages display TAR.GZ and GZIP labels instead of internal `tgz` / `gz` IDs.
 - [ ] `/7z-to-zip/`, `/7z-to-tar/`, `/7z-to-tar-gz/` are real converter routes.
 - [ ] `/rar-to-zip/`, `/rar-to-tar/`, `/rar-to-tar-gz/` are real converter routes.
@@ -106,6 +124,8 @@ Use this checklist before promoting the Archive category from Preview to product
 - [ ] Real RAR4 input converts through the WASM path.
 - [ ] Real RAR5 input converts through the WASM path.
 - [ ] Real encrypted RAR input is rejected.
+- [ ] Corrupt/truncated 7Z and RAR fail safely without a Retry action.
+- [ ] A blocked WASM runtime fails temporarily and exposes Retry.
 - [ ] Test fixtures are pinned and Git-blob verified before Playwright execution.
 
 ## Next-tier format admission

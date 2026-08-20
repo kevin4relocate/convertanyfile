@@ -9,13 +9,11 @@ function failure(requestId: string, error: unknown): ArchiveWorkerResponse {
   if (/decoder runtime unavailable/i.test(message)) {
     return { type: 'convert-result', requestId, ok: false, error: message, code: 'engine-crash', retryable: true };
   }
-  const code = /250 MB|100 MB|more than 2000/i.test(message)
-    ? 'memory-limit'
-    : /invalid|corrupt|unexpected end|does not contain|unsafe file path|encrypted|ended before/i.test(message)
-      ? 'corrupt-input'
-      : /not supported|unsupported link|unsupported .*entry/i.test(message)
-        ? 'unsupported-input'
-        : 'conversion-failed';
+
+  const memoryLimited = /75 MB browser-decoder|250 MB|100 MB|more than 2000|4096-byte|browser memory/i.test(message);
+  const unsupported = /password-protected 7Z\/RAR|encrypted archives are not supported|encrypted archive entries are not supported|this 7Z\/RAR archive uses an unsupported|TAR archive contains an unsupported|Archive contains (?:an )?unsupported|duplicate path|unsafe file path|control characters|not supported by this browser/i.test(message);
+  const corrupt = /invalid|corrupt|incomplete|unexpected end|does not contain|ended before|checksum|CRC|unable to read/i.test(message);
+  const code = memoryLimited ? 'memory-limit' : unsupported ? 'unsupported-input' : corrupt ? 'corrupt-input' : 'conversion-failed';
   return { type: 'convert-result', requestId, ok: false, error: message, code, retryable: false };
 }
 
@@ -26,7 +24,7 @@ self.addEventListener('message', async (event: MessageEvent<ArchiveWorkerRequest
       type: 'ready-result',
       requestId: request.requestId,
       ok: true,
-      version: 'archive-preview-3',
+      version: 'archive-preview-4',
       gzip: typeof CompressionStream !== 'undefined' && typeof DecompressionStream !== 'undefined',
       wasm: typeof WebAssembly !== 'undefined',
     } satisfies ArchiveWorkerResponse);
