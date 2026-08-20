@@ -12,6 +12,7 @@ const outputLabel = label(converter.output);
 const related = (converter.related ?? []).map((slug) => getAnyConverter(slug)).filter(Boolean);
 const asideRelated = related.map((item) => ({ href: `/${item!.slug}/`, label: item!.eyebrow }));
 const gzipInput = converter.input === 'gz';
+const wasmInput = converter.input === '7z' || converter.input === 'rar';
 const compressedTar = converter.input === 'tgz' || converter.output === 'tgz';
 const zipOutput = converter.output === 'zip';
 const toc = [
@@ -26,44 +27,46 @@ const faq = [
   { question: `Can I convert ${inputLabel} to ${outputLabel} without uploading the archive?`, answer: 'Yes. Supported archive bytes are parsed and repackaged in a browser worker. The source archive is not sent to a conversion server.' },
   { question: 'Does conversion extract files onto my device first?', answer: 'No. Archive entries are expanded inside browser memory and written into a new archive container. Only the final file you choose to download is saved by the browser.' },
   { question: 'How does the converter handle unsafe archive paths?', answer: 'Absolute paths, parent-directory traversal such as ../, Windows drive-root paths, and null-containing paths are rejected instead of being silently written or renamed.' },
-  { question: 'Are empty folders kept?', answer: 'For supported ZIP and TAR-family sources, directory entries are carried into the destination where the target container can represent them.' },
-  { question: 'Are encrypted or password-protected archives supported?', answer: 'Not in this preview. Password-protected ZIP files are rejected rather than producing incomplete output.' },
+  { question: 'Are empty folders kept?', answer: 'Directory entries are carried into the destination where both the source decoder and target container represent them.' },
+  { question: 'Are encrypted or password-protected archives supported?', answer: 'No. Password-protected ZIP, 7Z, or RAR input is rejected rather than creating incomplete output.' },
 ];
 ---
 <ArticleFrame toc={toc} related={asideRelated} relatedTitle="Related archive conversions" asideNote="Archive conversion runs locally with entry-count, per-entry, expanded-size, path-safety, and container-integrity checks before a new archive is produced.">
   <div class="quick-answer"><strong>Quick answer</strong><p>Convert {inputLabel} to {outputLabel} locally in your browser. The Archive engine reads the source container, validates its entries, and creates a new archive without uploading the contents.</p></div>
 
   <h2 id="why">Why convert {inputLabel} to {outputLabel}?</h2>
-  {gzipInput ? <p>GZIP is a compression stream for one file rather than a multi-file archive. This converter decompresses that single file and places it into a {outputLabel} container, which is useful when you need a normal archive around a <code>.gz</code> payload.</p> : <p>Different archive containers fit different workflows. ZIP is widely supported on desktop and mobile systems, while TAR is common in Unix and development workflows. TAR.GZ combines TAR's directory structure with gzip compression.</p>}
-  {compressedTar && <p>TAR.GZ and TGZ are treated as the same input family. The converter first handles the gzip stream, then parses or writes the TAR container inside it.</p>}
+  {gzipInput ? <p>GZIP is a compression stream for one file rather than a multi-file archive. This converter decompresses that single file and places it into a {outputLabel} container, which is useful when you need a normal archive around a <code>.gz</code> payload.</p> : wasmInput ? <p>{inputLabel} is useful for compact distribution and desktop archive workflows, but ZIP and TAR-family outputs are often easier to consume in browsers, operating systems, build pipelines, and Unix tooling. This converter reads supported {inputLabel} archives locally and rebuilds their regular files and folders in {outputLabel}.</p> : <p>Different archive containers fit different workflows. ZIP is widely supported on desktop and mobile systems, while TAR is common in Unix and development workflows. TAR.GZ combines TAR's directory structure with gzip compression.</p>}
+  {compressedTar && <p>TAR.GZ and TGZ are treated as the same output or input family. The converter handles the gzip stream and the TAR container as separate layers.</p>}
+  {wasmInput && <p>The 7Z/RAR decoder is a pinned libarchive WebAssembly runtime. It is lazy-loaded only when one of those input families is actually used; normal ZIP, TAR, and GZIP conversions do not initialize it.</p>}
 
   <h2 id="preserved">What the converter preserves</h2>
-  <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Archive detail</th><th>Preview behavior</th></tr></thead><tbody><tr><td><strong>File tree</strong></td><td>Nested safe paths are preserved when repackaging.</td></tr><tr><td><strong>Empty directories</strong></td><td>Directory entries are retained for supported ZIP and TAR-family sources.</td></tr><tr><td><strong>Timestamps</strong></td><td>Entry modification times are carried forward when the source exposes them.</td></tr><tr><td><strong>Unix permissions</strong></td><td>Basic permission bits are preserved where the source and target expose compatible metadata.</td></tr><tr><td><strong>Original archive</strong></td><td>Never modified. Conversion creates a new downloadable container.</td></tr></tbody></table></div>
-  <p>Archive formats do not share every metadata feature. Ownership IDs, access-control lists, extended attributes, sparse-file behavior, hard links, symbolic links, and vendor-specific metadata are not promised by this preview. Keep the source archive when those details matter.</p>
+  <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Archive detail</th><th>Preview behavior</th></tr></thead><tbody><tr><td><strong>File tree</strong></td><td>Nested safe paths are preserved when repackaging.</td></tr><tr><td><strong>Empty directories</strong></td><td>Directory entries are retained when the source decoder exposes them.</td></tr><tr><td><strong>Timestamps</strong></td><td>Entry modification times are carried forward when the source exposes them.</td></tr><tr><td><strong>Unix permissions</strong></td><td>Basic permission bits are preserved for native ZIP/TAR paths; 7Z/RAR inputs currently use safe target defaults where portable permission metadata is not exposed.</td></tr><tr><td><strong>Original archive</strong></td><td>Never modified. Conversion creates a new downloadable container.</td></tr></tbody></table></div>
+  <p>Archive formats do not share every metadata feature. Ownership IDs, access-control lists, extended attributes, sparse-file behavior, hard links, symbolic links, and vendor-specific metadata are not promised by this preview. Unsupported links and special entries are rejected instead of being silently dropped. Keep the source archive when those details matter.</p>
 
   <h2 id="safety">Archive safety checks before repacking</h2>
   <ul class="content-checklist">
     <li><strong>Path traversal protection:</strong> entries using <code>../</code>, absolute roots, Windows drive roots, or invalid null-containing names are rejected.</li>
     <li><strong>ZIP integrity:</strong> ZIP input is opened with CRC checking so corrupt entries do not silently become valid-looking output.</li>
     <li><strong>TAR integrity:</strong> TAR headers must pass checksum validation. PAX extended paths and GNU long-name records are understood for better real-world compatibility.</li>
+    <li><strong>7Z/RAR policy:</strong> signature checks happen before the WASM decoder is used. Password-protected archives, links, device nodes, and unsupported special entries are rejected.</li>
     <li><strong>Expansion limits:</strong> the worker stops archives that exceed the entry count, per-entry extracted size, or total expanded-size budget.</li>
     <li><strong>Failure isolation:</strong> one invalid archive can fail without discarding successful results from the rest of a batch.</li>
   </ul>
-  <div class="callout"><strong>Archive-bomb guard</strong><p>Compressed size is not a safe estimate of browser memory use. The Archive engine therefore applies limits to expanded content as it reads entries, not only to the source file size.</p></div>
+  <div class="callout"><strong>Archive-bomb guard</strong><p>Compressed size is not a safe estimate of browser memory use. The Archive engine therefore applies limits to expanded content as it reads entries, including entries decoded through the 7Z/RAR WASM path.</p></div>
 
   <h2 id="workflow">How the browser-first archive workflow works</h2>
   <ol>
-    <li><strong>Add archives.</strong> Choose supported ZIP, TAR, TAR.GZ/TGZ, or single-file GZIP sources. Pair pages restrict selection to their expected input family.</li>
+    <li><strong>Add archives.</strong> Choose supported 7Z, RAR, ZIP, TAR, TAR.GZ/TGZ, or single-file GZIP sources. Pair pages restrict selection to their expected input family.</li>
     <li><strong>Choose the target.</strong> Use ZIP, TAR, or TAR.GZ. {zipOutput ? 'ZIP output also exposes Store, Balanced, and Maximum compression profiles.' : 'The page is already preset to the requested target format.'}</li>
-    <li><strong>Convert in a worker.</strong> Container parsing, decompression, validation, and repacking run away from the main UI thread.</li>
+    <li><strong>Convert in a worker.</strong> Container parsing, decompression, validation, and repacking run away from the main UI thread. 7Z/RAR initializes the pinned WASM decoder only when needed.</li>
     <li><strong>Download results.</strong> Save each archive individually or package successful batch outputs using the shared download workflow.</li>
   </ol>
 
   <h2 id="limits">Limits and compatibility</h2>
   <p>The current Archive policy accepts up to 20 source archives, 75 MB per source, and 250 MB total source data per batch. After opening an archive, the engine allows at most 2,000 entries, 100 MB for one expanded file, and 250 MB total expanded content. These are browser-safety limits rather than server upload limits.</p>
-  <p>ZIP and TAR work without an additional server runtime. TAR.GZ/TGZ and generic GZIP depend on the browser's gzip compression/decompression stream support. Unsupported capabilities are hidden rather than advertised as working.</p>
+  <p>ZIP and TAR use the built-in Archive pipeline. TAR.GZ/TGZ and generic GZIP depend on browser gzip streams. 7Z and supported RAR4/RAR5 input use a build-pinned libarchive WASM runtime that is served as a static ConvertAnyFile asset and lazy-loaded by the Archive worker.</p>
 
   <h2 id="faq">Before you use the converted archive</h2>
-  <p>For software distribution, backups, deployment artifacts, or archives that rely on symbolic links, ownership, ACLs, extended attributes, sparse files, or exact reproducible metadata, verify the converted archive with the destination tool before replacing the original.</p>
+  <p>For software distribution, backups, deployment artifacts, or archives that rely on symbolic links, ownership, ACLs, extended attributes, sparse files, exact permissions, or reproducible metadata, verify the converted archive with the destination tool before replacing the original.</p>
 </ArticleFrame>
 <section class="content-wide-section white"><div class="site-container"><FaqList items={faq} title={`${inputLabel} to ${outputLabel} FAQ`} intro={`Practical details about converting ${inputLabel} to ${outputLabel} locally, including archive safety, metadata, compression, and browser limits.`} /></div></section>

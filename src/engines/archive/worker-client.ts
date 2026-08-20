@@ -33,10 +33,10 @@ export class ArchiveWorkerClient {
     return worker;
   }
 
-  async ready(): Promise<{ version: string; gzip: boolean }> {
+  async ready(): Promise<{ version: string; gzip: boolean; wasm: boolean }> {
     const response = await this.send({ type: 'ready', requestId: crypto.randomUUID() }, [], STARTUP_TIMEOUT);
     if (response.type !== 'ready-result' || !response.ok) throw new Error('Invalid archive engine readiness response');
-    return { version: response.version, gzip: response.gzip };
+    return { version: response.version, gzip: response.gzip, wasm: response.wasm };
   }
 
   async convert(

@@ -3,4 +3,6 @@ dist/
 .astro/
 playwright-report/
 test-results/
+public/vendor/libarchive-wasm/
+tests/fixtures/archive-wasm/
 .DS_Store

@@ -28,6 +28,24 @@ function tarHeaderLooksValid(sample: Uint8Array): boolean {
   return expected === actual;
 }
 
+function startsWith(sample: Uint8Array, signature: readonly number[]): boolean {
+  return sample.byteLength >= signature.length && signature.every((value, index) => sample[index] === value);
+}
+
+function archiveSignatureMatches(extension: string, sample: Uint8Array): boolean {
+  if (extension === 'zip') {
+    return sample.length >= 4 && sample[0] === 0x50 && sample[1] === 0x4b && [0x03, 0x05, 0x07].includes(sample[2]) && [0x04, 0x06, 0x08].includes(sample[3]);
+  }
+  if (extension === '7z') return startsWith(sample, [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c]);
+  if (extension === 'rar') {
+    return startsWith(sample, [0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0x00])
+      || startsWith(sample, [0x52, 0x61, 0x72, 0x21, 0x1a, 0x07, 0x01, 0x00]);
+  }
+  if (extension === 'tgz' || extension === 'gz') return startsWith(sample, [0x1f, 0x8b]);
+  if (extension === 'tar') return tarHeaderLooksValid(sample);
+  return false;
+}
+
 function zipCompressionSetting(value: unknown): ArchiveZipCompression {
   return value === 'store' || value === 'maximum' ? value : 'balanced';
 }
@@ -43,20 +61,20 @@ export const archiveEngine: EngineAdapter = {
   outputs: ARCHIVE_OUTPUTS,
   async validate(file, requiredInput) {
     const extension = normalizeArchiveExtension(extensionFromArchiveFilename(file.name));
-    if (!['zip', 'tar', 'tgz', 'gz'].includes(extension)) return null;
+    if (!['zip', '7z', 'rar', 'tar', 'tgz', 'gz'].includes(extension)) return null;
     if (requiredInput && normalizeArchiveExtension(requiredInput) !== extension) return null;
     const sample = new Uint8Array(await file.slice(0, 512).arrayBuffer());
-    if (extension === 'zip') {
-      const zipSignature = sample.length >= 4 && sample[0] === 0x50 && sample[1] === 0x4b && [0x03, 0x05, 0x07].includes(sample[2]) && [0x04, 0x06, 0x08].includes(sample[3]);
-      if (!zipSignature) return null;
-    } else if (extension === 'tgz' || extension === 'gz') {
-      if (sample.length < 2 || sample[0] !== 0x1f || sample[1] !== 0x8b) return null;
-    } else if (!tarHeaderLooksValid(sample)) return null;
+    if (!archiveSignatureMatches(extension, sample)) return null;
     return { extension, label: archiveLabel(extension), confidence: 'signature+extension' };
   },
   initialize() {
-    capabilitiesPromise ??= client.ready().then(({ version, gzip }) => ({
-      readable: gzip ? ['zip', 'tar', 'tgz', 'gz'] : ['zip', 'tar'],
+    capabilitiesPromise ??= client.ready().then(({ version, gzip, wasm }) => ({
+      readable: [
+        'zip',
+        'tar',
+        ...(wasm ? ['7z', 'rar'] : []),
+        ...(gzip ? ['tgz', 'gz'] : []),
+      ],
       writable: gzip ? ['zip', 'tar', 'tgz'] : ['zip', 'tar'],
       version,
     }));
@@ -71,7 +89,7 @@ export const archiveEngine: EngineAdapter = {
   async convert(file, output, settings) {
     const config = outputFor(output);
     const inputFormat = normalizeArchiveExtension(extensionFromArchiveFilename(file.name));
-    if (!config || !['zip', 'tar', 'tgz', 'gz'].includes(inputFormat)) throw new ConverterError('Unsupported archive format', 'unsupported-input', false);
+    if (!config || !['zip', '7z', 'rar', 'tar', 'tgz', 'gz'].includes(inputFormat)) throw new ConverterError('Unsupported archive format', 'unsupported-input', false);
     if (inputFormat === output) throw new ConverterError('Choose a different archive output format', 'conversion-failed', false);
     const runGeneration = generation;
     const input = await file.arrayBuffer();

@@ -6,11 +6,13 @@
   "description": "ConvertAnyFile.net — browser-first private file conversion platform.",
   "engines": { "node": ">=22.19.0" },
   "scripts": {
-    "dev": "astro dev",
+    "runtime:archive": "node scripts/sync-libarchive-runtime.mjs",
+    "fixtures:archive": "node scripts/sync-archive-test-fixtures.mjs",
+    "dev": "npm run runtime:archive && astro dev",
     "check": "astro check",
-    "build": "astro build",
+    "build": "npm run runtime:archive && astro build",
     "preview": "astro preview",
-    "test:e2e": "playwright test",
+    "test:e2e": "npm run fixtures:archive && playwright test",
     "test:production": "playwright test --config=playwright.production.config.ts"
   },
   "dependencies": {

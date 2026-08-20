@@ -22,9 +22,9 @@ export const FOOTER_GROUPS = [
       { label: 'Image Converter', href: '/image-converter/' },
       { label: 'Data Converter', href: '/data-converter/' },
       { label: 'Archive Converter', href: '/archive-converter/' },
-      { label: 'TAR.GZ to ZIP', href: '/tar-gz-to-zip/' },
+      { label: '7Z to ZIP', href: '/7z-to-zip/' },
+      { label: 'RAR to ZIP', href: '/rar-to-zip/' },
       { label: 'HEIC to JPG', href: '/heic-to-jpg/' },
-      { label: 'CSV to JSON', href: '/csv-to-json/' },
     ],
   },
   {
@@ -64,7 +64,7 @@ export const PLATFORM_CATEGORIES = [
     id: 'archive',
     label: 'Archives',
     status: 'preview',
-    description: 'ZIP, TAR, TAR.GZ/TGZ and GZIP repacking with local browser processing.',
+    description: '7Z, RAR, ZIP, TAR, TAR.GZ/TGZ and GZIP conversion with local browser processing.',
     href: '/archive-converter/',
   },
 ] as const;

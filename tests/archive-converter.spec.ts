@@ -41,6 +41,10 @@ function makeTar(): Buffer {
   return Buffer.concat([header, padded, Buffer.alloc(1024)]);
 }
 
+function fixture(name: string): Promise<Buffer> {
+  return readFile(`tests/fixtures/archive-wasm/${name}`);
+}
+
 async function downloadBytes(page: Page, app: Locator): Promise<{ name: string; bytes: Buffer }> {
   const downloadPromise = page.waitForEvent('download');
   await app.getByRole('button', { name: 'Download', exact: true }).click();
@@ -50,20 +54,85 @@ async function downloadBytes(page: Page, app: Locator): Promise<{ name: string; 
   return { name: download.suggestedFilename(), bytes: await readFile(path!) };
 }
 
+async function convertedZip(page: Page, source: { name: string; mimeType: string; buffer: Buffer }): Promise<JSZip> {
+  const app = page.locator('[data-converter-app]');
+  await expect(app).toHaveAttribute('data-initialized', 'true');
+  await app.locator('[data-role="file-input"]').setInputFiles(source);
+  await expect(app.locator('[data-role="output-format"]')).toHaveValue('zip');
+  await app.locator('[data-role="convert-all"]').click();
+  await expect(app.locator('[data-role="result-summary"]')).toContainText('1/1 converted');
+  const result = await downloadBytes(page, app);
+  return JSZip.loadAsync(result.bytes, { checkCRC32: true });
+}
+
 test('Archive preview loads the shared converter with archive engine', async ({ page }) => {
   await page.goto('/archive-converter/');
   const app = page.locator('[data-converter-app]');
   await expect(app).toHaveAttribute('data-engine', 'archive');
   await expect(app).toHaveAttribute('data-initialized', 'true');
   await expect(page.getByRole('heading', { name: 'Convert archives locally.' })).toBeVisible();
+  await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.7z/);
+  await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.rar/);
   await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.gz/);
 });
 
 test('Archive pair routes use archive-specific product content', async ({ page }) => {
-  await page.goto('/tar-gz-to-zip/');
-  await expect(page.getByRole('heading', { name: 'Convert TAR.GZ to ZIP' })).toBeVisible();
+  await page.goto('/7z-to-zip/');
+  await expect(page.getByRole('heading', { name: 'Convert 7Z to ZIP' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Archive safety checks before repacking' })).toBeVisible();
-  await expect(page.getByText('Path traversal protection:')).toBeVisible();
+  await expect(page.getByText('7Z/RAR policy:')).toBeVisible();
+});
+
+test('7Z decoder is lazy-loaded and a real 7Z can be repacked to ZIP', async ({ page }) => {
+  const vendorRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/vendor/libarchive-wasm/')) vendorRequests.push(request.url());
+  });
+  await page.goto('/7z-to-zip/');
+  expect(vendorRequests).toEqual([]);
+
+  const zip = await convertedZip(page, {
+    name: 'sample.7z',
+    mimeType: 'application/x-7z-compressed',
+    buffer: await fixture('file-and-empty.7z'),
+  });
+  expect(Object.keys(zip.files).length).toBeGreaterThan(0);
+  expect(vendorRequests.some((url) => url.endsWith('/libarchive.js'))).toBe(true);
+  expect(vendorRequests.some((url) => url.endsWith('/libarchive.wasm'))).toBe(true);
+});
+
+test('RAR4 input is decoded locally and repacked to a CRC-valid ZIP', async ({ page }) => {
+  await page.goto('/rar-to-zip/');
+  const zip = await convertedZip(page, {
+    name: 'sample-v4.rar',
+    mimeType: 'application/vnd.rar',
+    buffer: await fixture('v4.rar'),
+  });
+  expect(await zip.file('example/README.md')!.async('text')).toContain('# example');
+});
+
+test('RAR5 input is decoded locally and repacked to a CRC-valid ZIP', async ({ page }) => {
+  await page.goto('/rar-to-zip/');
+  const zip = await convertedZip(page, {
+    name: 'sample-v5.rar',
+    mimeType: 'application/vnd.rar',
+    buffer: await fixture('v5.rar'),
+  });
+  expect(await zip.file('example/README.md')!.async('text')).toContain('# example');
+});
+
+test('encrypted RAR is rejected instead of producing partial output', async ({ page }) => {
+  await page.goto('/rar-to-zip/');
+  const app = page.locator('[data-converter-app]');
+  await expect(app).toHaveAttribute('data-initialized', 'true');
+  await app.locator('[data-role="file-input"]').setInputFiles({
+    name: 'encrypted.rar',
+    mimeType: 'application/vnd.rar',
+    buffer: await fixture('v4-encrypted.rar'),
+  });
+  await app.locator('[data-role="convert-all"]').click();
+  await expect(app.locator('[data-role="file-list"]')).toContainText(/Encrypted archives are not supported|encrypted/i);
+  await expect(app.locator('[data-role="result-summary"]')).toContainText('failed');
 });
 
 test('ZIP converts to TAR locally, keeps directory entries, and downloads a real TAR container', async ({ page }) => {
@@ -131,6 +200,22 @@ test('Invalid ZIP signature is rejected before conversion', async ({ page }) => 
   await expect(app).toHaveAttribute('data-initialized', 'true');
   await app.locator('[data-role="file-input"]').setInputFiles({ name: 'fake.zip', mimeType: 'application/zip', buffer: Buffer.from('not a zip') });
   await expect(app.locator('[data-role="file-list"]')).not.toContainText('fake.zip');
+});
+
+test('Invalid 7Z and RAR signatures are rejected before WASM initialization', async ({ page }) => {
+  const vendorRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/vendor/libarchive-wasm/')) vendorRequests.push(request.url());
+  });
+  await page.goto('/archive-converter/');
+  const app = page.locator('[data-converter-app]');
+  await app.locator('[data-role="file-input"]').setInputFiles([
+    { name: 'fake.7z', mimeType: 'application/x-7z-compressed', buffer: Buffer.from('not 7z') },
+    { name: 'fake.rar', mimeType: 'application/vnd.rar', buffer: Buffer.from('not rar') },
+  ]);
+  await expect(app.locator('[data-role="file-list"]')).not.toContainText('fake.7z');
+  await expect(app.locator('[data-role="file-list"]')).not.toContainText('fake.rar');
+  expect(vendorRequests).toEqual([]);
 });
 
 test('TAR with an invalid header checksum is rejected during admission', async ({ page }) => {

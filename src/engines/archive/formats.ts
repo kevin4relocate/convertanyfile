@@ -12,7 +12,7 @@ const ZIP_COMPRESSION_CONTROL: SelectOutputControl = {
   ],
 };
 
-export const ARCHIVE_INPUT_EXTENSIONS = ['zip', 'tar', 'tgz', 'tar.gz', 'gz', 'gzip'] as const;
+export const ARCHIVE_INPUT_EXTENSIONS = ['zip', '7z', 'rar', 'tar', 'tgz', 'tar.gz', 'gz', 'gzip'] as const;
 
 export const ARCHIVE_OUTPUTS: readonly OutputOption[] = [
   { id: 'zip', label: 'ZIP', extension: 'zip', mime: 'application/zip', group: 'Popular', controls: [ZIP_COMPRESSION_CONTROL] },

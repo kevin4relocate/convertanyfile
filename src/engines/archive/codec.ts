@@ -1,7 +1,8 @@
 import JSZip from 'jszip';
+import { decodeWithLibarchive } from './libarchive-decoder';
 
 export type ArchiveFormat = 'zip' | 'tar' | 'tgz';
-export type ArchiveInputFormat = ArchiveFormat | 'gz';
+export type ArchiveInputFormat = ArchiveFormat | 'gz' | '7z' | 'rar';
 
 interface ArchiveEntry {
   path: string;
@@ -290,6 +291,13 @@ async function readEntries(input: ArrayBuffer, format: ArchiveInputFormat, sourc
   if (format === 'zip') return unzip(input);
   if (format === 'tar') return untar(new Uint8Array(input));
   if (format === 'tgz') return untar(await gunzipLimited(input));
+  if (format === '7z' || format === 'rar') {
+    const entries = await decodeWithLibarchive(input, { requireSafePath, ensureBudget });
+    return entries.map((entry) => ({
+      ...entry,
+      mode: entry.kind === 'directory' ? 0o755 : 0o644,
+    }));
+  }
   const data = await gunzipLimited(input);
   ensureBudget(1, 0, data.byteLength);
   return [{ path: gzipEntryName(sourceName), kind: 'file', data, mode: 0o644 }];
