@@ -1,0 +1,75 @@
+---
+import SiteLayout from '../../../layouts/SiteLayout.astro';
+import ArticleFrame from '../../../components/ArticleFrame.astro';
+
+const toc = [
+  { id: 'quick-comparison', label: 'Quick comparison' },
+  { id: 'csv', label: 'Where CSV is strong' },
+  { id: 'json', label: 'Where JSON is strong' },
+  { id: 'conversion', label: 'What conversion changes' },
+  { id: 'choose', label: 'Which format to choose' },
+  { id: 'faq', label: 'Common questions' },
+];
+const related = [
+  { href: '/csv-to-json/', label: 'CSV to JSON' },
+  { href: '/json-to-csv/', label: 'JSON to CSV' },
+  { href: '/csv-to-jsonl/', label: 'CSV to JSONL' },
+  { href: '/jsonl-to-csv/', label: 'JSONL to CSV' },
+  { href: '/data-converter/', label: 'Data Converter' },
+];
+---
+<SiteLayout title="CSV vs JSON: Which Format Should You Use? | ConvertAnyFile" description="A practical CSV vs JSON comparison covering tables, APIs, nested data, types, spreadsheets, conversion rules, and when each format is the better fit.">
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/guides/">Guides</a><span>/</span><span>CSV vs JSON</span></div><span class="eyebrow">Data formats</span><h1>CSV vs JSON: which format should you use?</h1><p>CSV is excellent for simple rectangular tables and spreadsheet workflows. JSON is better when data has explicit types, nested structures, or needs to move naturally through APIs and applications.</p></div></section>
+<ArticleFrame toc={toc} related={related} relatedTitle="Related tools & guides">
+  <div class="quick-answer"><strong>Quick answer</strong><p>Choose CSV for flat tabular data, spreadsheets, simple exports, and systems that expect rows and columns. Choose JSON for APIs, nested objects, explicit data types, and application-to-application exchange. Convert between them when the destination requires a different representation, and verify how nested values and types should be handled.</p></div>
+
+  <h2 id="quick-comparison">CSV vs JSON at a glance</h2>
+  <p>CSV and JSON are both text formats, but they describe data differently. CSV organizes values into rows and columns. JSON represents objects, arrays, strings, numbers, booleans, and null values explicitly. Neither is universally better; the destination determines which representation is useful.</p>
+  <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Concern</th><th>CSV</th><th>JSON</th></tr></thead><tbody>
+    <tr><td>Primary shape</td><td>Rows and columns</td><td>Objects and arrays</td></tr>
+    <tr><td>Native data types</td><td>Text fields</td><td>Strings, numbers, booleans, null, arrays, objects</td></tr>
+    <tr><td>Nested data</td><td>Not native</td><td>Native</td></tr>
+    <tr><td>Spreadsheet use</td><td>Excellent</td><td>Usually needs import or transformation</td></tr>
+    <tr><td>API use</td><td>Possible but less expressive</td><td>Very common</td></tr>
+    <tr><td>Human scanning</td><td>Easy for simple tables</td><td>Easy for structured records, especially with formatting</td></tr>
+  </tbody></table></div>
+
+  <h2 id="csv">Where CSV is strong</h2>
+  <p>CSV is a practical interchange format when your data is naturally rectangular: one header row followed by records with the same set of columns. It works well with spreadsheets, database exports, import screens, reporting tools, and simple data pipelines.</p>
+  <p>CSV is also easy to inspect because the structure is visible in plain text. A file such as <code>name,email,department</code> followed by rows is immediately understandable. The trade-off is that CSV has no standard way to represent nested objects, arrays, or explicit native types. A value such as <code>00123</code> is just text in the file, even if another application later decides to treat it as a number.</p>
+  <h3>Why CSV parsing needs care</h3>
+  <p>Real CSV is more than splitting a line on commas. Fields can contain commas, quotes, and embedded newlines when they are quoted correctly. A reliable converter must parse those cases before writing another delimited format.</p>
+
+  <h2 id="json">Where JSON is strong</h2>
+  <p>JSON is a natural fit for APIs and application data because its structure can express nested objects and arrays without inventing extra column names. It also carries native values such as numbers, booleans, and null, which is useful when the destination understands JSON types.</p>
+  <p>For example, an object can contain <code>profile</code> with a nested <code>city</code> property, while a CSV table needs a flat column such as <code>profile.city</code> or a separate table. JSON therefore preserves more structural information when the data is not naturally rectangular.</p>
+  <h3>Why JSON can be less convenient for spreadsheets</h3>
+  <p>A spreadsheet is fundamentally a table. A JSON array of similarly shaped objects can be flattened into columns, but nested values still need a rule. Arrays and irregular records can require application-specific decisions before they become a useful table.</p>
+
+  <h2 id="conversion">What happens when you convert CSV and JSON?</h2>
+  <h3>CSV to JSON</h3>
+  <p>The first CSV row becomes object keys and each later row becomes a JSON object. ConvertAnyFile intentionally keeps CSV cell values as strings rather than guessing that dates, numbers, or identifiers should become another type. This avoids damaging values with leading zeros or formatting.</p>
+  <p>Use <a href="/csv-to-json/">CSV to JSON</a> when a tabular export needs to enter an API, script, application, or structured-data workflow.</p>
+  <h3>JSON to CSV</h3>
+  <p>JSON records are flattened into a table. Plain nested objects use dot notation for columns, while arrays and other complex values remain explicit JSON text inside a cell rather than being silently discarded.</p>
+  <p>Use <a href="/json-to-csv/">JSON to CSV</a> when structured records need to be opened in a spreadsheet or imported into a table-oriented system.</p>
+  <div class="callout"><strong>Important conversion rule</strong><p>CSV does not have the same native type system as JSON. Converting JSON to CSV can therefore change the representation of types, even when the visible text looks the same. Treat the CSV as a delivery representation and verify the destination import settings.</p></div>
+
+  <h2 id="choose">Which format should you choose?</h2>
+  <ul class="content-checklist">
+    <li><strong>Spreadsheet export:</strong> CSV is usually the simpler choice.</li>
+    <li><strong>REST API payloads:</strong> JSON is usually more expressive.</li>
+    <li><strong>Simple rectangular datasets:</strong> CSV keeps the structure easy to inspect.</li>
+    <li><strong>Nested objects or arrays:</strong> JSON preserves the structure naturally.</li>
+    <li><strong>Identifiers with leading zeros:</strong> keep the source semantics in mind; CSV text can be safer than automatic numeric inference.</li>
+    <li><strong>Streaming records:</strong> JSONL/NDJSON can be a better fit than one large JSON document.</li>
+  </ul>
+  <p>There is also a useful middle ground: keep JSON as the structured source and generate CSV only for spreadsheet-oriented consumers. That lets each destination receive the representation it actually understands without forcing one format to serve every workflow.</p>
+
+  <h2 id="faq">Common CSV vs JSON questions</h2>
+  <h3>Is CSV smaller than JSON?</h3><p>Often for simple flat data, but not always. Field names are repeated in JSON objects, while CSV usually stores column names once. Actual size depends on the data, escaping, whitespace, and serialization choices.</p>
+  <h3>Can CSV store nested data?</h3><p>Not natively. A workflow can flatten nested fields into columns or store JSON text inside a cell, but those are representation choices rather than native CSV structures.</p>
+  <h3>Does CSV preserve numbers and booleans?</h3><p>CSV stores text. An importing application may infer types, but that inference is outside the CSV format itself. This is why a converter should avoid silently changing values unless the user explicitly asks for type coercion.</p>
+  <h3>Should I convert JSON to CSV before using a spreadsheet?</h3><p>If the spreadsheet workflow expects rows and columns, CSV is often convenient. For irregular or deeply nested JSON, inspect the resulting columns first because flattening can produce a table that is technically valid but not useful for analysis.</p>
+</ArticleFrame>
+</SiteLayout>
