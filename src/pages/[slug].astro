@@ -58,6 +58,7 @@ const schema={'@context':'https://schema.org','@type':'WebApplication',name:conv
     <ul class="content-checklist">
       {seoContent.checkAfter.map((item) => <li>{item}</li>)}
     </ul>
+    {seoContent.guideHref && seoContent.guideLabel && <p><strong>Want the format trade-offs first?</strong> Read <a href={seoContent.guideHref}>{seoContent.guideLabel}</a> for practical guidance before converting.</p>}
   </>}
 
   {source && target && <>
