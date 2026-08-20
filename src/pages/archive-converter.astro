@@ -1,0 +1,48 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ConverterPageFrame from '../components/ConverterPageFrame.astro';
+import FaqList from '../components/FaqList.astro';
+import { ARCHIVE_CONVERTER } from '../config/archive-converters';
+import { SITE } from '../config/site';
+
+const converter = ARCHIVE_CONVERTER;
+const faq = [
+  { question: 'Are my archive contents uploaded?', answer: 'No. ZIP, TAR, TAR.GZ/TGZ and supported GZIP repacking runs in a browser worker on your device. The source archive is not sent to a conversion server.' },
+  { question: 'Which archive formats are supported in this preview?', answer: 'ZIP and TAR are supported directly. TAR.GZ/TGZ and single-file GZIP are enabled when the browser provides gzip compression and decompression streams.' },
+  { question: 'Does converting an archive change the files inside it?', answer: 'The converter reads entry bytes in memory and writes them into a new container. File contents are not intentionally transformed, although archive-specific metadata that has no equivalent in the target format may not be preserved.' },
+  { question: 'What safety limits are applied?', answer: 'The preview limits archive entry count, individual expanded entry size, total expanded data, source file size, and batch size. Unsafe paths and corrupt container metadata are rejected.' },
+  { question: 'Are encrypted ZIP, RAR or 7Z files supported?', answer: 'Encrypted ZIP is not supported in this preview. RAR and 7Z are intentionally not advertised until their WASM runtime, memory policy, path safety, and compatibility matrix are production-tested.' },
+];
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: converter.h1,
+  url: `${SITE.origin}/archive-converter/`,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+---
+<SiteLayout title={converter.title} description={converter.description} schema={schema}>
+  <ConverterPageFrame converter={converter} />
+  <section class="content-wide-section white">
+    <div class="site-container prose-content">
+      <h2>Browser-first archive conversion</h2>
+      <p>Convert between ZIP, TAR and TAR.GZ/TGZ, or move a single-file GZIP payload into ZIP or TAR, without putting archive contents into a server-side upload queue. Parsing, decompression, integrity checks and repacking happen in a dedicated browser worker so the main interface remains responsive.</p>
+      <div class="callout"><strong>Preview safety policy</strong><p>Source files are signature-checked before admission. During parsing, the engine validates ZIP CRCs and TAR checksums, rejects unsafe paths, and caps expanded data at 2,000 entries, 100 MB per file, and 250 MB total.</p></div>
+      <h2>What the upgraded preview supports</h2>
+      <ul class="content-checklist">
+        <li><strong>ZIP → TAR / TAR.GZ</strong> with CRC verification and selectable Store, Balanced, or Maximum ZIP compression when ZIP is the destination.</li>
+        <li><strong>TAR → ZIP / TAR.GZ</strong> with TAR checksum validation plus PAX extended paths and GNU long-name compatibility.</li>
+        <li><strong>TAR.GZ / TGZ → ZIP / TAR</strong> when native gzip streams are available.</li>
+        <li><strong>GZIP / GZ → ZIP / TAR</strong> for single-file gzip streams while recovering the original base filename from the source name.</li>
+        <li><strong>Better fidelity:</strong> nested paths, empty directory entries, timestamps and basic Unix permission bits are preserved where the source and target can represent them.</li>
+        <li>Batch queue, cancel, per-file downloads and ZIP packaging reuse the same shared converter platform as Image and Data.</li>
+      </ul>
+      <h2>Compatibility boundary</h2>
+      <p>This preview deliberately does not promise exact preservation of symbolic links, hard links, ownership IDs, ACLs, extended attributes, sparse files or vendor-specific metadata. For deployment artifacts or backups that depend on those details, keep the original archive and verify the converted output with the destination tool.</p>
+      <p>RAR, 7Z, TAR.BZ2 and TAR.XZ are the next logical coverage tier, but they should be added through a dedicated WASM-backed compatibility layer rather than by weakening the current browser-native safety contract.</p>
+    </div>
+  </section>
+  <section class="content-wide-section"><div class="site-container"><FaqList items={faq} title="Archive converter FAQ" intro="How local ZIP, TAR, TAR.GZ and GZIP conversion works in the upgraded preview." /></div></section>
+</SiteLayout>

@@ -3,6 +3,7 @@ import type { EngineAdapter, EngineId } from './types';
 const loaders: Record<EngineId, () => Promise<EngineAdapter>> = {
   image: async () => (await import('../../engines/image/runtime')).imageEngine,
   data: async () => (await import('../../engines/data/runtime')).dataEngine,
+  archive: async () => (await import('../../engines/archive/runtime')).archiveEngine,
 };
 
 const cache = new Map<EngineId, Promise<EngineAdapter>>();

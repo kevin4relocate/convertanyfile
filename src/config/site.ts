@@ -4,7 +4,7 @@ export const SITE = {
   origin: 'https://convertanyfile.net',
   tagline: 'Fast, private file conversion in your browser.',
   description:
-    'Convert supported image and structured-data files directly in your browser with local processing, batch workflows, and no account required.',
+    'Convert supported image, archive, and structured-data files directly in your browser with local processing, batch workflows, and no account required.',
 } as const;
 
 export const NAV_ITEMS = [
@@ -21,9 +21,10 @@ export const FOOTER_GROUPS = [
     links: [
       { label: 'Image Converter', href: '/image-converter/' },
       { label: 'Data Converter', href: '/data-converter/' },
+      { label: 'Archive Converter', href: '/archive-converter/' },
+      { label: 'TAR.GZ to ZIP', href: '/tar-gz-to-zip/' },
       { label: 'HEIC to JPG', href: '/heic-to-jpg/' },
       { label: 'CSV to JSON', href: '/csv-to-json/' },
-      { label: 'JSON to CSV', href: '/json-to-csv/' },
     ],
   },
   {
@@ -58,5 +59,12 @@ export const PLATFORM_CATEGORIES = [
     status: 'live',
     description: 'CSV, TSV, JSON, JSONL and NDJSON conversion in your browser.',
     href: '/data-converter/',
+  },
+  {
+    id: 'archive',
+    label: 'Archives',
+    status: 'preview',
+    description: 'ZIP, TAR, TAR.GZ/TGZ and GZIP repacking with local browser processing.',
+    href: '/archive-converter/',
   },
 ] as const;

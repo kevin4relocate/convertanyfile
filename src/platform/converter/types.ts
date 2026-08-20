@@ -1,5 +1,5 @@
 export type ConverterCategory = 'image' | 'audio' | 'archive' | 'data' | 'subtitle' | 'font' | 'other';
-export type EngineId = 'image' | 'data';
+export type EngineId = 'image' | 'data' | 'archive';
 
 export interface BatchPolicy {
   maxFiles: number;
