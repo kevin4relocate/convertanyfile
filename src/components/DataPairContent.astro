@@ -3,17 +3,20 @@ import ArticleFrame from './ArticleFrame.astro';
 import FaqList from './FaqList.astro';
 import type { ConverterDefinition } from '../platform/converter/types';
 import { DATA_PAIR_CONTENT } from '../content/data-pair-content';
+import { SEO_DATA_CONTENT } from '../content/seo-data-content';
 import { getAnyConverter } from '../config/converter-registry';
 
 interface Props { converter: ConverterDefinition; }
 const { converter } = Astro.props;
 const content = DATA_PAIR_CONTENT[converter.slug];
+const seoContent = SEO_DATA_CONTENT[converter.slug];
 const inputLabel = converter.input?.toUpperCase() ?? 'DATA';
 const outputLabel = converter.output?.toUpperCase() ?? 'DATA';
 const related = (converter.related ?? []).map((slug) => getAnyConverter(slug)).filter(Boolean);
 const asideRelated = related.map((item) => ({ href: `/${item!.slug}/`, label: item!.eyebrow }));
 const toc = [
   { id: 'why', label: `Why convert ${inputLabel} to ${outputLabel}?` },
+  ...(seoContent ? [{ id: 'best-for', label: 'When this conversion is useful' }] : []),
   { id: 'structure', label: 'How structure changes' },
   { id: 'rules', label: 'Conversion rules' },
   { id: 'workflow', label: 'Local workflow' },
@@ -33,6 +36,18 @@ const faq = [
   <h2 id="why">Why convert {inputLabel} to {outputLabel}?</h2>
   <p>{content?.why}</p>
   <p>{content?.when}</p>
+
+  {seoContent && <>
+    <h2 id="best-for">When is {inputLabel} to {outputLabel} useful?</h2>
+    <p>{seoContent.audience}</p>
+    <ul class="content-checklist">
+      {seoContent.bestFor.map((item) => <li>{item}</li>)}
+    </ul>
+    <h3>Before you use the converted file</h3>
+    <ul class="content-checklist">
+      {seoContent.checkAfter.map((item) => <li>{item}</li>)}
+    </ul>
+  </>}
 
   <h2 id="structure">How the data structure changes</h2>
   <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Concern</th><th>{inputLabel} source</th><th>{outputLabel} output</th></tr></thead><tbody><tr><td><strong>Records</strong></td><td>Read according to the source format.</td><td>Rewritten into the destination format without changing the original file.</td></tr><tr><td><strong>Text encoding</strong></td><td>Valid UTF-8, optional BOM.</td><td>UTF-8; tabular outputs can optionally include a BOM.</td></tr><tr><td><strong>Types</strong></td><td>Native JSON types are preserved where the target can represent them.</td><td>CSV/TSV cells are text; complex JSON values remain explicit JSON strings.</td></tr><tr><td><strong>Schema</strong></td><td>Headers or object keys define fields.</td><td>Headers, object keys, or line records are generated predictably.</td></tr></tbody></table></div>
