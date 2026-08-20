@@ -2,6 +2,8 @@ export interface SeoDataContent {
   audience: string;
   bestFor: readonly string[];
   checkAfter: readonly string[];
+  guideHref?: string;
+  guideLabel?: string;
 }
 
 export const SEO_DATA_CONTENT: Record<string, SeoDataContent> = {
@@ -9,11 +11,15 @@ export const SEO_DATA_CONTENT: Record<string, SeoDataContent> = {
     audience: 'This conversion is for tabular exports that need to become named JSON records for scripts, APIs, configuration, or application workflows.',
     bestFor: ['Turning spreadsheet-style exports into arrays of JSON objects', 'Preparing CSV data for an API or JavaScript workflow', 'Keeping identifiers and formatted values as text instead of silently coercing them'],
     checkAfter: ['Confirm the first CSV row contains the headings you want to use as object keys', 'Check duplicate or empty headings in the source', 'Verify the output against the destination schema before importing it'],
+    guideHref: '/guides/csv-vs-json/',
+    guideLabel: 'CSV vs JSON guide',
   },
   'json-to-csv': {
     audience: 'This conversion is useful when structured JSON records need to become a rectangular table for spreadsheets, reporting, or import tools.',
     bestFor: ['Opening arrays of records in spreadsheet software', 'Creating a simple tabular export from application data', 'Feeding a table-oriented import system without building a custom script'],
     checkAfter: ['Review how nested objects were flattened into columns', 'Check that arrays and complex values remain meaningful as JSON text', 'Verify column order and names before sharing or importing the CSV'],
+    guideHref: '/guides/csv-vs-json/',
+    guideLabel: 'CSV vs JSON guide',
   },
   'jsonl-to-json': {
     audience: 'This conversion is for line-oriented JSON datasets such as logs, exports, and model data that need to become one standard JSON value, commonly an array.',
@@ -34,5 +40,7 @@ export const SEO_DATA_CONTENT: Record<string, SeoDataContent> = {
     audience: 'This conversion is useful when newline-delimited records need to become a table for review, analysis, or import into spreadsheet-oriented systems.',
     bestFor: ['Reviewing JSONL datasets in spreadsheets', 'Creating a tabular export from line-oriented application data', 'Producing CSV for systems that accept rows and columns rather than JSON records'],
     checkAfter: ['Review the union of fields used as columns', 'Inspect nested-object dot notation and JSON text stored in cells', 'Check whether irregular records create sparse or unexpected columns'],
+    guideHref: '/guides/csv-vs-json/',
+    guideLabel: 'CSV vs JSON guide',
   },
 };
