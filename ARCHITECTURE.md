@@ -8,100 +8,147 @@ A new converter category must not require copying the header, footer, FAQ markup
 
 ## Shared platform
 
-`SiteLayout.astro` owns document metadata, canonical URLs, structured data hooks, header and footer.
+- `SiteLayout.astro` owns document metadata, canonical URLs, structured-data hooks, header, and footer.
+- `ConverterPageFrame.astro` owns the dedicated converter-page hero contract.
+- `ConverterShell.astro` owns the reusable dropzone, engine-declared settings, queue, progress, notices, and batch action bar.
+- `converter-app.ts` owns generic admission, append-drop, queue state, progress, cancel, retry, downloads, and ZIP behavior.
+- `EngineAdapter` is the boundary between shared queue behavior and category-specific validation/conversion.
 
-`ConverterShell.astro` owns the reusable dropzone, engine-declared settings area, scrollable queue, progress area and sticky action bar.
+Current engines:
 
-`converter-app.ts` owns generic batch lifecycle: admission, append-by-drop, queue state, progress, cancel, retry, result statistics and ZIP download.
+- `src/engines/image/` — ImageMagick WASM. **Live.**
+- `src/engines/data/` — structured-text conversion. **Live.**
+- `src/engines/archive/` — archive validation/repacking + lazy 7Z/RAR WASM. **Live.**
+- `src/engines/subtitle/` — full-file timed-text preflight, transforms, and serialization. **Premium Preview.**
 
-`EngineAdapter` is the boundary between the generic queue and category-specific conversion logic.
+## Generic output-control contract
 
-## Engine contract
+Output controls are engine-declared. Shared UI supports reusable:
 
-Each engine provides accepted extensions, lightweight validation, lazy runtime initialization, capabilities, available outputs, output controls, conversion implementation and reset/cancel behavior.
+- `range`
+- `number`
+- `select`
+- `checkbox`
 
-Live engines:
+The shared queue must not learn category-specific concepts merely to expose a setting.
 
-- `src/engines/image/` — ImageMagick WASM image conversion.
-- `src/engines/data/` — UTF-8 structured-text conversion for CSV, TSV, JSON and JSON Lines.
+Examples:
 
-Output controls are declared by the engine through the shared control schema. Image uses a range control for lossy quality. Data uses select and checkbox controls for line endings, headers, BOM and pretty printing. Category-specific settings must not be hard-coded into the shared queue.
+- Image: lossy quality range.
+- Data: header, line endings, BOM, pretty printing.
+- Archive: ZIP compression.
+- Subtitle: exact numeric timing offset, plain-text cleanup, transcript mode, cue spacing, line endings, BOM.
 
-## Image codec contract
+## Image contract
 
-The image product uses three separate concepts and they must not be collapsed into one list:
+The image product separates:
 
-1. **Recognized input extensions** — filename families for which the detector has a validation path.
-2. **Runtime capabilities** — the full readable/writable coder scan returned by `Magick.supportedFormats` from the packaged ImageMagick WASM build.
-3. **Certified outputs** — a deliberately smaller product whitelist in `src/engines/image/formats.ts`.
+1. recognized input extensions;
+2. runtime readable/writable capabilities;
+3. product-certified public outputs.
 
-The UI may offer an output only when it is both product-certified and reported writable by the current runtime. Do not automatically expose every ImageMagick writer; many coders are internal, pseudo-formats, text formats, or unsuitable for a normal one-file image download workflow.
+The UI offers an image output only when it is both product-certified and writable by the packaged runtime. New certified outputs require worker mapping plus encode/decode-back browser regressions.
 
-Every new certified image output must be added to the WASM worker map and to the browser encode/decode-back matrix in the same change. CI failure means the format is not certified.
+The current product creates one output image per input. EXIF orientation is normalized, opaque outputs flatten transparency deterministically, and animated/multi-page/layered/multi-size sources are not falsely claimed as fully preserved.
 
-## Single-image fidelity contract
+## Data contract
 
-The current image product creates one output image per input file.
+Inputs: CSV, TSV, JSON, JSONL, NDJSON. Outputs: CSV, TSV, JSON, JSONL.
 
-- EXIF orientation is normalized into pixels before writing.
-- Transparent input is flattened to deterministic white when the selected destination has no useful alpha channel.
-- Animated GIF/WebP, multi-page TIFF, layered sources, and multi-size icon containers are not advertised as preserving all frames/pages/layers/sizes.
-- Container metadata is detected when practical so the UI can describe what was found.
-- Multi-size PNG-backed ICO input uses the largest valid embedded PNG frame for single-image conversion; legacy DIB/BMP ICO input falls back to ImageMagick.
+The conversion is deterministic rather than ETL-like:
 
-If full animation, page, or layer preservation is implemented later, it must be an explicit product mode with its own tests rather than an accidental side effect of a codec.
+- UTF-8 input with optional BOM.
+- first delimited row defines headers;
+- duplicate/empty headers are normalized;
+- delimited cells remain strings;
+- nested plain objects flatten with dot notation;
+- arrays/complex values remain JSON strings inside table cells;
+- JSONL/NDJSON use one complete JSON value per non-empty line;
+- unsafe JavaScript numeric precision is rejected rather than silently rounded;
+- output controls cover headers, LF/CRLF, BOM, and JSON formatting.
 
-## Structured Data contract
+## Archive contract
 
-The first Data production release accepts CSV, TSV, JSON, JSONL and NDJSON input and produces CSV, TSV, JSON and JSONL.
+Inputs: ZIP, TAR, TAR.GZ/TGZ, GZIP/GZ, 7Z, supported RAR4/RAR5. Outputs: ZIP, TAR, TAR.GZ.
 
-The contract is deliberately deterministic:
+Archive conversion treats containers as potentially hostile:
 
-- Input text must be valid UTF-8; a UTF-8 BOM is accepted.
-- CSV/TSV first row defines headers.
-- Empty and duplicate headers are normalized so fields are not lost.
-- Delimited cells remain strings; the engine does not guess numbers, dates or booleans.
-- Quoted delimited fields support embedded delimiters, escaped quotes and embedded CRLF/LF newlines.
-- JSON objects flatten with dot notation for tabular output.
-- Arrays and complex JSON values remain JSON strings inside table cells.
-- JSONL and NDJSON share one line-oriented input family: one complete JSON value per non-empty line.
-- JSON numeric tokens that would change value through JavaScript precision are rejected rather than silently rounded; exact precision-sensitive values belong in JSON strings.
-- CSV/TSV output can include/exclude the header, choose LF/CRLF, and optionally emit a UTF-8 BOM.
-- JSON output can be pretty or compact.
+- password/encryption fails closed;
+- unsafe and duplicate normalized paths fail;
+- unsupported special entries fail;
+- integrity/checksum errors fail;
+- compressed source size is not trusted as an expanded-memory signal;
+- entry count, per-entry size, and total expanded size are bounded separately;
+- 7Z/RAR decoding is lazy-loaded.
 
-The 64 KB admission sample is only a lightweight filter. Sampling uses streaming UTF-8 decoding so a valid multibyte character split at the sample boundary is not mistaken for corrupt text, and truncated JSONL tails are not treated as complete records. Full parsing in the worker remains authoritative.
+## Subtitle Premium Preview contract
 
-This engine is a format converter, not an ETL engine. It does not join files, execute spreadsheet formulas, infer relational schemas or apply business mappings.
+Inputs: SRT, VTT/WebVTT, ASS, SSA, SBV. Outputs: SRT, VTT, SBV, TXT.
+
+The route registry exposes 17 useful cross-format pairs and intentionally omits same-format SEO pages.
+
+### Full-file preflight
+
+Before the shared queue reports Ready, Subtitle sends the complete source file to its worker. Preflight:
+
+- decodes UTF-8, UTF-16LE, UTF-16BE BOM input, or Windows-1252 after strict UTF-8 failure;
+- parses every cue;
+- rejects malformed later cues;
+- rejects ambiguous SRT blocks containing multiple timestamp lines;
+- rejects end-before-start timing;
+- enforces a 100,000-cue guard;
+- reports cue count, timeline end, encoding, and richer formatting/WebVTT metadata through the normal `DetectedFile.label` surface.
+
+This preserves a single shared queue implementation.
+
+### Fidelity
+
+- cue order is preserved rather than silently sorted/merged;
+- timing is represented at millisecond precision;
+- SRT numbering is regenerated deterministically;
+- ASS/SSA readable dialogue and timing are extracted, but styles, positioning, karaoke, effects, drawing commands, and override metadata are not claimed as preserved in simpler outputs;
+- VTT-only global metadata cannot be represented in SRT/SBV/TXT;
+- no-transform VTT → VTT validates but preserves the decoded source document body so STYLE, REGION, NOTE, X-TIMESTAMP-MAP, cue IDs, and settings are not discarded merely by normalization;
+- VTT timing/text transforms rebuild from parsed cues, so global metadata preservation is no longer guaranteed.
+
+### Premium transforms
+
+- exact timing offset: `-600000` to `+600000` milliseconds;
+- arbitrary values such as `+1350` and `-780` are supported;
+- a negative offset that would move any cue before `00:00` fails instead of clipping silently;
+- out-of-range/non-numeric offsets fail explicitly;
+- optional plain-text cleanup for timed SRT/VTT/SBV output;
+- TXT timestamp modes: none, start, start → end;
+- TXT cue spacing: blank line or single line;
+- LF/CRLF and optional UTF-8 BOM.
+
+Subtitle is not OCR, speech-to-text, translation, frame-rate retiming, automatic audiovisual sync, or video embedding.
 
 ## Browser safety
 
-Policies are supplied by converter definitions rather than hard-coded in UI components.
+- Image: 50 files, 75 MB/file, 300 MB source batch plus decoded-memory/dimension guards.
+- Data: 50 files, 20 MB/file, 100 MB batch.
+- Archive: 20 files, 75 MB/source, 250 MB source batch plus expansion guards.
+- Subtitle Preview: 50 files, 5 MB/source, 50 MB batch plus full preflight, ±600000 ms timing-offset bound, and 100,000-cue guard.
 
-- Image: 50 files, 75 MB per file, 300 MB total, sequential processing, plus decoded-pixel memory/dimension guards.
-- Data: 50 files, 20 MB per file, 100 MB total, sequential processing in a browser worker.
-
-Compressed or serialized input size is not a sufficient memory signal. Images expand into pixels; JSON/CSV can expand into JavaScript strings, arrays, objects and generated output.
-
-Worker crash, message corruption, and timeout tear down the active worker. A later request initializes a fresh worker. Deterministic corrupt/unsupported/memory/precision failures are permanent and must not expose Retry; transient engine crash/timeout failures may expose Retry.
-
-Engine reset also invalidates the generation of any in-flight conversion. Cancel must remain authoritative if it races with `File.arrayBuffer()` or worker completion: a stale generation cannot publish a successful artifact after reset.
-
-Future archive/audio/subtitle engines can define different limits without changing shared UI code.
+Worker crashes, message corruption, and timeout are recoverable engine failures. Deterministic corrupt/unsupported/unsafe-setting failures are permanent and must not create retry loops. Reset/cancel invalidates stale in-flight results.
 
 ## Routing and SEO
 
-`src/config/converters.ts` owns Image routes. `src/config/data-converters.ts` owns Data routes. `src/config/converter-registry.ts` is the combined registry used by shared dynamic pair routing.
+- Image: `src/config/converters.ts`
+- Data: `src/config/data-converters.ts`
+- Archive: `src/config/archive-converters.ts`
+- Subtitle: `src/config/subtitle-converters.ts`
+- Combined real pair registry: `src/config/converter-registry.ts`
 
-Do not create a route until the conversion is real, testable, and useful. This avoids thin placeholder pages and keeps sitemap output aligned with product capability.
+Do not create a route until conversion is real, testable, and useful. Do not publish same-format pages merely to inflate route count.
 
-All dedicated converter pages render through `ConverterPageFrame` so the primary file action remains above the first desktop viewport. The homepage is the intentional marketing-layout exception and has its own viewport regression.
-
-Pair pages can provide category-specific explanation below the shared frame, but may not duplicate the queue or engine backend.
+Dedicated converter pages render through `ConverterPageFrame`. Category-specific content belongs below the shared tool. The homepage is the intentional marketing-layout exception.
 
 ## Release gate
 
-A category is production-ready only when static checks, browser UX regressions, category-specific real conversion tests, safety limits, deterministic error semantics, sitemap/canonical/internal-link tests, and existing-category regressions are green.
+A category is production-ready only when static checks, browser UX regressions, category-specific real conversion tests, safety/fidelity semantics, sitemap/canonical/internal-link tests, and previous-category regressions are green.
 
-Image additionally requires the full certified-output matrix to encode every public output and decode generated files back through the public converter path.
+Subtitle remains Preview until full-file preflight, encoding behavior, exact timing offsets, text cleanup, VTT metadata rules, ASS/SSA fidelity, all 17 routes, batch behavior, mobile UX, and Chromium/Firefox/WebKit gates are green.
 
-Data additionally requires real byte-level regressions for quoted delimited fields, nested JSON flattening, JSONL/NDJSON, output controls, deterministic parse failures, numeric fidelity, safe admission sampling, cancellation, and shared batch/ZIP reuse. See `IMAGE_RELEASE_CHECKLIST.md` and `DATA_RELEASE_CHECKLIST.md`.
+See `IMAGE_RELEASE_CHECKLIST.md`, `DATA_RELEASE_CHECKLIST.md`, `ARCHIVE_RELEASE_CHECKLIST.md`, and `SUBTITLE_RELEASE_CHECKLIST.md`.

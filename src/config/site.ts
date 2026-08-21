@@ -4,7 +4,7 @@ export const SITE = {
   origin: 'https://convertanyfile.net',
   tagline: 'Fast, private file conversion in your browser.',
   description:
-    'Convert supported image, archive, and structured-data files directly in your browser with local processing, batch workflows, and no account required.',
+    'Convert supported image, archive, structured-data, and subtitle files directly in your browser with local processing, batch workflows, and no account required.',
 } as const;
 
 export const NAV_ITEMS = [
@@ -22,9 +22,9 @@ export const FOOTER_GROUPS = [
       { label: 'Image Converter', href: '/image-converter/' },
       { label: 'Data Converter', href: '/data-converter/' },
       { label: 'Archive Converter', href: '/archive-converter/' },
+      { label: 'Subtitle Converter (Premium Preview)', href: '/subtitle-converter/' },
       { label: '7Z to ZIP', href: '/7z-to-zip/' },
-      { label: 'RAR to ZIP', href: '/rar-to-zip/' },
-      { label: 'HEIC to JPG', href: '/heic-to-jpg/' },
+      { label: 'SRT to VTT', href: '/srt-to-vtt/' },
     ],
   },
   {
@@ -66,5 +66,12 @@ export const PLATFORM_CATEGORIES = [
     status: 'live',
     description: '7Z, RAR, ZIP, TAR, TAR.GZ/TGZ and GZIP conversion with local browser processing.',
     href: '/archive-converter/',
+  },
+  {
+    id: 'subtitle',
+    label: 'Subtitles',
+    status: 'preview',
+    description: 'SRT, VTT, ASS, SSA and SBV with full-file preflight, timing tools, text cleanup and transcript export.',
+    href: '/subtitle-converter/',
   },
 ] as const;

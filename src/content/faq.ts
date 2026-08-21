@@ -1,7 +1,7 @@
 export const GENERAL_FAQ = [
   {
     question: 'Are my files uploaded to a conversion server?',
-    answer: 'For the local converters currently available on ConvertAnyFile, supported files are processed in your browser. The live Image, Data, and Archive categories do not require a file upload step for conversion.',
+    answer: 'For the browser-first converters currently available on ConvertAnyFile, supported files are processed on your device. The live Image, Data, and Archive categories and the Subtitle Preview do not require source-file contents to be uploaded to a ConvertAnyFile conversion server.',
   },
   {
     question: 'Do I need an account?',
@@ -9,11 +9,11 @@ export const GENERAL_FAQ = [
   },
   {
     question: 'Can I convert multiple files at once?',
-    answer: 'Yes. Live converters use the shared batch workspace with per-file status, individual downloads, append-by-drag, and ZIP download for successful results.',
+    answer: 'Yes. The shared batch workspace provides per-file status, individual downloads, append-by-drag, failure isolation, and ZIP download for successful results. Category-specific limits still apply.',
   },
   {
     question: 'Why are there batch limits?',
-    answer: 'Local conversion uses the memory and CPU of your device. Each category defines limits that reduce the chance that unusually large files or oversized batches make the browser tab unstable.',
+    answer: 'Local conversion uses the memory and CPU of your device. Each category defines limits that reduce the chance that unusually large files, expanded archives, decoded images, parsed data, or pathological cue counts make the browser tab unstable.',
   },
   {
     question: 'What happens if one file fails?',
@@ -21,7 +21,7 @@ export const GENERAL_FAQ = [
   },
   {
     question: 'Can I cancel a conversion?',
-    answer: 'Yes. Cancelling stops the active conversion worker. Results that already finished remain available, and unprocessed files can be converted later.',
+    answer: 'Yes. Cancelling resets the active category engine. Results that already finished remain available, and unprocessed files can be converted later.',
   },
   {
     question: 'Does ConvertAnyFile change my original file?',
@@ -29,15 +29,15 @@ export const GENERAL_FAQ = [
   },
   {
     question: 'Why can the first conversion take longer?',
-    answer: 'Some categories load a browser or WebAssembly engine only when needed. First use can include engine startup and caching work; later conversions in the same environment may start faster.',
+    answer: 'Some categories start a browser worker or load a WebAssembly engine only when needed. First use can include engine startup and caching work; later conversions in the same environment may start faster.',
   },
   {
-    question: 'Which converter categories are live?',
-    answer: 'Images, structured Data, and Archives are live today. Archive supports ZIP, TAR, TAR.GZ/TGZ, GZIP/GZ, 7Z, and supported RAR4/RAR5 input, with ZIP, TAR, and TAR.GZ as certified public outputs.',
+    question: 'Which converter categories are available?',
+    answer: 'Images, structured Data, and Archives are live. Subtitle is available as a Premium Preview with SRT, VTT/WebVTT, ASS, SSA, and SBV input; SRT, VTT, SBV, and TXT output; full-file preflight analysis; timing-shift controls; formatting cleanup; and transcript export options.',
   },
   {
     question: 'Why not process every file type on a server?',
-    answer: 'Server conversion can be useful for heavy or specialized workflows, but it adds upload time, temporary storage, cleanup, and infrastructure cost. ConvertAnyFile prefers browser-first processing when the user experience is dependable.',
+    answer: 'Server conversion can be useful for heavy or specialized workflows, but it adds upload time, temporary storage, cleanup, and infrastructure cost. ConvertAnyFile prefers browser-first processing when the user experience and fidelity contract can be made dependable.',
   },
 ] as const;
 

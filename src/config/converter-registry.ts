@@ -2,14 +2,17 @@ import type { ConverterDefinition } from '../platform/converter/types';
 import { DATA_INPUT_EXTENSIONS, normalizeDataExtension } from '../engines/data/formats';
 import { IMAGE_INPUT_EXTENSIONS, normalizeImageExtension } from '../engines/image/formats';
 import { ARCHIVE_INPUT_EXTENSIONS, normalizeArchiveExtension } from '../engines/archive/formats';
+import { SUBTITLE_INPUT_EXTENSIONS, normalizeSubtitleExtension } from '../engines/subtitle/formats';
 import { CONVERTERS as IMAGE_CONVERTERS } from './converters';
 import { DATA_CONVERTERS } from './data-converters';
 import { ARCHIVE_CONVERTERS } from './archive-converters';
+import { SUBTITLE_CONVERTERS } from './subtitle-converters';
 
 export const ALL_CONVERTERS: readonly ConverterDefinition[] = [
   ...IMAGE_CONVERTERS,
   ...DATA_CONVERTERS,
   ...ARCHIVE_CONVERTERS,
+  ...SUBTITLE_CONVERTERS,
 ];
 
 export const ALL_PAIR_CONVERTERS = ALL_CONVERTERS.filter((converter) => converter.input && converter.output);
@@ -29,6 +32,11 @@ export function acceptedExtensionsForConverter(converter: ConverterDefinition): 
     if (!converter.input) return ARCHIVE_INPUT_EXTENSIONS;
     const input = normalizeArchiveExtension(converter.input);
     return ARCHIVE_INPUT_EXTENSIONS.filter((extension) => normalizeArchiveExtension(extension) === input);
+  }
+  if (converter.category === 'subtitle') {
+    if (!converter.input) return SUBTITLE_INPUT_EXTENSIONS;
+    const input = normalizeSubtitleExtension(converter.input);
+    return SUBTITLE_INPUT_EXTENSIONS.filter((extension) => normalizeSubtitleExtension(extension) === input);
   }
   return [];
 }
