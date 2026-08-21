@@ -1,0 +1,17 @@
+---
+import type { ImageToolDefinition } from '../platform/image-tools/types';
+import ImageToolShell from './ImageToolShell.astro';
+interface Props { tool: ImageToolDefinition; }
+const { tool } = Astro.props;
+---
+<section class="converter-page-hero image-tool-page-hero">
+  <div class="site-container converter-page-hero-inner">
+    <div class="breadcrumbs converter-page-breadcrumbs"><a href="/">Home</a><span>/</span><a href="/image-tools/">Image Tools</a><span>/</span><span>Remove Watermark</span></div>
+    <span class="eyebrow converter-page-eyebrow">{tool.eyebrow}</span>
+    <h1>{tool.h1}</h1>
+    <p>{tool.intro}</p>
+  </div>
+</section>
+<section class="image-tool-page-tool">
+  <div class="site-container"><ImageToolShell tool={tool} /></div>
+</section>

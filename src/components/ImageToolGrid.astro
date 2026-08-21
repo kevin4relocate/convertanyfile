@@ -1,0 +1,27 @@
+---
+import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
+interface Props { compact?: boolean; }
+const { compact = false } = Astro.props;
+---
+<div class:list={['image-tool-grid', compact && 'image-tool-grid--compact']}>
+  {IMAGE_TOOL_ROADMAP.map((tool) => tool.href ? (
+    <a class="image-tool-card-link" href={tool.href}>
+      <span class="image-tool-card-icon" aria-hidden="true">{tool.label.slice(0, 1)}</span>
+      <span class="image-tool-card-copy">
+        <span class="image-tool-status image-tool-status--preview">Preview</span>
+        <strong>{tool.label}</strong>
+        <small>{tool.description}</small>
+      </span>
+      <span class="image-tool-card-arrow" aria-hidden="true">→</span>
+    </a>
+  ) : (
+    <div class="image-tool-card-link is-planned" aria-label={`${tool.label}, planned`}>
+      <span class="image-tool-card-icon" aria-hidden="true">{tool.label.slice(0, 1)}</span>
+      <span class="image-tool-card-copy">
+        <span class="image-tool-status">Planned</span>
+        <strong>{tool.label}</strong>
+        <small>{tool.description}</small>
+      </span>
+    </div>
+  ))}
+</div>

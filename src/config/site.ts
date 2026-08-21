@@ -2,13 +2,14 @@ export const SITE = {
   name: 'ConvertAnyFile',
   domain: 'convertanyfile.net',
   origin: 'https://convertanyfile.net',
-  tagline: 'Fast, private file conversion in your browser.',
+  tagline: 'Fast, private file conversion and image tools in your browser.',
   description:
-    'Convert supported image, archive, and structured-data files directly in your browser with local processing, batch workflows, and no account required.',
+    'Convert supported files and use focused image tools directly in your browser with local processing, privacy-first workflows, and no account required.',
 } as const;
 
 export const NAV_ITEMS = [
   { label: 'Converters', href: '/#converters' },
+  { label: 'Image Tools', href: '/image-tools/' },
   { label: 'Formats', href: '/formats/' },
   { label: 'Guides', href: '/guides/' },
   { label: 'FAQ', href: '/faq/' },
@@ -17,13 +18,13 @@ export const NAV_ITEMS = [
 
 export const FOOTER_GROUPS = [
   {
-    title: 'Convert',
+    title: 'Tools',
     links: [
       { label: 'Image Converter', href: '/image-converter/' },
       { label: 'Data Converter', href: '/data-converter/' },
       { label: 'Archive Converter', href: '/archive-converter/' },
-      { label: '7Z to ZIP', href: '/7z-to-zip/' },
-      { label: 'RAR to ZIP', href: '/rar-to-zip/' },
+      { label: 'Image Tools', href: '/image-tools/' },
+      { label: 'Remove Watermark', href: '/remove-watermark/' },
       { label: 'HEIC to JPG', href: '/heic-to-jpg/' },
     ],
   },
