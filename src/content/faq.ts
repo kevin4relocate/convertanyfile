@@ -1,7 +1,7 @@
 export const GENERAL_FAQ = [
   {
     question: 'Are my files uploaded to a conversion server?',
-    answer: 'For the local converters currently available on ConvertAnyFile, supported files are processed in your browser. The live Image and Data categories do not require a file upload step.',
+    answer: 'For the local converters currently available on ConvertAnyFile, supported files are processed in your browser. The live Image, Data, and Archive categories do not require a file upload step for conversion.',
   },
   {
     question: 'Do I need an account?',
@@ -33,7 +33,7 @@ export const GENERAL_FAQ = [
   },
   {
     question: 'Which converter categories are live?',
-    answer: 'Image and structured data conversion are live today. Additional categories will only appear after their browser workflows have production validation, safety limits, and regression coverage.',
+    answer: 'Images, structured Data, and Archives are live today. Archive supports ZIP, TAR, TAR.GZ/TGZ, GZIP/GZ, 7Z, and supported RAR4/RAR5 input, with ZIP, TAR, and TAR.GZ as certified public outputs.',
   },
   {
     question: 'Why not process every file type on a server?',

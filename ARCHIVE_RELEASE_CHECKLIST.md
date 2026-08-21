@@ -1,6 +1,6 @@
-# Archive Release Checklist
+# Archive Production Regression Checklist
 
-Use this checklist before promoting the Archive category from Preview to production.
+Archive is a live production category. Re-run this checklist before any Archive engine, runtime, format, safety-limit, or public-route release. Items are intentionally unchecked so each release verifies the contract again rather than inheriting a stale pass state.
 
 ## Product contract
 
@@ -10,7 +10,7 @@ Use this checklist before promoting the Archive category from Preview to product
 - [ ] 7Z and RAR remain input-only until a separately certified writer path exists.
 - [ ] No BZIP2, XZ, encrypted-archive, multi-volume, or other format claim is published without a tested runtime path.
 
-## Certified Preview inputs
+## Certified inputs
 
 - [ ] ZIP signature validation and CRC verification.
 - [ ] 7Z signature validation before WASM decode.
@@ -24,7 +24,7 @@ Use this checklist before promoting the Archive category from Preview to product
 - [ ] TAR.GZ / TGZ gzip stream + TAR validation.
 - [ ] Single-file GZIP / GZ stream handling with deterministic recovered filename.
 
-## V4 production-hardening gates
+## Production hardening gates
 
 - [ ] TAR hard links, symbolic links, device entries, FIFOs, and unknown special entry types are rejected instead of silently disappearing.
 - [ ] Duplicate NFC-normalized archive paths are rejected before any output writer runs.
@@ -37,19 +37,20 @@ Use this checklist before promoting the Archive category from Preview to product
 - [ ] Unicode filenames and zero-byte regular files survive certified native repacking.
 - [ ] The main Archive dropzone visibly lists 7Z and RAR in addition to native formats.
 - [ ] The WASM path independently enforces the 75 MB source-file ceiling before copying bytes into WASM memory.
-- [ ] Do not lower the 7Z/RAR source limit below the shared 75 MB policy without measured browser-memory evidence from Preview testing.
+- [ ] Do not lower the 7Z/RAR source limit below the shared 75 MB policy without measured browser-memory evidence.
 
 ## WASM supply chain
 
 - [ ] libarchive-wasm source is pinned to an immutable upstream commit.
-- [ ] JavaScript, WASM, and MIT license files are verified against expected Git blob SHA values during build.
+- [ ] JavaScript, WASM, and wrapper license files are verified against expected Git blob SHA values during build.
 - [ ] Generated vendor assets are not committed to the repository.
 - [ ] Deployed libarchive JavaScript/WASM is served as a same-origin static ConvertAnyFile asset.
 - [ ] The 7Z/RAR runtime is lazy-loaded only when those input formats are converted.
 - [ ] A missing or failed WASM runtime is a recoverable engine failure and exposes Retry.
 - [ ] Normal ZIP/TAR/GZIP conversion does not require libarchive initialization.
+- [ ] `THIRD_PARTY_NOTICES.md` still matches the pinned runtime and required notices are reviewed whenever the runtime pin or build composition changes.
 
-## Certified Preview outputs
+## Certified outputs
 
 - [ ] ZIP output opens with CRC verification after conversion.
 - [ ] ZIP Store profile produces a valid STORE archive.
@@ -103,12 +104,15 @@ Use this checklist before promoting the Archive category from Preview to product
 ## UX and SEO
 
 - [ ] Main Archive page identifies itself as `Archive Converter`, not generic `File Converter`.
+- [ ] Homepage exposes Archive as a first-class category and homogeneous Archive drops auto-route correctly.
+- [ ] Mixed-category homepage drops remain on the selected category and admit only files supported by that category.
 - [ ] Archive selection and visible dropzone copy accurately list 7Z, RAR, ZIP, TAR, TAR.GZ/TGZ and GZIP/GZ.
 - [ ] Pair pages display TAR.GZ and GZIP labels instead of internal `tgz` / `gz` IDs.
 - [ ] `/7z-to-zip/`, `/7z-to-tar/`, `/7z-to-tar-gz/` are real converter routes.
 - [ ] `/rar-to-zip/`, `/rar-to-tar/`, `/rar-to-tar-gz/` are real converter routes.
 - [ ] 7Z/RAR pages clearly describe those formats as input-only.
 - [ ] Archive pair pages use archive-specific explanatory content and FAQ.
+- [ ] Archive guide pages link to real converter routes and relevant converter pages link back to guides where applicable.
 - [ ] Archive pages appear in generated sitemap and use canonical `https://convertanyfile.net` URLs.
 - [ ] Pair pages remain within the shared first-viewport converter-frame contract.
 - [ ] Desktop and mobile layout regressions stay green.

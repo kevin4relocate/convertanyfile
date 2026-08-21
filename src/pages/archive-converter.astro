@@ -7,8 +7,8 @@ import { SITE } from '../config/site';
 
 const converter = ARCHIVE_CONVERTER;
 const faq = [
-  { question: 'Are my archive contents uploaded?', answer: 'No. 7Z, RAR, ZIP, TAR, TAR.GZ/TGZ and supported GZIP conversion runs in a browser worker on your device. The source archive is not sent to a conversion server.' },
-  { question: 'Which archive formats are supported in this preview?', answer: '7Z and supported RAR4/RAR5 are input formats through a lazy-loaded WASM decoder. ZIP and TAR are native input/output families. TAR.GZ/TGZ and GZIP depend on browser gzip stream support. Public outputs remain ZIP, TAR and TAR.GZ.' },
+  { question: 'Are my archive contents uploaded?', answer: 'No. Supported 7Z, RAR, ZIP, TAR, TAR.GZ/TGZ and GZIP conversion runs in a browser worker on your device. The source archive is not sent to a conversion server.' },
+  { question: 'Which archive formats are supported?', answer: 'ZIP, TAR, TAR.GZ/TGZ, GZIP/GZ, 7Z, and supported RAR4/RAR5 are accepted as inputs. 7Z and RAR use a lazy-loaded WASM decoder. Certified public outputs are ZIP, TAR, and TAR.GZ.' },
   { question: 'How are corrupt or ambiguous archives handled?', answer: 'The converter fails closed. Corrupt or incomplete containers, unsafe or duplicate normalized paths, password-protected archives, links, unsupported special entries, and archives over browser safety limits are rejected instead of producing partial output.' },
   { question: 'What happens if the 7Z/RAR decoder cannot load?', answer: 'A decoder-runtime load failure is treated as temporary and can be retried. Permanent input problems such as corruption, encryption, unsupported archive features, or safety-policy violations are not presented as retryable.' },
   { question: 'Does converting an archive change the files inside it?', answer: 'Regular file payload bytes are repackaged rather than intentionally transformed. Archive-specific metadata that has no safe equivalent in the target format may not be preserved, and unsupported special entries are rejected.' },
@@ -27,24 +27,25 @@ const schema = {
   <ConverterPageFrame converter={converter} />
   <section class="content-wide-section white">
     <div class="site-container prose-content">
-      <h2>Production-hardening preview</h2>
-      <p>Archive V4 keeps conversion browser-first while tightening the failure boundary. 7Z and RAR are decoded only when needed through the lazy WASM path; ZIP, TAR, TAR.GZ/TGZ and GZIP keep their existing local paths. Public outputs remain ZIP, TAR and TAR.GZ.</p>
+      <h2>Browser-first archive conversion with fail-closed safety</h2>
+      <p>The live Archive converter handles ZIP, TAR, TAR.GZ/TGZ, GZIP/GZ, 7Z, and supported RAR4/RAR5 inputs locally. 7Z and RAR are decoded only when needed through the lazy WASM path; certified public outputs remain ZIP, TAR, and TAR.GZ.</p>
       <div class="callout"><strong>Fail-closed archive policy</strong><p>Source files are signature-checked before admission. During parsing and before output, the engine rejects corrupt containers, unsafe or duplicate normalized paths, unsupported links and special entries, and archives that exceed entry-count, per-entry, expanded-size, path-size, or browser-memory safety limits.</p></div>
-      <h2>What V4 hardens</h2>
+      <h2>What the production Archive engine protects</h2>
       <ul class="content-checklist">
         <li><strong>No silent TAR loss:</strong> hard links, symbolic links, device entries, FIFOs and unknown special entry types are rejected instead of disappearing from the converted archive.</li>
         <li><strong>No ambiguous overwrite:</strong> duplicate normalized paths are rejected before ZIP/TAR/TAR.GZ output is generated.</li>
         <li><strong>Path hygiene:</strong> parent traversal, absolute roots, Windows drive roots, control characters and excessively long paths are rejected.</li>
         <li><strong>Clear failure classes:</strong> password/unsupported-feature errors are permanent, corruption/incomplete containers are permanent, and only transient decoder-runtime failures remain retryable.</li>
-        <li><strong>WASM defense in depth:</strong> the 7Z/RAR decoder independently enforces the current 75 MB source policy before copying the source into WASM memory. That limit is intentionally not reduced without measured browser evidence.</li>
-        <li><strong>Fidelity coverage:</strong> Unicode names and zero-byte regular files are included in the hardening regression surface.</li>
+        <li><strong>WASM defense in depth:</strong> the 7Z/RAR decoder independently enforces the current 75 MB source policy before copying the source into WASM memory.</li>
+        <li><strong>Fidelity coverage:</strong> Unicode names, zero-byte regular files, nested paths, empty directories, timestamps, and compatible basic permissions are covered by the Archive regression surface.</li>
       </ul>
       <h2>Lazy WASM, not server conversion</h2>
-      <p>The 7Z/RAR compatibility layer remains pinned to a fixed libarchive-wasm build. Its JavaScript, WASM binary and wrapper license are verified by Git blob hash during the site build and served as same-origin static assets. Normal ZIP, TAR and GZIP users do not initialize this runtime.</p>
+      <p>The 7Z/RAR compatibility layer is pinned to a fixed libarchive-wasm build. Its JavaScript, WASM binary, and wrapper license are verified by Git blob hash during the site build and served as same-origin static assets. Normal ZIP, TAR, and GZIP users do not initialize this runtime.</p>
       <h2>Compatibility boundary</h2>
-      <p>V4 still does not promise exact preservation of symbolic links, hard links, ownership IDs, ACLs, extended attributes, sparse files or vendor-specific metadata. Rather than silently omitting unsupported entries, the converter rejects archives whose meaning cannot be safely represented by the certified output path.</p>
-      <p>7Z and RAR remain <strong>input-only</strong>. ConvertAnyFile does not advertise 7Z or RAR output until a writer path has its own compatibility, fidelity and browser test matrix.</p>
+      <p>The converter does not promise exact preservation of symbolic links, hard links, ownership IDs, ACLs, extended attributes, sparse files, or vendor-specific metadata. Rather than silently omitting unsupported entries, it rejects archives whose meaning cannot be safely represented by the certified output path.</p>
+      <p>7Z and RAR remain <strong>input-only</strong>. ConvertAnyFile does not advertise 7Z or RAR output until a writer path has its own compatibility, fidelity, and browser test matrix.</p>
+      <p>For practical walkthroughs, see the <a href="/guides/how-to-convert-rar-to-zip/">RAR to ZIP guide</a>, <a href="/guides/how-to-convert-7z-to-zip/">7Z to ZIP guide</a>, and <a href="/guides/how-to-convert-tar-gz-to-zip/">TAR.GZ to ZIP guide</a>.</p>
     </div>
   </section>
-  <section class="content-wide-section"><div class="site-container"><FaqList items={faq} title="Archive converter FAQ" intro="Production-hardening details for local 7Z, RAR, ZIP, TAR, TAR.GZ and GZIP conversion." /></div></section>
+  <section class="content-wide-section"><div class="site-container"><FaqList items={faq} title="Archive converter FAQ" intro="Practical details for local 7Z, RAR, ZIP, TAR, TAR.GZ, and GZIP conversion." /></div></section>
 </SiteLayout>

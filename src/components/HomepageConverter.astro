@@ -2,12 +2,15 @@
 import ConverterShell from './ConverterShell.astro';
 import { getConverter } from '../config/converters';
 import { getDataConverter } from '../config/data-converters';
+import { ARCHIVE_CONVERTER } from '../config/archive-converters';
 import { acceptedExtensionsForConverter } from '../config/converter-registry';
 
 const imageConverter = getConverter('image-converter')!;
 const dataConverter = getDataConverter('data-converter')!;
+const archiveConverter = ARCHIVE_CONVERTER;
 const imageExtensions = acceptedExtensionsForConverter(imageConverter).join(',');
 const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
+const archiveExtensions = acceptedExtensionsForConverter(archiveConverter).join(',');
 ---
 <div
   class="home-converter-switcher"
@@ -15,71 +18,31 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
   data-active-category="image"
   data-image-extensions={imageExtensions}
   data-data-extensions={dataExtensions}
+  data-archive-extensions={archiveExtensions}
 >
   <div class="home-converter-category-bar">
-    <div class="home-converter-category-copy">
-      <span>Converter type</span>
-      <strong>Choose a category</strong>
-    </div>
+    <div class="home-converter-category-copy"><span>Converter type</span><strong>Choose a category</strong></div>
     <div class="home-converter-tabs" role="tablist" aria-label="Converter category">
-      <button
-        class="home-converter-tab is-active"
-        type="button"
-        role="tab"
-        id="home-converter-image-tab"
-        aria-selected="true"
-        aria-controls="home-converter-image-panel"
-        tabindex="0"
-        data-home-category="image"
-      >
-        <span class="home-converter-tab-dot" aria-hidden="true"></span>
-        Images
-      </button>
-      <button
-        class="home-converter-tab"
-        type="button"
-        role="tab"
-        id="home-converter-data-tab"
-        aria-selected="false"
-        aria-controls="home-converter-data-panel"
-        tabindex="-1"
-        data-home-category="data"
-      >
-        <span class="home-converter-tab-dot" aria-hidden="true"></span>
-        Data
-      </button>
+      <button class="home-converter-tab is-active" type="button" role="tab" id="home-converter-image-tab" aria-selected="true" aria-controls="home-converter-image-panel" tabindex="0" data-home-category="image"><span class="home-converter-tab-dot" aria-hidden="true"></span>Images</button>
+      <button class="home-converter-tab" type="button" role="tab" id="home-converter-data-tab" aria-selected="false" aria-controls="home-converter-data-panel" tabindex="-1" data-home-category="data"><span class="home-converter-tab-dot" aria-hidden="true"></span>Data</button>
+      <button class="home-converter-tab" type="button" role="tab" id="home-converter-archive-tab" aria-selected="false" aria-controls="home-converter-archive-panel" tabindex="-1" data-home-category="archive"><span class="home-converter-tab-dot" aria-hidden="true"></span>Archives</button>
     </div>
-    <span class="home-converter-auto-hint" data-home-auto-hint role="status" aria-live="polite" aria-atomic="true">Drop a supported file — category auto-detects</span>
+    <span class="home-converter-auto-hint" data-home-auto-hint role="status" aria-live="polite" aria-atomic="true">Drop one file category — it auto-detects</span>
   </div>
 
-  <div
-    class="home-converter-panel"
-    id="home-converter-image-panel"
-    role="tabpanel"
-    aria-labelledby="home-converter-image-tab"
-    data-home-panel="image"
-  >
-    <ConverterShell converter={imageConverter} compact />
-  </div>
-
-  <div
-    class="home-converter-panel"
-    id="home-converter-data-panel"
-    role="tabpanel"
-    aria-labelledby="home-converter-data-tab"
-    data-home-panel="data"
-    hidden
-  >
-    <ConverterShell converter={dataConverter} compact />
-  </div>
+  <div class="home-converter-panel" id="home-converter-image-panel" role="tabpanel" aria-labelledby="home-converter-image-tab" data-home-panel="image"><ConverterShell converter={imageConverter} compact /></div>
+  <div class="home-converter-panel" id="home-converter-data-panel" role="tabpanel" aria-labelledby="home-converter-data-tab" data-home-panel="data" hidden><ConverterShell converter={dataConverter} compact /></div>
+  <div class="home-converter-panel" id="home-converter-archive-panel" role="tabpanel" aria-labelledby="home-converter-archive-tab" data-home-panel="archive" hidden><ConverterShell converter={archiveConverter} compact /></div>
 </div>
 
 <script>
-  type HomeCategory = 'image' | 'data';
+  type HomeCategory = 'image' | 'data' | 'archive';
 
   const extensionFromName = (name: string): string => {
-    const dot = name.lastIndexOf('.');
-    return dot >= 0 && dot < name.length - 1 ? name.slice(dot + 1).toLowerCase() : '';
+    const lower = name.toLowerCase();
+    if (lower.endsWith('.tar.gz')) return 'tar.gz';
+    const dot = lower.lastIndexOf('.');
+    return dot >= 0 && dot < lower.length - 1 ? lower.slice(dot + 1) : '';
   };
 
   function initHomepageConverters(): void {
@@ -89,30 +52,28 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
 
       const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-home-category]'));
       const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-home-panel]'));
-      const imageExtensions = new Set((root.dataset.imageExtensions ?? '').split(',').filter(Boolean));
-      const dataExtensions = new Set((root.dataset.dataExtensions ?? '').split(',').filter(Boolean));
+      const extensions: Record<HomeCategory, Set<string>> = {
+        image: new Set((root.dataset.imageExtensions ?? '').split(',').filter(Boolean)),
+        data: new Set((root.dataset.dataExtensions ?? '').split(',').filter(Boolean)),
+        archive: new Set((root.dataset.archiveExtensions ?? '').split(',').filter(Boolean)),
+      };
       const hint = root.querySelector<HTMLElement>('[data-home-auto-hint]');
-      const defaultHint = hint?.textContent?.trim() ?? 'Drop a supported file — category auto-detects';
+      const defaultHint = hint?.textContent?.trim() ?? 'Drop one file category — it auto-detects';
       let hintTimer: number | undefined;
 
-      const activeCategory = (): HomeCategory => root.dataset.activeCategory === 'data' ? 'data' : 'image';
+      const isCategory = (value: string | undefined): value is HomeCategory => value === 'image' || value === 'data' || value === 'archive';
+      const activeCategory = (): HomeCategory => isCategory(root.dataset.activeCategory) ? root.dataset.activeCategory : 'image';
       const panelFor = (category: HomeCategory): HTMLElement | undefined => panels.find((item) => item.dataset.homePanel === category);
       const activeApp = (): HTMLElement | null => panelFor(activeCategory())?.querySelector<HTMLElement>('[data-converter-app]') ?? null;
       const currentBusy = (): boolean => activeApp()?.getAttribute('aria-busy') === 'true';
-      const currentConverting = (): boolean => {
-        const cancel = activeApp()?.querySelector<HTMLButtonElement>('[data-role="cancel"]');
-        return Boolean(cancel && !cancel.hidden);
-      };
+      const currentConverting = (): boolean => { const cancel = activeApp()?.querySelector<HTMLButtonElement>('[data-role="cancel"]'); return Boolean(cancel && !cancel.hidden); };
 
       const showHint = (message: string): void => {
         if (!hint) return;
         if (hintTimer) window.clearTimeout(hintTimer);
         hint.textContent = message;
         hint.classList.add('is-message');
-        hintTimer = window.setTimeout(() => {
-          hint.textContent = defaultHint;
-          hint.classList.remove('is-message');
-        }, 4200);
+        hintTimer = window.setTimeout(() => { hint.textContent = defaultHint; hint.classList.remove('is-message'); }, 4200);
       };
 
       const syncBusyState = (): void => {
@@ -120,20 +81,16 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
         root.dataset.busy = busy ? 'true' : 'false';
         for (const tab of tabs) {
           const inactive = tab.dataset.homeCategory !== activeCategory();
-          if (busy && inactive) tab.setAttribute('aria-disabled', 'true');
-          else tab.removeAttribute('aria-disabled');
+          if (busy && inactive) tab.setAttribute('aria-disabled', 'true'); else tab.removeAttribute('aria-disabled');
         }
       };
 
       const activate = (category: HomeCategory, focus = false): boolean => {
         if (category !== activeCategory() && currentBusy()) {
-          showHint(currentConverting()
-            ? 'Finish or cancel the current conversion before switching.'
-            : 'Wait for the current files to finish adding before switching.');
+          showHint(currentConverting() ? 'Finish or cancel the current conversion before switching.' : 'Wait for the current files to finish adding before switching.');
           syncBusyState();
           return false;
         }
-
         root.dataset.activeCategory = category;
         for (const tab of tabs) {
           const selected = tab.dataset.homeCategory === category;
@@ -147,30 +104,27 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
         return true;
       };
 
-      const classify = (files: readonly File[]): HomeCategory => {
-        let imageMatches = 0;
-        let dataMatches = 0;
+      const categoriesForFiles = (files: readonly File[]): Set<HomeCategory> => {
+        const matches = new Set<HomeCategory>();
         for (const file of files) {
           const extension = extensionFromName(file.name);
-          if (imageExtensions.has(extension)) imageMatches += 1;
-          if (dataExtensions.has(extension)) dataMatches += 1;
+          for (const category of ['image', 'data', 'archive'] as const) if (extensions[category].has(extension)) matches.add(category);
         }
-        if (dataMatches > 0 && imageMatches === 0) return 'data';
-        if (imageMatches > 0 && dataMatches === 0) return 'image';
-        return activeCategory();
+        return matches;
+      };
+
+      // A homogeneous drop auto-switches. A mixed-category drop intentionally stays
+      // on the selected tab so that tab's engine accepts its own files and rejects the rest.
+      const targetCategory = (files: readonly File[]): HomeCategory => {
+        const matches = categoriesForFiles(files);
+        return matches.size === 1 ? [...matches][0]! : activeCategory();
       };
 
       const admitFiles = (files: File[]): void => {
         if (!files.length) return;
-        const category = classify(files);
-        if (currentConverting()) {
-          showHint('Finish or cancel the current conversion before adding more files.');
-          return;
-        }
-        if (category !== activeCategory() && currentBusy()) {
-          showHint('Wait for the current files to finish adding before switching categories.');
-          return;
-        }
+        const category = targetCategory(files);
+        if (currentConverting()) { showHint('Finish or cancel the current conversion before adding more files.'); return; }
+        if (category !== activeCategory() && currentBusy()) { showHint('Wait for the current files to finish adding before switching categories.'); return; }
         if (!activate(category)) return;
         const input = panelFor(category)?.querySelector<HTMLInputElement>('[data-role="file-input"]');
         if (!input) return;
@@ -178,10 +132,11 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
         for (const file of files) transfer.items.add(file);
         input.files = transfer.files;
         input.dispatchEvent(new Event('change', { bubbles: true }));
+        if (categoriesForFiles(files).size > 1) showHint(`Mixed files kept on ${category === 'image' ? 'Images' : category === 'data' ? 'Data' : 'Archives'} — unsupported files were skipped.`);
       };
 
       tabs.forEach((tab, index) => {
-        tab.addEventListener('click', () => activate(tab.dataset.homeCategory === 'data' ? 'data' : 'image'));
+        tab.addEventListener('click', () => { if (isCategory(tab.dataset.homeCategory)) activate(tab.dataset.homeCategory); });
         tab.addEventListener('keydown', (event) => {
           if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
           event.preventDefault();
@@ -191,199 +146,27 @@ const dataExtensions = acceptedExtensionsForConverter(dataConverter).join(',');
           if (event.key === 'Home') targetIndex = 0;
           if (event.key === 'End') targetIndex = tabs.length - 1;
           const target = tabs[targetIndex];
-          if (target) activate(target.dataset.homeCategory === 'data' ? 'data' : 'image', true);
+          if (target && isCategory(target.dataset.homeCategory)) activate(target.dataset.homeCategory, true);
         });
       });
 
-      root.addEventListener('dragover', (event) => {
-        if (!event.dataTransfer?.types.includes('Files')) return;
-        event.preventDefault();
-        if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
-      }, true);
-
-      root.addEventListener('drop', (event) => {
-        const files = Array.from(event.dataTransfer?.files ?? []);
-        if (!files.length) return;
-        event.preventDefault();
-        event.stopPropagation();
-        admitFiles(files);
-      }, true);
-
-      root.addEventListener('paste', (event) => {
-        const clipboardEvent = event as ClipboardEvent;
-        const files = Array.from(clipboardEvent.clipboardData?.files ?? []);
-        if (!files.length) return;
-        event.preventDefault();
-        event.stopPropagation();
-        admitFiles(files);
-      }, true);
+      root.addEventListener('dragover', (event) => { if (!event.dataTransfer?.types.includes('Files')) return; event.preventDefault(); if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'; }, true);
+      root.addEventListener('drop', (event) => { const files = Array.from(event.dataTransfer?.files ?? []); if (!files.length) return; event.preventDefault(); event.stopPropagation(); admitFiles(files); }, true);
+      root.addEventListener('paste', (event) => { const files = Array.from((event as ClipboardEvent).clipboardData?.files ?? []); if (!files.length) return; event.preventDefault(); event.stopPropagation(); admitFiles(files); }, true);
 
       const busyObserver = new MutationObserver(syncBusyState);
-      for (const panel of panels) {
-        const app = panel.querySelector<HTMLElement>('[data-converter-app]');
-        if (app) busyObserver.observe(app, { attributes: true, attributeFilter: ['aria-busy'] });
-      }
+      for (const panel of panels) { const app = panel.querySelector<HTMLElement>('[data-converter-app]'); if (app) busyObserver.observe(app, { attributes: true, attributeFilter: ['aria-busy'] }); }
       syncBusyState();
     });
   }
-
   initHomepageConverters();
 </script>
 
 <style>
-  .home-converter-category-bar {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 10px;
-    padding: 7px 9px 7px 14px;
-    border: 1px solid #e1e2ea;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, .8);
-    box-shadow: 0 10px 34px rgba(30, 32, 52, .045);
-    backdrop-filter: blur(10px);
-  }
-
-  .home-converter-category-copy {
-    display: flex;
-    align-items: baseline;
-    gap: 7px;
-    white-space: nowrap;
-  }
-
-  .home-converter-category-copy span {
-    color: #8a8d99;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-  }
-
-  .home-converter-category-copy strong {
-    color: #383b47;
-    font-size: 12px;
-  }
-
-  .home-converter-tabs {
-    display: inline-flex;
-    gap: 3px;
-    padding: 3px;
-    border: 1px solid #e1e2e9;
-    border-radius: 11px;
-    background: #f2f3f7;
-  }
-
-  .home-converter-tab {
-    min-height: 32px;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 6px 13px;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: #666a77;
-    cursor: pointer;
-    font: inherit;
-    font-size: 12px;
-    font-weight: 800;
-    transition: background .14s ease, box-shadow .14s ease, color .14s ease, opacity .14s ease;
-  }
-
-  .home-converter-tab:hover {
-    color: var(--accent-dark);
-  }
-
-  .home-converter-tab:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .home-converter-tab.is-active {
-    background: #fff;
-    color: #242631;
-    box-shadow: 0 2px 8px rgba(34, 36, 52, .08);
-  }
-
-  .home-converter-switcher[data-busy="true"] .home-converter-tab[aria-disabled="true"] {
-    opacity: .48;
-    cursor: not-allowed;
-  }
-
-  .home-converter-tab-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #b7bac5;
-  }
-
-  .home-converter-tab.is-active .home-converter-tab-dot {
-    background: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-soft);
-  }
-
-  .home-converter-auto-hint {
-    margin-left: auto;
-    color: #858895;
-    font-size: 11px;
-    font-weight: 650;
-    white-space: nowrap;
-  }
-
-  .home-converter-auto-hint.is-message {
-    color: var(--accent-dark);
-    font-weight: 760;
-  }
-
-  .home-converter-panel[hidden] {
-    display: none;
-  }
-
-  @media (max-width: 760px) {
-    .home-converter-category-bar {
-      gap: 9px;
-      padding-left: 10px;
-    }
-
-    .home-converter-category-copy span {
-      display: none;
-    }
-
-    .home-converter-category-copy strong {
-      font-size: 11px;
-    }
-
-    .home-converter-auto-hint {
-      display: none;
-    }
-
-    .home-converter-auto-hint.is-message {
-      display: block;
-      flex-basis: 100%;
-      margin-left: 0;
-      text-align: center;
-      white-space: normal;
-    }
-
-    .home-converter-tabs {
-      margin-left: auto;
-    }
-  }
-
-  @media (max-width: 420px) {
-    .home-converter-category-copy {
-      display: none;
-    }
-
-    .home-converter-tabs {
-      width: 100%;
-      margin-left: 0;
-    }
-
-    .home-converter-tab {
-      flex: 1;
-      justify-content: center;
-    }
-  }
+  .home-converter-category-bar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:10px;padding:7px 9px 7px 14px;border:1px solid #e1e2ea;border-radius:14px;background:rgba(255,255,255,.8);box-shadow:0 10px 34px rgba(30,32,52,.045);backdrop-filter:blur(10px)}
+  .home-converter-category-copy{display:flex;align-items:baseline;gap:7px;white-space:nowrap}.home-converter-category-copy span{color:#8a8d99;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.home-converter-category-copy strong{color:#383b47;font-size:12px}
+  .home-converter-tabs{display:inline-flex;gap:3px;padding:3px;border:1px solid #e1e2e9;border-radius:11px;background:#f2f3f7}.home-converter-tab{min-height:32px;display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border:0;border-radius:8px;background:transparent;color:#666a77;cursor:pointer;font:inherit;font-size:12px;font-weight:800;transition:background .14s ease,box-shadow .14s ease,color .14s ease,opacity .14s ease}.home-converter-tab:hover{color:var(--accent-dark)}.home-converter-tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.home-converter-tab.is-active{background:#fff;color:#242631;box-shadow:0 2px 8px rgba(34,36,52,.08)}.home-converter-switcher[data-busy="true"] .home-converter-tab[aria-disabled="true"]{opacity:.48;cursor:not-allowed}.home-converter-tab-dot{width:7px;height:7px;border-radius:50%;background:#b7bac5}.home-converter-tab.is-active .home-converter-tab-dot{background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .home-converter-auto-hint{margin-left:auto;color:#858895;font-size:11px;font-weight:650;white-space:nowrap}.home-converter-auto-hint.is-message{color:var(--accent-dark);font-weight:760}.home-converter-panel[hidden]{display:none}
+  @media(max-width:760px){.home-converter-category-bar{gap:9px;padding-left:10px}.home-converter-category-copy span{display:none}.home-converter-category-copy strong{font-size:11px}.home-converter-auto-hint{display:none}.home-converter-auto-hint.is-message{display:block;flex-basis:100%;margin-left:0;text-align:center;white-space:normal}.home-converter-tabs{margin-left:auto}}
+  @media(max-width:520px){.home-converter-category-copy{display:none}.home-converter-tabs{width:100%;margin-left:0}.home-converter-tab{flex:1;justify-content:center;padding-left:8px;padding-right:8px}}
 </style>

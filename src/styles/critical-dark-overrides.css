@@ -1,0 +1,60 @@
+/*
+ * Final dark-mode locks for component-scoped surfaces.
+ * These rules intentionally use !important so Astro component CSS cannot
+ * reintroduce bright light-mode surfaces after the global dark theme loads.
+ */
+
+.home-converter-category-bar {
+  border-color: #303746 !important;
+  background: #151a24 !important;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .22) !important;
+}
+
+.home-converter-category-copy span,
+.home-converter-auto-hint {
+  color: #9299a9 !important;
+}
+
+.home-converter-category-copy strong {
+  color: #e1e4ec !important;
+}
+
+.home-converter-tabs {
+  border-color: #303746 !important;
+  background: #0f141d !important;
+}
+
+.home-converter-tab {
+  background: transparent !important;
+  color: #a1a8b7 !important;
+}
+
+.home-converter-tab:hover {
+  color: #d7d3ff !important;
+}
+
+.home-converter-tab.is-active {
+  border: 1px solid #3b4354 !important;
+  background: #222938 !important;
+  color: #f3f5fb !important;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .28) !important;
+}
+
+.home-converter-tab-dot {
+  background: #5f6776 !important;
+}
+
+.home-converter-tab.is-active .home-converter-tab-dot {
+  background: var(--accent) !important;
+  box-shadow: 0 0 0 3px var(--accent-soft) !important;
+}
+
+@media (max-width: 520px) {
+  .home-converter-category-bar {
+    padding: 8px !important;
+  }
+
+  .home-converter-tabs {
+    width: 100% !important;
+  }
+}

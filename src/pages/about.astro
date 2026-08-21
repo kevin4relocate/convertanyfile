@@ -12,40 +12,42 @@ const toc = [
 const related = [
   { href: '/image-converter/', label: 'Image Converter' },
   { href: '/data-converter/', label: 'Data Converter' },
+  { href: '/archive-converter/', label: 'Archive Converter' },
   { href: '/formats/', label: 'Supported formats' },
   { href: '/faq/', label: 'FAQ' },
 ];
 ---
-<SiteLayout title="About ConvertAnyFile — Browser-First File Conversion" description="Learn why ConvertAnyFile is built around fast browser-first conversion, local processing, shared converter infrastructure, and reliability before format count.">
+<SiteLayout title="About ConvertAnyFile — Browser-First File Conversion" description="Learn how ConvertAnyFile runs image, archive, and structured-data conversion locally in the browser with shared infrastructure, category-specific safety rules, and no account required.">
 <section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>About</span></div><span class="eyebrow">About ConvertAnyFile</span><h1>File conversion without turning every file into a server upload.</h1><p>ConvertAnyFile is a focused conversion platform: one shared interface, separate category engines, and local processing wherever the browser can do the job reliably.</p></div></section>
-<ArticleFrame toc={toc} related={related} relatedTitle="Explore ConvertAnyFile" asideNote="Image and structured Data conversion are live. New categories are only promoted when their browser workflow is dependable enough to test, document, and protect with sensible limits.">
+<ArticleFrame toc={toc} related={related} relatedTitle="Explore ConvertAnyFile" asideNote="Image, structured Data, and Archive conversion are live. New categories are promoted only after their browser workflow has real validation, safety limits, and regression coverage.">
   <div class="quick-answer"><strong>The short version</strong><p>ConvertAnyFile aims to make routine file conversion feel immediate: choose or drop files, pick an output, convert locally when practical, and download the result without creating an account or waiting for an upload queue.</p></div>
 
   <h2 id="why">Why ConvertAnyFile exists</h2>
-  <p>File formats create small but constant friction. A phone photo arrives as HEIC, a website expects WebP, a spreadsheet export needs JSON, or an API dataset needs CSV. None of those routine tasks should require a complicated editing suite or a long upload-and-wait process.</p>
+  <p>File formats create small but constant friction. A phone photo arrives as HEIC, a website expects WebP, a spreadsheet export needs JSON, an API dataset needs CSV, or a downloaded package arrives as RAR or 7Z when the next workflow expects ZIP. None of those routine tasks should require a complicated editing suite or a long upload-and-wait process.</p>
   <p>The goal is not to claim support for every extension ever created. The goal is to make the conversions that are supported feel fast, predictable, and easy to understand. That means the tool should tell you what it can process, protect the browser from unsafe batches, document structural trade-offs, and keep working even when one file in a batch fails.</p>
 
   <h2 id="browser-first">What browser-first means</h2>
   <p>For supported local converters, the conversion engine runs inside your browser using JavaScript, browser workers, and WebAssembly where the category needs it. Your device provides the CPU and memory for the job, while the website provides the interface, category engine code, format rules, and download workflow.</p>
-  <p>This architecture is a good fit for many image, structured-data, subtitle, archive, and other lightweight conversion tasks because the browser can often complete the work without first transferring the source file to a remote conversion server.</p>
+  <p>Image, Data, and Archive each use their own engine behind the same batch interface. Heavy code is loaded only when needed; for example, the pinned 7Z/RAR decoder is lazy-loaded only for those Archive inputs.</p>
   <ul class="content-checklist"><li>No account is required for the core browser converter.</li><li>Original files stay unchanged; conversion creates new downloadable copies.</li><li>Batch processing is designed to continue when an individual file fails.</li><li>Category engines and heavier dependencies are loaded only when the relevant workflow needs them.</li></ul>
 
   <h2 id="privacy">A privacy model built around the workflow</h2>
-  <p>The live Image and Data converters process supported source bytes in the browser session rather than sending those files through a conversion upload queue. Data parsing and serialization run in a browser worker; Image uses its dedicated local image engine.</p>
-  <p>That does not mean every possible future website feature is invisible to the internet. Static pages, analytics added in the future, advertising services, and normal web requests are separate concerns and must be disclosed accurately in the privacy policy if they are introduced. The product should only make privacy claims that match the actual implementation.</p>
+  <p>The live Image, Data, and Archive converters process supported source bytes in the browser session rather than sending those files through a conversion upload queue. Data parsing runs in a browser worker, Image uses its dedicated local image engine, and Archive parses and repackages supported containers locally.</p>
+  <p>That does not mean every website request is invisible to the internet. Static pages, analytics, advertising services if introduced, and normal web requests are separate concerns and must be disclosed accurately in the privacy policy. Privacy claims should match the actual conversion path rather than implying that the browser has no network activity at all.</p>
 
   <h2 id="reliability">Reliability before format count</h2>
-  <p>A long format list is useful only when the formats actually work. Image support is separated into recognized inputs, runtime capabilities, and certified outputs. Structured Data takes a similarly explicit approach: UTF-8 validation, a documented set of input/output formats, robust quoted-field parsing, and deterministic JSON-to-table rules rather than silent schema guessing.</p>
-  <p>The browser also has real limits. A compressed image can expand dramatically after decoding, and a JSON document can occupy much more memory after becoming JavaScript strings and objects. Category-specific batch limits, sequential conversion, cancellation, failure isolation, and worker recovery are therefore product features rather than arbitrary restrictions.</p>
+  <p>A long format list is useful only when the formats actually work. Image separates recognized inputs, runtime capabilities, and certified outputs. Data uses UTF-8 validation and deterministic table/JSON rules. Archive validates container signatures and integrity, rejects unsafe paths and unsupported special entries, and applies expanded-size guards so compressed files cannot bypass browser-memory limits.</p>
+  <p>The browser also has real limits. A compressed image can expand dramatically after decoding, JSON can occupy much more memory after parsing, and an archive can expand far beyond its compressed size. Category-specific batch limits, sequential conversion, cancellation, failure isolation, and worker recovery are therefore product features rather than arbitrary restrictions.</p>
   <div class="callout"><strong>Product principle</strong><p>New categories should be added only when their browser workflow is dependable enough to explain honestly, test automatically, and protect with sensible CPU and memory limits.</p></div>
 
   <h2 id="live">What is live today</h2>
-  <p><strong>Image</strong> is the first production category, with runtime-certified image outputs, real WASM conversion regressions, browser memory guards, multi-format batches, and explicit single-image fidelity rules.</p>
-  <p><strong>Data</strong> is the second production category, covering CSV, TSV, JSON, JSONL, and NDJSON input with CSV, TSV, JSON, and JSONL output. It supports quoted delimited fields, header normalization, nested-object flattening, line-oriented JSON, output line endings, optional UTF-8 BOM, and batch ZIP downloads.</p>
+  <p><strong>Image</strong> provides runtime-certified image outputs, real WASM conversion regressions, browser memory guards, multi-format batches, and explicit single-image fidelity rules.</p>
+  <p><strong>Data</strong> covers CSV, TSV, JSON, JSONL, and NDJSON input with CSV, TSV, JSON, and JSONL output. It supports quoted delimited fields, header normalization, nested-object flattening, line-oriented JSON, output line endings, optional UTF-8 BOM, and batch ZIP downloads.</p>
+  <p><strong>Archive</strong> accepts ZIP, TAR, TAR.GZ/TGZ, GZIP/GZ, 7Z, and supported RAR4/RAR5 input. Certified public outputs are ZIP, TAR, and TAR.GZ. The engine includes CRC/checksum validation, path and expansion safety rules, and input-only lazy WASM decoding for 7Z/RAR.</p>
 
   <h2 id="future">How the platform can grow without becoming a pile of copied tools</h2>
   <p>The site is built around shared navigation, layout, converter frame, batch queue, progress, cancellation, retry semantics, downloads, ZIP packaging, SEO routing, sitemap generation, and common design rules. Category engines plug into that platform rather than rebuilding the entire website for every file type.</p>
-  <p>The Data release also proves that output settings are engine-declared rather than image-specific. Image can expose quality while Data exposes headers, line endings, BOM, and pretty-printing through the same shared converter shell.</p>
-  <p>Future archive, audio, subtitle, font, contact, calendar, or geographic-file converters can therefore reuse the interaction model while keeping their own validation, safety policy, and conversion implementation isolated. The result should feel like one coherent product instead of hundreds of unrelated mini-tools.</p>
+  <p>Image, Data, and Archive also prove that output settings can be engine-declared: Image can expose quality, Data can expose headers and line endings, and Archive can expose ZIP compression through the same shell.</p>
+  <p>Future audio, subtitle, font, contact, calendar, or geographic-file converters can reuse the interaction model while keeping their own validation, safety policy, and conversion implementation isolated. The result should feel like one coherent product instead of hundreds of unrelated mini-tools.</p>
 </ArticleFrame>
 </SiteLayout>

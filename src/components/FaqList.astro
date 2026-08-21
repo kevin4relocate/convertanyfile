@@ -7,3 +7,128 @@ const { items, title = 'Frequently asked questions', intro } = Astro.props;
   <div class="section-heading"><span class="section-kicker">FAQ</span><h2>{title}</h2>{intro && <p>{intro}</p>}</div>
   <div class="faq-list">{items.map((item, index) => <details open={index === 0}><summary>{item.question}<span aria-hidden="true">+</span></summary><p>{item.answer}</p></details>)}</div>
 </section>
+
+<style>
+  .faq-block {
+    display: grid;
+    grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr);
+    gap: clamp(36px, 5vw, 72px);
+    align-items: start;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .section-heading {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+    min-width: 0;
+    margin-bottom: 0;
+  }
+
+  .faq-list {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    gap: 10px;
+    border-top: 0;
+  }
+
+  .faq-list details {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+  }
+
+  .faq-list summary {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 18px;
+    border: 0;
+    cursor: pointer;
+  }
+
+  .faq-list summary span {
+    flex: 0 0 auto;
+    display: inline-grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: 9px;
+    line-height: 1;
+  }
+
+  .faq-list details p {
+    margin: 0;
+    padding: 0 18px 18px;
+  }
+
+  .faq-list details[open] summary {
+    padding-bottom: 11px;
+  }
+
+  @media (max-width: 900px) {
+    .faq-block {
+      grid-template-columns: minmax(0, 1fr) !important;
+      gap: 24px;
+    }
+
+    .section-heading {
+      position: static !important;
+      top: auto;
+      width: 100%;
+      max-width: none;
+    }
+
+    .faq-list {
+      width: 100%;
+      max-width: none;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .faq-block {
+      display: block;
+    }
+
+    .section-heading {
+      margin-bottom: 22px;
+    }
+
+    .faq-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .faq-list summary {
+      min-height: 54px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .faq-list details p {
+      padding: 0 14px 15px;
+      font-size: 13px;
+      line-height: 1.62;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .faq-list summary {
+      gap: 10px;
+      padding: 13px;
+    }
+
+    .faq-list summary span {
+      width: 26px;
+      height: 26px;
+    }
+  }
+</style>

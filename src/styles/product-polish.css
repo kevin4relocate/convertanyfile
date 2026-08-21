@@ -77,6 +77,58 @@
   outline: none;
 }
 
+/* FAQ blocks should read like an intentional product surface, not one long slab. */
+.faq-block {
+  grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr);
+  gap: clamp(36px, 5vw, 72px);
+}
+
+.faq-block > .section-heading {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  margin-bottom: 0;
+}
+
+.faq-list {
+  display: grid;
+  gap: 10px;
+  border-top: 0;
+}
+
+.faq-list details,
+.faq-list details + details {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.faq-list summary {
+  min-height: 58px;
+  align-items: center;
+  padding: 16px 18px;
+  border: 0;
+}
+
+.faq-list details p {
+  margin: 0;
+  padding: 0 18px 18px;
+}
+
+.faq-list details[open] summary {
+  padding-bottom: 11px;
+}
+
+.faq-list summary span {
+  flex: 0 0 auto;
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 9px;
+  line-height: 1;
+}
+
 .mobile-nav {
   display: none;
   position: relative;
@@ -141,6 +193,25 @@
   color: var(--accent-dark);
 }
 
+/* Tablet and below: FAQ must be a single readable column. */
+@media (max-width: 900px) {
+  .faq-block {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .faq-block > .section-heading {
+    position: static;
+    max-width: 720px;
+    margin-bottom: 0;
+  }
+
+  .faq-list {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 @media (max-width: 680px) {
   .header-inner {
     gap: 10px;
@@ -179,6 +250,42 @@
   .setting-field {
     min-height: 36px;
   }
+
+  .faq-block {
+    gap: 22px;
+  }
+
+  .faq-block > .section-heading h2 {
+    font-size: clamp(32px, 10vw, 40px);
+    line-height: 1.03;
+  }
+
+  .faq-block > .section-heading p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .faq-list {
+    gap: 8px;
+  }
+
+  .faq-list summary {
+    min-height: 54px;
+    padding: 14px;
+    font-size: 14px;
+    line-height: 1.28;
+  }
+
+  .faq-list summary span {
+    width: 26px;
+    height: 26px;
+  }
+
+  .faq-list details p {
+    padding: 0 14px 15px;
+    font-size: 13px;
+    line-height: 1.62;
+  }
 }
 
 @media (max-width: 420px) {
@@ -188,5 +295,9 @@
 
   .mobile-nav summary > span:last-child {
     display: none;
+  }
+
+  .faq-block > .section-heading h2 {
+    font-size: 34px;
   }
 }

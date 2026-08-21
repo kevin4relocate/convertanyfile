@@ -63,7 +63,7 @@ export const PLATFORM_CATEGORIES = [
   {
     id: 'archive',
     label: 'Archives',
-    status: 'preview',
+    status: 'live',
     description: '7Z, RAR, ZIP, TAR, TAR.GZ/TGZ and GZIP conversion with local browser processing.',
     href: '/archive-converter/',
   },
