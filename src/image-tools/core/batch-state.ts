@@ -1,12 +1,24 @@
 import type { ImageEditScope } from '../../platform/image-tools/types';
-import type { BatchEditorState, BatchImageItem } from './batch-types';
+import type { BatchEditorState, BatchImageItem, BatchSettingsOrigin } from './batch-types';
+
+export function resolveScopedSettings<TSettings>(
+  mode: ImageEditScope,
+  sharedSettings: TSettings,
+  itemSettings?: TSettings
+): TSettings {
+  if (mode === 'individual' && itemSettings !== undefined) return itemSettings;
+  return sharedSettings;
+}
+
+export function resolveSettingsOrigin<TSettings>(itemSettings?: TSettings): BatchSettingsOrigin {
+  return itemSettings === undefined ? 'shared' : 'custom';
+}
 
 export function getEffectiveSettings<TSettings>(
   state: BatchEditorState<TSettings>,
   item: BatchImageItem<TSettings>
 ): TSettings {
-  if (state.mode === 'individual' && item.settings !== undefined) return item.settings;
-  return state.sharedSettings;
+  return resolveScopedSettings(state.mode, state.sharedSettings, item.settings);
 }
 
 export function setEditScope<TSettings>(
