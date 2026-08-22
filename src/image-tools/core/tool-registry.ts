@@ -5,8 +5,8 @@ export interface MountableImageToolModule {
 type ImageToolLoader = () => Promise<MountableImageToolModule>;
 
 const maskToolLoader: ImageToolLoader = async () => {
-  const module = await import('../shared/batch-mask-editor');
-  return { mount: module.mountBatchMaskEditor };
+  const module = await import('../mask/mask-platform-editor');
+  return { mount: module.mountMaskBatchPlatformEditor };
 };
 
 const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
