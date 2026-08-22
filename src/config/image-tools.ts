@@ -49,14 +49,14 @@ export const GEMINI_AI_LOGO_REMOVER_TOOL: ImageToolDefinition = {
 export const IMAGE_TOOL_ROADMAP = [
   { id: 'resize-image', label: 'Resize Image', status: 'preview', description: 'Resize JPG, PNG and WebP by a target box, exact dimensions, or percentage in a local batch.', href: '/resize-image/' },
   { id: 'compress-image', label: 'Compress Image', status: 'preview', description: 'Reduce JPG, PNG and WebP file size locally with quality and output-format controls.', href: '/compress-image/' },
-  { id: 'crop-image', label: 'Crop Image', status: 'preview', description: 'Apply centered aspect-ratio or exact-size crops across JPG, PNG and WebP batches.', href: '/crop-image/' },
+  { id: 'crop-image', label: 'Crop Image', status: 'preview', description: 'Crop by aspect ratio or exact size, then drag the crop position on the first image for batch placement.', href: '/crop-image/' },
   { id: 'rotate-flip-image', label: 'Rotate / Flip', status: 'preview', description: 'Rotate 90/180/270 degrees or mirror JPG, PNG and WebP batches locally.', href: '/rotate-image/' },
+  { id: 'image-background', label: 'Image Background', status: 'preview', description: 'Fill transparent pixels with a chosen color or preserve existing transparency in PNG/WebP outputs.', href: '/image-background/' },
+  { id: 'blur-image', label: 'Blur Image', status: 'preview', description: 'Apply adjustable full-image Gaussian blur to JPG, PNG and WebP batches locally.', href: '/blur-image/' },
   { id: 'image-metadata', label: 'Image Metadata', status: 'preview', description: 'Inspect detected profiles and attributes, then optionally create a metadata-cleaned copy.', href: '/image-metadata/' },
   { id: 'bulk-rename-images', label: 'Bulk Rename Images', status: 'preview', description: 'Preview safe filename patterns and download renamed images without re-encoding their bytes.', href: '/bulk-rename-images/' },
   { id: 'remove-watermark', label: 'Remove Watermark', status: 'live', description: 'Batch visible-watermark repair with six manual mask modes, including a movable text mask.', href: '/remove-watermark/' },
   { id: 'gemini-ai-logo-remover', label: 'Gemini AI Logo Remover', status: 'live', description: 'Free Gemini watermark remover for a small visible sparkle mark, with Circle or 4-Point-Star masks and smart batch editing.', href: '/gemini-ai-logo-remover/' },
-  { id: 'background-tools', label: 'Background Tools', status: 'planned', description: 'Add a solid background or prepare transparent-background workflows.', href: null },
-  { id: 'blur-image', label: 'Blur Image', status: 'planned', description: 'Blur an image or a selected region.', href: null },
   { id: 'remove-object', label: 'Remove Object', status: 'planned', description: 'Reuse the mask editor for larger manual object repair.', href: null },
-  { id: 'remove-background', label: 'Remove Background', status: 'planned', description: 'Background isolation belongs to a later, separately validated engine.', href: null },
+  { id: 'remove-background', label: 'Remove Background', status: 'planned', description: 'Automatic subject/background isolation belongs to a later, separately validated engine.', href: null },
 ] as const;
