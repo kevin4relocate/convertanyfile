@@ -65,7 +65,7 @@ async function initializeImageTool(root: HTMLElement): Promise<void> {
   if (root.dataset.imageToolReady === 'true') return;
   root.dataset.imageToolReady = 'true';
   const toolId = root.dataset.toolId;
-  if (toolId === 'remove-watermark' || toolId === 'gemini-ai-logo-remover') {
+  if (toolId === 'remove-watermark' || toolId === 'gemini-ai-logo-remover' || toolId === 'remove-object') {
     const module = await import('../image-tools/shared/batch-mask-editor');
     module.mountBatchMaskEditor(root);
     initStickyImageToolActions(root);
