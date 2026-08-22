@@ -1,6 +1,6 @@
 import { ConverterError } from '../../platform/converter/errors';
 import type { EngineCapabilities } from '../../platform/converter/types';
-import type { ImageWorkerRequest, ImageWorkerResponse } from './protocol';
+import type { ImageMetadataSnapshot, ImageTransformOptions, ImageWorkerRequest, ImageWorkerResponse } from './protocol';
 
 interface PendingRequest { resolve: (value: ImageWorkerResponse) => void; reject: (reason: Error) => void; timeoutId: number; }
 const STARTUP_TIMEOUT = 45_000;
@@ -35,8 +35,18 @@ export class ImageWorkerClient {
     return { readable: response.readable, writable: response.writable, version: response.version };
   }
 
-  async convert(input: ArrayBuffer, inputFormat: string | undefined, output: string, quality: number): Promise<ArrayBuffer> {
-    const request: ImageWorkerRequest = { type: 'convert', requestId: crypto.randomUUID(), input, inputFormat, output, quality };
+  async inspect(input: ArrayBuffer, inputFormat?: string): Promise<ImageMetadataSnapshot> {
+    const request: ImageWorkerRequest = { type: 'inspect', requestId: crypto.randomUUID(), input, inputFormat };
+    const response = await this.send(request, [input], CONVERSION_TIMEOUT);
+    if (response.type !== 'inspect-result' || !response.ok) {
+      if (!response.ok) throw new ConverterError(response.error, response.code, response.retryable);
+      throw new Error('Invalid image metadata response');
+    }
+    return response.metadata;
+  }
+
+  async convert(input: ArrayBuffer, inputFormat: string | undefined, output: string, quality: number, options: ImageTransformOptions = {}): Promise<ArrayBuffer> {
+    const request: ImageWorkerRequest = { type: 'convert', requestId: crypto.randomUUID(), input, inputFormat, output, quality, options };
     const response = await this.send(request, [input], CONVERSION_TIMEOUT);
     if (response.type !== 'convert-result' || !response.ok) {
       if (!response.ok) throw new ConverterError(response.error, response.code, response.retryable);
@@ -52,7 +62,7 @@ export class ImageWorkerClient {
   private send(request: ImageWorkerRequest, transfer: Transferable[], timeoutMs: number): Promise<ImageWorkerResponse> {
     return new Promise((resolve, reject) => {
       const timeoutId = window.setTimeout(() => {
-        const error = new ConverterError(request.type === 'convert' ? 'Image conversion timed out' : 'Image engine startup timed out', 'timeout', true);
+        const error = new ConverterError(request.type === 'capabilities' ? 'Image engine startup timed out' : 'Image processing timed out', 'timeout', true);
         this.failWorker(error);
       }, timeoutMs);
       this.pending.set(request.requestId, { resolve, reject, timeoutId });

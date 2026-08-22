@@ -1,0 +1,26 @@
+---
+import ImageUtilityTool from './ImageUtilityTool.astro';
+import RegionBlurEditor from './RegionBlurEditor.astro';
+---
+<div class="blur-workspace" data-blur-workspace>
+  <div class="blur-workspace-tabs" role="tablist" aria-label="Blur workflow">
+    <button class="is-active" type="button" role="tab" aria-selected="true" data-blur-tab="whole">Whole image</button>
+    <button type="button" role="tab" aria-selected="false" data-blur-tab="region">Selected region</button>
+  </div>
+  <div data-blur-panel="whole"><ImageUtilityTool mode="blur" /></div>
+  <div data-blur-panel="region" hidden><RegionBlurEditor /></div>
+</div>
+<script>
+  document.querySelectorAll<HTMLElement>('[data-blur-workspace]').forEach((root) => {
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-blur-tab]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-blur-panel]'));
+    for (const tab of tabs) tab.addEventListener('click', () => {
+      const mode = tab.dataset.blurTab;
+      tabs.forEach((button) => { const active = button === tab; button.classList.toggle('is-active', active); button.setAttribute('aria-selected', String(active)); });
+      panels.forEach((panel) => { panel.hidden = panel.dataset.blurPanel !== mode; });
+    });
+  });
+</script>
+<style>
+  .blur-workspace-tabs{display:flex;gap:6px;margin:0 0 12px;padding:5px;border:1px solid #303746;border-radius:13px;background:#121821}.blur-workspace-tabs button{flex:1;min-height:42px;border:0;border-radius:9px;background:transparent;color:#8f97a7;cursor:pointer;font:inherit;font-size:12px;font-weight:760}.blur-workspace-tabs button.is-active{background:#1c2330;color:#f1f0ff;box-shadow:inset 0 0 0 1px rgba(124,115,255,.25)}
+</style>

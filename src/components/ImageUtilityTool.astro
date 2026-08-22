@@ -1,0 +1,113 @@
+---
+type UtilityMode = 'resize' | 'compress' | 'rotate' | 'crop' | 'background' | 'blur';
+interface Props { mode: UtilityMode; }
+const { mode } = Astro.props;
+const labels: Record<UtilityMode, string> = {
+  resize: 'Resize',
+  compress: 'Compress',
+  rotate: 'Rotate / Flip',
+  crop: 'Crop',
+  background: 'Image Background',
+  blur: 'Blur',
+};
+const action = labels[mode];
+---
+<div class="image-utility" data-image-utility data-mode={mode}>
+  <div class="image-utility-topbar">
+    <div><span class="image-utility-kicker">Local image tool</span><strong>{action}</strong></div>
+    <span class="image-utility-private"><i></i> Private tool ready</span>
+  </div>
+
+  <div class="image-utility-notice" data-role="notice" role="status" aria-live="polite" hidden></div>
+
+  <div class="image-utility-drop" data-role="dropzone" tabindex="0" role="button" aria-label={`Choose images for ${action}`}>
+    <input data-role="file-input" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple hidden />
+    <span class="image-utility-upload" aria-hidden="true">↑</span>
+    <strong>Drop your images here</strong>
+    <p>JPG, PNG and WebP · up to 50 images · 200 MB batch · processed locally</p>
+    <button type="button" class="primary-button" data-role="choose">Choose images</button>
+  </div>
+
+  <div class="image-utility-workspace" data-role="workspace" hidden>
+    <div class="image-utility-summary">
+      <div><span>Batch workspace</span><strong data-role="summary">0 images</strong></div>
+      <div class="image-utility-summary-actions"><button type="button" data-role="add">+ Add more</button><button type="button" data-role="clear">Clear all</button></div>
+    </div>
+
+    <div class="image-utility-settings" data-role="settings">
+      {mode === 'resize' && <>
+        <div class="utility-control"><label for="resize-mode">Resize mode</label><select id="resize-mode" data-role="resize-mode"><option value="box">Width × height</option><option value="percent">Percentage</option></select></div>
+        <div class="utility-control utility-dimensions" data-role="dimension-controls"><label>Target size</label><div><input data-role="width" type="number" min="1" max="12000" value="1920" aria-label="Target width" /><span>×</span><input data-role="height" type="number" min="1" max="12000" value="1080" aria-label="Target height" /><span>px</span></div></div>
+        <label class="utility-toggle" data-role="lock-control"><input data-role="lock" type="checkbox" checked /><span>Keep aspect ratio</span></label>
+        <div class="utility-control" data-role="percent-control" hidden><label for="resize-percent">Scale</label><div class="utility-percent"><input id="resize-percent" data-role="percent" type="number" min="1" max="400" value="50" /><span>%</span></div></div>
+        <div class="utility-presets"><span>Quick presets</span><button type="button" data-preset-width="1920" data-preset-height="1080">1920×1080</button><button type="button" data-preset-width="1280" data-preset-height="720">1280×720</button><button type="button" data-preset-width="1080" data-preset-height="1080">1080×1080</button><button type="button" data-preset-width="1200" data-preset-height="630">1200×630</button><button type="button" data-preset-percent="50">50%</button></div>
+      </>}
+
+      {mode === 'compress' && <>
+        <div class="utility-control utility-quality"><label for="compress-quality">Quality <strong data-role="quality-value">80</strong></label><input id="compress-quality" data-role="quality" type="range" min="10" max="100" value="80" /></div>
+        <div class="utility-control"><label for="compress-output">Output</label><select id="compress-output" data-role="output"><option value="same">Same as source</option><option value="jpg">JPG</option><option value="webp">WebP</option><option value="png">PNG</option></select></div>
+        <p class="utility-hint">JPG and WebP respond most strongly to quality. PNG is lossless, so a smaller file is not guaranteed.</p>
+        <div class="utility-presets"><span>Quality presets</span><button type="button" data-preset-quality="90">High · 90</button><button type="button" data-preset-quality="80">Balanced · 80</button><button type="button" data-preset-quality="60">Smaller · 60</button></div>
+      </>}
+
+      {mode === 'rotate' && <>
+        <div class="utility-control"><label for="rotate-angle">Rotation</label><select id="rotate-angle" data-role="rotation"><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">270° clockwise</option><option value="0">No rotation</option></select></div>
+        <label class="utility-toggle"><input data-role="flip-horizontal" type="checkbox" /><span>Flip horizontal</span></label>
+        <label class="utility-toggle"><input data-role="flip-vertical" type="checkbox" /><span>Flip vertical</span></label>
+        <div class="utility-control"><label for="rotate-output">Output</label><select id="rotate-output" data-role="output"><option value="same">Same as source</option><option value="jpg">JPG</option><option value="webp">WebP</option><option value="png">PNG</option></select></div>
+        <div class="utility-presets"><span>Quick actions</span><button type="button" data-preset-rotation="90">↻ 90°</button><button type="button" data-preset-rotation="270">↺ 90°</button><button type="button" data-preset-flip="horizontal">↔ Flip</button><button type="button" data-preset-flip="vertical">↕ Flip</button></div>
+      </>}
+
+      {mode === 'crop' && <>
+        <div class="utility-control"><label for="crop-mode">Crop mode</label><select id="crop-mode" data-role="crop-mode"><option value="ratio">Aspect ratio</option><option value="exact">Exact size</option></select></div>
+        <div class="utility-control" data-role="crop-ratio-control"><label for="crop-ratio">Aspect ratio</label><select id="crop-ratio" data-role="crop-ratio"><option value="1:1">1:1 Square</option><option value="4:3">4:3</option><option value="3:2">3:2</option><option value="16:9">16:9</option><option value="9:16">9:16 Portrait</option></select></div>
+        <div class="utility-control utility-dimensions" data-role="crop-exact-control" hidden><label>Crop size</label><div><input data-role="crop-width" type="number" min="1" max="12000" value="1080" aria-label="Crop width" /><span>×</span><input data-role="crop-height" type="number" min="1" max="12000" value="1080" aria-label="Crop height" /><span>px</span></div></div>
+        <div class="utility-control"><label for="crop-output">Output</label><select id="crop-output" data-role="output"><option value="same">Same as source</option><option value="jpg">JPG</option><option value="webp">WebP</option><option value="png">PNG</option></select></div>
+        <div class="crop-interactive" data-role="crop-interactive" hidden>
+          <div class="crop-preview" data-role="crop-preview"><img data-role="crop-preview-image" alt="Crop positioning preview" /><div class="crop-window" data-role="crop-window" tabindex="0" aria-label="Drag to position crop"><span>Drag crop</span></div></div>
+          <div class="crop-preview-controls"><div><strong>Batch crop position</strong><span data-role="crop-position-label">Center</span></div><div class="utility-presets"><button type="button" data-crop-anchor="top-left">↖</button><button type="button" data-crop-anchor="top">↑</button><button type="button" data-crop-anchor="top-right">↗</button><button type="button" data-crop-anchor="left">←</button><button type="button" data-crop-anchor="center">Center</button><button type="button" data-crop-anchor="right">→</button><button type="button" data-crop-anchor="bottom-left">↙</button><button type="button" data-crop-anchor="bottom">↓</button><button type="button" data-crop-anchor="bottom-right">↘</button></div></div>
+        </div>
+        <p class="utility-hint">Position the crop on the first image. The same relative position is applied to every image in the batch.</p>
+      </>}
+
+      {mode === 'background' && <>
+        <div class="utility-control"><label for="background-mode">Background action</label><select id="background-mode" data-role="background-mode"><option value="fill">Fill transparent areas</option><option value="preserve">Preserve transparency</option></select></div>
+        <div class="utility-control background-color-control" data-role="background-color-control"><label for="background-color">Background color</label><div class="background-color-row"><input id="background-color" data-role="background-color" type="color" value="#ffffff" /><input data-role="background-hex" type="text" value="#ffffff" maxlength="7" aria-label="Background hex color" /></div></div>
+        <div class="utility-control"><label for="background-output">Output</label><select id="background-output" data-role="output"><option value="png">PNG</option><option value="webp">WebP</option><option value="jpg">JPG</option></select></div>
+        <p class="utility-hint" data-role="background-hint">Fill mode composites transparent pixels onto the selected color. Existing opaque pixels are not recolored.</p>
+        <div class="utility-presets"><span>Background presets</span><button type="button" data-preset-background="#ffffff">White</button><button type="button" data-preset-background="#000000">Black</button><button type="button" data-preset-background="#f3f4f6">Light gray</button><button type="button" data-preset-background="#111827">Dark gray</button></div>
+      </>}
+
+      {mode === 'blur' && <>
+        <div class="utility-control utility-quality"><label for="blur-strength">Blur strength <strong data-role="blur-value">6</strong></label><input id="blur-strength" data-role="blur-strength" type="range" min="0.5" max="20" step="0.5" value="6" /></div>
+        <div class="utility-control"><label for="blur-output">Output</label><select id="blur-output" data-role="output"><option value="same">Same as source</option><option value="jpg">JPG</option><option value="webp">WebP</option><option value="png">PNG</option></select></div>
+        <p class="utility-hint">P4 applies Gaussian blur to the entire image. Selected-region blur remains a later interactive editor feature.</p>
+        <div class="utility-presets"><span>Blur presets</span><button type="button" data-preset-blur="2">Subtle · 2</button><button type="button" data-preset-blur="6">Medium · 6</button><button type="button" data-preset-blur="12">Strong · 12</button></div>
+      </>}
+
+      <div class="utility-run-actions"><button type="button" class="secondary-button" data-role="cancel" hidden>Cancel</button><button type="button" class="primary-button utility-run" data-role="run">{action} images</button></div>
+    </div>
+
+    <div class="image-utility-progress" data-role="progress" hidden><span data-role="progress-text">Processing…</span><div><i data-role="progress-bar"></i></div></div>
+    <div class="image-utility-list" data-role="list"></div>
+    <div class="image-utility-downloads" data-role="downloads" hidden><span data-role="result-summary"></span><button type="button" class="secondary-button" data-role="download-all">Download all ZIP</button></div>
+  </div>
+</div>
+
+<script>import '../scripts/image-utility-tool';</script>
+
+<style>
+.image-utility{overflow:hidden;border:1px solid #303746;border-radius:22px;background:#121821;box-shadow:0 22px 60px rgba(0,0,0,.18)}
+.image-utility-topbar{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;border-bottom:1px solid #303746;background:#171c27}.image-utility-topbar>div{display:grid;gap:2px}.image-utility-kicker{color:#a99fff;font-size:10px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}.image-utility-topbar strong{color:#f3f5fb;font-size:15px}.image-utility-private{display:flex;align-items:center;gap:7px;color:#62d6a2;font-size:12px;font-weight:750}.image-utility-private i{width:8px;height:8px;border-radius:50%;background:#21bd7b;box-shadow:0 0 0 5px rgba(33,189,123,.12)}
+.image-utility-notice{margin:12px 18px 0;padding:10px 12px;border:1px solid #3a4354;border-radius:11px;background:#151b25;color:#aeb5c3;font-size:11px;line-height:1.45}.image-utility-notice.is-warning{border-color:#6d5931;background:#211c13;color:#e1c27b}.image-utility-notice.is-success{border-color:#285c49;background:#12211c;color:#71d8ad}
+.image-utility-drop{margin:18px;min-height:300px;display:grid;place-items:center;align-content:center;gap:12px;padding:34px;border:1.5px dashed #465064;border-radius:18px;background:#0f151e;text-align:center;cursor:pointer;transition:.15s}.image-utility-drop:hover,.image-utility-drop.is-dragging{border-color:#8077ff;background:#14172b}.image-utility-upload{width:48px;height:48px;display:grid;place-items:center;border:1px solid #384152;border-radius:14px;background:#181e29;color:#e8e6ff;font-size:28px}.image-utility-drop>strong{color:#f4f5fa;font-size:30px;line-height:1.05}.image-utility-drop p{margin:0;color:#989faf;font-size:14px}
+.primary-button,.secondary-button{border:0;border-radius:12px;cursor:pointer;font:inherit;font-weight:800}.primary-button{min-height:46px;padding:0 24px;background:linear-gradient(135deg,#766dff,#6359ef);color:#fff;box-shadow:0 12px 28px rgba(99,89,239,.24)}.secondary-button{min-height:40px;padding:0 18px;border:1px solid #3a4354;background:#1a202b;color:#e7e9f0}.primary-button:disabled,.secondary-button:disabled{opacity:.55;cursor:not-allowed}
+.image-utility-workspace{padding:18px}.image-utility-summary{display:flex;align-items:end;justify-content:space-between;gap:16px;padding:4px 4px 16px}.image-utility-summary>div:first-child{display:grid;gap:3px}.image-utility-summary span{color:#a69cff;font-size:10px;font-weight:850;letter-spacing:.11em;text-transform:uppercase}.image-utility-summary strong{color:#f3f5fb;font-size:24px}.image-utility-summary-actions{display:flex;gap:18px}.image-utility-summary-actions button{border:0;background:none;color:#b7b0ff;cursor:pointer;font:inherit;font-size:12px;font-weight:750}.image-utility-summary-actions button:last-child{color:#9299a8}
+.image-utility-settings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:end;gap:10px;padding:14px;border:1px solid #32394a;border-radius:16px;background:#171c27}.utility-control{min-width:0;display:grid;gap:7px}.utility-control label,.utility-toggle{color:#aeb4c2;font-size:11px;font-weight:750}.utility-control select,.utility-control input[type=number],.utility-control input[type=text]{width:100%;height:42px;border:1px solid #3a4354;border-radius:10px;background:#111720;color:#f0f2f7;padding:0 12px;font:inherit;font-size:12px;box-sizing:border-box}.utility-dimensions>div{display:grid;grid-template-columns:minmax(65px,1fr) auto minmax(65px,1fr) auto;align-items:center;gap:6px;color:#8e95a4}.utility-toggle{min-height:42px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid #343c4c;border-radius:10px;background:#141a24}.utility-toggle input{width:16px;height:16px}.utility-percent{display:grid;grid-template-columns:1fr auto;align-items:center;gap:7px;color:#8e95a4}.utility-quality{grid-column:span 2}.utility-quality label{display:flex;justify-content:space-between}.utility-quality label strong{color:#d6d2ff}.utility-quality input[type=range]{width:100%;accent-color:#756cff}.utility-hint{grid-column:span 2;margin:0;color:#858d9e;font-size:10px;line-height:1.45}.utility-presets{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding-top:2px}.utility-presets>span{margin-right:3px;color:#858d9d;font-size:10px;font-weight:750}.utility-presets button{min-height:30px;padding:0 10px;border:1px solid #343c4c;border-radius:8px;background:#121821;color:#aeb5c3;cursor:pointer;font:inherit;font-size:10px;font-weight:720}.utility-presets button:hover{border-color:#5e57ae;color:#e9e6ff}.utility-run-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px;padding-top:2px}.utility-run{min-width:170px}
+.background-color-row{display:grid;grid-template-columns:44px 1fr;gap:7px}.background-color-row input[type=color]{width:44px;height:42px;padding:3px;border:1px solid #3a4354;border-radius:10px;background:#111720}
+.crop-interactive{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,620px) minmax(180px,1fr);gap:14px;align-items:start;margin-top:4px;padding:12px;border:1px solid #303849;border-radius:14px;background:#10161f}.crop-preview{position:relative;overflow:hidden;width:100%;max-height:420px;border-radius:10px;background:#0a0f16;touch-action:none}.crop-preview img{display:block;width:100%;height:100%;object-fit:contain}.crop-window{position:absolute;left:0;top:0;display:grid;place-items:center;border:2px solid #8a82ff;background:rgba(118,109,255,.08);box-shadow:0 0 0 9999px rgba(0,0,0,.5);cursor:move;touch-action:none;user-select:none}.crop-window span{padding:4px 7px;border-radius:999px;background:rgba(15,20,30,.84);color:#f1efff;font-size:9px;font-weight:800;pointer-events:none}.crop-preview-controls{display:grid;gap:10px}.crop-preview-controls>div:first-child{display:grid;gap:3px}.crop-preview-controls strong{color:#eef0f6;font-size:12px}.crop-preview-controls span{color:#8f97a7;font-size:10px}.crop-preview-controls .utility-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.crop-preview-controls .utility-presets button{padding:0;min-width:0}
+.image-utility-progress{display:grid;gap:7px;margin:14px 2px}.image-utility-progress>span{color:#b9c0cc;font-size:11px}.image-utility-progress>div{height:5px;overflow:hidden;border-radius:999px;background:#252c38}.image-utility-progress i{display:block;width:0;height:100%;border-radius:inherit;background:#756cff;transition:width .2s ease}
+.image-utility-list{margin-top:14px;border:1px solid #2e3644;border-radius:14px;background:#0f151e}.image-utility-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:14px;min-height:66px;padding:10px 14px;border-bottom:1px solid #272e3a}.image-utility-row:last-child{border-bottom:0}.image-utility-row-copy{min-width:0;display:grid;gap:3px}.image-utility-row-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#edf0f5;font-size:12px}.image-utility-row-copy span,.image-utility-row-status{color:#858d9d;font-size:10px}.image-utility-row-status.is-success{color:#66d7a4}.image-utility-row-status.is-error{color:#ff9b9b}.image-utility-row-actions{display:flex;gap:7px}.image-utility-row-actions button{border:0;background:none;color:#aaa4ff;cursor:pointer;font:inherit;font-size:11px;font-weight:760}.image-utility-row-actions button.is-muted{color:#818999}.image-utility-downloads{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:12px 2px}.image-utility-downloads span{color:#9da4b3;font-size:11px}
+@media(max-width:900px){.image-utility-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.utility-quality,.utility-hint{grid-column:span 2}.crop-interactive{grid-template-columns:1fr}.utility-run-actions{grid-column:1/-1}}
+@media(max-width:600px){.image-utility-topbar{align-items:flex-start;flex-direction:column}.image-utility-drop{min-height:250px;margin:12px;padding:24px 16px}.image-utility-drop>strong{font-size:24px}.image-utility-workspace{padding:12px}.image-utility-summary{align-items:flex-start;flex-direction:column}.image-utility-summary-actions{align-self:flex-end}.image-utility-settings{grid-template-columns:1fr}.utility-quality,.utility-hint{grid-column:1}.utility-run-actions{flex-direction:column-reverse}.utility-run-actions button{width:100%}.image-utility-row{grid-template-columns:minmax(0,1fr) auto}.image-utility-row-status{grid-column:1/-1}.image-utility-downloads{align-items:stretch;flex-direction:column}.image-utility-downloads .secondary-button{width:100%}.crop-preview-controls .utility-presets{grid-template-columns:repeat(3,1fr)}}
+</style>
