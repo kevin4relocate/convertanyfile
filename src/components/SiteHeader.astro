@@ -1,7 +1,7 @@
 ---
 import { NAV_ITEMS, SITE } from '../config/site';
 const currentPath = Astro.url.pathname;
-const imageToolPaths = ['/image-tools/', '/resize-image/', '/compress-image/', '/crop-image/', '/rotate-image/', '/image-background/', '/blur-image/', '/image-metadata/', '/bulk-rename-images/', '/remove-watermark/', '/gemini-ai-logo-remover/'];
+const imageToolPaths = ['/image-tools/', '/resize-image/', '/compress-image/', '/crop-image/', '/rotate-image/', '/image-background/', '/blur-image/', '/image-metadata/', '/bulk-rename-images/', '/remove-object/', '/remove-watermark/', '/gemini-ai-logo-remover/'];
 const imageToolsActive = imageToolPaths.includes(currentPath);
 const converterPaths = ['/image-converter/', '/data-converter/', '/archive-converter/', '/subtitle-converter/'];
 const convertersActive = converterPaths.includes(currentPath);
