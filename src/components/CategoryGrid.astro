@@ -3,6 +3,14 @@ import { PLATFORM_CATEGORIES } from '../config/site';
 ---
 <div class="category-grid">
   {PLATFORM_CATEGORIES.map((category) => (
-    <a class="category-card category-card--live" href={category.href}><div class="category-icon" aria-hidden="true">{category.label.slice(0,1)}</div><div><span class="live-badge">Live</span><h3>{category.label}</h3><p>{category.description}</p></div><span class="category-arrow">→</span></a>
+    <a class="category-card category-card--live" href={category.href}>
+      <div class="category-icon" aria-hidden="true">{category.label.slice(0,1)}</div>
+      <div>
+        <span class={category.status === 'preview' ? 'planned-badge' : 'live-badge'}>{category.status === 'preview' ? 'Preview' : 'Live'}</span>
+        <h3>{category.label}</h3>
+        <p>{category.description}</p>
+      </div>
+      <span class="category-arrow">→</span>
+    </a>
   ))}
 </div>
