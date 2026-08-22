@@ -4,7 +4,7 @@ import { ImageMagick, Magick, MagickColors, MagickFormat, initializeImageMagick,
 import magickWasmUrl from '@imagemagick/magick-wasm/magick.wasm?url';
 import type { ConversionErrorCode } from '../../platform/converter/errors';
 import { extractBestPngIcoFrame } from './legacy-formats';
-import type { ImageWorkerRequest, ImageWorkerResponse } from './protocol';
+import type { ImageResizeTransform, ImageWorkerRequest, ImageWorkerResponse } from './protocol';
 
 const scope = self as DedicatedWorkerGlobalScope;
 let initialization: Promise<void> | undefined;
@@ -59,13 +59,23 @@ function friendlyError(error: unknown): { message: string; code: ConversionError
   return { message: 'Unable to convert this image', code: 'conversion-failed', retryable: false };
 }
 
-async function convert(input: ArrayBuffer, inputFormat: string | undefined, output: string, quality: number): Promise<ArrayBuffer> {
+function normalizedResize(resize: ImageResizeTransform | undefined): ImageResizeTransform | undefined {
+  if (!resize) return undefined;
+  const width = Math.max(1, Math.min(12_000, Math.round(resize.width)));
+  const height = Math.max(1, Math.min(12_000, Math.round(resize.height)));
+  if (width * height > 20_000_000) throw new Error('Requested image dimensions exceed the browser safety limit');
+  return { width, height };
+}
+
+async function convert(input: ArrayBuffer, inputFormat: string | undefined, output: string, quality: number, resize?: ImageResizeTransform): Promise<ArrayBuffer> {
   await ensureInitialized();
   const format = OUTPUT_MAP[output];
   if (!format) throw new Error('Unsupported output format');
   const bytes = new Uint8Array(input);
+  const target = normalizedResize(resize);
   const process = (image: Parameters<Parameters<typeof ImageMagick.read>[1]>[0]) => {
     image.autoOrient();
+    if (target) image.resize(target.width, target.height);
     if (OPAQUE_OUTPUTS.has(output) && !image.isOpaque) image.colorAlpha(MagickColors.White);
     if (QUALITY_OUTPUTS.has(output)) image.quality = Math.min(100, Math.max(1, quality));
     return image.write(format, (data) => {
@@ -96,7 +106,7 @@ scope.addEventListener('message', async (event: MessageEvent<ImageWorkerRequest>
       };
       scope.postMessage(response); return;
     }
-    const output = await convert(request.input, request.inputFormat, request.output, request.quality);
+    const output = await convert(request.input, request.inputFormat, request.output, request.quality, request.resize);
     const response: ImageWorkerResponse = { type: 'convert-result', requestId: request.requestId, ok: true, output };
     scope.postMessage(response, [output]);
   } catch (error) {
