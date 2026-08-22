@@ -1,7 +1,7 @@
 export const GENERAL_FAQ = [
   {
     question: 'Are my files uploaded to a conversion server?',
-    answer: 'For the browser-first converters currently available on ConvertAnyFile, supported files are processed on your device. The live Image, Data, and Archive categories and the Subtitle Preview do not require source-file contents to be uploaded to a ConvertAnyFile conversion server.',
+    answer: 'For the browser-first converters currently available on ConvertAnyFile, supported files are processed on your device. The live Image, Data, Archive, and Subtitle categories do not require source-file contents to be uploaded to a ConvertAnyFile conversion server.',
   },
   {
     question: 'Do I need an account?',
@@ -33,7 +33,7 @@ export const GENERAL_FAQ = [
   },
   {
     question: 'Which converter categories are available?',
-    answer: 'Images, structured Data, and Archives are live. Subtitle is available as a Preview with SRT, VTT/WebVTT, ASS, SSA, and SBV input; SRT, VTT, SBV, and TXT output; full-file preflight analysis; timing-shift controls; formatting cleanup; and transcript export options.',
+    answer: 'Images, structured Data, Archives, and Subtitles are live. Subtitle supports SRT, VTT/WebVTT, ASS, SSA, and SBV input; SRT, VTT, SBV, and TXT output; full-file preflight analysis; timing-shift controls; formatting cleanup; and transcript export options.',
   },
   {
     question: 'Why not process every file type on a server?',
