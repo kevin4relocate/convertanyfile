@@ -13,7 +13,9 @@ const acceptedHint = converter.input
       ? 'CSV, TSV, JSON, JSONL and NDJSON files'
       : converter.category === 'archive'
         ? '7Z, RAR, ZIP, TAR, TAR.GZ, TGZ, GZIP and GZ files'
-        : 'Supported files';
+        : converter.category === 'subtitle'
+          ? 'SRT, VTT, WebVTT, ASS, SSA and SBV subtitle files'
+          : 'Supported files';
 const toolLabel = converter.input && converter.output
   ? `${displayFormat(converter.input)} → ${displayFormat(converter.output)}`
   : converter.category === 'image'
@@ -22,7 +24,9 @@ const toolLabel = converter.input && converter.output
       ? 'Data Converter'
       : converter.category === 'archive'
         ? 'Archive Converter'
-        : 'File Converter';
+        : converter.category === 'subtitle'
+          ? 'Subtitle Converter'
+          : 'File Converter';
 const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${extension}`).join(',');
 ---
 <div
@@ -73,6 +77,9 @@ const accept = acceptedExtensionsForConverter(converter).map((extension) => `.${
       )}
       {converter.category === 'archive' && (
         <p class="conversion-policy-note">Archive contents stay local. Unsafe or duplicate paths, corrupt or password-protected containers, unsupported special entries, and archives over browser safety limits are rejected.</p>
+      )}
+      {converter.category === 'subtitle' && (
+        <p class="conversion-policy-note">Subtitle text stays local. Timing and readable dialogue are preserved where possible; ASS/SSA styling, karaoke, positioning, and effects are not carried into simpler outputs.</p>
       )}
       <div class="progress-wrap" data-role="progress" hidden role="progressbar" aria-label="Conversion progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-copy"><strong data-role="progress-text">Preparing…</strong><span>Keep this tab open</span></div><div class="progress-track"><span data-role="progress-bar"></span></div></div>
       <div class="file-list" data-role="file-list" aria-label="Selected files"></div>
