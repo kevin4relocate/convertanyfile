@@ -30,6 +30,17 @@ function downloadBlob(blob: Blob, filename: string): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
+function uniqueFilename(stem: string, extension: string, used: Set<string>): string {
+  let suffix = 1;
+  let candidate = `${stem}.${extension}`;
+  while (used.has(candidate.toLowerCase())) {
+    suffix += 1;
+    candidate = `${stem}-${suffix}.${extension}`;
+  }
+  used.add(candidate.toLowerCase());
+  return candidate;
+}
+
 function initBulkRename(root: HTMLElement): void {
   if (root.dataset.ready === 'true') return;
   root.dataset.ready = 'true';
@@ -56,18 +67,15 @@ function initBulkRename(root: HTMLElement): void {
     const requestedStart = Math.max(0, Math.min(999999, Math.round(Number(start.value) || 0)));
     const digits = Math.max(1, Math.min(4, Number(padding.value) || 1));
     const template = pattern.value.trim() || '{name}-{n}';
-    const used = new Map<string, number>();
+    const used = new Set<string>();
     items.forEach((item, index) => {
-      const ext = extensionOf(item.file.name) || 'jpg';
+      const sourceExt = extensionOf(item.file.name) || 'jpg';
+      const ext = lowercase.checked ? sourceExt.toLowerCase() : sourceExt;
       const number = String(requestedStart + index).padStart(digits, '0');
       let stem = template.replaceAll('{name}', baseName(item.file.name)).replaceAll('{n}', number);
       stem = sanitizeStem(stem);
       if (lowercase.checked) stem = stem.toLowerCase();
-      let outputName = `${stem}.${lowercase.checked ? ext.toLowerCase() : ext}`;
-      const count = used.get(outputName) ?? 0;
-      used.set(outputName, count + 1);
-      if (count > 0) outputName = `${stem}-${count + 1}.${lowercase.checked ? ext.toLowerCase() : ext}`;
-      item.outputName = outputName;
+      item.outputName = uniqueFilename(stem, ext, used);
     });
   };
 
