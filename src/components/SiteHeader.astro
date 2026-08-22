@@ -28,7 +28,7 @@ const imageToolsActive = currentPath === '/image-tools/' || currentPath === '/re
             </a>
             <a class:list={['nav-tool-link', currentPath === '/gemini-ai-logo-remover/' && 'is-current']} href="/gemini-ai-logo-remover/">
               <span class="nav-tool-icon nav-tool-icon--spark" aria-hidden="true">✦</span>
-              <span class="nav-tool-copy"><strong>Gemini AI Logo Remover</strong><small>Circle · 4-Point Star</small></span>
+              <span class="nav-tool-copy"><strong>Gemini Watermark Remover</strong><small>Visible mark · Circle · 4-Point Star</small></span>
             </a>
           </div>
         </details>
@@ -46,7 +46,7 @@ const imageToolsActive = currentPath === '/image-tools/' || currentPath === '/re
             <div>
               <a class:list={[currentPath === '/image-tools/' && 'is-current']} href="/image-tools/">All Image Tools</a>
               <a class:list={[currentPath === '/remove-watermark/' && 'is-current']} href="/remove-watermark/">Remove Watermark</a>
-              <a class:list={[currentPath === '/gemini-ai-logo-remover/' && 'is-current']} href="/gemini-ai-logo-remover/">Gemini AI Logo Remover</a>
+              <a class:list={[currentPath === '/gemini-ai-logo-remover/' && 'is-current']} href="/gemini-ai-logo-remover/">Gemini Watermark Remover</a>
             </div>
           </details>
         ) : <a href={item.href}>{item.label}</a>)}
