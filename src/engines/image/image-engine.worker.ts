@@ -8,6 +8,7 @@ import type { ImageMetadataSnapshot, ImageTransformOptions, ImageWorkerRequest, 
 
 const scope = self as DedicatedWorkerGlobalScope;
 let initialization: Promise<void> | undefined;
+type MagickImage = Parameters<Parameters<typeof ImageMagick.read>[1]>[0];
 
 /**
  * This is deliberately a product whitelist, not a mirror of every ImageMagick
@@ -95,7 +96,7 @@ function normalizeOptions(options: ImageTransformOptions | undefined): ImageTran
   return normalized;
 }
 
-function stripMetadata(image: Parameters<Parameters<typeof ImageMagick.read>[1]>[0], preserveColorProfile: boolean): void {
+function stripMetadata(image: MagickImage, preserveColorProfile: boolean): void {
   const attributes = [...image.attributeNames];
   for (const name of attributes) image.removeAttribute(name);
   const profiles = [...image.profileNames];
@@ -105,7 +106,7 @@ function stripMetadata(image: Parameters<Parameters<typeof ImageMagick.read>[1]>
   }
 }
 
-function metadataSnapshot(image: Parameters<Parameters<typeof ImageMagick.read>[1]>[0]): ImageMetadataSnapshot {
+function metadataSnapshot(image: MagickImage): ImageMetadataSnapshot {
   const attributes: Array<{ name: string; value: string }> = [];
   for (const name of image.attributeNames.slice(0, 100)) {
     try {
@@ -122,18 +123,18 @@ function metadataSnapshot(image: Parameters<Parameters<typeof ImageMagick.read>[
   };
 }
 
-function readWithHint<TReturn>(bytes: Uint8Array, inputFormat: string | undefined, callback: Parameters<typeof ImageMagick.read>[1]): TReturn {
+function readWithHint<TReturn>(bytes: Uint8Array, inputFormat: string | undefined, callback: (image: MagickImage) => TReturn): TReturn {
   if (inputFormat === 'ico') {
     const pngFrame = extractBestPngIcoFrame(bytes);
-    if (pngFrame) return ImageMagick.read(pngFrame, MagickFormat.Png, callback) as TReturn;
+    if (pngFrame) return ImageMagick.read(pngFrame, MagickFormat.Png, callback);
   }
   const hint = inputFormat ? INPUT_HINT_MAP[inputFormat] : undefined;
-  return (hint ? ImageMagick.read(bytes, hint, callback) : ImageMagick.read(bytes, callback)) as TReturn;
+  return hint ? ImageMagick.read(bytes, hint, callback) : ImageMagick.read(bytes, callback);
 }
 
 async function inspect(input: ArrayBuffer, inputFormat: string | undefined): Promise<ImageMetadataSnapshot> {
   await ensureInitialized();
-  return readWithHint<ImageMetadataSnapshot>(new Uint8Array(input), inputFormat, (image) => metadataSnapshot(image));
+  return readWithHint(new Uint8Array(input), inputFormat, metadataSnapshot);
 }
 
 async function convert(input: ArrayBuffer, inputFormat: string | undefined, output: string, quality: number, rawOptions?: ImageTransformOptions): Promise<ArrayBuffer> {
@@ -142,7 +143,7 @@ async function convert(input: ArrayBuffer, inputFormat: string | undefined, outp
   if (!format) throw new Error('Unsupported output format');
   const bytes = new Uint8Array(input);
   const options = normalizeOptions(rawOptions);
-  const process = (image: Parameters<Parameters<typeof ImageMagick.read>[1]>[0]) => {
+  const process = (image: MagickImage): ArrayBuffer => {
     image.autoOrient();
 
     if (options.rotate) {
@@ -169,7 +170,7 @@ async function convert(input: ArrayBuffer, inputFormat: string | undefined, outp
     });
   };
 
-  return readWithHint<ArrayBuffer>(bytes, inputFormat, process);
+  return readWithHint(bytes, inputFormat, process);
 }
 
 scope.addEventListener('message', async (event: MessageEvent<ImageWorkerRequest>) => {
