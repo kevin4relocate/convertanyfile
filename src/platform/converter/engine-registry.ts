@@ -4,6 +4,7 @@ const loaders: Record<EngineId, () => Promise<EngineAdapter>> = {
   image: async () => (await import('../../engines/image/runtime')).imageEngine,
   data: async () => (await import('../../engines/data/runtime')).dataEngine,
   archive: async () => (await import('../../engines/archive/runtime')).archiveEngine,
+  subtitle: async () => (await import('../../engines/subtitle/runtime')).subtitleEngine,
 };
 
 const cache = new Map<EngineId, Promise<EngineAdapter>>();
