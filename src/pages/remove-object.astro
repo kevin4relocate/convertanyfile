@@ -12,17 +12,6 @@ const schemas = [
 ---
 <SiteLayout title={tool.title} description={tool.description} schema={schemas} noindex={true}>
   <ImageToolPageFrame tool={tool} />
-  <script is:inline>
-    (() => {
-      const root = document.querySelector('[data-image-tool-app][data-tool-id="remove-object"]');
-      if (!root) return;
-      root.dataset.targetLabel = 'object';
-      const toolbarCopy = root.querySelector('.gemini-toolbar-copy strong');
-      if (toolbarCopy) toolbarCopy.textContent = 'Choose a shape that tightly covers the visible object';
-      const uploadCopy = root.querySelector('[data-role="drop-zone"] > span:nth-of-type(2)');
-      if (uploadCopy) uploadCopy.textContent = 'Any aspect ratios · up to 50 images · 10 MB each · 200 MB total';
-    })();
-  </script>
   <section class="content-wide-section white"><div class="site-container"><div class="content-intro-grid"><div><span class="section-kicker">Manual object repair</span><h2>Select only the pixels you want the browser to reconstruct.</h2><p>Use Rectangle, Circle, Square or Diamond masks over the unwanted object. Drag masks to move them, resize from the corners, or rotate them when the object sits at an angle. Multiple masks can cover disconnected parts without forcing one oversized selection.</p></div><div class="content-summary-card"><strong>Not automatic object detection</strong><p>This preview does not recognize people, products, logos or background subjects automatically. You choose every repair region manually, which keeps the behavior predictable and local.</p></div></div></div></section>
   <section class="content-wide-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">One image or repeated placement</span><h2>Reuse a normalized mask across matching layouts, or edit exceptions individually.</h2><p>The same shared/individual workflow used by the watermark editor is reused here. Repeated product shots or screenshots can use one normalized mask when the unwanted object stays in the same relative position. Mixed layouts can keep independent masks.</p></div><ul class="content-checklist"><li>Up to 50 JPG, PNG or WebP images.</li><li>10 MB per source image and 200 MB total source input.</li><li>Cancel a batch while keeping outputs already completed.</li><li>Download individual repaired images or package successful results as ZIP.</li></ul></div></section>
   <section class="content-wide-section white"><div class="site-container"><div class="content-intro-grid"><div><span class="section-kicker">Repair limits</span><h2>Large objects are possible to select, but harder to reconstruct convincingly.</h2><p>The current non-AI repair estimates selected pixels from nearby unmasked pixels. Small or medium objects over sky, walls, grass, water, fabric or repeating textures are usually easier than large foreground subjects that cross faces, text, architecture, shadows or unique edges.</p><p>For a large object, use the tightest practical mask rather than covering half the image. Always review the After preview at full size and keep the original source.</p></div><div class="content-summary-card"><strong>Different from Remove Background</strong><p>Remove Object repairs a manually selected patch inside the image. It does not isolate a foreground subject or turn the rest of an opaque photo transparent.</p></div></div></div></section>
