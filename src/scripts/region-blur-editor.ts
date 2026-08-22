@@ -6,7 +6,8 @@ type Handle = 'nw' | 'ne' | 'sw' | 'se';
 type Interaction = { type: 'move' | 'resize'; startX: number; startY: number; before: Selection; handle?: Handle };
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
-const MAX_PIXELS = 20_000_000;
+const MAX_PIXELS = 12_000_000;
+const MAX_REGION_PIXELS = 4_000_000;
 const MAX_DIMENSION = 12_000;
 const ACCEPTED = new Set(['jpg', 'jpeg', 'png', 'webp']);
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
@@ -155,7 +156,7 @@ function initRegionBlur(root: HTMLElement): void {
     if (candidate.size > MAX_FILE_BYTES) { showNotice('This image is larger than the 20 MB selected-region limit.'); return; }
     let next: ImageBitmap;
     try { next = await createImageBitmap(candidate); } catch { showNotice('This image could not be decoded in the browser.'); return; }
-    if (!next.width || !next.height || next.width > MAX_DIMENSION || next.height > MAX_DIMENSION || next.width * next.height > MAX_PIXELS) { next.close(); showNotice('Image dimensions exceed the 12,000 px / 20 MP browser safety limit.'); return; }
+    if (!next.width || !next.height || next.width > MAX_DIMENSION || next.height > MAX_DIMENSION || next.width * next.height > MAX_PIXELS) { next.close(); showNotice('Selected-region blur supports images up to 12,000 px per side and 12 MP.'); return; }
     bitmap?.close(); bitmap = next; file = candidate; hideNotice(); invalidateResult();
     sourceCanvas.width = overlay.width = resultCanvas.width = next.width;
     sourceCanvas.height = overlay.height = resultCanvas.height = next.height;
@@ -180,11 +181,11 @@ function initRegionBlur(root: HTMLElement): void {
     const context = sourceCanvas.getContext('2d');
     if (!context) return;
     const pixelRect = selectionPixels();
-    if (pixelRect.width * pixelRect.height > 8_000_000) { showNotice('Selected region is too large. Reduce the selection below the 8 MP safety limit.'); return; }
+    if (pixelRect.width * pixelRect.height > MAX_REGION_PIXELS) { showNotice('Selected region is too large. Reduce the selection below the 4 MP safety limit.'); return; }
     cancelled = false; hideNotice(); setBusy(true); status.textContent = 'Blurring selected pixels locally…'; invalidateResult();
     try {
       const imageData = context.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
-      const response = await client.blur(imageData.data.buffer, sourceCanvas.width, sourceCanvas.height, pixelRect, shape.value as RegionBlurShape, Number(strength.value));
+      const response = await client.blur(imageData.data.buffer as ArrayBuffer, sourceCanvas.width, sourceCanvas.height, pixelRect, shape.value as RegionBlurShape, Number(strength.value));
       if (cancelled) return;
       const resultContext = resultCanvas.getContext('2d')!;
       resultContext.putImageData(new ImageData(new Uint8ClampedArray(response.pixels), resultCanvas.width, resultCanvas.height), 0, 0);
