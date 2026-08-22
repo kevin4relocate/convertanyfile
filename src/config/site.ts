@@ -23,7 +23,7 @@ export const FOOTER_GROUPS = [
       { label: 'Image Converter', href: '/image-converter/' },
       { label: 'Data Converter', href: '/data-converter/' },
       { label: 'Archive Converter', href: '/archive-converter/' },
-      { label: 'Subtitle Converter (Preview)', href: '/subtitle-converter/' },
+      { label: 'Subtitle Converter', href: '/subtitle-converter/' },
       { label: 'Image Tools', href: '/image-tools/' },
       { label: 'Remove Watermark', href: '/remove-watermark/' },
       { label: 'Gemini Watermark Remover', href: '/gemini-ai-logo-remover/' },
@@ -77,7 +77,7 @@ export const PLATFORM_CATEGORIES = [
   {
     id: 'subtitle',
     label: 'Subtitles',
-    status: 'preview',
+    status: 'live',
     description: 'SRT, VTT, ASS, SSA and SBV with full-file preflight, timing tools, text cleanup and transcript export.',
     href: '/subtitle-converter/',
   },
