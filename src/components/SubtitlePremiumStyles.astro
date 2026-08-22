@@ -3,45 +3,73 @@
   .converter-card[data-engine="subtitle"] .converter-topbar{background:linear-gradient(180deg,#1a1e2b,#151a24);border-bottom-color:#302f4b}
   .converter-card[data-engine="subtitle"] .settings-card{border-color:#343553;background:linear-gradient(135deg,#171a27 0%,#141923 55%,#171b28 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
   .converter-card[data-engine="subtitle"] .quick-output{min-width:44px}
-  .converter-card[data-engine="subtitle"] .output-controls{min-width:0}
-  .converter-card[data-engine="subtitle"] .extra-output-controls{gap:7px;flex-wrap:nowrap;min-width:0}
-  .converter-card[data-engine="subtitle"] .setting-field{position:relative;flex:0 0 auto;min-height:40px;padding:6px 8px;border:1px solid #343949;border-radius:10px;background:#191e29;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+
+  /* Keep the three main settings regions independent so controls can never overlap. */
+  .converter-card[data-engine="subtitle"].converter-card--compact .settings-card{
+    grid-template-columns:minmax(205px,225px) minmax(0,1fr) minmax(145px,165px);
+    grid-template-areas:"output controls action" "quick quick quick";
+    column-gap:14px;
+    row-gap:12px;
+  }
+  .converter-card[data-engine="subtitle"] .output-field{min-width:0;white-space:nowrap}
+  .converter-card[data-engine="subtitle"] .output-field select{min-width:92px}
+  .converter-card[data-engine="subtitle"] .output-controls{min-width:0;width:100%;overflow:visible;justify-content:flex-start;padding-right:0}
+  .converter-card[data-engine="subtitle"] .extra-output-controls{display:grid;grid-template-columns:minmax(205px,1.25fr) minmax(145px,.9fr) minmax(178px,1fr) minmax(142px,.82fr);align-items:center;gap:7px;width:100%;min-width:0}
+  .converter-card[data-engine="subtitle"] .setting-field{position:relative;min-width:0;min-height:40px;padding:6px 8px;border:1px solid #343949;border-radius:10px;background:#191e29;box-shadow:0 2px 8px rgba(0,0,0,.12);box-sizing:border-box}
   .converter-card[data-engine="subtitle"] .setting-field>span{color:#a7adbb;font-size:10px;font-weight:820}
-  .converter-card[data-engine="subtitle"] .setting-field select{min-width:80px;border-color:#3a4150;background-color:#11161f;color:#eef0f7}
-  .converter-card[data-engine="subtitle"] .setting-field--checkbox{padding-right:10px}
-  .converter-card[data-engine="subtitle"] .number-setting-wrap{display:inline-flex;align-items:center;overflow:hidden;border:1px solid #3a4150;border-radius:9px;background:#11161f;box-shadow:0 1px 2px rgba(0,0,0,.16)}
-  .converter-card[data-engine="subtitle"] .number-setting-wrap input{width:78px;min-height:32px;border:0;background:transparent;padding:5px 3px 5px 8px;color:#f3f5fb;font-size:11px;font-weight:780;outline:0;font-variant-numeric:tabular-nums}
+  .converter-card[data-engine="subtitle"] .setting-field select{min-width:76px;border-color:#3a4150;background-color:#11161f;color:#eef0f7}
+  .converter-card[data-engine="subtitle"] .setting-field--checkbox{padding-right:9px;gap:7px}
+  .converter-card[data-engine="subtitle"] .number-setting-wrap{display:inline-flex;align-items:center;min-width:0;overflow:hidden;border:1px solid #3a4150;border-radius:9px;background:#11161f;box-shadow:0 1px 2px rgba(0,0,0,.16)}
+  .converter-card[data-engine="subtitle"] .number-setting-wrap input{width:72px;min-width:0;min-height:32px;border:0;background:transparent;padding:5px 3px 5px 8px;color:#f3f5fb;font-size:11px;font-weight:780;outline:0;font-variant-numeric:tabular-nums}
   .converter-card[data-engine="subtitle"] .number-setting-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px rgba(124,115,255,.16)}
-  .converter-card[data-engine="subtitle"] .number-setting-suffix{padding:0 7px 0 4px;color:#8f96a6;font-size:9px;font-weight:850;letter-spacing:.03em;text-transform:uppercase}
+  .converter-card[data-engine="subtitle"] .number-setting-suffix{padding:0 6px 0 3px;color:#8f96a6;font-size:9px;font-weight:850;letter-spacing:.03em;text-transform:uppercase}
   .converter-card[data-engine="subtitle"] .conversion-policy-note{margin:0 2px 12px;padding:10px 12px;border:1px solid #3a3860;border-radius:11px;background:#18182b;color:#b6b2ca;font-size:11px;line-height:1.5}
   .converter-card[data-engine="subtitle"] .format-badge{border-color:#494476;background:linear-gradient(180deg,#262342,#201e38);color:#bbb6ff}
   .converter-card[data-engine="subtitle"] .file-text span{line-height:1.45}
 
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="timingShiftMs"])>span,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="stripFormatting"])>span,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="lineEnding"])>span,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="bom"])>span{position:relative;display:inline-flex;align-items:center;gap:5px}
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="timingShiftMs"])>span::after,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="stripFormatting"])>span::after,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="lineEnding"])>span::after,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="bom"])>span::after{content:'?';display:inline-grid;place-items:center;width:15px;height:15px;border:1px solid #555d72;border-radius:50%;color:#bfc4d6;font-size:9px;font-weight:900;line-height:1;cursor:help}
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="timingShiftMs"])>span::before,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="stripFormatting"])>span::before,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="lineEnding"])>span::before,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="bom"])>span::before{position:absolute;left:0;bottom:calc(100% + 12px);z-index:30;width:230px;padding:9px 10px;border:1px solid #454b60;border-radius:9px;background:#0f131c;color:#d9dce8;box-shadow:0 12px 30px rgba(0,0,0,.34);font-size:10px;font-weight:650;line-height:1.45;white-space:normal;pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .12s ease,transform .12s ease}
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="timingShiftMs"])>span::before{content:'Shift every subtitle cue earlier or later. Positive values delay captions; negative values show them earlier.'}
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="stripFormatting"])>span::before{content:'Remove inline subtitle styling and keep readable cue text only.'}
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="lineEnding"])>span::before{content:'Choose LF for modern web, macOS and Linux workflows, or CRLF for software that expects Windows-style line breaks.'}
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="bom"])>span::before{content:'Add a UTF-8 byte-order mark for older software that needs an explicit UTF-8 marker. Usually leave this off.'}
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="timingShiftMs"])>span:hover::before,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="stripFormatting"])>span:hover::before,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="lineEnding"])>span:hover::before,
-  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="bom"])>span:hover::before{opacity:1;transform:translateY(0)}
+  /* Help belongs only to the human-readable label, never to wrapper spans. */
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="timingShiftMs"])>span:first-child,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="lineEnding"])>span:first-child,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="stripFormatting"])>span:last-child,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="bom"])>span:last-child{position:relative;display:inline-flex;align-items:center;gap:5px}
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="timingShiftMs"])>span:first-child::after,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="lineEnding"])>span:first-child::after,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="stripFormatting"])>span:last-child::after,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="bom"])>span:last-child::after{content:'?';display:inline-grid;place-items:center;width:15px;height:15px;flex:0 0 15px;border:1px solid #555d72;border-radius:50%;color:#bfc4d6;font-size:9px;font-weight:900;line-height:1;cursor:help}
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="timingShiftMs"])>span:first-child::before,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="lineEnding"])>span:first-child::before,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="stripFormatting"])>span:last-child::before,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="bom"])>span:last-child::before{position:absolute;left:0;bottom:calc(100% + 12px);z-index:80;width:230px;box-sizing:border-box;padding:9px 10px;border:1px solid #454b60;border-radius:9px;background:#0f131c;color:#d9dce8;box-shadow:0 12px 30px rgba(0,0,0,.34);font-size:10px;font-weight:650;line-height:1.45;white-space:normal;pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .12s ease,transform .12s ease}
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="timingShiftMs"])>span:first-child::before{content:'Shift every subtitle cue earlier or later. Positive values delay captions; negative values show them earlier.'}
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="stripFormatting"])>span:last-child::before{content:'Remove inline subtitle styling and keep readable cue text only.'}
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="lineEnding"])>span:first-child::before{content:'Choose LF for modern web, macOS and Linux workflows, or CRLF for software that expects Windows-style line breaks.'}
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="bom"])>span:last-child::before{content:'Add a UTF-8 byte-order mark for older software that needs an explicit UTF-8 marker. Usually leave this off.'}
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="timingShiftMs"])>span:first-child:hover::before,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="lineEnding"])>span:first-child:hover::before,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="stripFormatting"])>span:last-child:hover::before,
+  .converter-card[data-engine="subtitle"] .setting-field:has([data-setting-id="bom"])>span:last-child:hover::before{opacity:1;transform:translateY(0)}
 
   .subtitle-premium-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 0}
   .subtitle-premium-item{padding:13px 14px;border:1px solid #303746;border-radius:13px;background:linear-gradient(180deg,#171c27,#141923);box-shadow:0 8px 24px rgba(0,0,0,.12)}
   .subtitle-premium-item strong,.subtitle-premium-item span{display:block}.subtitle-premium-item strong{color:#f1f3f9;font-size:12px}.subtitle-premium-item span{margin-top:4px;color:#9da4b3;font-size:10px;line-height:1.45}
-  @media(max-width:1180px){.converter-card[data-engine="subtitle"] .extra-output-controls{flex-wrap:wrap}.converter-card[data-engine="subtitle"] .setting-field{flex:1 1 170px;justify-content:space-between}}
-  @media(max-width:900px){.subtitle-premium-strip{grid-template-columns:repeat(2,1fr)}.converter-card[data-engine="subtitle"] .setting-field{flex:1 1 180px;justify-content:space-between}}
-  @media(max-width:560px){.subtitle-premium-strip{grid-template-columns:1fr}.converter-card[data-engine="subtitle"] .setting-field{width:100%;flex-basis:100%}.converter-card[data-engine="subtitle"] .setting-field select{min-width:128px}.converter-card[data-engine="subtitle"] .number-setting-wrap input{width:122px}.converter-card[data-engine="subtitle"] .setting-field>span::before{width:min(230px,calc(100vw - 64px))}}
+
+  /* At narrower desktop widths, deliberately move controls to their own row instead of squeezing/overlapping. */
+  @media(max-width:1280px){
+    .converter-card[data-engine="subtitle"].converter-card--compact .settings-card{grid-template-columns:minmax(190px,220px) minmax(145px,165px);grid-template-areas:"output action" "controls controls" "quick quick"}
+    .converter-card[data-engine="subtitle"] .extra-output-controls{grid-template-columns:repeat(4,minmax(0,1fr))}
+  }
+  @media(max-width:900px){
+    .subtitle-premium-strip{grid-template-columns:repeat(2,1fr)}
+    .converter-card[data-engine="subtitle"] .extra-output-controls{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .converter-card[data-engine="subtitle"] .setting-field{justify-content:space-between}
+  }
+  @media(max-width:560px){
+    .subtitle-premium-strip{grid-template-columns:1fr}
+    .converter-card[data-engine="subtitle"].converter-card--compact .settings-card{grid-template-columns:1fr;grid-template-areas:"output" "controls" "action" "quick"}
+    .converter-card[data-engine="subtitle"] .extra-output-controls{grid-template-columns:1fr}
+    .converter-card[data-engine="subtitle"] .setting-field{width:100%}
+    .converter-card[data-engine="subtitle"] .setting-field select{min-width:128px}
+    .converter-card[data-engine="subtitle"] .number-setting-wrap input{width:122px}
+    .converter-card[data-engine="subtitle"] .setting-field>span::before{width:min(230px,calc(100vw - 64px))}
+  }
 </style>
