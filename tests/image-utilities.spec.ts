@@ -88,19 +88,47 @@ test('Image Background preserve mode prevents JPG transparency output', async ({
   await expect(page.locator('[data-role="output"] option[value="jpg"]')).toBeDisabled();
 });
 
-test('Blur Image runs a real Gaussian blur worker transform', async ({ page }) => {
+test('Blur Image whole-image tab runs a real Gaussian blur worker transform', async ({ page }) => {
   await page.goto('/blur-image/');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Blur images locally');
-  await addTinyImage(page);
-  await page.locator('[data-role="blur-strength"]').evaluate((node) => {
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Blur a whole image or just one selected area');
+  const whole = page.locator('[data-blur-panel="whole"]');
+  await whole.locator('[data-role="file-input"]').setInputFiles(imageFile);
+  await expect(whole.locator('[data-role="summary"]')).toContainText('1 image');
+  await whole.locator('[data-role="blur-strength"]').evaluate((node) => {
     const input = node as HTMLInputElement;
     input.value = '4';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
   });
-  await expect(page.locator('[data-role="blur-value"]')).toHaveText('4');
-  await page.locator('[data-role="run"]').click();
-  await expectDone(page);
+  await expect(whole.locator('[data-role="blur-value"]')).toHaveText('4');
+  await whole.locator('[data-role="run"]').click();
+  await expect(whole.locator('.image-utility-row-status')).toHaveText('Done', { timeout: 60_000 });
+});
+
+test('Blur Image selected-region tab runs the focused local blur worker', async ({ page }) => {
+  await page.goto('/blur-image/');
+  await page.locator('[data-blur-tab="region"]').click();
+  const region = page.locator('[data-blur-panel="region"]');
+  await expect(region).toBeVisible();
+  await region.locator('[data-role="file-input"]').setInputFiles(imageFile);
+  await expect(region.locator('[data-role="filename"]')).toHaveText('tiny.png');
+  await expect(region.locator('[data-role="selection-meta"]')).toContainText('px');
+  await region.locator('[data-role="shape"]').selectOption('ellipse');
+  await region.locator('[data-role="run"]').click();
+  await expect(region.locator('[data-role="result-meta"]')).toContainText('pixels blurred', { timeout: 60_000 });
+  await expect(region.locator('[data-role="download"]')).toBeEnabled();
+});
+
+test('Remove Object mounts the shared mask editor with object-specific target copy', async ({ page }) => {
+  await page.goto('/remove-object/');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Remove selected objects');
+  const editor = page.locator('[data-image-tool-app][data-tool-id="remove-object"]');
+  await expect(editor).toHaveAttribute('data-target-label', 'object');
+  await expect(editor.locator('.gemini-toolbar-copy strong')).toContainText('object');
+  await expect(editor.locator('[data-tool-mode="rect"]')).toBeVisible();
+  await expect(editor.locator('[data-tool-mode="circle"]')).toBeVisible();
+  await editor.locator('[data-role="file-input"]').setInputFiles(imageFile);
+  await expect(editor.locator('[data-role="batch-count"]')).toHaveText('1');
 });
 
 test('Image Metadata inspects and creates a cleaned copy', async ({ page }) => {
