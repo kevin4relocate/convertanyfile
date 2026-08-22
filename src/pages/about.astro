@@ -13,14 +13,14 @@ const related = [
   { href: '/image-converter/', label: 'Image Converter' },
   { href: '/data-converter/', label: 'Data Converter' },
   { href: '/archive-converter/', label: 'Archive Converter' },
-  { href: '/subtitle-converter/', label: 'Subtitle Converter Preview' },
+  { href: '/subtitle-converter/', label: 'Subtitle Converter' },
   { href: '/image-tools/', label: 'Image Tools' },
   { href: '/formats/', label: 'Supported formats' },
 ];
 ---
-<SiteLayout title="About ConvertAnyFile — Browser-First File Tools" description="Learn how ConvertAnyFile runs image, archive, structured-data and Subtitle Preview conversion plus focused Image Tools locally in the browser with category-specific safety rules.">
+<SiteLayout title="About ConvertAnyFile — Browser-First File Tools" description="Learn how ConvertAnyFile runs image, archive, structured-data and subtitle conversion plus focused Image Tools locally in the browser with category-specific safety rules.">
 <section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>About</span></div><span class="eyebrow">About ConvertAnyFile</span><h1>File tools without turning every file into a server upload.</h1><p>ConvertAnyFile is a browser-first platform: one shared interface, separate category engines, focused Image Tools, and local processing wherever the browser can do the job reliably.</p></div></section>
-<ArticleFrame toc={toc} related={related} relatedTitle="Explore ConvertAnyFile" asideNote="Image, structured Data, and Archive conversion are live. Subtitle is available as a Preview, while focused Image Tools use their own local editing runtime.">
+<ArticleFrame toc={toc} related={related} relatedTitle="Explore ConvertAnyFile" asideNote="Image, structured Data, Archive, and Subtitle conversion are live, while focused Image Tools use their own local editing runtime.">
   <div class="quick-answer"><strong>The short version</strong><p>ConvertAnyFile aims to make routine file work feel immediate: choose or drop files, pick an output or focused image edit, process locally when practical, and download the result without creating an account or waiting for an upload queue.</p></div>
 
   <h2 id="why">Why ConvertAnyFile exists</h2>
@@ -29,11 +29,11 @@ const related = [
 
   <h2 id="browser-first">What browser-first means</h2>
   <p>For supported local converters, the conversion engine runs inside your browser using JavaScript, browser workers, and WebAssembly where the category needs it. Your device provides the CPU and memory for the job, while the website provides the interface, category engine code, format rules, and download workflow.</p>
-  <p>Image, Data, Archive, and the Subtitle Preview each use their own engine behind the same batch interface. Heavy code is loaded only when needed; for example, the pinned 7Z/RAR decoder is lazy-loaded only for those Archive inputs, while Subtitle uses a lightweight timed-text worker. Image Tools use a separate stateful mask editor because interactive pixel editing has different needs from format conversion.</p>
+  <p>Image, Data, Archive, and Subtitle each use their own engine behind the same batch interface. Heavy code is loaded only when needed; for example, the pinned 7Z/RAR decoder is lazy-loaded only for those Archive inputs, while Subtitle uses a lightweight timed-text worker. Image Tools use a separate stateful mask editor because interactive pixel editing has different needs from format conversion.</p>
   <ul class="content-checklist"><li>No account is required for the core browser workflows.</li><li>Original files stay unchanged; conversion or editing creates new downloadable copies.</li><li>Batch processing is designed to continue when an individual file fails.</li><li>Category engines and heavier dependencies are loaded only when the relevant workflow needs them.</li></ul>
 
   <h2 id="privacy">A privacy model built around the workflow</h2>
-  <p>The live Image, Data, and Archive converters, the Subtitle Preview, and supported Image Tools process source contents in the browser session rather than sending those files through a conversion or editing upload queue. Data and Subtitle parsing run in browser workers, Image uses its dedicated local image engine, Archive parses and repackages supported containers locally, and Image Tools repair selected pixels in a local worker.</p>
+  <p>The live Image, Data, Archive, and Subtitle converters and supported Image Tools process source contents in the browser session rather than sending those files through a conversion or editing upload queue. Data and Subtitle parsing run in browser workers, Image uses its dedicated local image engine, Archive parses and repackages supported containers locally, and Image Tools repair selected pixels in a local worker.</p>
   <p>That does not mean every website request is invisible to the internet. Static pages, analytics, advertising services if introduced, and normal web requests are separate concerns and must be disclosed accurately in the privacy policy. Privacy claims should match the actual processing path rather than implying that the browser has no network activity at all.</p>
 
   <h2 id="reliability">Reliability before format count</h2>
@@ -45,7 +45,7 @@ const related = [
   <p><strong>Image — Live.</strong> Runtime-certified image outputs, WASM conversion regressions, browser memory guards, multi-format batches, and explicit single-image fidelity rules.</p>
   <p><strong>Data — Live.</strong> CSV, TSV, JSON, JSONL, and NDJSON input with deterministic table and JSON outputs plus batch ZIP downloads.</p>
   <p><strong>Archive — Live.</strong> ZIP, TAR, TAR.GZ/TGZ, GZIP/GZ, 7Z, and supported RAR4/RAR5 input with certified ZIP, TAR, and TAR.GZ output plus integrity, path, and expansion safety rules.</p>
-  <p><strong>Subtitle — Preview.</strong> SRT, VTT/WebVTT, ASS, SSA, and SBV input with SRT, VTT, SBV, and TXT output, complete timed-text preflight, exact timing shift, formatting cleanup, and transcript controls.</p>
+  <p><strong>Subtitle — Live.</strong> SRT, VTT/WebVTT, ASS, SSA, and SBV input with SRT, VTT, SBV, and TXT output, complete timed-text preflight, exact timing shift, formatting cleanup, and transcript controls.</p>
   <p><strong>Image Tools — Live.</strong> Focused local visible-watermark workflows include the general Remove Watermark editor and the Gemini Watermark Remover, both backed by the shared local batch mask runtime.</p>
 
   <h2 id="future">How the platform can grow without becoming a pile of copied tools</h2>
