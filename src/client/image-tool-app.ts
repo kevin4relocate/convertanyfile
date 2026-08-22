@@ -1,5 +1,3 @@
-import '../styles/tool-sticky-actions.css';
-
 function initStickyImageToolActions(root: HTMLElement): void {
   if (root.dataset.stickyActionsReady === 'true') return;
 
