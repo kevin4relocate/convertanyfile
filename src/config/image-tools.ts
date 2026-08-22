@@ -47,12 +47,15 @@ export const GEMINI_AI_LOGO_REMOVER_TOOL: ImageToolDefinition = {
 };
 
 export const IMAGE_TOOL_ROADMAP = [
+  { id: 'resize-image', label: 'Resize Image', status: 'preview', description: 'Resize JPG, PNG and WebP by a target box, exact dimensions, or percentage in a local batch.', href: '/resize-image/' },
+  { id: 'compress-image', label: 'Compress Image', status: 'preview', description: 'Reduce JPG, PNG and WebP file size locally with quality and output-format controls.', href: '/compress-image/' },
   { id: 'remove-watermark', label: 'Remove Watermark', status: 'live', description: 'Batch visible-watermark repair with six manual mask modes, including a movable text mask.', href: '/remove-watermark/' },
   { id: 'gemini-ai-logo-remover', label: 'Gemini AI Logo Remover', status: 'live', description: 'Free Gemini watermark remover for a small visible sparkle mark, with Circle or 4-Point-Star masks and smart batch editing.', href: '/gemini-ai-logo-remover/' },
-  { id: 'resize-image', label: 'Resize Image', status: 'planned', description: 'Resize by pixels, percentage, or fit-to-box.', href: null },
-  { id: 'compress-image', label: 'Compress Image', status: 'planned', description: 'Reduce image size with output-quality controls.', href: null },
   { id: 'crop-image', label: 'Crop Image', status: 'planned', description: 'Crop freely or use common aspect ratios.', href: null },
-  { id: 'rotate-flip-image', label: 'Rotate / Flip', status: 'planned', description: 'Rotate or mirror an image locally.', href: null },
+  { id: 'rotate-flip-image', label: 'Rotate / Flip', status: 'planned', description: 'Rotate or mirror images locally, including batch orientation fixes.', href: null },
+  { id: 'image-metadata', label: 'Image Metadata', status: 'planned', description: 'View or remove common image metadata without uploading the source.', href: null },
+  { id: 'background-tools', label: 'Background Tools', status: 'planned', description: 'Add a solid background or prepare transparent-background workflows.', href: null },
+  { id: 'bulk-rename-images', label: 'Bulk Rename Images', status: 'planned', description: 'Rename image batches with prefixes, suffixes, numbering and safe filename rules.', href: null },
   { id: 'blur-image', label: 'Blur Image', status: 'planned', description: 'Blur an image or a selected region.', href: null },
   { id: 'remove-object', label: 'Remove Object', status: 'planned', description: 'Reuse the mask editor for larger manual object repair.', href: null },
   { id: 'remove-background', label: 'Remove Background', status: 'planned', description: 'Background isolation belongs to a later, separately validated engine.', href: null },
