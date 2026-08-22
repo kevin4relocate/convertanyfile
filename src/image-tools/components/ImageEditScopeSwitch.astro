@@ -1,0 +1,26 @@
+---
+interface Props {
+  mode?: 'shared' | 'individual';
+  disabled?: boolean;
+}
+
+const { mode = 'shared', disabled = false } = Astro.props;
+---
+
+<div class="image-edit-scope" data-role="edit-scope-switch" data-mode={mode}>
+  <span class="image-edit-scope__label">Settings behavior</span>
+  <div class="image-edit-scope__options" role="group" aria-label="Settings behavior">
+    <button type="button" data-edit-scope="shared" aria-pressed={mode === 'shared'} disabled={disabled}>
+      <strong>Apply to all</strong>
+      <small>One setup for the batch</small>
+    </button>
+    <button type="button" data-edit-scope="individual" aria-pressed={mode === 'individual'} disabled={disabled}>
+      <strong>Edit individually</strong>
+      <small>Per-image overrides</small>
+    </button>
+  </div>
+</div>
+
+<style>
+  .image-edit-scope{display:grid;gap:8px}.image-edit-scope__label{font-size:.8rem;font-weight:700}.image-edit-scope__options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.image-edit-scope button{display:grid;gap:2px;text-align:left;padding:10px 12px;border:1px solid var(--border-color,#303744);border-radius:10px;background:transparent;color:inherit;cursor:pointer}.image-edit-scope button[aria-pressed="true"]{border-color:currentColor;background:color-mix(in srgb,currentColor 8%,transparent)}.image-edit-scope small{opacity:.68}@media(max-width:640px){.image-edit-scope__options{grid-template-columns:1fr}}
+</style>
