@@ -2,7 +2,7 @@
   <div class="region-blur-topbar"><div><span>Interactive privacy blur</span><strong>Selected Region</strong></div><span class="region-blur-local"><i></i> Browser-only</span></div>
   <div class="region-blur-notice" data-role="notice" role="status" aria-live="polite" hidden></div>
   <section class="region-blur-upload" data-role="upload-view">
-    <button class="region-blur-drop" data-role="drop-zone" type="button"><span class="region-blur-upload-icon">↑</span><strong>Add one image</strong><span>JPG, PNG or WebP · 20 MB max · 20 MP safety limit</span><span class="primary-button">Choose image</span><small>Source pixels stay on this device</small></button>
+    <button class="region-blur-drop" data-role="drop-zone" type="button"><span class="region-blur-upload-icon">↑</span><strong>Add one image</strong><span>JPG, PNG or WebP · 20 MB max · 12 MP source</span><span class="primary-button">Choose image</span><small>Source pixels stay on this device · selected region up to 4 MP</small></button>
     <input data-role="file-input" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden />
   </section>
   <section class="region-blur-workspace" data-role="workspace" hidden>
@@ -20,7 +20,7 @@
     </div>
     <div class="region-blur-status"><span data-role="status">Move the selection over a face, plate, screen, address, or other detail you want to obscure.</span></div>
     <div class="region-blur-actions"><button class="secondary-button" data-role="cancel" type="button" hidden>Cancel</button><button class="primary-button" data-role="run" type="button">Blur selected region</button><button class="secondary-button" data-role="download" type="button" disabled>Download result</button></div>
-    <p class="region-blur-policy">This tool obscures only the region you select. Blur reduces visual readability but is not a guarantee that sensitive information cannot be recovered from another copy or source.</p>
+    <p class="region-blur-policy">Selected-region blur accepts source images up to 12 MP and a selected area up to 4 MP to keep browser memory use predictable, especially on mobile. Blur reduces visual readability but is not a guarantee that sensitive information cannot be recovered from another copy or source.</p>
   </section>
 </div>
 <script>
