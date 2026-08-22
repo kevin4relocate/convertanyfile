@@ -1,0 +1,85 @@
+---
+interface Props {
+  mode: 'resize' | 'compress';
+}
+const { mode } = Astro.props;
+const isResize = mode === 'resize';
+const action = isResize ? 'Resize' : 'Compress';
+---
+<div class="image-utility" data-image-utility data-mode={mode}>
+  <div class="image-utility-topbar">
+    <div><span class="image-utility-kicker">Local image tool</span><strong>{action} Image</strong></div>
+    <span class="image-utility-private"><i></i> Private tool ready</span>
+  </div>
+
+  <div class="image-utility-drop" data-role="dropzone" tabindex="0" role="button" aria-label={`Choose images to ${mode}`}>
+    <input data-role="file-input" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple hidden />
+    <span class="image-utility-upload" aria-hidden="true">↑</span>
+    <strong>Drop your images here</strong>
+    <p>JPG, PNG and WebP · up to 50 images · processed locally</p>
+    <button type="button" class="primary-button" data-role="choose">Choose images</button>
+  </div>
+
+  <div class="image-utility-workspace" data-role="workspace" hidden>
+    <div class="image-utility-summary">
+      <div><span>Ready to process</span><strong data-role="summary">0 images</strong></div>
+      <div class="image-utility-summary-actions"><button type="button" data-role="add">+ Add more</button><button type="button" data-role="clear">Clear all</button></div>
+    </div>
+
+    <div class="image-utility-settings">
+      {isResize ? (
+        <>
+          <div class="utility-control">
+            <label for="resize-mode">Resize mode</label>
+            <select id="resize-mode" data-role="resize-mode"><option value="box">Width × height</option><option value="percent">Percentage</option></select>
+          </div>
+          <div class="utility-control utility-dimensions" data-role="dimension-controls">
+            <label>Target size</label>
+            <div><input data-role="width" type="number" min="1" max="12000" value="1920" aria-label="Target width" /><span>×</span><input data-role="height" type="number" min="1" max="12000" value="1080" aria-label="Target height" /><span>px</span></div>
+          </div>
+          <label class="utility-toggle" data-role="lock-control"><input data-role="lock" type="checkbox" checked /><span>Keep aspect ratio</span></label>
+          <div class="utility-control" data-role="percent-control" hidden>
+            <label for="resize-percent">Scale</label>
+            <div class="utility-percent"><input id="resize-percent" data-role="percent" type="number" min="1" max="400" value="50" /><span>%</span></div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div class="utility-control utility-quality">
+            <label for="compress-quality">Quality <strong data-role="quality-value">80</strong></label>
+            <input id="compress-quality" data-role="quality" type="range" min="10" max="100" value="80" />
+          </div>
+          <div class="utility-control">
+            <label for="compress-output">Output</label>
+            <select id="compress-output" data-role="output"><option value="same">Same as source</option><option value="jpg">JPG</option><option value="webp">WebP</option><option value="png">PNG</option></select>
+          </div>
+          <p class="utility-hint">JPG and WebP respond most strongly to the quality setting. PNG is lossless, so a smaller file is not guaranteed.</p>
+        </>
+      )}
+      <button type="button" class="primary-button utility-run" data-role="run">{action} images</button>
+    </div>
+
+    <div class="image-utility-progress" data-role="progress" hidden><span data-role="progress-text">Processing…</span><div><i data-role="progress-bar"></i></div></div>
+    <div class="image-utility-list" data-role="list"></div>
+    <div class="image-utility-downloads" data-role="downloads" hidden>
+      <span data-role="result-summary"></span>
+      <button type="button" class="secondary-button" data-role="download-all">Download all ZIP</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  import '../scripts/image-utility-tool';
+</script>
+
+<style>
+  .image-utility{overflow:hidden;border:1px solid #303746;border-radius:22px;background:#121821;box-shadow:0 22px 60px rgba(0,0,0,.18)}
+  .image-utility-topbar{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;border-bottom:1px solid #303746;background:#171c27}.image-utility-topbar>div{display:grid;gap:2px}.image-utility-kicker{color:#a99fff;font-size:10px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}.image-utility-topbar strong{color:#f3f5fb;font-size:15px}.image-utility-private{display:flex;align-items:center;gap:7px;color:#62d6a2;font-size:12px;font-weight:750}.image-utility-private i{width:8px;height:8px;border-radius:50%;background:#21bd7b;box-shadow:0 0 0 5px rgba(33,189,123,.12)}
+  .image-utility-drop{margin:18px;min-height:300px;display:grid;place-items:center;align-content:center;gap:12px;padding:34px;border:1.5px dashed #465064;border-radius:18px;background:#0f151e;text-align:center;cursor:pointer;transition:border-color .15s ease,background .15s ease}.image-utility-drop:hover,.image-utility-drop.is-dragging{border-color:#8077ff;background:#14172b}.image-utility-upload{width:48px;height:48px;display:grid;place-items:center;border:1px solid #384152;border-radius:14px;background:#181e29;color:#e8e6ff;font-size:28px}.image-utility-drop>strong{color:#f4f5fa;font-size:30px;line-height:1.05}.image-utility-drop p{margin:0;color:#989faf;font-size:14px}.primary-button,.secondary-button{border:0;border-radius:12px;cursor:pointer;font:inherit;font-weight:800}.primary-button{min-height:46px;padding:0 24px;background:linear-gradient(135deg,#766dff,#6359ef);color:#fff;box-shadow:0 12px 28px rgba(99,89,239,.24)}.secondary-button{min-height:40px;padding:0 18px;border:1px solid #3a4354;background:#1a202b;color:#e7e9f0}
+  .image-utility-workspace{padding:18px}.image-utility-summary{display:flex;align-items:end;justify-content:space-between;gap:16px;padding:4px 4px 16px}.image-utility-summary>div:first-child{display:grid;gap:3px}.image-utility-summary span{color:#a69cff;font-size:10px;font-weight:850;letter-spacing:.11em;text-transform:uppercase}.image-utility-summary strong{color:#f3f5fb;font-size:24px}.image-utility-summary-actions{display:flex;gap:18px}.image-utility-summary-actions button{border:0;background:none;color:#b7b0ff;cursor:pointer;font:inherit;font-size:12px;font-weight:750}.image-utility-summary-actions button:last-child{color:#9299a8}
+  .image-utility-settings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;align-items:end;gap:10px;padding:14px;border:1px solid #32394a;border-radius:16px;background:#171c27}.utility-control{min-width:0;display:grid;gap:7px}.utility-control label,.utility-toggle{color:#aeb4c2;font-size:11px;font-weight:750}.utility-control select,.utility-control input[type=number]{width:100%;height:42px;border:1px solid #3a4354;border-radius:10px;background:#111720;color:#f0f2f7;padding:0 12px;font:inherit;font-size:12px}.utility-dimensions>div{display:grid;grid-template-columns:minmax(65px,1fr) auto minmax(65px,1fr) auto;align-items:center;gap:6px;color:#8e95a4}.utility-toggle{min-height:42px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid #343c4c;border-radius:10px;background:#141a24}.utility-toggle input{width:16px;height:16px}.utility-percent{display:grid;grid-template-columns:1fr auto;align-items:center;gap:7px;color:#8e95a4}.utility-quality{grid-column:span 2}.utility-quality label{display:flex;justify-content:space-between}.utility-quality label strong{color:#d6d2ff}.utility-quality input[type=range]{width:100%;accent-color:#756cff}.utility-hint{grid-column:span 2;margin:0;color:#858d9e;font-size:10px;line-height:1.45}.utility-run{min-width:160px}
+  .image-utility-progress{display:grid;gap:7px;margin:14px 2px}.image-utility-progress>span{color:#b9c0cc;font-size:11px}.image-utility-progress>div{height:5px;overflow:hidden;border-radius:999px;background:#252c38}.image-utility-progress i{display:block;width:0;height:100%;border-radius:inherit;background:#756cff;transition:width .2s ease}
+  .image-utility-list{margin-top:14px;border:1px solid #2e3644;border-radius:14px;background:#0f151e}.image-utility-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:14px;min-height:66px;padding:10px 14px;border-bottom:1px solid #272e3a}.image-utility-row:last-child{border-bottom:0}.image-utility-row-copy{min-width:0;display:grid;gap:3px}.image-utility-row-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#edf0f5;font-size:12px}.image-utility-row-copy span,.image-utility-row-status{color:#858d9d;font-size:10px}.image-utility-row-status.is-success{color:#66d7a4}.image-utility-row-status.is-error{color:#ff9b9b}.image-utility-row button{border:0;background:none;color:#aaa4ff;cursor:pointer;font:inherit;font-size:11px;font-weight:760}.image-utility-downloads{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:12px 2px}.image-utility-downloads span{color:#9da4b3;font-size:11px}
+  @media(max-width:900px){.image-utility-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.utility-quality,.utility-hint{grid-column:span 2}.utility-run{grid-column:1/-1}.image-utility-settings .primary-button{width:100%}}
+  @media(max-width:600px){.image-utility-topbar{align-items:flex-start;flex-direction:column}.image-utility-drop{min-height:260px;margin:12px;padding:24px 16px}.image-utility-drop>strong{font-size:24px}.image-utility-workspace{padding:12px}.image-utility-summary{align-items:flex-start;flex-direction:column}.image-utility-summary-actions{align-self:flex-end}.image-utility-settings{grid-template-columns:1fr}.utility-quality,.utility-hint,.utility-run{grid-column:1}.image-utility-row{grid-template-columns:minmax(0,1fr) auto}.image-utility-row-status{grid-column:1/-1}.image-utility-downloads{align-items:stretch;flex-direction:column}.image-utility-downloads .secondary-button{width:100%}}
+</style>
