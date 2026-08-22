@@ -1,75 +1,95 @@
 # ConvertAnyFile
 
-ConvertAnyFile.net is a browser-first file conversion platform built around one shared static site shell and pluggable local converter engines.
+ConvertAnyFile.net is a browser-first file conversion and image-editing platform built around one shared static site shell and local processing engines.
 
-## Current production categories
+## Live converter categories
 
 ### Image
-
-- 57 recognized image filename extensions across common raster, specialist, legacy, and camera RAW families.
-- 16 product-certified outputs: JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO, JXL, JP2, HDR, EXR, PCX, TGA, QOI, and PNM.
-- HEIC/HEIF remains input-only because the packaged WASM runtime does not expose a HEIC writer.
-- Runtime readable/writable codec scan plus a product-certified output whitelist.
 - Browser-side ImageMagick WASM conversion.
 - 50 files / 75 MB per file / 300 MB per batch.
-- Dimension and estimated decoded-memory guards.
-- EXIF orientation normalization and deterministic white flattening for opaque destinations.
-- Explicit single-image policy for animated, multi-page, layered, and multi-size sources.
-- ICO hardening for multi-size PNG-backed icons plus legacy DIB/BMP fallback.
-- Certified output encode + decode-back browser matrix.
+- Runtime codec detection plus a product-certified output whitelist.
+- EXIF orientation normalization, deterministic flattening for opaque outputs, and decoded-memory guards.
 
 ### Data
-
-- Inputs: CSV, TSV, JSON, JSONL, and NDJSON.
-- Outputs: CSV, TSV, JSON, and JSONL.
-- UTF-8 validation with optional input BOM support.
-- Parsing and serialization run in a browser worker.
-- Quoted CSV/TSV fields support embedded delimiters, escaped quotes, CRLF/LF, and embedded line breaks.
-- First delimited row becomes headers; empty and duplicate headers are normalized safely.
-- CSV/TSV values remain strings instead of using risky automatic type inference.
-- JSON nested plain objects flatten with dot notation for tabular output.
-- Arrays and complex JSON values remain JSON strings inside CSV/TSV cells.
-- JSONL and NDJSON share the one-JSON-value-per-line input path.
-- CSV/TSV controls: header row, LF/CRLF, optional UTF-8 BOM.
-- JSON control: pretty print.
+- CSV, TSV, JSON, JSONL, and NDJSON input.
+- CSV, TSV, JSON, and JSONL output.
+- UTF-8 validation and deterministic browser-worker parsing/serialization.
 - 50 files / 20 MB per file / 100 MB per batch.
 
-Both categories reuse the same batch queue, append-by-drag behavior, progress, cancel, recoverable-only retry, per-file download, ZIP packaging, compact converter page frame, sitemap, SEO shell, and browser-layout regressions.
+### Archive
+- Browser-side archive conversion for the supported ZIP, TAR, TAR.GZ/TGZ, GZIP, 7Z, and RAR input families exposed by the current product.
+- Category-specific archive safety limits and local ZIP/download workflows.
+
+All converter categories reuse the generic batch queue, progress, cancel, retry policy, per-file download, ZIP packaging, SEO shell, and responsive page frame. Category behavior stays behind `EngineAdapter` implementations.
+
+## Live Image Tools
+
+Image Tools are intentionally separate from the converter `EngineAdapter` stack because they need a stateful canvas editor, masks, Before/After previews, and per-image visual-edit state.
+
+### Remove Watermark
+- One image or up to 50 JPG/JPEG, PNG, or WebP images.
+- 10 MB per source image / 200 MB total source input.
+- Rectangle, Circle, Square, Diamond, 4-Point Star, and manual Text masks.
+- Text mode builds a solid bold glyph-shaped mask, auto-sizes its selection bounds to the typed content, and is not OCR or automatic text detection.
+- All masks can be moved, resized, and rotated with visible handles.
+- Same-ratio batches start with **One mask for all**.
+- Mixed-ratio batches start with **Edit individually**.
+- Shared-mask copies, per-image Custom overrides, Undo, Clear, Cancel, Before/After, output controls, and ZIP download.
+
+### Gemini AI Logo Remover
+- Uses the same shared batch mask editor and local repair worker.
+- Intentionally exposes only **Circle** and **4-Point Star**; 4-Point Star is the default.
+- Circle and Star masks use the same move/resize/rotate interaction as the general editor.
+- Same shared/individual batch recommendation, per-image overrides, Before/After, Cancel, output, and ZIP behavior.
+- No logo Auto Select and no claim to detect or remove invisible provenance systems.
+- ConvertAnyFile is not affiliated with or endorsed by Google or Gemini.
 
 ## Architecture
 
 ```text
 src/
-  components/            shared Header, Footer, ConverterPageFrame, ConverterShell, FAQ/content UI
-  config/                site config + category route registries + combined converter registry
-  content/               reusable FAQ and category/pair guidance
-  layouts/               shared Astro page shell / SEO metadata layer
-  platform/converter/    generic batch policy, engine registry, controls, ZIP/downloads
-  engines/image/         image detection, codec policy, ImageMagick WASM worker
-  engines/data/          UTF-8 validation, delimited/JSON codec, browser worker
-  client/                category-agnostic converter controller
-  pages/                 static category routes and real SEO conversion presets
+  components/                 shared Header/Footer, converter frames, BatchMaskEditorShell, FAQ/content UI
+  config/                     site config, converter registries, Image Tool definitions
+  content/                    reusable FAQ and guidance
+  layouts/                    shared Astro SEO/document shell
+  platform/converter/         generic converter batch policy, controls, ZIP/download
+  platform/image-tools/       Image Tool types/contracts
+  engines/image/              image conversion engine
+  engines/data/               structured-data conversion engine
+  engines/archive/            archive conversion engine
+  image-tools/shared/         shared batch mask editor + mask geometry
+  image-tools/remove-watermark/ local visible-pixel repair worker/client
+  client/                     converter controller + Image Tool bootstrap
+  pages/                      static product, guide, format, and converter routes
 ```
 
-A new file category implements `EngineAdapter` rather than duplicating the website or queue UI. Output settings are engine-declared through generic controls:
+A new **converter category** implements `EngineAdapter`; it must not duplicate queue/download infrastructure.
 
-- Image declares range controls such as quality.
-- Data declares checkbox/select controls such as header output, line endings, BOM, and pretty printing.
-- Future Archive/Audio engines can declare compression, bitrate, sample rate, or other category settings without adding those concepts to the shared queue.
+A new **interactive Image Tool** should reuse the Image Tools shell/runtime when its workflow genuinely fits the same mask/editor contract. Product-specific choices belong in config, not copied editors. Remove Watermark and Gemini AI Logo Remover therefore share one runtime while exposing different mask sets.
 
 See `ARCHITECTURE.md` for the platform contract.
 
 ## Converter page contract
 
-Every live dedicated converter route renders through `ConverterPageFrame`. The frame owns the compact breadcrumb/eyebrow/title/intro region and renders the shared `ConverterShell` in compact mode so the primary file action remains inside the first desktop viewport.
+Every live dedicated converter route renders through `ConverterPageFrame`. The frame keeps the main file action near the first desktop viewport while category-specific explanation stays below the shared converter.
 
-Category-specific explanations belong below the tool. Category-specific converter shells, queue implementations, and duplicated download logic are not allowed.
+Category-specific converter shells, queue implementations, and duplicated download logic are not allowed.
 
-CI reads the generated sitemap and enforces this contract for every page containing a live converter.
+## Image Tools page contract
 
-## Why Astro
+Every live watermark editor route renders through `ImageToolPageFrame` → `BatchMaskEditorShell` and mounts `src/image-tools/shared/batch-mask-editor.ts`.
 
-Astro produces crawlable static HTML while allowing shared layouts/components and client-side converter scripts. Conversion engines are lazy-loaded only when a user interacts with a converter.
+The shared editor owns:
+- admission and batch queue;
+- automatic shared/individual recommendation;
+- shared and per-image mask state;
+- mask move/resize/rotate/Undo/Clear interaction;
+- solid auto-fitted Text mask interaction when supported by the tool;
+- sequential local repair and cancellation;
+- Before/After result restoration;
+- output encoding and browser-generated ZIP download.
+
+Tool config owns the public mask vocabulary and copy. Do not fork the runtime merely to hide or add mask buttons.
 
 ## Local commands
 
@@ -84,56 +104,42 @@ npm run test:e2e
 ## Cloudflare Pages
 
 Use a static Pages deployment:
-
 - Production branch: `main`
 - Build command: `npm run build`
 - Build output directory: `dist`
 - Node: `22.19.0`
 
-No Pages Function, KV, D1, R2, or conversion backend is required for the current Image or Data converters.
+No Pages Function, KV, D1, R2, or image/conversion backend is required for the current browser-first workflows.
 
 ## SEO model
 
 - Canonicals are generated from `https://convertanyfile.net`.
 - `@astrojs/sitemap` generates the sitemap from actual static routes.
-- `robots.txt` reads the same site config and points to the generated sitemap index.
-- Pair pages are real converter presets backed by category engines, not copied converter implementations.
-- Image routes live in `src/config/converters.ts`.
-- Data routes live in `src/config/data-converters.ts`.
-- `src/config/converter-registry.ts` combines live pair routes for shared static generation.
-- Placeholder routes are not published for planned categories.
+- Pair pages are real converter presets backed by category engines.
+- Image Tools receive routes only when the editing workflow is implemented; roadmap ideas do not create fake placeholder pages.
+- Product pages use substantive body copy, FAQ, internal links, and matching guides.
 
 ## Production release gates
 
-All categories must keep these shared gates green:
-
+All live products must keep these shared gates green:
 - Astro diagnostics (`npm run check`)
 - production static build (`npm run build`)
 - sitemap/canonical/title/description/internal-link regressions
-- shared converter-frame and first-viewport regressions
 - desktop/mobile layout checks
-- Chromium/Firefox/WebKit browser coverage
-- batch admission, append-by-drag, cancellation, failure isolation, retry semantics and ZIP behavior
-- previous production category regressions
+- Chromium/Firefox/WebKit coverage appropriate to the workflow
+- safety/admission limits and cancellation semantics
+- previous production-product regressions.
 
-Image additionally requires its certified output encode/decode-back matrix and image-specific fidelity/memory regressions.
+Converter categories additionally require real output conversion tests for their supported matrix.
 
-Data additionally requires byte-level tests for quoted delimited fields, nested JSON flattening, JSONL/NDJSON, output controls, permanent parse errors, and shared batch/ZIP reuse.
+Image Tools additionally require mask geometry and rotation, shared/individual state, local worker rasterization/repair, Before/After restoration, output/ZIP, touch interaction, and browser memory/cancel validation.
 
 See:
 - `IMAGE_RELEASE_CHECKLIST.md`
 - `DATA_RELEASE_CHECKLIST.md`
+- `ARCHIVE_RELEASE_CHECKLIST.md`
+- `IMAGE_TOOLS_RELEASE_CHECKLIST.md`
 
 ## Expansion rule
 
-Archive, Audio, Subtitle, Font, and other categories should be added only when they provide a dependable browser-first workflow with their own safety policy and category-specific conversion tests.
-
-For every future live category:
-
-1. implement/register its engine adapter;
-2. define real input/output formats and engine-declared controls;
-3. define real converter routes;
-4. render category and pair routes through `ConverterPageFrame`;
-5. keep category-specific guidance below the tool;
-6. add deterministic conversion, safety, and error regressions;
-7. let sitemap, canonical, shared-frame, viewport, and existing-category CI tests validate the full product before merge.
+Add a public route only when its engine or interactive workflow is dependable, testable, and useful. Reuse the appropriate shared platform rather than copying a product-specific implementation.

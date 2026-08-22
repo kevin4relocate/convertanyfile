@@ -1,0 +1,344 @@
+/* Gemini AI Logo Remover V3 — compact utility UI aligned with the converter workspace. */
+.gemini-batch-card{
+  background:#141923;
+  font-family:inherit;
+  letter-spacing:normal;
+}
+.gemini-batch-card .image-editor-topbar span{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.06em;
+}
+.gemini-batch-card .image-editor-topbar strong{font-weight:720}
+.gemini-batch-card .image-editor-local-state{font-weight:650}
+
+.gemini-batch-warning{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin:12px 14px 10px;
+  padding:9px 11px;
+  border:1px solid rgba(225,174,79,.23);
+  border-radius:12px;
+  background:rgba(117,82,25,.09);
+  color:#cdbf9f;
+}
+.gemini-batch-warning-icon{
+  width:20px;height:20px;flex:0 0 20px;
+  display:grid;place-items:center;
+  border:1px solid rgba(237,179,78,.38);
+  border-radius:50%;
+  color:#e8b95e;
+  font-size:11px;font-weight:750;
+}
+.gemini-batch-warning div{display:grid;gap:2px}
+.gemini-batch-warning strong{color:#dfd2b5;font-size:11px;font-weight:720}
+.gemini-batch-warning p{margin:0;color:#a79c89;font-size:10px;line-height:1.45}
+
+/* Compact upload window: large enough for drag/drop, small enough to remain in the first viewport. */
+.gemini-batch-upload{padding:0 14px 14px}
+.gemini-batch-upload .image-tool-drop-zone{
+  min-height:116px;
+  display:grid;
+  grid-template-columns:46px minmax(0,1fr) auto;
+  grid-template-rows:auto auto auto;
+  grid-template-areas:"icon title choose" "icon meta choose" "icon privacy choose";
+  align-items:center;
+  justify-items:start;
+  gap:3px 15px;
+  padding:15px 17px;
+  text-align:left;
+}
+.gemini-batch-upload .image-tool-drop-zone>.drop-icon{grid-area:icon;margin:0;width:44px;height:44px;border-radius:13px}
+.gemini-batch-upload .image-tool-drop-zone>strong{grid-area:title;font-size:16px;font-weight:720;line-height:1.2}
+.gemini-batch-upload .image-tool-drop-zone>span:not(.drop-icon):not(.choose-button){grid-area:meta;font-size:11px;line-height:1.35}
+.gemini-batch-upload .image-tool-drop-zone>.choose-button{grid-area:choose;align-self:center;margin:0;white-space:nowrap;font-size:12px;font-weight:720;padding:10px 15px}
+.gemini-batch-upload .image-tool-drop-zone>small{grid-area:privacy;margin:0;font-size:10px}
+
+.gemini-batch-workspace{padding:0 14px 14px}
+.gemini-batch-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:8px 2px 10px;
+}
+.gemini-batch-header>div:first-child{min-width:0;display:grid;gap:2px}
+.gemini-batch-header span,
+.gemini-edit-mode-copy>span,
+.gemini-toolbar-copy>span,
+.gemini-output-format-block>span,
+.gemini-quality-block>span{
+  color:#8e95a5;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.055em;
+  text-transform:uppercase;
+}
+.gemini-batch-header strong{font-size:15px;font-weight:740}
+.gemini-batch-header small{color:#939aa9;font-size:10.5px;line-height:1.4}
+.gemini-batch-header-actions{display:flex;align-items:center;gap:2px}
+.gemini-batch-header-actions .text-button{font-size:11px;font-weight:680}
+
+/* Editing mode is one deliberate product decision, not another nested settings card. */
+.gemini-edit-mode-bar{
+  display:grid;
+  grid-template-columns:minmax(220px,1fr) auto;
+  align-items:center;
+  gap:18px;
+  margin:2px 0 10px;
+  padding:10px 11px;
+  border:1px solid #2b3240;
+  border-radius:13px;
+  background:#10151e;
+}
+.gemini-edit-mode-copy{min-width:0;display:grid;gap:2px}
+.gemini-edit-mode-copy>strong{font-size:13px;font-weight:720}
+.gemini-edit-mode-copy>small{color:#939aa9;font-size:10px;line-height:1.4}
+.gemini-edit-mode-options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4px;
+  padding:4px;
+  border:1px solid #303746;
+  border-radius:11px;
+  background:#0d1219;
+}
+.gemini-edit-mode{
+  min-width:148px;
+  min-height:42px;
+  display:grid;
+  align-content:center;
+  gap:1px;
+  padding:6px 12px;
+  border:1px solid transparent;
+  border-radius:8px;
+  background:transparent;
+  color:#9ca3b2;
+  cursor:pointer;
+  font:inherit;
+  text-align:left;
+}
+.gemini-edit-mode strong{font-size:11px;font-weight:710}
+.gemini-edit-mode small{color:#777f8f;font-size:9px}
+.gemini-edit-mode:hover:not(:disabled){background:#171d28;color:#eceef4}
+.gemini-edit-mode.is-active{
+  border-color:#5751a8;
+  background:#24233e;
+  color:#f0efff;
+  box-shadow:0 3px 10px rgba(0,0,0,.16);
+}
+.gemini-edit-mode.is-active small{color:#aaa5dd}
+
+/* One horizontal filmstrip keeps a 12–50 image batch from swallowing the whole editor. */
+.gemini-file-queue{
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  overscroll-behavior-x:contain;
+  scroll-snap-type:x proximity;
+  scrollbar-width:thin;
+  scrollbar-color:#343c4d transparent;
+  padding:0 0 8px;
+  margin-bottom:4px;
+}
+.gemini-file-queue::-webkit-scrollbar{height:8px}
+.gemini-file-queue::-webkit-scrollbar-thumb{border:2px solid #141923;border-radius:999px;background:#343c4d}
+.gemini-file-card{
+  position:relative;
+  min-width:218px;
+  flex:0 0 218px;
+  display:grid;
+  grid-template-columns:52px minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  padding:7px;
+  border:1px solid #29313f;
+  border-radius:11px;
+  background:#10151e;
+  scroll-snap-align:start;
+  transition:border-color .14s ease,background .14s ease;
+}
+.gemini-file-card.is-sample{border-color:#625bc2;background:#17172a}
+.gemini-file-card.has-error{border-color:rgba(255,117,107,.38)}
+.gemini-file-sample{
+  width:52px;height:44px;overflow:hidden;padding:0;border:0;border-radius:8px;background:#0b0f15;cursor:pointer
+}
+.gemini-file-sample img{width:100%;height:100%;display:block;object-fit:cover}
+.gemini-file-copy{min-width:0;display:grid;gap:2px}
+.gemini-file-copy>strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:700}
+.gemini-file-copy>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#838b9b;font-size:9px}
+.gemini-file-copy>small[data-status=done]{color:#68d9a4}
+.gemini-file-copy>small[data-status=error]{color:#ff9088}
+.gemini-file-copy>small[data-status=processing]{color:#b7b2ff}
+.gemini-file-badges{min-height:15px;display:flex;align-items:center;gap:4px;overflow:hidden}
+.gemini-mask-badge{
+  width:max-content;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  padding:2px 5px;
+  border:1px solid #3b4352;
+  border-radius:999px;
+  color:#9098a8;
+  font-size:8px;
+  font-weight:680;
+}
+.gemini-mask-badge--active{border-color:#554f9d;background:rgba(124,115,255,.12);color:#b4afff}
+.gemini-mask-badge--custom{border-color:#5b557e;color:#beb9e9}
+.gemini-mask-badge--shared{border-color:#35485a;color:#9eb7c9}
+.gemini-mask-badge--empty{border-color:#544438;color:#c1a88e}
+.gemini-file-remove{
+  width:24px;height:24px;display:grid;place-items:center;padding:0;
+  border:1px solid #343c4d;border-radius:7px;background:#171c27;color:#8f97a7;
+  cursor:pointer;font:inherit;font-size:16px;line-height:1
+}
+.gemini-file-remove:hover:not(:disabled){border-color:#68413f;background:#291918;color:#ff9f98}
+
+/* Shape tools use divider-style hierarchy like the converter workspace instead of another heavy card. */
+.gemini-shape-toolbar{
+  justify-content:flex-start;
+  gap:10px;
+  margin:2px 0 0;
+  padding:11px 2px;
+  border:0;
+  border-top:1px solid #29303d;
+  border-bottom:1px solid #29303d;
+  border-radius:0;
+  background:transparent;
+}
+.gemini-toolbar-copy{min-width:210px;display:grid;gap:2px;margin-right:2px}
+.gemini-toolbar-copy>strong{font-size:13px;font-weight:720}
+.gemini-shape-toolbar .image-tool-toolbar-primary{display:flex}
+.gemini-shape-toolbar .image-tool-mode,
+.gemini-shape-toolbar .image-tool-quiet-button{
+  min-height:36px;
+  font-size:10.5px;
+  font-weight:700;
+}
+.gemini-mask-history{margin-left:auto}
+.gemini-selection-status{margin:8px 3px 10px;font-size:10.5px;color:#949cab}
+.gemini-batch-card .image-tool-mode{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.gemini-batch-card .image-tool-mode-icon{width:15px;height:15px;flex:0 0 15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.gemini-batch-card .image-tool-mode-icon--star4{fill:currentColor;stroke:none}
+
+.gemini-preview-grid{margin-top:0;gap:10px}
+.gemini-preview-grid .image-tool-preview-panel{border-radius:14px}
+.gemini-preview-grid .image-tool-preview-panel>header{padding:9px 11px}
+.gemini-preview-grid .image-tool-preview-panel>header span{font-size:9px;font-weight:700;letter-spacing:.055em}
+.gemini-preview-grid .image-tool-preview-panel>header strong{font-size:12px;font-weight:700}
+.gemini-preview-grid .image-tool-preview-panel>header small{font-size:9px}
+
+/* Output and quality share one settings surface, mirroring converter settings-card density. */
+.gemini-output-panel{
+  display:grid;
+  grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);
+  gap:0;
+  margin-top:10px;
+  padding:11px 12px;
+  border:1px solid #2b3240;
+  border-radius:13px;
+  background:#10151e;
+}
+.gemini-output-format-block,.gemini-quality-block{min-width:0;display:grid;gap:7px;padding:0;border:0;background:transparent}
+.gemini-output-format-block{padding-right:15px}
+.gemini-output-format-block>strong{font-size:12px;font-weight:720}
+.gemini-quality-block{padding-left:15px;border-left:1px solid #29303d}
+.gemini-output-pills{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:4px;
+  padding:3px;
+  border:1px solid #303746;
+  border-radius:10px;
+  background:#0c1118;
+}
+.gemini-output-pill{
+  min-height:36px;padding:6px 8px;border:1px solid transparent;border-radius:7px;background:transparent;
+  color:#929aaa;cursor:pointer;font:inherit;font-size:9.5px;font-weight:700;transition:.14s ease
+}
+.gemini-output-pill:hover:not(:disabled){color:#eceef4;background:#161c26}
+.gemini-output-pill.is-active{border-color:#5751a8;background:#252440;color:#f3f1ff;box-shadow:0 2px 8px rgba(0,0,0,.16)}
+.gemini-quality-block>div{display:flex;align-items:center;gap:10px}
+.gemini-quality-block input{min-width:0;flex:1;accent-color:var(--accent)}
+.gemini-quality-block output{min-width:26px;color:#d8dbe5;font-size:13px;font-weight:720;font-variant-numeric:tabular-nums}
+.gemini-quality-block small{color:#858d9d;font-size:9px;line-height:1.4}
+
+.gemini-batch-progress{margin-top:10px;padding:10px 12px;border:1px solid #2b3240;border-radius:11px;background:#0f141d}
+.gemini-batch-progress>div:first-child{display:flex;justify-content:space-between;gap:12px;margin-bottom:7px}
+.gemini-batch-progress strong{font-size:10px;font-weight:700}
+.gemini-batch-progress span{color:#8f96a6;font-size:9px}
+.gemini-batch-progress .progress-track{height:5px;overflow:hidden;border-radius:999px;background:#242b37}
+.gemini-batch-progress .progress-track>span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#635bff,#8c84ff);transition:width .15s ease}
+
+.gemini-batch-action-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  margin-top:10px;padding:11px 12px;border:1px solid #2b3240;border-radius:13px;background:#111720
+}
+.gemini-batch-action-bar>div:first-child{min-width:0;display:grid;gap:2px}
+.gemini-batch-action-bar>div:first-child strong{font-size:12px;font-weight:720}
+.gemini-batch-action-bar>div:first-child small{color:#858d9d;font-size:9.5px}
+.gemini-batch-actions{display:flex;gap:7px}
+.gemini-batch-actions button{min-height:40px;white-space:nowrap;font-weight:720}
+.gemini-batch-actions [data-role=download]:not(:disabled){border-color:#444e62;background:#1b2230;color:#f1f3f8}
+.gemini-batch-card .image-tool-policy-note{margin-top:9px;font-size:9.5px;line-height:1.45}
+
+/* Gemini is a dense utility page: keep editorial sections connected. */
+body .gemini-content-section{padding-top:48px;padding-bottom:48px}
+.gemini-content-warning{padding-top:26px!important;padding-bottom:26px!important}
+.gemini-content-warning .callout{margin:0}
+.gemini-content-warning+.gemini-content-section{padding-top:42px}
+
+@media(max-width:1050px){
+  .gemini-edit-mode-bar{grid-template-columns:1fr}
+  .gemini-edit-mode-options{width:100%}
+  .gemini-edit-mode{min-width:0}
+  .gemini-output-panel{grid-template-columns:1fr}
+  .gemini-output-format-block{padding-right:0}
+  .gemini-quality-block{margin-top:11px;padding:11px 0 0;border-left:0;border-top:1px solid #29303d}
+  .gemini-shape-toolbar{align-items:flex-start}
+  .gemini-toolbar-copy{width:100%}
+  .gemini-mask-history{margin-left:0}
+}
+
+@media(max-width:760px){
+  .gemini-batch-warning{margin:9px 9px 8px;padding:8px 10px}
+  .gemini-batch-upload{padding:0 9px 9px}
+  .gemini-batch-upload .image-tool-drop-zone{
+    min-height:142px;
+    grid-template-columns:42px minmax(0,1fr);
+    grid-template-rows:auto auto auto auto;
+    grid-template-areas:"icon title" "icon meta" "icon choose" "icon privacy";
+    gap:4px 11px;padding:13px 14px
+  }
+  .gemini-batch-upload .image-tool-drop-zone>.choose-button{justify-self:start}
+  .gemini-batch-workspace{padding:0 9px 9px}
+  .gemini-batch-header{align-items:flex-start;flex-direction:column;padding-top:7px}
+  .gemini-batch-header-actions{width:100%}
+  .gemini-edit-mode-bar{gap:10px;padding:9px}
+  .gemini-edit-mode-options{grid-template-columns:1fr 1fr}
+  .gemini-edit-mode{padding:6px 8px}
+  .gemini-file-card{min-width:198px;flex-basis:198px}
+  .gemini-shape-toolbar .image-tool-toolbar-primary{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .gemini-shape-toolbar .image-tool-mode{min-height:40px;padding:6px 5px}
+  .gemini-mask-history{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .gemini-output-pills{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .gemini-batch-action-bar{align-items:stretch;flex-direction:column}
+  .gemini-batch-actions{width:100%}
+  .gemini-batch-actions button{flex:1}
+  body .gemini-content-section{padding-top:34px;padding-bottom:34px}
+  .gemini-content-warning{padding-top:18px!important;padding-bottom:18px!important}
+  .gemini-content-warning+.gemini-content-section{padding-top:30px}
+}
+
+@media(max-width:480px){
+  .gemini-edit-mode-options{grid-template-columns:1fr}
+  .gemini-file-card{min-width:182px;flex-basis:182px}
+  .gemini-shape-toolbar .image-tool-mode span:last-child{font-size:9px}
+  .gemini-mask-history{grid-template-columns:1fr 1fr}
+  .gemini-mask-history [data-role=reset-to-shared]:not([hidden]){grid-column:1/-1}
+  .gemini-output-pills{grid-template-columns:1fr 1fr}
+  .gemini-batch-actions{flex-direction:column}
+  .gemini-batch-actions button{width:100%}
+}

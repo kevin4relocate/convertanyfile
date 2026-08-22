@@ -2,9 +2,9 @@ async function initializeImageTool(root: HTMLElement): Promise<void> {
   if (root.dataset.imageToolReady === 'true') return;
   root.dataset.imageToolReady = 'true';
   const toolId = root.dataset.toolId;
-  if (toolId === 'remove-watermark') {
-    const module = await import('../image-tools/remove-watermark/editor');
-    module.mountRemoveWatermarkEditor(root);
+  if (toolId === 'remove-watermark' || toolId === 'gemini-ai-logo-remover') {
+    const module = await import('../image-tools/shared/batch-mask-editor');
+    module.mountBatchMaskEditor(root);
   }
 }
 
