@@ -40,18 +40,11 @@ const imageToolsActive = currentPath === '/image-tools/' || currentPath === '/re
     <details class="mobile-nav">
       <summary><span class="mobile-nav-icon" aria-hidden="true"><span></span><span></span><span></span></span><span>Menu</span></summary>
       <nav aria-label="Mobile navigation">
-        {NAV_ITEMS.map((item) => item.label === 'Image Tools' ? (
-          <details class="mobile-nav-group" open={imageToolsActive}>
-            <summary><span>Image Tools</span><span class="mobile-group-chevron" aria-hidden="true">⌄</span></summary>
-            <div class="mobile-nav-submenu">
-              <a class:list={[currentPath === '/image-tools/' && 'is-current']} href="/image-tools/">All Image Tools</a>
-              <a class:list={[currentPath === '/remove-watermark/' && 'is-current']} href="/remove-watermark/">Remove Watermark</a>
-              <a class:list={[currentPath === '/gemini-ai-logo-remover/' && 'is-current']} href="/gemini-ai-logo-remover/">Gemini Watermark Remover</a>
-            </div>
-          </details>
-        ) : <a href={item.href}>{item.label}</a>)}
+        {NAV_ITEMS.map((item) => <a class:list={[item.label === 'Image Tools' && imageToolsActive && 'is-current']} href={item.href}>{item.label}</a>)}
         <a href="/image-converter/">Image Converter</a>
         <a href="/data-converter/">Data Converter</a>
+        <a href="/archive-converter/">Archive Converter</a>
+        <a href="/subtitle-converter/">Subtitle Converter</a>
       </nav>
     </details>
   </div>
@@ -182,89 +175,8 @@ const imageToolsActive = currentPath === '/image-tools/' || currentPath === '/re
   .nav-tool-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #eef0f6; font-size: 12px; font-weight: 690; }
   .nav-tool-copy small { color: #858d9d; font-size: 9.75px; line-height: 1.35; }
 
-  /* Mobile Image Tools is an accordion row, not a nested floating card. */
-  .mobile-nav-group {
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-  .mobile-nav-group > summary {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 11px 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-    list-style: none;
-    font: inherit;
-    font-weight: inherit;
-  }
-  .mobile-nav-group > summary::-webkit-details-marker { display: none; }
-  .mobile-group-chevron {
-    flex: 0 0 auto;
-    color: #8f96a6;
-    font-size: 13px;
-    line-height: 1;
-    transition: transform .15s ease;
-  }
-  .mobile-nav-group[open] .mobile-group-chevron { transform: rotate(180deg); }
-  .mobile-nav-submenu {
-    position: relative;
-    display: grid;
-    gap: 0;
-    margin: 0 0 7px 8px;
-    padding: 2px 0 3px 16px;
-    border: 0;
-    background: transparent;
-  }
-  .mobile-nav-submenu::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 4px;
-    bottom: 5px;
-    width: 1px;
-    background: #343b4a;
-  }
-  .mobile-nav-group .mobile-nav-submenu a {
-    min-height: 38px;
-    display: flex;
-    align-items: center;
-    padding: 7px 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    color: #969dac !important;
-    font-size: 12.5px !important;
-    font-weight: 650 !important;
-  }
-  .mobile-nav-group .mobile-nav-submenu a:hover,
-  .mobile-nav-group .mobile-nav-submenu a.is-current {
-    color: #f1f0ff !important;
-    background: transparent !important;
-  }
-  .mobile-nav-group .mobile-nav-submenu a.is-current::before {
-    content: '';
-    width: 5px;
-    height: 5px;
-    flex: 0 0 5px;
-    margin-right: 8px;
-    border-radius: 50%;
-    background: #7c73ff;
-    box-shadow: 0 0 0 3px rgba(124,115,255,.12);
-  }
-
   @media (max-width: 980px) {
     .nav-submenu { width: 286px; }
-    .mobile-nav > nav .mobile-nav-group { border: 0 !important; background: transparent !important; box-shadow: none !important; }
-    .mobile-nav > nav .mobile-nav-group > summary { padding-left: 0 !important; padding-right: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+    .mobile-nav > nav > a.is-current { color: #f1f0ff !important; }
   }
 </style>
