@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import { Gravity, ImageMagick, Magick, MagickColors, MagickFormat, initializeImageMagick, type MagickFormat as MagickFormatType } from '@imagemagick/magick-wasm';
+import { AlphaAction, Gravity, ImageMagick, Magick, MagickColor, MagickColors, MagickFormat, MagickGeometry, initializeImageMagick, type MagickFormat as MagickFormatType } from '@imagemagick/magick-wasm';
 import magickWasmUrl from '@imagemagick/magick-wasm/magick.wasm?url';
 import type { ConversionErrorCode } from '../../platform/converter/errors';
 import { extractBestPngIcoFrame } from './legacy-formats';
@@ -10,11 +10,6 @@ const scope = self as DedicatedWorkerGlobalScope;
 let initialization: Promise<void> | undefined;
 type MagickImage = Parameters<Parameters<typeof ImageMagick.read>[1]>[0];
 
-/**
- * This is deliberately a product whitelist, not a mirror of every ImageMagick
- * writer. A format belongs here only when it is also present in IMAGE_OUTPUTS
- * and covered by the browser round-trip matrix.
- */
 const OUTPUT_MAP: Record<string, MagickFormatType> = {
   jpg: MagickFormat.Jpeg,
   png: MagickFormat.Png,
@@ -43,6 +38,7 @@ const INPUT_HINT_MAP: Record<string, MagickFormatType> = {
 const QUALITY_OUTPUTS = new Set(['jpg', 'webp', 'avif', 'jxl', 'jp2']);
 const OPAQUE_OUTPUTS = new Set(['jpg', 'bmp', 'pcx', 'pnm', 'hdr']);
 const COLOR_PROFILES = new Set(['icc', 'icm']);
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 
 function ensureInitialized(): Promise<void> {
   if (!initialization) initialization = (async () => {
@@ -58,12 +54,17 @@ function friendlyError(error: unknown): { message: string; code: ConversionError
   if (/memory|out of bounds|allocation/i.test(message)) return { message: 'Not enough browser memory for this image', code: 'memory-limit', retryable: false };
   if (/delegate|unsupported|no images defined|no decode delegate|no encode delegate/i.test(message)) return { message: 'Unsupported image codec', code: 'unsupported-input', retryable: false };
   if (/corrupt|improper|invalid|unexpected end|insufficient|unexpected end-of-file/i.test(message)) return { message: 'The image appears to be corrupted or invalid', code: 'corrupt-input', retryable: false };
-  return { message: 'Unable to process this image', code: 'conversion-failed', retryable: false };
+  return { message: message || 'Unable to process this image', code: 'conversion-failed', retryable: false };
 }
 
 function safeInteger(value: number, min: number, max: number, label: string): number {
   if (!Number.isFinite(value)) throw new Error(`${label} is invalid`);
   return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function safeNumber(value: number, min: number, max: number, label: string): number {
+  if (!Number.isFinite(value)) throw new Error(`${label} is invalid`);
+  return Math.max(min, Math.min(max, value));
 }
 
 function normalizeOptions(options: ImageTransformOptions | undefined): ImageTransformOptions {
@@ -82,6 +83,8 @@ function normalizeOptions(options: ImageTransformOptions | undefined): ImageTran
     normalized.crop = {
       width: safeInteger(options.crop.width, 1, 12_000, 'Crop width'),
       height: safeInteger(options.crop.height, 1, 12_000, 'Crop height'),
+      offsetX: safeNumber(options.crop.offsetX ?? 0.5, 0, 1, 'Crop horizontal position'),
+      offsetY: safeNumber(options.crop.offsetY ?? 0.5, 0, 1, 'Crop vertical position'),
     };
   }
   if (options.rotate) {
@@ -92,6 +95,17 @@ function normalizeOptions(options: ImageTransformOptions | undefined): ImageTran
       flipHorizontal: options.rotate.flipHorizontal === true,
       flipVertical: options.rotate.flipVertical === true,
     };
+  }
+  if (options.blur) {
+    normalized.blur = {
+      radius: safeNumber(options.blur.radius, 0, 50, 'Blur radius'),
+      sigma: safeNumber(options.blur.sigma, 0.1, 50, 'Blur strength'),
+    };
+  }
+  if (options.background) {
+    const color = String(options.background.color ?? '').trim();
+    if (!HEX_COLOR.test(color)) throw new Error('Background color must be a 6-digit hex color');
+    normalized.background = { color, flatten: options.background.flatten === true };
   }
   return normalized;
 }
@@ -118,6 +132,8 @@ function metadataSnapshot(image: MagickImage): ImageMetadataSnapshot {
   return {
     width: image.width,
     height: image.height,
+    hasAlpha: image.hasAlpha,
+    isOpaque: image.isOpaque,
     profiles: [...image.profileNames].slice(0, 50),
     attributes,
   };
@@ -154,11 +170,24 @@ async function convert(input: ArrayBuffer, inputFormat: string | undefined, outp
 
     if (options.crop) {
       if (options.crop.width > image.width || options.crop.height > image.height) throw new Error('Crop size cannot be larger than the source image');
-      image.crop(options.crop.width, options.crop.height, Gravity.Center);
+      const availableX = Math.max(0, image.width - options.crop.width);
+      const availableY = Math.max(0, image.height - options.crop.height);
+      const x = Math.round(availableX * (options.crop.offsetX ?? 0.5));
+      const y = Math.round(availableY * (options.crop.offsetY ?? 0.5));
+      const geometry = new MagickGeometry(x, y, options.crop.width, options.crop.height);
+      geometry.ignoreAspectRatio = true;
+      image.crop(geometry);
       image.resetPage();
     }
 
     if (options.resize) image.resize(options.resize.width, options.resize.height);
+    if (options.blur) image.blur(options.blur.radius, options.blur.sigma);
+
+    if (options.background?.flatten) {
+      image.backgroundColor = new MagickColor(options.background.color);
+      image.alpha(AlphaAction.Remove);
+    }
+
     if (options.stripMetadata) stripMetadata(image, options.preserveColorProfile !== false);
     if (OPAQUE_OUTPUTS.has(output) && !image.isOpaque) image.colorAlpha(MagickColors.White);
     if (QUALITY_OUTPUTS.has(output)) image.quality = Math.min(100, Math.max(1, quality));
