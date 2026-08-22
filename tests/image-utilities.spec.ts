@@ -25,7 +25,6 @@ test('Compress Image admits and recompresses a local PNG', async ({ page }) => {
   await page.locator('[data-role="file-input"]').setInputFiles(imageFile);
   await expect(page.locator('[data-role="summary"]')).toContainText('1 image');
   await page.locator('[data-role="output"]').selectOption('webp');
-  await page.locator('[data-role="quality"]').fill('70');
   await page.locator('[data-role="run"]').click();
   await expect(page.locator('.image-utility-row-status')).toHaveText('Done', { timeout: 60_000 });
   await expect(page.locator('.image-utility-row button')).toHaveText('Download');
