@@ -139,10 +139,18 @@ export function rotationHandlePx(operation: Pick<Op, 'rect' | 'rotation'>, width
     const length = Math.max(1, Math.hypot(vx, vy));
     return { x: anchor.x + vx / length * distance, y: anchor.y + vy / length * distance };
   };
-  const topCandidate = extend(top, 28);
-  const margin = 9;
-  const topFits = topCandidate.x >= margin && topCandidate.x <= width - margin && topCandidate.y >= margin && topCandidate.y <= height - margin;
-  return extend(topFits ? top : bottom, offset);
+  if (offset === 0) {
+    const margin = 9;
+    const topVisible = top.x >= margin && top.x <= width - margin && top.y >= margin && top.y <= height - margin;
+    if (topVisible) return top;
+    const bottomVisible = bottom.x >= margin && bottom.x <= width - margin && bottom.y >= margin && bottom.y <= height - margin;
+    return bottomVisible ? bottom : { x: clamp(top.x, margin, width - margin), y: clamp(top.y, margin, height - margin) };
+  }
+  const margin = 10;
+  const candidates = [extend(top, offset), extend(bottom, offset)];
+  const visible = candidates.find(candidate => candidate.x >= margin && candidate.x <= width - margin && candidate.y >= margin && candidate.y <= height - margin);
+  const fallback = visible ?? candidates[0] ?? center;
+  return { x: clamp(fallback.x, margin, Math.max(margin, width - margin)), y: clamp(fallback.y, margin, Math.max(margin, height - margin)) };
 }
 
 export function localPointPx(point: Point, operation: Pick<Op, 'rect' | 'rotation'>, width: number, height: number): Point {
@@ -208,9 +216,9 @@ export function drawTextMask(context: CanvasRenderingContext2D | OffscreenCanvas
   const clean = text.trim();
   if (!clean) return;
   context.save();
-  let fontSize = Math.max(6, rect.height * 0.76);
+  let fontSize = Math.max(6, rect.height * 0.82);
   context.font = `900 ${fontSize}px sans-serif`;
-  const maxWidth = Math.max(1, rect.width * 0.92);
+  const maxWidth = Math.max(1, rect.width * 0.96);
   const measured = Math.max(1, context.measureText(clean).width);
   if (measured > maxWidth) {
     fontSize = Math.max(6, fontSize * maxWidth / measured);
@@ -218,12 +226,8 @@ export function drawTextMask(context: CanvasRenderingContext2D | OffscreenCanvas
   }
   context.textAlign = 'center';
   context.textBaseline = 'middle';
-  context.lineJoin = 'round';
-  context.lineCap = 'round';
-  context.lineWidth = Math.max(2, fontSize * 0.18);
   const x = rect.x + rect.width / 2;
   const y = rect.y + rect.height / 2;
-  context.strokeText(clean, x, y);
   context.fillText(clean, x, y);
   context.restore();
 }
@@ -242,14 +246,12 @@ export function moveRect(rect: PixelRect, dx: number, dy: number): PixelRect {
 }
 
 export function moveRotatedRect(rect: PixelRect, rotation: number, dx: number, dy: number, width: number, height: number): PixelRect {
-  const w = rect.width * width;
-  const h = rect.height * height;
-  const radians = rotation * Math.PI / 180;
-  const halfX = Math.abs(w / 2 * Math.cos(radians)) + Math.abs(h / 2 * Math.sin(radians));
-  const halfY = Math.abs(w / 2 * Math.sin(radians)) + Math.abs(h / 2 * Math.cos(radians));
-  const cx = clamp((rect.x + rect.width / 2 + dx) * width, halfX, Math.max(halfX, width - halfX));
-  const cy = clamp((rect.y + rect.height / 2 + dy) * height, halfY, Math.max(halfY, height - halfY));
-  return { x: cx / width - rect.width / 2, y: cy / height - rect.height / 2, width: rect.width, height: rect.height };
+  void rotation;
+  const safeWidth = Math.max(1, width);
+  const safeHeight = Math.max(1, height);
+  const centerX = clamp((rect.x + rect.width / 2 + dx) * safeWidth, 0, safeWidth);
+  const centerY = clamp((rect.y + rect.height / 2 + dy) * safeHeight, 0, safeHeight);
+  return { x: centerX / safeWidth - rect.width / 2, y: centerY / safeHeight - rect.height / 2, width: rect.width, height: rect.height };
 }
 
 export function resizeRect(rect: PixelRect, handle: Handle, point: Point, width: number, height: number, constrained: boolean): PixelRect {
