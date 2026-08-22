@@ -14,12 +14,29 @@ export interface ImageRotateTransform {
 export interface ImageCropTransform {
   width: number;
   height: number;
+  /** 0 = left/top, 0.5 = center, 1 = right/bottom within available crop travel. */
+  offsetX?: number;
+  offsetY?: number;
+}
+
+export interface ImageBlurTransform {
+  radius: number;
+  sigma: number;
+}
+
+export interface ImageBackgroundTransform {
+  /** CSS/ImageMagick-compatible hex color such as #ffffff. */
+  color: string;
+  /** Flatten transparent pixels onto the chosen color. */
+  flatten: boolean;
 }
 
 export interface ImageTransformOptions {
   resize?: ImageResizeTransform;
   rotate?: ImageRotateTransform;
   crop?: ImageCropTransform;
+  blur?: ImageBlurTransform;
+  background?: ImageBackgroundTransform;
   stripMetadata?: boolean;
   preserveColorProfile?: boolean;
 }
@@ -27,6 +44,8 @@ export interface ImageTransformOptions {
 export interface ImageMetadataSnapshot {
   width: number;
   height: number;
+  hasAlpha: boolean;
+  isOpaque: boolean;
   profiles: string[];
   attributes: Array<{ name: string; value: string }>;
 }
