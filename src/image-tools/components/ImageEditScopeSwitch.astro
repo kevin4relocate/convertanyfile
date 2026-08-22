@@ -40,7 +40,7 @@ const rootClass = variant === 'mask' ? 'image-edit-scope gemini-edit-mode-bar' :
       data-edit-mode="shared"
       role="radio"
       aria-checked={mode === 'shared'}
-      aria-pressed={mode === 'shared'}
+      aria-pressed={variant === 'generic' ? mode === 'shared' : undefined}
       disabled={disabled}
     >
       <strong>{sharedLabel}</strong>
@@ -53,7 +53,7 @@ const rootClass = variant === 'mask' ? 'image-edit-scope gemini-edit-mode-bar' :
       data-edit-mode="individual"
       role="radio"
       aria-checked={mode === 'individual'}
-      aria-pressed={mode === 'individual'}
+      aria-pressed={variant === 'generic' ? mode === 'individual' : undefined}
       disabled={disabled}
     >
       <strong>{individualLabel}</strong>
