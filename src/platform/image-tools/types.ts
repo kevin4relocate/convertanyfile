@@ -1,5 +1,16 @@
 export type ImageToolStatus = 'preview' | 'live' | 'planned';
+export type ImageToolCategory = 'transform' | 'encode' | 'geometry' | 'mask' | 'metadata' | 'naming';
+export type ImageEditScope = 'shared' | 'individual';
+export type ImageToolOutputKind = 'image' | 'zip' | 'metadata' | 'filename';
 export type ImageMaskMode = 'rect' | 'circle' | 'square' | 'diamond' | 'star4' | 'text';
+
+export interface ImageToolCapabilities {
+  supportsBatch: boolean;
+  supportsSharedSettings: boolean;
+  supportsIndividualSettings: boolean;
+  supportsPreview?: boolean;
+  supportsOutputFormat?: boolean;
+}
 
 export interface ImageToolDefinition {
   id: string;
@@ -16,6 +27,12 @@ export interface ImageToolDefinition {
   maxFileBytes: number;
   maxPixels: number;
   maxDimension: number;
+  maxFiles?: number;
+  category?: ImageToolCategory;
+  capabilities?: ImageToolCapabilities;
+  outputKind?: ImageToolOutputKind;
+
+  /** Legacy mask-tool fields. Kept during the platform migration. */
   selectionModes: readonly ImageMaskMode[];
   defaultSelectionMode: ImageMaskMode;
   removeActionLabel: string;
