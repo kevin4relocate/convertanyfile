@@ -12,7 +12,7 @@ export const SUBTITLE_CONVERTERS: readonly ConverterDefinition[] = [
   {
     ...subtitleBase,
     slug: 'subtitle-converter',
-    title: 'Free Subtitle Converter — SRT, VTT, ASS, SSA & SBV | ConvertAnyFile',
+    title: 'Free Online Subtitle Converter — SRT, VTT, ASS & More | ConvertAnyFile',
     description: 'Convert SRT, WebVTT, ASS, SSA and SBV locally with preflight cue analysis, timing shift, formatting cleanup, transcript export, batch conversion and no upload.',
     h1: 'Convert subtitles locally.',
     eyebrow: 'Subtitle converter preview',
