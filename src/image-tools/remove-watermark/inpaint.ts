@@ -4,11 +4,12 @@ function clamp(value: number, min: number, max: number): number { return Math.mi
 function rotation(operation: MaskOperation): number { return Number.isFinite(operation.rotation) ? operation.rotation ?? 0 : 0; }
 
 function rectBounds(width: number, height: number, rect: PixelRect): { left: number; top: number; right: number; bottom: number } {
-  const left = clamp(Math.floor(rect.x), 0, width - 1);
-  const top = clamp(Math.floor(rect.y), 0, height - 1);
-  const right = clamp(Math.ceil(rect.x + rect.width), left + 1, width);
-  const bottom = clamp(Math.ceil(rect.y + rect.height), top + 1, height);
-  return { left, top, right, bottom };
+  const rawLeft = Math.floor(rect.x), rawTop = Math.floor(rect.y), rawRight = Math.ceil(rect.x + rect.width), rawBottom = Math.ceil(rect.y + rect.height);
+  const left = clamp(rawLeft, 0, width);
+  const top = clamp(rawTop, 0, height);
+  const right = clamp(rawRight, 0, width);
+  const bottom = clamp(rawBottom, 0, height);
+  return { left: Math.min(left, right), top: Math.min(top, bottom), right: Math.max(left, right), bottom: Math.max(top, bottom) };
 }
 
 function rotatedBounds(width: number, height: number, rect: PixelRect, degrees: number): { left:number; top:number; right:number; bottom:number } {
@@ -62,18 +63,20 @@ function paintPolygon(mask:Uint8Array,width:number,height:number,rect:PixelRect,
 function paintText(mask:Uint8Array,width:number,height:number,rect:PixelRect,text:string,degrees=0):void{
   const clean=text.trim();if(!clean)return;
   if(typeof OffscreenCanvas==='undefined')throw new Error('Text masks are not supported by this browser. Use a shape mask instead.');
-  const bounds=rotatedBounds(width,height,rect,degrees),localWidth=Math.max(1,bounds.right-bounds.left),localHeight=Math.max(1,bounds.bottom-bounds.top);
+  const fontCanvas=new OffscreenCanvas(1,1),fontContext=fontCanvas.getContext('2d');
+  if(!fontContext)throw new Error('Text masks are not supported by this browser. Use a shape mask instead.');
+  let fontSize=Math.max(6,rect.height*.82);fontContext.font=`900 ${fontSize}px sans-serif`;
+  const maxWidth=Math.max(1,rect.width*.96),measured=Math.max(1,fontContext.measureText(clean).width);
+  if(measured>maxWidth){fontSize=Math.max(6,fontSize*maxWidth/measured);fontContext.font=`900 ${fontSize}px sans-serif`}
+  const pad=Math.max(4,Math.ceil(fontSize*.12)),localWidth=Math.max(1,Math.ceil(rect.width+pad*2)),localHeight=Math.max(1,Math.ceil(rect.height+pad*2));
   const canvas=new OffscreenCanvas(localWidth,localHeight),context=canvas.getContext('2d',{willReadFrequently:true});
   if(!context)throw new Error('Text masks are not supported by this browser. Use a shape mask instead.');
-  const cx=rect.x+rect.width/2-bounds.left,cy=rect.y+rect.height/2-bounds.top;
-  context.save();context.translate(cx,cy);context.rotate(degrees*Math.PI/180);
-  let fontSize=Math.max(6,rect.height*.76);context.font=`900 ${fontSize}px sans-serif`;
-  const maxWidth=Math.max(1,rect.width*.92),measured=Math.max(1,context.measureText(clean).width);
-  if(measured>maxWidth){fontSize=Math.max(6,fontSize*maxWidth/measured);context.font=`900 ${fontSize}px sans-serif`}
-  context.fillStyle='#fff';context.strokeStyle='#fff';context.textAlign='center';context.textBaseline='middle';context.lineJoin='round';context.lineCap='round';context.lineWidth=Math.max(2,fontSize*.18);
-  context.strokeText(clean,0,0);context.fillText(clean,0,0);context.restore();
-  const pixels=context.getImageData(0,0,localWidth,localHeight).data;
-  for(let y=0;y<localHeight;y++)for(let x=0;x<localWidth;x++)if((pixels[(y*localWidth+x)*4+3]??0)>=18){const tx=bounds.left+x,ty=bounds.top+y;if(tx>=0&&ty>=0&&tx<width&&ty<height)mask[ty*width+tx]=1}
+  context.font=`900 ${fontSize}px sans-serif`;context.fillStyle='#fff';context.textAlign='center';context.textBaseline='middle';context.fillText(clean,localWidth/2,localHeight/2);
+  const pixels=context.getImageData(0,0,localWidth,localHeight).data,cx=rect.x+rect.width/2,cy=rect.y+rect.height/2,rad=degrees*Math.PI/180,cos=Math.cos(rad),sin=Math.sin(rad);
+  for(let y=0;y<localHeight;y++)for(let x=0;x<localWidth;x++)if((pixels[(y*localWidth+x)*4+3]??0)>=18){
+    const dx=x-localWidth/2,dy=y-localHeight/2,tx=Math.round(cx+dx*cos-dy*sin),ty=Math.round(cy+dx*sin+dy*cos);
+    if(tx>=0&&ty>=0&&tx<width&&ty<height)mask[ty*width+tx]=1;
+  }
 }
 
 export function rasterizeMask(width:number,height:number,operations:readonly MaskOperation[]):Uint8Array{
