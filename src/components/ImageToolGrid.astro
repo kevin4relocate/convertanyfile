@@ -2,13 +2,14 @@
 import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
 interface Props { compact?: boolean; }
 const { compact = false } = Astro.props;
+const statusLabel = (status: string): string => status === 'live' ? 'Live' : status === 'preview' ? 'Preview' : 'Planned';
 ---
 <div class:list={['image-tool-grid', compact && 'image-tool-grid--compact']}>
   {IMAGE_TOOL_ROADMAP.map((tool) => tool.href ? (
     <a class="image-tool-card-link" href={tool.href}>
       <span class="image-tool-card-icon" aria-hidden="true">{tool.label.slice(0, 1)}</span>
       <span class="image-tool-card-copy">
-        <span class="image-tool-status image-tool-status--preview">Preview</span>
+        <span class:list={['image-tool-status', tool.status === 'preview' && 'image-tool-status--preview', tool.status === 'live' && 'image-tool-status--live']}>{statusLabel(tool.status)}</span>
         <strong>{tool.label}</strong>
         <small>{tool.description}</small>
       </span>
@@ -25,3 +26,6 @@ const { compact = false } = Astro.props;
     </div>
   ))}
 </div>
+<style>
+  .image-tool-status--live{border-color:rgba(67,204,148,.34);background:rgba(37,116,84,.11);color:#72d9ad}
+</style>

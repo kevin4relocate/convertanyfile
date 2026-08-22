@@ -1,0 +1,86 @@
+/* Release-candidate polish layered after gemini-logo-batch.css. */
+.gemini-batch-warning[hidden]{display:none!important}
+.gemini-batch-warning[data-tone="compatible"]{
+  border-color:rgba(74,211,157,.22);
+  background:rgba(31,112,82,.10);
+  color:#b8d7ca;
+}
+.gemini-batch-warning[data-tone="compatible"] .gemini-batch-warning-icon{
+  border-color:rgba(74,211,157,.34);color:#58d6a2
+}
+.gemini-batch-warning[data-tone="compatible"] strong{color:#c8e7da}
+.gemini-batch-warning[data-tone="compatible"] p{color:#96b8aa}
+.gemini-batch-warning[data-tone="info"]{
+  border-color:rgba(124,115,255,.24);
+  background:rgba(88,80,186,.09);
+}
+.gemini-batch-warning[data-tone="info"] .gemini-batch-warning-icon{
+  border-color:rgba(124,115,255,.36);color:#a8a2ff
+}
+.gemini-batch-warning[data-tone="info"] strong{color:#d0cdfb}
+.gemini-batch-warning[data-tone="info"] p{color:#aaa8c8}
+.gemini-batch-warning[data-tone="warning"]{
+  border-color:rgba(225,174,79,.30);
+  background:rgba(117,82,25,.11)
+}
+
+.gemini-batch-card .image-editor-topbar span,
+.gemini-batch-header span,
+.gemini-edit-mode-copy>span,
+.gemini-toolbar-copy>span,
+.gemini-output-format-block>span,
+.gemini-quality-block>span{font-size:10.5px;font-weight:650;letter-spacing:.035em}
+.gemini-batch-warning strong{font-size:11.5px;font-weight:680}
+.gemini-batch-warning p{font-size:10.75px;line-height:1.5}
+.gemini-batch-header small{font-size:11px}
+.gemini-edit-mode-copy>strong,.gemini-toolbar-copy>strong{font-weight:690}
+.gemini-edit-mode-copy>small{font-size:10.75px}
+.gemini-edit-mode strong{font-size:11.5px;font-weight:680}
+.gemini-edit-mode small{font-size:9.75px}
+.gemini-file-copy>strong{font-size:11.5px;font-weight:670}
+.gemini-file-copy>small{font-size:10px}
+.gemini-mask-badge{font-size:9px;font-weight:650;padding:2px 6px}
+.gemini-shape-toolbar .image-tool-mode,
+.gemini-shape-toolbar .image-tool-quiet-button{font-size:11px;font-weight:670}
+.gemini-selection-status{font-size:11px;line-height:1.45}
+.gemini-preview-grid .image-tool-preview-panel>header span{font-size:9.75px;font-weight:650}
+.gemini-preview-grid .image-tool-preview-panel>header strong{font-size:12.5px;font-weight:680}
+.gemini-preview-grid .image-tool-preview-panel>header small{font-size:10px}
+.gemini-output-format-block>strong{font-size:12.5px;font-weight:690}
+.gemini-output-pill{font-size:10.5px;font-weight:670}
+.gemini-quality-block output{font-weight:690}
+.gemini-quality-block small{font-size:10px}
+.gemini-batch-progress strong{font-size:10.75px;font-weight:680}
+.gemini-batch-progress span{font-size:10px}
+.gemini-batch-action-bar>div:first-child strong{font-size:12.5px;font-weight:690}
+.gemini-batch-action-bar>div:first-child small{font-size:10.25px;line-height:1.4}
+.gemini-batch-actions button{font-weight:690}
+.gemini-batch-card .image-tool-policy-note{font-size:10.25px;line-height:1.5;margin-bottom:0}
+.gemini-non-affiliation{margin:5px 2px 0;color:#747d8d;font-size:9.75px;line-height:1.45}
+
+/* The full file card is a selection target; only the remove button has a separate action. */
+.gemini-file-card{cursor:pointer}
+.gemini-file-card:hover:not(.is-sample){border-color:#414a5d;background:#151b26}
+.gemini-file-card .gemini-file-copy,
+.gemini-file-card .gemini-file-copy *{cursor:pointer;user-select:none}
+.gemini-file-card .gemini-file-remove{cursor:pointer}
+.gemini-file-card:has(.gemini-file-remove:hover){border-color:#29313f;background:#10151e}
+.gemini-file-card.is-sample:has(.gemini-file-remove:hover){border-color:#625bc2;background:#17172a}
+
+.gemini-batch-progress{position:relative;padding-right:116px}
+.gemini-cancel-button{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  min-height:32px;padding:5px 10px;border:1px solid #3a4353;border-radius:8px;
+  background:#171d27;color:#c6cbd5;font:inherit;font-size:10.5px;font-weight:660;cursor:pointer
+}
+.gemini-cancel-button:hover:not(:disabled){border-color:#615d83;background:#211f32;color:#f0efff}
+.gemini-cancel-button:disabled{opacity:.55;cursor:default}
+.gemini-cancel-button[hidden]{display:none!important}
+
+@media(max-width:760px){
+  .gemini-batch-progress{padding-right:10px;padding-bottom:48px}
+  .gemini-cancel-button{left:10px;right:10px;top:auto;bottom:8px;transform:none;width:calc(100% - 20px)}
+  .gemini-batch-warning p{font-size:10.5px}
+  .gemini-file-copy>strong{font-size:11px}
+  .gemini-selection-status{font-size:10.75px}
+}

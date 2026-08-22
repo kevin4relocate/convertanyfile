@@ -1,8 +1,10 @@
 export type ImageToolStatus = 'preview' | 'live' | 'planned';
+export type ImageMaskMode = 'rect' | 'circle' | 'square' | 'diamond' | 'star4' | 'text';
 
 export interface ImageToolDefinition {
   id: string;
   slug: string;
+  displayName: string;
   title: string;
   description: string;
   h1: string;
@@ -14,6 +16,11 @@ export interface ImageToolDefinition {
   maxFileBytes: number;
   maxPixels: number;
   maxDimension: number;
+  selectionModes: readonly ImageMaskMode[];
+  defaultSelectionMode: ImageMaskMode;
+  removeActionLabel: string;
+  downloadSuffix: string;
+  policyNote: string;
 }
 
 export interface PixelPoint {
@@ -29,11 +36,8 @@ export interface PixelRect {
 }
 
 export type MaskOperation =
-  | { type: 'rect'; rect: PixelRect }
-  | { type: 'stroke'; erase: boolean; radius: number; points: PixelPoint[] };
-
-export interface AutoSelection {
-  rect: PixelRect;
-  confidence: 'high' | 'medium' | 'low';
-  score: number;
-}
+  | { type: 'rect'; rect: PixelRect; rotation?: number }
+  | { type: 'ellipse'; rect: PixelRect; rotation?: number }
+  | { type: 'diamond'; rect: PixelRect; rotation?: number }
+  | { type: 'star4'; rect: PixelRect; rotation?: number }
+  | { type: 'text'; rect: PixelRect; text: string; rotation?: number };

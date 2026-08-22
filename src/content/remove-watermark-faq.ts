@@ -1,34 +1,18 @@
 export const REMOVE_WATERMARK_FAQ = [
-  {
-    question: 'Are my images uploaded to a server?',
-    answer: 'No. The Preview decodes the image in your browser, analyzes a reduced preview locally, and repairs the selected full-resolution pixels in a browser worker. The source image is not sent to a conversion backend.',
-  },
-  {
-    question: 'Does Auto Select always find the watermark?',
-    answer: 'No. Auto Select is optimized for small visible marks near the bottom-right corner and is deliberately treated as a suggestion. Use Rectangle, Brush, and Eraser to correct the mask before processing when the suggested area is incomplete or overlaps important details.',
-  },
-  {
-    question: 'Does this use AI?',
-    answer: 'No. The first Preview uses deterministic browser-side image analysis and a local pixel-repair algorithm. It does not call an AI API, upload the image for inference, or require a GPU.',
-  },
-  {
-    question: 'What images work best?',
-    answer: 'Small corner logos over sky, walls, gradients, foliage, fabric, or other locally consistent backgrounds usually work better than marks covering faces, text, hair, architecture edges, or large unique objects.',
-  },
-  {
-    question: 'Will the image keep the same resolution?',
-    answer: 'Yes. The repair is applied at the decoded source resolution and the downloaded image keeps those pixel dimensions. JPEG and WebP are re-encoded, so file size and compression artifacts can change even when dimensions stay the same.',
-  },
-  {
-    question: 'Which formats are supported?',
-    answer: 'The Preview accepts JPG/JPEG, PNG, and WebP. It can download in the source format or export PNG, JPEG, or WebP when the browser supports that encoder.',
-  },
-  {
-    question: 'What do Undo and Reset mask do?',
-    answer: 'Undo removes the latest rectangle, brush, or eraser action. Reset mask clears all selection edits while keeping the current source image loaded.',
-  },
-  {
-    question: 'Can this remove hidden provenance or invisible watermarks?',
-    answer: 'No. This tool edits visible pixels inside the selected area. It does not claim to remove invisible provenance systems, metadata-based authenticity signals, or other information that is not represented by the visible selected pixels.',
-  },
+  { question: 'Are my images uploaded to a server?', answer: 'No. Image decoding, mask editing, visible-pixel repair, output encoding, and ZIP creation happen locally in your browser. The source images are not sent to a conversion or AI inference backend.' },
+  { question: 'Can I remove watermarks from multiple images at once?', answer: 'Yes. Add up to 50 JPG, PNG, or WebP images. Same-ratio batches start with One mask for all; mixed aspect ratios start with Edit individually. You can switch the mode yourself at any time.' },
+  { question: 'Which mask shapes are available?', answer: 'Remove Watermark includes Rectangle, Circle, Square, Diamond, 4-Point Star, and Text. Every mask can be moved, resized, and rotated after it is created.' },
+  { question: 'How does the Text mask work?', answer: 'Choose Text and type a visible word, number, or phrase. The browser creates a solid bold text-shaped mask and automatically sizes the selection bounds to the content. Drag it to move, use the square corner handles to resize, and use the round handle to rotate it. It is manual masking, not OCR or automatic text recognition.' },
+  { question: 'Can a one-character Text mask reach an image corner?', answer: 'Yes. Text-mask width is fitted to the typed content instead of using one fixed wide box. A short value such as a single digit keeps a compact selection, so it can be dragged close to the left, right, top, or bottom edge.' },
+  { question: 'Can I rotate a mask over diagonal text or a tilted logo?', answer: 'Yes. Select an existing mask and drag its round rotation handle. Rotation works with shape masks and Text masks and is preserved when a shared mask is copied into per-image editing.' },
+  { question: 'Can I use one mask for most images and customize only a few?', answer: 'Yes. Start in One mask for all, place the shared mask, then switch to Edit individually. Each image receives a shared copy as a starting point, and only images you adjust become Custom.' },
+  { question: 'Can mixed aspect ratios stay in one batch?', answer: 'Yes. Mixed layouts are kept in the batch and the editor recommends Edit individually. If you manually force One mask for all, the tool shows a warning because a normalized mask can align differently across layouts.' },
+  { question: 'What are the limits?', answer: 'A batch can contain up to 50 images, each source image can be up to 10 MB, and total source input is limited to 200 MB. Pixel-count and dimension guards also protect browser memory.' },
+  { question: 'Can I stop a long batch?', answer: 'Yes. Cancel batch stops the active run and keeps successful results that already finished so you can still download them.' },
+  { question: 'Will the output keep the original dimensions?', answer: 'Yes. Repair runs against decoded source-resolution pixels and keeps the pixel dimensions. JPEG and WebP are re-encoded, so compression and file size can change.' },
+  { question: 'How are batch results downloaded?', answer: 'One successful result downloads directly. Two or more successful results are packaged into a ZIP locally in your browser. Output can use the source format, PNG, JPG, or WebP.' },
+  { question: 'Does the tool automatically detect watermarks or text?', answer: 'No. The editor intentionally keeps selection manual. Shape presets and the Text mask make selection faster without pretending to know which visible pixels you intended to remove.' },
+  { question: 'Does this remove invisible provenance or authenticity signals?', answer: 'No. The tool changes visible pixels inside masks you create. It does not claim to detect or remove invisible watermark systems, Content Credentials, metadata-based provenance, authenticity signals, or SynthID-style signals.' },
+  { question: 'What images work best?', answer: 'Small visible marks over sky, walls, gradients, fabric, foliage, or repeated texture are usually easier than marks covering faces, hair, text, sharp architecture, or unique foreground details.' },
+  { question: 'Do I need permission to remove a watermark?', answer: 'You should use the editor only on images you own or have permission to modify. Removing a visible mark can affect ownership, licensing, attribution, or provenance context, so keep the original when that information matters.' },
 ] as const;

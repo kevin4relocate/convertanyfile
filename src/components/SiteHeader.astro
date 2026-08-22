@@ -1,5 +1,7 @@
 ---
 import { NAV_ITEMS, SITE } from '../config/site';
+const currentPath = Astro.url.pathname;
+const imageToolsActive = currentPath === '/image-tools/' || currentPath === '/remove-watermark/' || currentPath === '/gemini-ai-logo-remover/';
 ---
 <header class="site-header">
   <div class="site-container header-inner">
@@ -7,17 +9,199 @@ import { NAV_ITEMS, SITE } from '../config/site';
       <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
       <span>{SITE.name}</span>
     </a>
+
     <nav class="main-nav" aria-label="Main navigation">
-      {NAV_ITEMS.map((item) => <a href={item.href}>{item.label}</a>)}
+      {NAV_ITEMS.map((item) => item.label === 'Image Tools' ? (
+        <details class:list={['nav-dropdown', imageToolsActive && 'is-current']}>
+          <summary>
+            <span>Image Tools</span>
+            <svg class="nav-dropdown-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" /></svg>
+          </summary>
+          <div class="nav-submenu">
+            <a class:list={['nav-submenu-overview', currentPath === '/image-tools/' && 'is-current']} href="/image-tools/">
+              <span>All Image Tools</span>
+              <span aria-hidden="true">→</span>
+            </a>
+            <a class:list={['nav-tool-link', currentPath === '/remove-watermark/' && 'is-current']} href="/remove-watermark/">
+              <span class="nav-tool-icon" aria-hidden="true">W</span>
+              <span class="nav-tool-copy"><strong>Remove Watermark</strong><small>Batch · shapes · text mask</small></span>
+            </a>
+            <a class:list={['nav-tool-link', currentPath === '/gemini-ai-logo-remover/' && 'is-current']} href="/gemini-ai-logo-remover/">
+              <span class="nav-tool-icon nav-tool-icon--spark" aria-hidden="true">✦</span>
+              <span class="nav-tool-copy"><strong>Gemini Watermark Remover</strong><small>Visible mark · Circle · 4-Point Star</small></span>
+            </a>
+          </div>
+        </details>
+      ) : <a href={item.href}>{item.label}</a>)}
     </nav>
+
     <a class="privacy-chip" href="/privacy/"><span aria-hidden="true"></span>Private by design</a>
+
     <details class="mobile-nav">
       <summary><span class="mobile-nav-icon" aria-hidden="true"><span></span><span></span><span></span></span><span>Menu</span></summary>
       <nav aria-label="Mobile navigation">
-        {NAV_ITEMS.map((item) => <a href={item.href}>{item.label}</a>)}
+        {NAV_ITEMS.map((item) => item.label === 'Image Tools' ? (
+          <details class="mobile-nav-group" open={imageToolsActive}>
+            <summary><span>Image Tools</span><span aria-hidden="true">⌄</span></summary>
+            <div>
+              <a class:list={[currentPath === '/image-tools/' && 'is-current']} href="/image-tools/">All Image Tools</a>
+              <a class:list={[currentPath === '/remove-watermark/' && 'is-current']} href="/remove-watermark/">Remove Watermark</a>
+              <a class:list={[currentPath === '/gemini-ai-logo-remover/' && 'is-current']} href="/gemini-ai-logo-remover/">Gemini Watermark Remover</a>
+            </div>
+          </details>
+        ) : <a href={item.href}>{item.label}</a>)}
         <a href="/image-converter/">Image Converter</a>
         <a href="/data-converter/">Data Converter</a>
       </nav>
     </details>
   </div>
 </header>
+
+<script>
+  const dropdowns = Array.from(document.querySelectorAll<HTMLDetailsElement>('.nav-dropdown'));
+  const closeDesktopDropdowns = (except?: HTMLDetailsElement) => {
+    for (const dropdown of dropdowns) if (dropdown !== except) dropdown.removeAttribute('open');
+  };
+
+  for (const dropdown of dropdowns) {
+    dropdown.addEventListener('toggle', () => {
+      if (dropdown.open) closeDesktopDropdowns(dropdown);
+    });
+    dropdown.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => dropdown.removeAttribute('open')));
+  }
+
+  document.addEventListener('pointerdown', (event) => {
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (!dropdowns.some((dropdown) => dropdown.contains(target))) closeDesktopDropdowns();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeDesktopDropdowns();
+  });
+</script>
+
+<style>
+  .nav-dropdown { position: relative; }
+  .nav-dropdown > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 34px;
+    color: #a5abba;
+    font-size: 14px;
+    font-weight: 680;
+    cursor: pointer;
+    list-style: none;
+    transition: color .15s ease;
+  }
+  .nav-dropdown > summary::-webkit-details-marker { display: none; }
+  .nav-dropdown > summary:hover,
+  .nav-dropdown[open] > summary,
+  .nav-dropdown:focus-within > summary,
+  .nav-dropdown.is-current > summary { color: #f5f6fb; }
+  .nav-dropdown-chevron {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform .15s ease;
+  }
+  .nav-dropdown[open] .nav-dropdown-chevron { transform: rotate(180deg); }
+
+  .nav-submenu {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 10px);
+    z-index: 80;
+    width: 310px;
+    display: none;
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid #303746;
+    border-radius: 15px;
+    background: rgba(17, 22, 31, .98);
+    box-shadow: 0 22px 55px rgba(0, 0, 0, .38);
+    transform: translateX(-50%);
+    backdrop-filter: blur(18px);
+  }
+  .nav-submenu::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -11px;
+    height: 11px;
+  }
+  .nav-dropdown:hover > .nav-submenu,
+  .nav-dropdown:focus-within > .nav-submenu,
+  .nav-dropdown[open] > .nav-submenu { display: grid; }
+
+  .main-nav .nav-submenu a { color: #aeb4c2; }
+  .nav-submenu-overview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 36px;
+    padding: 7px 9px 9px;
+    border-bottom: 1px solid #272e3a;
+    font-size: 11px !important;
+    font-weight: 690 !important;
+  }
+  .nav-submenu-overview:hover,
+  .nav-submenu-overview.is-current { color: #f3f5fb !important; }
+  .nav-tool-link {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-height: 56px;
+    padding: 8px 9px;
+    border-radius: 10px;
+  }
+  .nav-tool-link:hover,
+  .nav-tool-link.is-current { background: #1a202c; color: #f3f5fb !important; }
+  .nav-tool-link.is-current { box-shadow: inset 0 0 0 1px rgba(124,115,255,.2); }
+  .nav-tool-icon {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #373f50;
+    border-radius: 10px;
+    background: #151b25;
+    color: #b2accf;
+    font-size: 12px;
+    font-weight: 760;
+  }
+  .nav-tool-icon--spark { color: #aaa4ff; font-size: 18px; }
+  .nav-tool-copy { min-width: 0; display: grid; gap: 2px; }
+  .nav-tool-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #eef0f6; font-size: 12px; font-weight: 690; }
+  .nav-tool-copy small { color: #858d9d; font-size: 9.75px; line-height: 1.35; }
+
+  .mobile-nav-group { border-top: 1px solid rgba(52, 60, 77, .55); border-bottom: 1px solid rgba(52, 60, 77, .55); }
+  .mobile-nav-group > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 0;
+    color: #f0f2f7;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 700;
+  }
+  .mobile-nav-group > summary::-webkit-details-marker { display: none; }
+  .mobile-nav-group > summary span:last-child { color: #8f96a6; transition: transform .15s ease; }
+  .mobile-nav-group[open] > summary span:last-child { transform: rotate(180deg); }
+  .mobile-nav-group > div { display: grid; gap: 2px; padding: 0 0 8px 12px; }
+  .mobile-nav-group > div a { padding: 8px 0 !important; color: #aeb4c2 !important; font-size: 13px !important; }
+  .mobile-nav-group > div a.is-current { color: #f1f0ff !important; }
+
+  @media (max-width: 980px) {
+    .nav-submenu { width: 286px; }
+  }
+</style>

@@ -1,99 +1,85 @@
-# Image Tools / Remove Watermark Preview Release Checklist
+# Image Tools Watermark Editors — Release Candidate Checklist
 
-Keep this checklist independent from converter-category release checklists. Remove Watermark must be releasable after other converter previews without forcing them into the same branch or deployment decision.
+This checklist covers the shared batch mask editor used by Remove Watermark and Gemini AI Logo Remover.
 
-## Branch isolation
+## Architecture
+- [ ] Both pages mount `BatchMaskEditorShell.astro` and `src/image-tools/shared/batch-mask-editor.ts`.
+- [ ] No obsolete separate Gemini or Remove Watermark editor remains.
+- [ ] Converter EngineAdapters remain independent from Image Tools.
+- [ ] Rebase or retarget onto the intended production `main` before release and review the final diff again.
 
-- [ ] Feature branch is based on the intended production `main`, not on another preview branch.
-- [ ] Converter EngineAdapter registry and `converter-app.ts` are unchanged by Image Tools.
-- [ ] Existing Image/Data/Archive homepage converter tabs behave exactly as before.
-- [ ] If another preview is merged first, rebase this branch onto the new `main` and re-run every gate before release.
+## Product modes
+- [ ] Remove Watermark exposes exactly Rectangle, Circle, Square, Diamond, 4-Point Star, and Text.
+- [ ] Remove Watermark has no legacy Auto Select, Brush, or Eraser controls.
+- [ ] Text creates a solid bold text-shaped mask, auto-sizes to typed content, and is described as manual rather than OCR.
+- [ ] A one-character Text mask remains compact enough to move close to every image edge.
+- [ ] Diamond and 4-Point Star rasterize as real shapes rather than their bounding rectangles.
+- [ ] Gemini exposes exactly Circle and 4-Point Star.
+- [ ] Gemini defaults to 4-Point Star and exposes no Rectangle, Square, Diamond, Text, Brush, Eraser, or logo Auto Select.
 
-## Product contract
+## Batch behavior
+- [ ] Maximum 50 images, 10 MB per image, and 200 MB total source input.
+- [ ] 20 MP and 12,000-pixel-side decoded guards remain active.
+- [ ] Same-ratio batches automatically start with One mask for all.
+- [ ] Mixed-ratio batches remain accepted and automatically start with Edit individually.
+- [ ] Automatic mode is a recommendation; manual toggle choice persists.
+- [ ] Manual shared mode on mixed layouts is allowed and shows a compatibility warning.
+- [ ] Shared masks copy into individual mode; queue states distinguish Shared copy, Custom, and Needs mask.
+- [ ] Rotation is preserved when a shared mask becomes per-image copies.
+- [ ] The entire queue card selects an image; the × control only removes it.
 
-- [ ] `/image-tools/` is the Image Tools category landing page.
-- [ ] `/remove-watermark/` is a real working tool page, not a placeholder.
-- [ ] Planned Resize/Compress/Crop/Rotate/Blur/Remove Object/Remove Background items do not create fake public routes.
-- [ ] The tool edits visible selected pixels only and does not claim to remove invisible provenance or authenticity systems.
-- [ ] The product does not claim AI detection or remote AI inference.
+## Mask interaction
+- [ ] New masks are selected and show four square resize handles plus one round rotation handle.
+- [ ] Dragging inside moves the selected mask.
+- [ ] Corner handles resize masks while keeping them usable inside the image.
+- [ ] The round handle rotates shape and Text masks and records the edit in Undo history.
+- [ ] Rotation-aware hit testing still lets a rotated mask be selected and moved.
+- [ ] The rotation handle flips to the opposite side when the preferred side would sit outside the canvas.
+- [ ] Circle, Square, Diamond, and 4-Point Star preserve square bounds during resize.
+- [ ] Undo and Clear mask work in shared and individual contexts.
+- [ ] Text-mask edits participate in Undo and per-image state.
+- [ ] Mask edits invalidate stale results.
+- [ ] Worker rasterization matches visible rotation for rectangle, ellipse, diamond, star, and text operations.
+- [ ] Repair rejects masks above the 15% local safety threshold.
 
-## Input and browser safety
+## Processing and output
+- [ ] Full-resolution decoded pixels are processed in the local worker.
+- [ ] Text repair rasterizes solid bold glyph pixels rather than only a thin outline.
+- [ ] Batch processing is sequential and can be cancelled.
+- [ ] Cancel preserves successful results already completed.
+- [ ] Clicking a completed queue card restores its After preview.
+- [ ] Same as source / PNG / JPG / WebP output controls work.
+- [ ] PNG disables quality; JPEG/WebP use the quality value.
+- [ ] One successful result downloads directly; multiple results download as a browser-generated ZIP.
+- [ ] General outputs use `-watermark-removed`; Gemini outputs use `-gemini-logo-removed`.
 
-- [ ] JPG/JPEG input works.
-- [ ] PNG input works, including alpha.
-- [ ] WebP input works in browsers that can decode it.
-- [ ] 40 MB file limit is enforced before decode.
-- [ ] 20 megapixel and 12,000-pixel-side decoded guards are enforced.
-- [ ] Unsupported file types fail before entering the editor.
-- [ ] Original source file remains unchanged.
+## UX and responsive behavior
+- [ ] Shared editor inherits the same site/system font stack as converters.
+- [ ] Batch queue remains a compact horizontal filmstrip.
+- [ ] Routine successful uploads do not show redundant added-count notices.
+- [ ] Edit-mode toggle does not add a layout-shifting Auto badge.
+- [ ] Text-mask helper aligns vertically with the text field on desktop and stacks cleanly on mobile.
+- [ ] Before/After, output controls, queue, mask handles, and Cancel remain usable at 390–430px widths.
+- [ ] Mobile page has no horizontal overflow.
 
-## Auto Select and mask editing
+## Navigation and content
+- [ ] Header Image Tools submenu links All Image Tools, Remove Watermark, and Gemini AI Logo Remover.
+- [ ] Header copy distinguishes general batch/shapes/text from focused Circle/4-Point-Star editing.
+- [ ] Footer links both tools and all three image-editing guides.
+- [ ] Homepage and `/image-tools/` accurately describe six general modes versus two Gemini modes.
+- [ ] Remove Watermark title, description, H1, schema, FAQ, and body match the shared batch product including rotation and solid Text masks.
+- [ ] Gemini title, description, H1, schema, FAQ, and body mention only Circle and 4-Point Star while documenting rotation.
+- [ ] General watermark, text-mask, and Gemini guides match current move/resize/rotate behavior.
+- [ ] Text guide clearly says the text field is not OCR or automatic detection.
+- [ ] Gemini pages include visible non-affiliation copy.
+- [ ] Privacy and Terms cover local Image Tools processing and destructive edits.
 
-- [ ] Auto Select produces a visible bottom-right suggestion on a small corner mark.
-- [ ] Low-confidence Auto Select is described as a suggestion, not a guaranteed detection.
-- [ ] Rectangle creates a new mask region with mouse and touch/pointer input.
-- [ ] Brush adds to the mask.
-- [ ] Eraser subtracts from the mask.
-- [ ] Undo removes the latest mask operation.
-- [ ] Reset mask clears mask state without unloading the source image.
-- [ ] Editing the mask invalidates a stale After result.
-- [ ] Mask larger than the local-repair safety threshold fails clearly.
-
-## Local repair
-
-- [ ] Full-resolution pixels, not only preview pixels, are sent to the local worker.
-- [ ] Repair runs off the UI thread.
-- [ ] Worker timeout/crash produces a visible error and does not publish a stale result.
-- [ ] New image/reset invalidates in-flight work.
-- [ ] Repaired output keeps decoded source pixel dimensions.
-- [ ] Complex backgrounds are described honestly; the UI does not promise semantic reconstruction.
-
-## Preview and export
-
-- [ ] Before canvas remains unchanged.
-- [ ] Purple selection mask is clearly visible but does not alter source pixels.
-- [ ] After preview is shown only after a successful repair.
-- [ ] Same-as-source export works for PNG/JPEG/WebP source families when the browser encoder supports it.
-- [ ] PNG export works.
-- [ ] JPEG export flattens transparency to deterministic white and respects quality.
-- [ ] WebP export either produces real `image/webp` or fails with a clear fallback message.
-- [ ] Download filename ends in `-watermark-removed.<ext>`.
-
-## Privacy and trust
-
-- [ ] Tool page states that source pixels are processed locally.
-- [ ] Privacy page includes Image Tools local processing.
-- [ ] Terms explain destructive editing and re-encoding limitations.
-- [ ] Page does not imply affiliation with Google or Gemini.
-- [ ] User is reminded to keep important originals and only edit images they have the right to modify.
-
-## SEO and content
-
-- [ ] Unique title, description, H1, canonical, and WebApplication schema are present.
-- [ ] Tool remains above the main explanatory content.
-- [ ] How It Works is substantive.
-- [ ] Resolution/quality behavior is substantive.
-- [ ] FAQ is substantive and responsive.
-- [ ] Related Image Tools section contains no links to unimplemented routes.
-- [ ] `/image-tools/` and `/remove-watermark/` appear in the generated sitemap only when this branch is intended for release.
-
-## Responsive/browser matrix
-
-- [ ] Chromium desktop.
-- [ ] Chromium mobile.
-- [ ] Firefox desktop.
-- [ ] WebKit desktop.
-- [ ] Real mobile Safari touch test before Live.
-- [ ] No horizontal overflow at 390–430 px widths.
-- [ ] Toolbar remains usable with touch input.
-- [ ] Before/After panels stack cleanly on mobile.
-
-## Existing-product regression
-
-- [ ] Homepage Images/Data/Archives switching still works.
-- [ ] Homogeneous converter drops still auto-route.
-- [ ] Mixed converter drops still respect the selected category.
-- [ ] Existing converter queues remain independent.
-- [ ] Dark theme/FAQ regressions remain green.
-- [ ] Image Converter conversion matrix remains green.
-- [ ] Data and Archive regression suites remain green.
+## Regression and final validation
+- [ ] Remove Watermark tests cover six modes, shared/mixed auto mode, solid Text mask, one-character corner placement, rotation, ZIP, full-card selection, and mobile layout.
+- [ ] Gemini tests cover exactly two modes, star default, rotation, shared/mixed auto mode, overrides, ZIP, After restore, and mobile layout.
+- [ ] Existing Image/Data/Archive converter suites remain unaffected.
+- [ ] Cloudflare Preview builds from the final squashed commit.
+- [ ] Chromium desktop and mobile smoke tests complete.
+- [ ] Safari/WebKit manually validates upload, mask move/resize/rotate, processing, output, ZIP, and Text-mode behavior.
+- [ ] A 20–50 image manual batch validates cancellation and browser memory behavior.
+- [ ] GitHub Actions counts as QA only when jobs contain real steps; empty-step runner failures do not count as executed tests.

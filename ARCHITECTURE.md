@@ -2,106 +2,160 @@
 
 ## Principle
 
-The website shell and category conversion engines are separate products inside one repository.
+ConvertAnyFile has one static site shell with two local-processing product families:
 
-A new converter category must not require copying the header, footer, FAQ markup, batch queue, download logic, sitemap, robots file, or page layout.
+1. **Converters** — category engines behind the generic `EngineAdapter` batch pipeline.
+2. **Image Tools** — interactive visual editing behind a shared canvas/mask batch editor.
 
-## Shared platform
+A new product must reuse the appropriate platform instead of copying header, footer, SEO layout, queue, download logic, or product-specific editor code.
 
-`SiteLayout.astro` owns document metadata, canonical URLs, structured data hooks, header and footer.
+## Shared site platform
 
-`ConverterShell.astro` owns the reusable dropzone, engine-declared settings area, scrollable queue, progress area and sticky action bar.
+`SiteLayout.astro` owns document metadata, canonical URLs, structured data hooks, header, and footer.
 
-`converter-app.ts` owns generic batch lifecycle: admission, append-by-drop, queue state, progress, cancel, retry, result statistics and ZIP download.
+Static Astro routes provide crawlable product and guide content. Browser code is loaded only for the interactive workflow needed by the page.
+
+## Converter platform
+
+`ConverterShell.astro` owns the reusable dropzone, engine-declared settings area, queue, progress area, and action bar.
+
+`converter-app.ts` owns generic converter batch lifecycle: admission, append-by-drop, queue state, progress, cancel, retry, result statistics, and ZIP download.
 
 `EngineAdapter` is the boundary between the generic queue and category-specific conversion logic.
 
-## Engine contract
+Live converter engine families include Image, Data, and Archive. Each category supplies accepted inputs, safety policy, output capabilities, category controls, conversion implementation, and reset/cancel behavior without adding category-specific settings to the shared queue.
 
-Each engine provides accepted extensions, lightweight validation, lazy runtime initialization, capabilities, available outputs, output controls, conversion implementation and reset/cancel behavior.
+## Image Tools platform
 
-Live engines:
+Image Tools are not `EngineAdapter` converters. They need stateful visual interaction: masks, active-image selection, Before/After canvases, shared/per-image editing state, and destructive visual edits.
 
-- `src/engines/image/` — ImageMagick WASM image conversion.
-- `src/engines/data/` — UTF-8 structured-text conversion for CSV, TSV, JSON and JSON Lines.
+The watermark products use this chain:
 
-Output controls are declared by the engine through the shared control schema. Image uses a range control for lossy quality. Data uses select and checkbox controls for line endings, headers, BOM and pretty printing. Category-specific settings must not be hard-coded into the shared queue.
+```text
+ImageToolPageFrame
+  → BatchMaskEditorShell
+    → image-tool-app.ts
+      → image-tools/shared/batch-mask-editor.ts
+        → image-tools/shared/mask-geometry.ts
+        → image-tools/remove-watermark/worker-client.ts
+          → remove-watermark.worker.ts
+            → inpaint.ts
+```
+
+`BatchMaskEditorShell.astro` owns the common editor DOM contract: batch queue, edit-mode toggle, mask toolbar, text-mask field when supported, Before/After panels, output controls, progress, Cancel, and download actions.
+
+`batch-mask-editor.ts` owns common runtime state:
+- input admission and limits;
+- aspect-ratio compatibility checks;
+- automatic `One mask for all` vs `Edit individually` recommendation;
+- manual mode override persistence;
+- normalized shared masks and per-image copies/overrides;
+- active image selection;
+- move/resize/rotate/Undo/Clear interaction;
+- compact auto-fit Text-mask bounds;
+- sequential local processing and cancellation;
+- result restoration, encoding, and ZIP download.
+
+`mask-geometry.ts` owns normalized mask geometry, rotation-aware hit testing and handles, edge-aware rotation-handle placement, and conversion to worker operations.
+
+The current shared worker performs deterministic visible-pixel repair from nearby unmasked pixels. It is not a semantic image-generation model and must not be presented as one.
+
+## Image Tool configuration contract
+
+Product-specific mask choices live in `src/config/image-tools.ts`.
+
+**Remove Watermark** exposes:
+- Rectangle
+- Circle
+- Square
+- Diamond
+- 4-Point Star
+- Text
+
+Text creates a manual solid glyph-shaped mask with content-fitted bounds. It is not OCR or automatic text detection.
+
+**Gemini AI Logo Remover** intentionally exposes only:
+- Circle
+- 4-Point Star
+
+The 4-Point Star is the default. The focused Gemini product must not regain Rectangle or unrelated general-editor controls merely because the runtime supports them.
+
+Both tools use the same batch and output engine. A feature or bug fix that belongs to shared behavior should be made once in the shared runtime.
+
+## Shared / individual mask contract
+
+Aspect ratio is used only to recommend a starting workflow:
+- same-ratio batch → `One mask for all`;
+- mixed-ratio batch → `Edit individually`.
+
+Mixed-ratio files are not rejected solely because of ratio. The user can always change the mode manually.
+
+A shared mask is normalized to image dimensions and stores rotation with its geometry. Switching to individual editing copies the shared operations into each image as a starting point. An edited copy becomes `Custom`; an unedited inherited copy remains `Shared copy`; an image without a mask is `Needs mask`.
+
+The whole queue item is a selection target while the remove control remains a separate action.
+
+## Mask geometry and worker contract
+
+The shared editor passes only explicit visible-pixel operations to the worker:
+- rectangle;
+- ellipse;
+- diamond;
+- four-point star;
+- text.
+
+Square is an editor constraint and is rasterized as a square rectangle. All worker operations can carry rotation, and rasterization must match the visible rotated preview.
+
+Text is rasterized locally from the user-supplied string using a bold filled glyph plus a same-color expansion stroke so the selected character strokes form a solid repair mask. If the worker environment cannot provide the required text canvas support, processing must fail clearly rather than silently substitute a broad rectangular mask.
+
+The repair worker rejects masks above the configured local safety threshold and never claims to remove invisible provenance, Content Credentials, metadata authenticity systems, or SynthID-style signals.
 
 ## Image codec contract
 
-The image product uses three separate concepts and they must not be collapsed into one list:
+The image-converter product keeps separate concepts for recognized inputs, runtime capabilities, and product-certified outputs. The UI may offer an output only when it is both product-certified and writable by the packaged runtime.
 
-1. **Recognized input extensions** — filename families for which the detector has a validation path.
-2. **Runtime capabilities** — the full readable/writable coder scan returned by `Magick.supportedFormats` from the packaged ImageMagick WASM build.
-3. **Certified outputs** — a deliberately smaller product whitelist in `src/engines/image/formats.ts`.
-
-The UI may offer an output only when it is both product-certified and reported writable by the current runtime. Do not automatically expose every ImageMagick writer; many coders are internal, pseudo-formats, text formats, or unsuitable for a normal one-file image download workflow.
-
-Every new certified image output must be added to the WASM worker map and to the browser encode/decode-back matrix in the same change. CI failure means the format is not certified.
-
-## Single-image fidelity contract
-
-The current image product creates one output image per input file.
-
-- EXIF orientation is normalized into pixels before writing.
-- Transparent input is flattened to deterministic white when the selected destination has no useful alpha channel.
-- Animated GIF/WebP, multi-page TIFF, layered sources, and multi-size icon containers are not advertised as preserving all frames/pages/layers/sizes.
-- Container metadata is detected when practical so the UI can describe what was found.
-- Multi-size PNG-backed ICO input uses the largest valid embedded PNG frame for single-image conversion; legacy DIB/BMP ICO input falls back to ImageMagick.
-
-If full animation, page, or layer preservation is implemented later, it must be an explicit product mode with its own tests rather than an accidental side effect of a codec.
+Animated, multi-page, layered, and multi-size sources are not advertised as preserving all frames/pages/layers/sizes unless explicitly implemented and tested.
 
 ## Structured Data contract
 
-The first Data production release accepts CSV, TSV, JSON, JSONL and NDJSON input and produces CSV, TSV, JSON and JSONL.
-
-The contract is deliberately deterministic:
-
-- Input text must be valid UTF-8; a UTF-8 BOM is accepted.
-- CSV/TSV first row defines headers.
-- Empty and duplicate headers are normalized so fields are not lost.
-- Delimited cells remain strings; the engine does not guess numbers, dates or booleans.
-- Quoted delimited fields support embedded delimiters, escaped quotes and embedded CRLF/LF newlines.
-- JSON objects flatten with dot notation for tabular output.
-- Arrays and complex JSON values remain JSON strings inside table cells.
-- JSONL and NDJSON share one line-oriented input family: one complete JSON value per non-empty line.
-- JSON numeric tokens that would change value through JavaScript precision are rejected rather than silently rounded; exact precision-sensitive values belong in JSON strings.
-- CSV/TSV output can include/exclude the header, choose LF/CRLF, and optionally emit a UTF-8 BOM.
-- JSON output can be pretty or compact.
-
-The 64 KB admission sample is only a lightweight filter. Sampling uses streaming UTF-8 decoding so a valid multibyte character split at the sample boundary is not mistaken for corrupt text, and truncated JSONL tails are not treated as complete records. Full parsing in the worker remains authoritative.
-
-This engine is a format converter, not an ETL engine. It does not join files, execute spreadsheet formulas, infer relational schemas or apply business mappings.
+The Data converter is deterministic: valid UTF-8 input, explicit delimited parsing, string-preserving tabular values, defined nested-JSON flattening, JSONL/NDJSON line semantics, and output controls for headers, line endings, BOM, and pretty printing. It is a format converter, not an ETL engine.
 
 ## Browser safety
 
-Policies are supplied by converter definitions rather than hard-coded in UI components.
+Compressed file size alone is not a sufficient memory signal. Every product defines admission limits plus decoded/runtime safety where needed.
 
-- Image: 50 files, 75 MB per file, 300 MB total, sequential processing, plus decoded-pixel memory/dimension guards.
-- Data: 50 files, 20 MB per file, 100 MB total, sequential processing in a browser worker.
+Current watermark-editor limits:
+- 50 images per batch;
+- 10 MB per source image;
+- 200 MB total source input;
+- 20 megapixels decoded;
+- 12,000 pixels maximum side;
+- sequential processing;
+- masks above 15% of decoded image pixels are rejected by local repair.
 
-Compressed or serialized input size is not a sufficient memory signal. Images expand into pixels; JSON/CSV can expand into JavaScript strings, arrays, objects and generated output.
-
-Worker crash, message corruption, and timeout tear down the active worker. A later request initializes a fresh worker. Deterministic corrupt/unsupported/memory/precision failures are permanent and must not expose Retry; transient engine crash/timeout failures may expose Retry.
-
-Engine reset also invalidates the generation of any in-flight conversion. Cancel must remain authoritative if it races with `File.arrayBuffer()` or worker completion: a stale generation cannot publish a successful artifact after reset.
-
-Future archive/audio/subtitle engines can define different limits without changing shared UI code.
+Cancel/reset invalidates active worker work. A stale request must not publish a successful artifact after reset.
 
 ## Routing and SEO
 
-`src/config/converters.ts` owns Image routes. `src/config/data-converters.ts` owns Data routes. `src/config/converter-registry.ts` is the combined registry used by shared dynamic pair routing.
+Do not create a public route until the converter or editing workflow is real, testable, and useful. Planned Image Tools may appear as roadmap items without hrefs, but must not create thin placeholder routes.
 
-Do not create a route until the conversion is real, testable, and useful. This avoids thin placeholder pages and keeps sitemap output aligned with product capability.
+Dedicated converter pages render through `ConverterPageFrame`. Watermark editor pages render through `ImageToolPageFrame` and the shared batch editor shell.
 
-All dedicated converter pages render through `ConverterPageFrame` so the primary file action remains above the first desktop viewport. The homepage is the intentional marketing-layout exception and has its own viewport regression.
-
-Pair pages can provide category-specific explanation below the shared frame, but may not duplicate the queue or engine backend.
+Product-specific explanation belongs below the shared interactive surface and must accurately describe current behavior.
 
 ## Release gate
 
-A category is production-ready only when static checks, browser UX regressions, category-specific real conversion tests, safety limits, deterministic error semantics, sitemap/canonical/internal-link tests, and existing-category regressions are green.
+A product is production-ready only when static checks, real browser workflow tests, safety limits, cancellation semantics, sitemap/canonical/internal-link checks, responsive UX, and existing-product regressions are green.
 
-Image additionally requires the full certified-output matrix to encode every public output and decode generated files back through the public converter path.
+Watermark Image Tools additionally require:
+- exact mask-set regression for each public tool;
+- real mask geometry, rotation, and rasterization checks;
+- one-character Text-mask edge-placement regression;
+- shared/mixed automatic mode behavior;
+- manual override and per-image Custom state;
+- Before/After restoration;
+- output and ZIP behavior;
+- text-mask behavior in supported browsers;
+- mobile touch/no-overflow validation;
+- manual Safari/WebKit and large-batch cancellation checks.
 
-Data additionally requires real byte-level regressions for quoted delimited fields, nested JSON flattening, JSONL/NDJSON, output controls, deterministic parse failures, numeric fidelity, safe admission sampling, cancellation, and shared batch/ZIP reuse. See `IMAGE_RELEASE_CHECKLIST.md` and `DATA_RELEASE_CHECKLIST.md`.
+See `IMAGE_TOOLS_RELEASE_CHECKLIST.md` for the release-candidate gates.

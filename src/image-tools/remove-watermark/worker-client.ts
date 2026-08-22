@@ -1,4 +1,4 @@
-import type { AutoSelection, MaskOperation } from '../../platform/image-tools/types';
+import type { MaskOperation } from '../../platform/image-tools/types';
 import type { RemoveWatermarkWorkerRequest, RemoveWatermarkWorkerResponse } from './protocol';
 
 interface PendingRequest {
@@ -30,18 +30,21 @@ export class RemoveWatermarkWorkerClient {
     return worker;
   }
 
-  async detect(pixels: ArrayBuffer, width: number, height: number): Promise<AutoSelection> {
-    const request: RemoveWatermarkWorkerRequest = { type: 'detect', requestId: crypto.randomUUID(), pixels, width, height };
-    const response = await this.send(request, [pixels], 12_000);
-    if (response.type !== 'detect-result') throw new Error('Invalid Auto Select response');
-    if (!response.ok) throw new Error(response.error);
-    return response.selection;
-  }
-
-  async inpaint(pixels: ArrayBuffer, width: number, height: number, operations: MaskOperation[]): Promise<{ pixels: ArrayBuffer; repairedPixels: number }> {
-    const request: RemoveWatermarkWorkerRequest = { type: 'inpaint', requestId: crypto.randomUUID(), pixels, width, height, operations };
+  async inpaint(
+    pixels: ArrayBuffer,
+    width: number,
+    height: number,
+    operations: MaskOperation[],
+  ): Promise<{ pixels: ArrayBuffer; repairedPixels: number }> {
+    const request: RemoveWatermarkWorkerRequest = {
+      type: 'inpaint',
+      requestId: crypto.randomUUID(),
+      pixels,
+      width,
+      height,
+      operations,
+    };
     const response = await this.send(request, [pixels], 75_000);
-    if (response.type !== 'inpaint-result') throw new Error('Invalid repair response');
     if (!response.ok) throw new Error(response.error);
     return { pixels: response.pixels, repairedPixels: response.repairedPixels };
   }
@@ -50,12 +53,17 @@ export class RemoveWatermarkWorkerClient {
     this.fail(new Error(reason));
   }
 
-  private send(request: RemoveWatermarkWorkerRequest, transfer: Transferable[], timeoutMs: number): Promise<RemoveWatermarkWorkerResponse> {
+  private send(
+    request: RemoveWatermarkWorkerRequest,
+    transfer: Transferable[],
+    timeoutMs: number,
+  ): Promise<RemoveWatermarkWorkerResponse> {
     return new Promise((resolve, reject) => {
       const timer = window.setTimeout(() => this.fail(new Error('Local image processing timed out')), timeoutMs);
       this.pending.set(request.requestId, { resolve, reject, timer });
-      try { this.ensureWorker().postMessage(request, transfer); }
-      catch (error) {
+      try {
+        this.ensureWorker().postMessage(request, transfer);
+      } catch (error) {
         window.clearTimeout(timer);
         this.pending.delete(request.requestId);
         reject(error instanceof Error ? error : new Error(String(error)));
