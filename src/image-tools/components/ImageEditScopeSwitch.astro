@@ -2,25 +2,66 @@
 interface Props {
   mode?: 'shared' | 'individual';
   disabled?: boolean;
+  variant?: 'generic' | 'mask';
+  label?: string;
+  title?: string;
+  sharedLabel?: string;
+  sharedHint?: string;
+  individualLabel?: string;
+  individualHint?: string;
 }
 
-const { mode = 'shared', disabled = false } = Astro.props;
+const {
+  mode = 'shared',
+  disabled = false,
+  variant = 'generic',
+  label = variant === 'mask' ? 'Mask behavior' : 'Settings behavior',
+  title = variant === 'mask' ? 'Recommended automatically, always adjustable' : 'Choose how settings apply',
+  sharedLabel = variant === 'mask' ? 'One mask for all' : 'Apply to all',
+  sharedHint = variant === 'mask' ? 'Fast batch' : 'One setup for the batch',
+  individualLabel = 'Edit individually',
+  individualHint = variant === 'mask' ? 'Per-image mask' : 'Per-image overrides',
+} = Astro.props;
+
+const rootClass = variant === 'mask' ? 'image-edit-scope gemini-edit-mode-bar' : 'image-edit-scope';
 ---
 
-<div class="image-edit-scope" data-role="edit-scope-switch" data-mode={mode}>
-  <span class="image-edit-scope__label">Settings behavior</span>
-  <div class="image-edit-scope__options" role="group" aria-label="Settings behavior">
-    <button type="button" data-edit-scope="shared" aria-pressed={mode === 'shared'} disabled={disabled}>
-      <strong>Apply to all</strong>
-      <small>One setup for the batch</small>
+<div class={rootClass} data-role="edit-scope-switch" data-mode={mode} aria-label={label}>
+  <div class={variant === 'mask' ? 'gemini-edit-mode-copy' : 'image-edit-scope__copy'}>
+    <span class="image-edit-scope__label">{label}</span>
+    <strong>{title}</strong>
+    <small data-role="edit-mode-copy">The editor chooses a starting mode from the uploaded layouts.</small>
+  </div>
+  <div class={variant === 'mask' ? 'image-edit-scope__options gemini-edit-mode-options' : 'image-edit-scope__options'} role="radiogroup" aria-label={label}>
+    <button
+      type="button"
+      class:list={[variant === 'mask' && 'gemini-edit-mode', mode === 'shared' && 'is-active']}
+      data-edit-scope="shared"
+      data-edit-mode="shared"
+      role="radio"
+      aria-checked={mode === 'shared'}
+      aria-pressed={mode === 'shared'}
+      disabled={disabled}
+    >
+      <strong>{sharedLabel}</strong>
+      <small>{sharedHint}</small>
     </button>
-    <button type="button" data-edit-scope="individual" aria-pressed={mode === 'individual'} disabled={disabled}>
-      <strong>Edit individually</strong>
-      <small>Per-image overrides</small>
+    <button
+      type="button"
+      class:list={[variant === 'mask' && 'gemini-edit-mode', mode === 'individual' && 'is-active']}
+      data-edit-scope="individual"
+      data-edit-mode="individual"
+      role="radio"
+      aria-checked={mode === 'individual'}
+      aria-pressed={mode === 'individual'}
+      disabled={disabled}
+    >
+      <strong>{individualLabel}</strong>
+      <small>{individualHint}</small>
     </button>
   </div>
 </div>
 
 <style>
-  .image-edit-scope{display:grid;gap:8px}.image-edit-scope__label{font-size:.8rem;font-weight:700}.image-edit-scope__options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.image-edit-scope button{display:grid;gap:2px;text-align:left;padding:10px 12px;border:1px solid var(--border-color,#303744);border-radius:10px;background:transparent;color:inherit;cursor:pointer}.image-edit-scope button[aria-pressed="true"]{border-color:currentColor;background:color-mix(in srgb,currentColor 8%,transparent)}.image-edit-scope small{opacity:.68}@media(max-width:640px){.image-edit-scope__options{grid-template-columns:1fr}}
+  .image-edit-scope{display:grid;gap:8px}.image-edit-scope__copy{display:grid;gap:2px}.image-edit-scope__label{font-size:.8rem;font-weight:700}.image-edit-scope__copy>strong{font-size:.9rem}.image-edit-scope__copy>small{opacity:.68}.image-edit-scope__options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.image-edit-scope__options>button{display:grid;gap:2px;text-align:left;padding:10px 12px;border:1px solid var(--border-color,#303744);border-radius:10px;background:transparent;color:inherit;cursor:pointer}.image-edit-scope__options>button[aria-checked="true"],.image-edit-scope__options>button[aria-pressed="true"]{border-color:currentColor;background:color-mix(in srgb,currentColor 8%,transparent)}.image-edit-scope__options small{opacity:.68}.gemini-edit-mode-bar{display:flex}.gemini-edit-mode-bar .image-edit-scope__options{display:flex}@media(max-width:760px){.gemini-edit-mode-bar{display:grid}.gemini-edit-mode-bar .image-edit-scope__options{display:grid}}@media(max-width:640px){.image-edit-scope__options{grid-template-columns:1fr}}
 </style>
