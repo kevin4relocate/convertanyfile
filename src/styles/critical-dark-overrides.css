@@ -49,6 +49,11 @@
   box-shadow: 0 0 0 3px var(--accent-soft) !important;
 }
 
+/* Subtitle is production-live; suppress the legacy homepage Preview badge. */
+.home-preview-badge {
+  display: none !important;
+}
+
 @media (max-width: 520px) {
   .home-converter-category-bar {
     padding: 8px !important;
