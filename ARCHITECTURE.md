@@ -23,7 +23,60 @@ Static Astro routes provide crawlable product and guide content. Browser code is
 
 `EngineAdapter` is the boundary between the generic queue and category-specific conversion logic.
 
-Live converter engine families include Image, Data, and Archive. Each category supplies accepted inputs, safety policy, output capabilities, category controls, conversion implementation, and reset/cancel behavior without adding category-specific settings to the shared queue.
+Production converter engine families include Image, Data, and Archive. Subtitle is integrated through the same contract as a Preview category. Each category supplies accepted inputs, safety policy, output capabilities, category controls, conversion implementation, and reset/cancel behavior without forking the shared queue.
+
+Generic output controls currently support range, number, select, and checkbox inputs. Category-specific controls must be declared by an output definition rather than hard-coded into the shared controller.
+
+## Subtitle Preview contract
+
+Subtitle is a deterministic timed-text converter, not a media transcoder or subtitle editor.
+
+Public Preview inputs:
+- SRT
+- VTT / WebVTT
+- ASS
+- SSA
+- SBV
+
+Public outputs:
+- SRT
+- VTT
+- SBV
+- TXT
+
+ASS and SSA remain input-only because SRT, VTT, SBV, and TXT cannot reproduce their full style, positioning, karaoke, drawing, and effect model.
+
+The Subtitle engine chain is:
+
+```text
+ConverterPageFrame
+  → ConverterShell
+    → converter-app.ts
+      → engine-registry.ts
+        → engines/subtitle/runtime.ts
+          → worker-client.ts
+            → subtitle-engine.worker.ts
+              → codec.ts
+```
+
+Full-file preflight occurs in the Subtitle worker before admission. A Ready subtitle has already passed complete timed-text parsing rather than only an extension check or partial sample.
+
+Preflight metadata includes:
+- cue count;
+- timeline end;
+- detected text encoding;
+- richer-format / WebVTT metadata flags.
+
+The parser supports UTF-8, UTF-16LE/BE BOM input, then Windows-1252 fallback only after strict UTF-8 fails. Generated text output is UTF-8.
+
+The current transform contract includes:
+- exact whole-millisecond timing shift from -600000 to +600000 ms;
+- rejection when a negative shift would move a cue before `00:00`;
+- opt-in plain-text cleanup for timed outputs;
+- TXT timestamp modes and cue spacing;
+- LF / CRLF and optional UTF-8 BOM output.
+
+A no-transform VTT → VTT export validates the source but preserves the decoded WebVTT document body so document-level metadata is not discarded merely by normalization. Timing or text transforms rebuild parsed cues and therefore do not promise preservation of VTT document-level metadata.
 
 ## Image Tools platform
 
@@ -72,9 +125,9 @@ Product-specific mask choices live in `src/config/image-tools.ts`.
 - 4-Point Star
 - Text
 
-Text creates a manual solid glyph-shaped mask with content-fitted bounds. It is not OCR or automatic text detection.
+Text creates a manual solid bold glyph-shaped mask with content-fitted bounds. It is not OCR or automatic text detection.
 
-**Gemini AI Logo Remover** intentionally exposes only:
+**Gemini AI Logo Remover / Gemini Watermark Remover** intentionally exposes only:
 - Circle
 - 4-Point Star
 
@@ -105,7 +158,7 @@ The shared editor passes only explicit visible-pixel operations to the worker:
 
 Square is an editor constraint and is rasterized as a square rectangle. All worker operations can carry rotation, and rasterization must match the visible rotated preview.
 
-Text is rasterized locally from the user-supplied string using a bold filled glyph plus a same-color expansion stroke so the selected character strokes form a solid repair mask. If the worker environment cannot provide the required text canvas support, processing must fail clearly rather than silently substitute a broad rectangular mask.
+Text is rasterized locally as a solid bold filled glyph mask. Edge-safe placement may leave part of a selection outside the image; only intersecting in-image pixels are processed. The worker must not silently substitute a broad rectangular mask for text.
 
 The repair worker rejects masks above the configured local safety threshold and never claims to remove invisible provenance, Content Credentials, metadata authenticity systems, or SynthID-style signals.
 
@@ -117,11 +170,20 @@ Animated, multi-page, layered, and multi-size sources are not advertised as pres
 
 ## Structured Data contract
 
-The Data converter is deterministic: valid UTF-8 input, explicit delimited parsing, string-preserving tabular values, defined nested-JSON flattening, JSONL/NDJSON line semantics, and output controls for headers, line endings, BOM, and pretty printing. It is a format converter, not an ETL engine.
+The Data converter is deterministic: valid documented input, explicit delimited parsing, string-preserving tabular values, defined nested-JSON flattening, JSONL/NDJSON line semantics, and output controls for headers, line endings, BOM, and pretty printing. It is a format converter, not an ETL engine.
 
 ## Browser safety
 
 Compressed file size alone is not a sufficient memory signal. Every product defines admission limits plus decoded/runtime safety where needed.
+
+Current Subtitle Preview limits:
+- 50 files per batch;
+- 5 MB per source file;
+- 50 MB total source input;
+- 100,000 cues maximum per parsed file;
+- sequential conversion;
+- worker startup/analysis/conversion timeouts;
+- timing shift limited to whole milliseconds from -600000 to +600000.
 
 Current watermark-editor limits:
 - 50 images per batch;
@@ -140,11 +202,21 @@ Do not create a public route until the converter or editing workflow is real, te
 
 Dedicated converter pages render through `ConverterPageFrame`. Watermark editor pages render through `ImageToolPageFrame` and the shared batch editor shell.
 
+Subtitle exposes exactly 17 cross-format pair routes backed by its actual writer matrix. Same-format placeholder routes are not created for route count alone.
+
 Product-specific explanation belongs below the shared interactive surface and must accurately describe current behavior.
 
 ## Release gate
 
 A product is production-ready only when static checks, real browser workflow tests, safety limits, cancellation semantics, sitemap/canonical/internal-link checks, responsive UX, and existing-product regressions are green.
+
+Subtitle remains Preview until:
+- `SUBTITLE_RELEASE_CHECKLIST.md` is completed;
+- static build/check execute successfully;
+- Chromium desktop/mobile, Firefox, and WebKit regressions execute;
+- real SRT/VTT/ASS/SSA/SBV files are smoke-tested;
+- homepage auto-routing and 17 route inventory are verified;
+- existing Image/Data/Archive and Image Tools regressions remain green.
 
 Watermark Image Tools additionally require:
 - exact mask-set regression for each public tool;
@@ -158,4 +230,4 @@ Watermark Image Tools additionally require:
 - mobile touch/no-overflow validation;
 - manual Safari/WebKit and large-batch cancellation checks.
 
-See `IMAGE_TOOLS_RELEASE_CHECKLIST.md` for the release-candidate gates.
+See `IMAGE_TOOLS_RELEASE_CHECKLIST.md` and `SUBTITLE_RELEASE_CHECKLIST.md` for product-specific gates.
