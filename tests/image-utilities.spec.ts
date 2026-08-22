@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const tinyPng = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAD0lEQVR4nGP4z8DAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==',
@@ -7,7 +7,7 @@ const tinyPng = Buffer.from(
 
 const imageFile = { name: 'tiny.png', mimeType: 'image/png', buffer: tinyPng };
 
-async function addTinyImage(page: Parameters<typeof test>[0] extends never ? never : any, name = 'tiny.png') {
+async function addTinyImage(page: Page, name = 'tiny.png') {
   await page.locator('[data-role="file-input"]').setInputFiles({ name, mimeType: 'image/png', buffer: tinyPng });
   await expect(page.locator('[data-role="summary"]')).toContainText('1 image');
 }
