@@ -5,6 +5,9 @@ interface Props {
   canDownload?: boolean;
   processLabel?: string;
   downloadLabel?: string;
+  variant?: 'generic' | 'mask';
+  summary?: string;
+  preparedSummary?: string;
 }
 
 const {
@@ -13,21 +16,35 @@ const {
   canDownload = false,
   processLabel = 'Process images',
   downloadLabel = 'Download ZIP',
+  variant = 'generic',
+  summary = 'Ready to process',
+  preparedSummary = 'Prepare images to continue.',
 } = Astro.props;
 ---
 
-<div class="image-batch-action-bar" data-role="batch-action-bar">
-  <span data-role="ready-count">{readyCount} image{readyCount === 1 ? '' : 's'} ready</span>
-  <div class="image-batch-action-bar__actions">
-    <button type="button" data-role="process-batch" disabled={processing || readyCount === 0}>
-      {processing ? 'Processing…' : processLabel}
-    </button>
-    <button type="button" data-role="download-batch" disabled={!canDownload}>
-      {downloadLabel}
-    </button>
+{variant === 'mask' ? (
+  <div class="image-batch-action-bar gemini-batch-action-bar" data-role="batch-action-bar">
+    <div>
+      <strong data-role="batch-result-summary">{summary}</strong>
+      <small data-role="prepared-summary">{preparedSummary}</small>
+    </div>
+    <div class="image-batch-action-bar__actions gemini-batch-actions">
+      <button class="primary-button" data-role="remove" type="button" disabled>{processLabel}</button>
+      <button class="secondary-button" data-role="download" type="button" disabled={!canDownload}>{downloadLabel}</button>
+    </div>
   </div>
-</div>
+) : (
+  <div class="image-batch-action-bar" data-role="batch-action-bar">
+    <span data-role="ready-count">{readyCount} image{readyCount === 1 ? '' : 's'} ready</span>
+    <div class="image-batch-action-bar__actions">
+      <button type="button" data-role="process-batch" disabled={processing || readyCount === 0}>
+        {processing ? 'Processing…' : processLabel}
+      </button>
+      <button type="button" data-role="download-batch" disabled={!canDownload}>{downloadLabel}</button>
+    </div>
+  </div>
+)}
 
 <style>
-  .image-batch-action-bar{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px;border:1px solid var(--border-color,#303744);border-radius:12px;background:var(--surface-color,#11161f);box-shadow:0 -8px 28px rgba(0,0,0,.12)}.image-batch-action-bar__actions{display:flex;gap:8px;flex-wrap:wrap}.image-batch-action-bar button{min-height:40px;padding:8px 14px}@media(max-width:640px){.image-batch-action-bar{align-items:stretch;flex-direction:column}.image-batch-action-bar__actions{display:grid;grid-template-columns:1fr 1fr}.image-batch-action-bar button{width:100%}}
+  .image-batch-action-bar{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px;border:1px solid var(--border-color,#303744);border-radius:12px;background:var(--surface-color,#11161f);box-shadow:0 -8px 28px rgba(0,0,0,.12)}.image-batch-action-bar__actions{display:flex;gap:8px;flex-wrap:wrap}.image-batch-action-bar button{min-height:40px;padding:8px 14px}.gemini-batch-action-bar{padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}@media(max-width:640px){.image-batch-action-bar{align-items:stretch;flex-direction:column}.image-batch-action-bar__actions{display:grid;grid-template-columns:1fr 1fr}.image-batch-action-bar button{width:100%}}
 </style>
