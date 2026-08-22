@@ -1,0 +1,80 @@
+---
+import type { ImageToolDefinition } from '../platform/image-tools/types';
+interface Props { tool: ImageToolDefinition; }
+const { tool } = Astro.props;
+const accept = tool.acceptedExtensions.map((extension) => `.${extension}`).join(',');
+---
+<div class="image-editor-card" data-image-tool-app data-tool-id={tool.id} data-max-file-bytes={tool.maxFileBytes} data-max-pixels={tool.maxPixels} data-max-dimension={tool.maxDimension}>
+  <div class="image-editor-topbar">
+    <div><span>Local image tool</span><strong>Remove Watermark</strong></div>
+    <div class="image-editor-local-state"><span aria-hidden="true"></span>Browser-only Preview</div>
+  </div>
+  <div class="image-editor-notice" data-role="notice" role="status" aria-live="polite" hidden></div>
+
+  <section class="image-tool-upload" data-role="upload-view">
+    <button class="image-tool-drop-zone" data-role="drop-zone" type="button">
+      <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" /></svg></span>
+      <strong>Drop an image here</strong>
+      <span>JPG, PNG or WebP · one image at a time</span>
+      <span class="choose-button">Choose image</span>
+      <small><span class="privacy-dot" aria-hidden="true"></span> Image pixels stay on your device</small>
+    </button>
+    <input data-role="file-input" type="file" accept={accept} hidden />
+  </section>
+
+  <section class="image-tool-editor" data-role="editor" hidden>
+    <header class="image-tool-editor-header">
+      <div><span>Editing</span><strong data-role="source-name">Image</strong><small data-role="source-meta"></small></div>
+      <button class="secondary-button image-tool-new-image" data-role="new-image" type="button">New image</button>
+    </header>
+
+    <div class="image-tool-toolbar" role="toolbar" aria-label="Watermark selection tools">
+      <div class="image-tool-toolbar-group image-tool-toolbar-primary">
+        <button class="image-tool-auto-button" data-role="auto-select" type="button">Auto Select</button>
+        <button class="image-tool-mode is-active" data-tool-mode="rect" type="button">Rectangle</button>
+        <button class="image-tool-mode" data-tool-mode="brush" type="button">Brush</button>
+        <button class="image-tool-mode" data-tool-mode="erase" type="button">Eraser</button>
+      </div>
+      <label class="image-tool-brush-control"><span>Brush</span><input data-role="brush-size" type="range" min="4" max="80" value="24" /><output data-role="brush-size-value">24 px</output></label>
+      <div class="image-tool-toolbar-group">
+        <button class="image-tool-quiet-button" data-role="undo" type="button" disabled>Undo</button>
+        <button class="image-tool-quiet-button" data-role="reset-mask" type="button" disabled>Reset mask</button>
+      </div>
+    </div>
+
+    <div class="image-tool-selection-status">
+      <span class="image-tool-selection-dot" aria-hidden="true"></span>
+      <span data-role="selection-status">Auto Select will suggest the bottom-right watermark area.</span>
+    </div>
+
+    <div class="image-tool-preview-grid">
+      <article class="image-tool-preview-panel">
+        <header><div><span>Before</span><strong>Select the visible watermark</strong></div><small>Drag to draw · paint to refine</small></header>
+        <div class="image-tool-canvas-wrap" data-role="canvas-wrap">
+          <canvas data-role="original-canvas" aria-label="Original image preview"></canvas>
+          <canvas class="image-tool-mask-canvas" data-role="mask-canvas" aria-label="Watermark selection mask"></canvas>
+        </div>
+      </article>
+      <article class="image-tool-preview-panel">
+        <header><div><span>After</span><strong>Repair preview</strong></div><small data-role="result-label">Run Remove to preview</small></header>
+        <div class="image-tool-result-wrap">
+          <canvas data-role="result-canvas" aria-label="Watermark removal result preview"></canvas>
+          <div class="image-tool-result-empty" data-role="result-empty"><span>After preview</span><small>The repaired image will appear here at the same resolution.</small></div>
+        </div>
+      </article>
+    </div>
+
+    <div class="image-tool-output-bar">
+      <div class="image-tool-output-settings">
+        <label><span>Output</span><select data-role="output-format"><option value="source">Same as source</option><option value="png">PNG</option><option value="jpeg">JPEG</option><option value="webp">WebP</option></select></label>
+        <label class="image-tool-quality"><span>Quality</span><input data-role="quality" type="range" min="80" max="100" value="96" /><output data-role="quality-value">96</output></label>
+      </div>
+      <div class="image-tool-output-actions">
+        <button class="primary-button image-tool-remove-button" data-role="remove" type="button" disabled>Remove watermark</button>
+        <button class="secondary-button image-tool-download-button" data-role="download" type="button" disabled>Download image</button>
+      </div>
+    </div>
+    <p class="image-tool-policy-note">Best for small visible corner logos on simple or moderately textured backgrounds. Auto Select is a suggestion: adjust the mask before processing when it overlaps important image details.</p>
+  </section>
+</div>
+<script src="../client/image-tool-app.ts"></script>

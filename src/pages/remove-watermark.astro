@@ -1,0 +1,35 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ImageToolPageFrame from '../components/ImageToolPageFrame.astro';
+import ImageToolGrid from '../components/ImageToolGrid.astro';
+import FaqList from '../components/FaqList.astro';
+import { REMOVE_WATERMARK_TOOL } from '../config/image-tools';
+import { REMOVE_WATERMARK_FAQ } from '../content/remove-watermark-faq';
+import { SITE } from '../config/site';
+const tool = REMOVE_WATERMARK_TOOL;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'ConvertAnyFile Remove Watermark',
+  url: `${SITE.origin}/remove-watermark/`,
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Any',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  featureList: ['Local browser processing', 'Bottom-right Auto Select', 'Rectangle selection', 'Brush and eraser mask editing', 'Before and after preview', 'JPG, PNG and WebP input', 'No image upload'],
+};
+---
+<SiteLayout title={tool.title} description={tool.description} schema={schema}>
+  <ImageToolPageFrame tool={tool} />
+
+  <section class="content-wide-section white"><div class="site-container"><div class="content-intro-grid"><div class="section-heading wide"><span class="section-kicker">Local visible-pixel repair</span><h2>Start with Auto Select. Keep control of the mask.</h2><p>The Preview is tuned for a small visible logo or AI-image badge near the bottom-right corner. It scans that corner locally and suggests a purple selection, but it never assumes the selection is perfect. Rectangle, Brush, and Eraser are available before the repair runs.</p></div><div class="content-summary-card"><strong>No AI API and no upload queue</strong><p>Image decoding, corner analysis, mask editing, and pixel repair happen in the browser. The first version intentionally avoids remote inference and server-side image processing.</p></div></div><ul class="content-checklist"><li>Auto Select analyzes a reduced browser preview instead of sending the source anywhere.</li><li>Manual rectangle and brush tools provide a fallback when the visible mark is not detected cleanly.</li><li>The selected mask is applied to the source-resolution image only when you press Remove watermark.</li><li>The original file stays unchanged; download creates a new image.</li></ul></div></section>
+
+  <section class="content-wide-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">How it works</span><h2>Four steps from source image to repaired copy.</h2><p>This is a visual editing workflow rather than a batch format converter, so the tool asks you to verify the selected pixels before changing them.</p></div><div class="steps-grid"><article class="step-card"><span class="step-number">01</span><h3>Add one image</h3><p>Choose or drop a JPG, PNG, or WebP file. The Preview checks file size, decoded dimensions, and pixel count before opening the editor.</p></article><article class="step-card"><span class="step-number">02</span><h3>Check the purple mask</h3><p>Auto Select suggests a bottom-right area. Redraw it with Rectangle, paint missing pixels with Brush, or remove excess mask with Eraser.</p></article><article class="step-card"><span class="step-number">03</span><h3>Repair locally</h3><p>The browser worker rebuilds selected pixels from neighboring unmasked pixels. No semantic AI model is used, so a careful mask matters on complex backgrounds.</p></article><article class="step-card"><span class="step-number">04</span><h3>Compare and download</h3><p>Review Before and After, refine the mask if necessary, then export in the source format, PNG, JPEG, or WebP.</p></article></div></div></section>
+
+  <section class="content-wide-section white"><div class="site-container"><div class="content-intro-grid"><div><span class="section-kicker">Best use cases</span><h2>Small corner marks are the target, not every object in every photo.</h2><p>Non-AI inpainting estimates missing pixels from nearby visual information. It is most convincing when the selected mark is small and the surrounding texture continues naturally behind it.</p></div><div class="content-summary-card"><strong>Gemini-style corner logos</strong><p>The Auto Select heuristic is deliberately biased toward small visible bottom-right badges of the kind commonly added to AI-generated images. The tool is not affiliated with Google or Gemini and does not claim to remove invisible provenance systems.</p></div></div><div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Scene behind the mark</th><th>Expected result</th><th>Recommendation</th></tr></thead><tbody><tr><td>Sky, wall, gradient, soft texture</td><td>Usually the strongest</td><td>Auto Select, then inspect edges.</td></tr><tr><td>Grass, fabric, foliage, repeated texture</td><td>Often usable</td><td>Use Brush to keep the mask tight.</td></tr><tr><td>Hair, face, text, sharp architecture</td><td>More difficult</td><td>Use a very precise mask and keep the original.</td></tr><tr><td>Large object or large watermark</td><td>Not the MVP target</td><td>Wait for the future Remove Object workflow.</td></tr></tbody></table></div></div></section>
+
+  <section class="content-wide-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Resolution and quality</span><h2>Keep source dimensions; be explicit about re-encoding.</h2><p>The local repair runs against decoded source-resolution pixels rather than the smaller editor preview. PNG can be exported losslessly after editing. JPEG and WebP must be encoded again, so the quality slider controls the new compression level and the output file size may differ from the original.</p></div><div class="callout"><strong>Keep your source image</strong><p>Removing visible pixels is destructive editing. The download is a new file, but you should keep the original whenever the image is important or the selected area contains unique detail.</p></div></div></section>
+
+  <section class="content-wide-section white"><div class="site-container"><FaqList items={REMOVE_WATERMARK_FAQ} title="Remove Watermark FAQ" intro="Privacy, Auto Select limits, manual mask editing, supported formats, output quality, and what this browser-only Preview can and cannot remove." /></div></section>
+
+  <section class="content-wide-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Image Tools</span><h2>One editor platform, more focused tools over time.</h2><p>Remove Watermark is the first Image Tools Preview. Planned tools will reuse the same local image-loading, preview, export, safety, and responsive UI foundation without becoming fake placeholder converter pages.</p></div><ImageToolGrid compact /></div></section>
+</SiteLayout>

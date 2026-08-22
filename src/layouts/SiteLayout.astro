@@ -5,6 +5,7 @@ import '../styles/converter-pages.css';
 import '../styles/product-polish.css';
 import '../styles/dark-theme.css';
 import '../styles/critical-dark-overrides.css';
+import '../styles/image-tools.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { SITE } from '../config/site';
@@ -18,7 +19,7 @@ interface Props {
 }
 
 const {
-  title = `${SITE.name} — Fast, Private File Converter`,
+  title = `${SITE.name} — Fast, Private File Converter & Image Tools`,
   description = SITE.description,
   canonical = new URL(Astro.url.pathname, SITE.origin).toString(),
   noindex = false,
