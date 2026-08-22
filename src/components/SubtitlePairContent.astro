@@ -1,0 +1,84 @@
+---
+import type { ConverterDefinition } from '../platform/converter/types';
+import ArticleFrame from './ArticleFrame.astro';
+import FaqList from './FaqList.astro';
+import SubtitlePremiumStyles from './SubtitlePremiumStyles.astro';
+import { getAnyConverter } from '../config/converter-registry';
+
+interface Props { converter: ConverterDefinition; }
+const { converter } = Astro.props;
+const label = (value?: string) => value?.toUpperCase() ?? '';
+const inputLabel = label(converter.input);
+const outputLabel = label(converter.output);
+const related = (converter.related ?? []).map((slug) => getAnyConverter(slug)).filter(Boolean);
+const asideRelated = related.map((item) => ({ href: `/${item!.slug}/`, label: item!.eyebrow }));
+const richSource = converter.input === 'ass' || converter.input === 'ssa';
+const vttSource = converter.input === 'vtt';
+const textOutput = converter.output === 'txt';
+const toc = [
+  { id: 'why', label: `Why convert ${inputLabel} to ${outputLabel}?` },
+  { id: 'preflight', label: 'Preflight analysis' },
+  { id: 'preserved', label: 'What is preserved' },
+  { id: 'advanced', label: 'Advanced controls' },
+  { id: 'changes', label: 'What changes' },
+  { id: 'workflow', label: 'Local workflow' },
+  { id: 'check', label: 'Before you replace the source' },
+];
+const faq = [
+  { question: `Can I convert ${inputLabel} to ${outputLabel} without uploading the subtitle?`, answer: 'Yes. Preflight analysis, parsing, timing transforms, and serialization run in a browser worker. The source file is not sent to a conversion server.' },
+  { question: 'Can I shift all subtitle timing precisely?', answer: 'Yes. Timing shift accepts an exact offset from -600000 to +600000 milliseconds. Values such as +1350 or -780 are applied consistently to every cue. A negative shift that would move any cue before 00:00 is rejected rather than silently clipped.' },
+  { question: 'Can I remove subtitle formatting?', answer: textOutput ? 'TXT is always exported as readable plain text. Voice labels are kept where they can be interpreted, while inline styling markup is removed.' : 'Yes. Enable Plain text only to remove inline subtitle markup from cue text before the destination file is written.' },
+  { question: 'Does the converter change the original subtitle file?', answer: 'No. It creates a new downloadable output. Keep the source until you have checked timing, line breaks, speaker labels, and any formatting your workflow depends on.' },
+  { question: 'What happens if a timestamp is malformed?', answer: 'Full-file preflight parsing rejects malformed timed-text structure before the file enters the ready queue. The converter does not guess missing or invalid timing values.' },
+  { question: 'Can I batch convert subtitle files?', answer: 'Yes. Each accepted file is preflight-checked, then the shared queue converts files sequentially. Successful results can be downloaded individually or together as a ZIP.' },
+];
+---
+<SubtitlePremiumStyles />
+<ArticleFrame toc={toc} related={asideRelated} relatedTitle="Related subtitle conversions" asideNote="Subtitle Preview runs a full timed-text preflight before conversion, then keeps fidelity loss explicit instead of pretending richer metadata survived.">
+  <div class="quick-answer"><strong>Quick answer</strong><p>Convert {inputLabel} to {outputLabel} locally in your browser. Before a file becomes Ready, the worker parses the complete subtitle, counts cues, detects text encoding, and identifies richer formatting or WebVTT metadata.</p></div>
+
+  <h2 id="why">Why convert {inputLabel} to {outputLabel}?</h2>
+  {richSource ? <p>{inputLabel} is designed for styled subtitles with positioning, named styles, effects, and other presentation metadata. {outputLabel} is simpler and often easier to use in players, web workflows, caption tools, or editing software. This conversion intentionally creates a compatibility copy centered on dialogue timing and readable text.</p> : textOutput ? <p>Plain TXT is useful when you need a transcript-like copy for editing, search, notes, translation preparation, or text analysis rather than a timed subtitle container. You can export dialogue only, start timestamps, or complete start-to-end ranges.</p> : <p>{inputLabel} and {outputLabel} store the same basic idea—timed text—but use different timestamp syntax and container rules. Converting creates a compatibility copy for software or publishing workflows that expect the destination format.</p>}
+
+  <h2 id="preflight">Full-file preflight before the queue says Ready</h2>
+  <p>The Subtitle engine does more than check the filename. It sends the complete subtitle to its local Web Worker, parses every cue, validates each start/end pair, detects the text encoding, counts cues, records the timeline end, and flags richer formatting or WebVTT metadata. The queue metadata then shows useful facts such as cue count, timeline length, encoding, and whether presentation metadata was detected.</p>
+  <div class="callout"><strong>Why this matters</strong><p>A file with a valid first cue but broken timing near the end is rejected during admission instead of failing only after you press Convert. Ambiguous SRT blocks containing multiple timestamp lines are also rejected rather than silently turning later timing into subtitle text.</p></div>
+
+  <h2 id="preserved">What is preserved?</h2>
+  <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Subtitle detail</th><th>Preview behavior</th></tr></thead><tbody><tr><td><strong>Cue order</strong></td><td>Kept in source order; the converter does not sort or merge cues.</td></tr><tr><td><strong>Start / end timing</strong></td><td>Converted to millisecond timing where the destination supports it, with an optional exact global millisecond offset.</td></tr><tr><td><strong>Line breaks</strong></td><td>Dialogue line breaks are retained in timed subtitle outputs unless the chosen transcript mode changes spacing.</td></tr><tr><td><strong>Readable text</strong></td><td>Kept. Plain-text mode can intentionally remove inline formatting markup.</td></tr><tr><td><strong>Original file</strong></td><td>Never modified.</td></tr></tbody></table></div>
+
+  <h2 id="advanced">Advanced controls without turning this into a subtitle editor</h2>
+  <div class="subtitle-premium-strip">
+    <div class="subtitle-premium-item"><strong>Exact timing shift</strong><span>Enter a precise -600000 to +600000 ms offset, including values such as +1350 or -780.</span></div>
+    <div class="subtitle-premium-item"><strong>Formatting cleanup</strong><span>Timed outputs can keep inline markup or intentionally export plain cue text.</span></div>
+    <div class="subtitle-premium-item"><strong>Transcript modes</strong><span>TXT can use no timestamps, start times, or full start → end ranges.</span></div>
+    <div class="subtitle-premium-item"><strong>Byte controls</strong><span>Choose LF/CRLF and optional UTF-8 BOM for downstream compatibility.</span></div>
+  </div>
+  {textOutput && <p>For TXT output, <strong>Cue spacing</strong> lets you choose a blank line between cues or a single line break for a denser transcript.</p>}
+
+  <h2 id="changes">What changes during conversion?</h2>
+  {richSource && <div class="callout"><strong>ASS/SSA fidelity note</strong><p>Named styles, fonts, colors, positioning, margins, karaoke timing, drawing commands, effects, and override tags are not preserved in SRT, VTT, SBV, or TXT output. Keep the ASS/SSA source whenever presentation matters.</p></div>}
+  {vttSource && <p>WebVTT can carry cue identifiers, cue settings, regions, NOTE blocks, STYLE blocks, and timestamp-map metadata that simpler formats do not understand. Those features are detected during preflight so the source is not treated as plain timed text by accident.</p>}
+  {textOutput && <p>TXT is intentionally not a timed subtitle container. Inline markup is removed. Timing appears only when you choose <strong>Start time</strong> or <strong>Start → end</strong>.</p>}
+  {!richSource && !vttSource && !textOutput && <p>The main change is serialization: timestamp punctuation, cue numbering/header rules, and container syntax are rewritten for {outputLabel}. The spoken text and cue ranges remain the compatibility target.</p>}
+
+  <h2 id="workflow">How the browser-first Subtitle workflow works</h2>
+  <ol>
+    <li><strong>Add a subtitle.</strong> The engine checks the extension, then fully parses the file in its worker before admission.</li>
+    <li><strong>Review the queue facts.</strong> Cue count, timeline end, encoding, and richer-format flags appear with the source metadata.</li>
+    <li><strong>Choose output and controls.</strong> Set an exact timing offset, formatting cleanup, transcript options, line endings, or BOM as needed.</li>
+    <li><strong>Convert locally.</strong> The worker applies deterministic cue transforms and serializes {outputLabel}.</li>
+    <li><strong>Download a new file.</strong> The browser saves the converted copy; the original stays unchanged.</li>
+  </ol>
+
+  <h2 id="check">Before you replace the source subtitle</h2>
+  <ul class="content-checklist">
+    <li>Spot-check early, middle, and late cue timing in the destination player.</li>
+    <li>Keep ASS/SSA sources if styling, karaoke, placement, or effects matter.</li>
+    <li>Check speaker markup and inline emphasis when moving between subtitle ecosystems.</li>
+    <li>Use negative timing shift carefully; the converter refuses to move cues before 00:00.</li>
+    <li>Keep the original until the destination tool renders the converted file as expected.</li>
+  </ul>
+</ArticleFrame>
+
+<section class="content-wide-section white"><div class="site-container"><FaqList items={faq} title={`${inputLabel} to ${outputLabel} FAQ`} intro={`Practical questions about converting ${inputLabel} timed text to ${outputLabel}, preflight validation, exact timing correction, text cleanup, and local browser processing.`} /></div></section>
