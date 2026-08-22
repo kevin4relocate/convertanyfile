@@ -1,6 +1,13 @@
 import type { ImageToolDefinition } from '../platform/image-tools/types';
 
 const MIB = 1024 * 1024;
+const MASK_BATCH_CAPABILITIES = {
+  supportsBatch: true,
+  supportsSharedSettings: true,
+  supportsIndividualSettings: true,
+  supportsPreview: true,
+  supportsOutputFormat: true,
+} as const;
 
 export const REMOVE_WATERMARK_TOOL: ImageToolDefinition = {
   id: 'remove-watermark',
@@ -17,6 +24,10 @@ export const REMOVE_WATERMARK_TOOL: ImageToolDefinition = {
   maxFileBytes: 10 * MIB,
   maxPixels: 20_000_000,
   maxDimension: 12_000,
+  maxFiles: 50,
+  category: 'mask',
+  capabilities: MASK_BATCH_CAPABILITIES,
+  outputKind: 'zip',
   selectionModes: ['rect', 'circle', 'square', 'diamond', 'star4', 'text'],
   defaultSelectionMode: 'rect',
   removeActionLabel: 'Remove watermark',
@@ -39,6 +50,10 @@ export const GEMINI_AI_LOGO_REMOVER_TOOL: ImageToolDefinition = {
   maxFileBytes: 10 * MIB,
   maxPixels: 20_000_000,
   maxDimension: 12_000,
+  maxFiles: 50,
+  category: 'mask',
+  capabilities: MASK_BATCH_CAPABILITIES,
+  outputKind: 'zip',
   selectionModes: ['circle', 'star4'],
   defaultSelectionMode: 'star4',
   removeActionLabel: 'Remove Gemini watermark',
