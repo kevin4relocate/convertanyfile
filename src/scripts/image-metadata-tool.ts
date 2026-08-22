@@ -45,6 +45,15 @@ function initMetadataTool(root: HTMLElement): void {
   let currentFile: File | undefined;
   let cleanedBlob: Blob | undefined;
   let cleanedName = '';
+  let inspecting = false;
+  let cleaning = false;
+
+  const setControls = (): void => {
+    const locked = inspecting || cleaning;
+    clear.disabled = locked;
+    preserveColor.disabled = locked;
+    clean.disabled = locked || !currentFile || inspecting;
+  };
 
   const renderEntries = (container: HTMLElement, entries: Array<{ name: string; value?: string }>): void => {
     container.replaceChildren();
@@ -78,30 +87,37 @@ function initMetadataTool(root: HTMLElement): void {
     renderEntries(attributes, metadata.attributes);
   };
 
-  const reset = (): void => {
-    currentFile = undefined;
+  const resetResult = (): void => {
     cleanedBlob = undefined;
     cleanedName = '';
+    result.hidden = true;
+    download.hidden = true;
+    resultSummary.textContent = '';
+  };
+
+  const reset = (): void => {
+    if (inspecting || cleaning) return;
+    currentFile = undefined;
     input.value = '';
     workspace.hidden = true;
     dropzone.hidden = false;
-    result.hidden = true;
-    clean.disabled = false;
+    resetResult();
     renderEntries(profiles, []);
     renderEntries(attributes, []);
+    setControls();
   };
 
   const loadFile = async (file: File): Promise<void> => {
     const ext = extensionOf(file.name);
-    if (!ACCEPTED.has(ext) || file.size > MAX_FILE_BYTES) return;
+    if (!ACCEPTED.has(ext) || file.size > MAX_FILE_BYTES || inspecting || cleaning) return;
     currentFile = file;
-    cleanedBlob = undefined;
-    result.hidden = true;
+    resetResult();
     filename.textContent = file.name;
     filemeta.textContent = `${formatBytes(file.size)} · ${ext.toUpperCase()}`;
     dropzone.hidden = true;
     workspace.hidden = false;
-    clean.disabled = true;
+    inspecting = true;
+    setControls();
     profileCount.textContent = '…';
     attributeCount.textContent = '…';
     dimensions.textContent = '…';
@@ -111,28 +127,32 @@ function initMetadataTool(root: HTMLElement): void {
       const metadata = await client.inspect(await file.arrayBuffer(), normalizedFormat(file));
       if (currentFile !== file) return;
       renderMetadata(metadata);
-      clean.disabled = false;
     } catch (error) {
       if (currentFile !== file) return;
       renderEntries(profiles, []);
       renderEntries(attributes, [{ name: error instanceof Error ? error.message : 'Unable to inspect this image' }]);
-      clean.disabled = true;
+    } finally {
+      if (currentFile === file) {
+        inspecting = false;
+        setControls();
+      }
     }
   };
 
-  choose.addEventListener('click', (event) => { event.stopPropagation(); input.click(); });
-  dropzone.addEventListener('click', () => input.click());
-  dropzone.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); input.click(); } });
+  choose.addEventListener('click', (event) => { event.stopPropagation(); if (!inspecting && !cleaning) input.click(); });
+  dropzone.addEventListener('click', () => { if (!inspecting && !cleaning) input.click(); });
+  dropzone.addEventListener('keydown', (event) => { if ((event.key === 'Enter' || event.key === ' ') && !inspecting && !cleaning) { event.preventDefault(); input.click(); } });
   input.addEventListener('change', () => { const file = input.files?.[0]; if (file) void loadFile(file); input.value = ''; });
   dropzone.addEventListener('dragover', (event) => event.preventDefault());
   dropzone.addEventListener('drop', (event) => { event.preventDefault(); const file = event.dataTransfer?.files?.[0]; if (file) void loadFile(file); });
   clear.addEventListener('click', reset);
   clean.addEventListener('click', async () => {
     const file = currentFile;
-    if (!file) return;
-    clean.disabled = true;
+    if (!file || inspecting || cleaning) return;
+    cleaning = true;
+    resetResult();
     clean.textContent = 'Cleaning…';
-    result.hidden = true;
+    setControls();
     try {
       const format = normalizedFormat(file);
       const output = await client.convert(await file.arrayBuffer(), format, format, 95, { stripMetadata: true, preserveColorProfile: preserveColor.checked });
@@ -142,18 +162,27 @@ function initMetadataTool(root: HTMLElement): void {
       cleanedBlob = blob;
       cleanedName = `${baseName(file.name)}-metadata-cleaned.${format}`;
       resultSummary.textContent = `${formatBytes(file.size)} → ${formatBytes(blob.size)} · remaining: ${after.profiles.length} profiles, ${after.attributes.length} attributes`;
+      download.hidden = false;
       result.hidden = false;
     } catch (error) {
       if (currentFile === file) {
+        cleanedBlob = undefined;
+        cleanedName = '';
         resultSummary.textContent = error instanceof Error ? error.message : 'Unable to clean metadata';
+        download.hidden = true;
         result.hidden = false;
       }
     } finally {
-      clean.disabled = false;
-      clean.textContent = 'Remove metadata';
+      if (currentFile === file) {
+        cleaning = false;
+        clean.textContent = 'Remove metadata';
+        setControls();
+      }
     }
   });
   download.addEventListener('click', () => { if (cleanedBlob && cleanedName) downloadBlob(cleanedBlob, cleanedName); });
+  download.hidden = true;
+  setControls();
 }
 
 document.querySelectorAll<HTMLElement>('[data-image-metadata]').forEach(initMetadataTool);
