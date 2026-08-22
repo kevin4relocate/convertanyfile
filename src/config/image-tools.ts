@@ -42,7 +42,7 @@ export const GEMINI_AI_LOGO_REMOVER_TOOL: ImageToolDefinition = {
   selectionModes: ['circle', 'star4'],
   defaultSelectionMode: 'star4',
   removeActionLabel: 'Remove Gemini watermark',
-  downloadSuffix: 'gemini-watermark-removed',
+  downloadSuffix: 'gemini-logo-removed',
   policyNote: 'Use one shared mask when the visible watermark stays at the same relative position and approximate size. Use individual masks for mixed layouts or exceptions. This tool edits visible selected pixels only; it does not claim to detect or remove invisible provenance, authenticity, Content Credentials, metadata, or SynthID-style signals.',
 };
 
