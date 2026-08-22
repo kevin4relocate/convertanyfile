@@ -1,9 +1,16 @@
 ---
 import { NAV_ITEMS, SITE } from '../config/site';
 const currentPath = Astro.url.pathname;
-const imageToolsActive = currentPath === '/image-tools/' || currentPath === '/remove-watermark/' || currentPath === '/gemini-ai-logo-remover/';
+const imageToolPaths = ['/image-tools/', '/resize-image/', '/compress-image/', '/crop-image/', '/rotate-image/', '/image-metadata/', '/bulk-rename-images/', '/remove-watermark/', '/gemini-ai-logo-remover/'];
+const imageToolsActive = imageToolPaths.includes(currentPath);
 const converterPaths = ['/image-converter/', '/data-converter/', '/archive-converter/', '/subtitle-converter/'];
 const convertersActive = converterPaths.includes(currentPath);
+const featuredImageTools = [
+  { href: '/resize-image/', name: 'Resize Image', detail: 'Dimensions · batch · presets', icon: 'R' },
+  { href: '/compress-image/', name: 'Compress Image', detail: 'Quality · format · size', icon: 'C' },
+  { href: '/remove-watermark/', name: 'Remove Watermark', detail: 'Batch · shapes · text mask', icon: 'W' },
+  { href: '/gemini-ai-logo-remover/', name: 'Gemini Watermark Remover', detail: 'Visible mark · Circle · Star', icon: '✦', spark: true },
+];
 ---
 <header class="site-header">
   <div class="site-container header-inner">
@@ -24,14 +31,12 @@ const convertersActive = converterPaths.includes(currentPath);
               <span>All Image Tools</span>
               <span aria-hidden="true">→</span>
             </a>
-            <a class:list={['nav-tool-link', currentPath === '/remove-watermark/' && 'is-current']} href="/remove-watermark/">
-              <span class="nav-tool-icon" aria-hidden="true">W</span>
-              <span class="nav-tool-copy"><strong>Remove Watermark</strong><small>Batch · shapes · text mask</small></span>
-            </a>
-            <a class:list={['nav-tool-link', currentPath === '/gemini-ai-logo-remover/' && 'is-current']} href="/gemini-ai-logo-remover/">
-              <span class="nav-tool-icon nav-tool-icon--spark" aria-hidden="true">✦</span>
-              <span class="nav-tool-copy"><strong>Gemini Watermark Remover</strong><small>Visible mark · Circle · 4-Point Star</small></span>
-            </a>
+            {featuredImageTools.map((tool) => (
+              <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} href={tool.href}>
+                <span class:list={['nav-tool-icon', tool.spark && 'nav-tool-icon--spark']} aria-hidden="true">{tool.icon}</span>
+                <span class="nav-tool-copy"><strong>{tool.name}</strong><small>{tool.detail}</small></span>
+              </a>
+            ))}
           </div>
         </details>
       ) : <a href={item.href}>{item.label}</a>)}
@@ -62,8 +67,7 @@ const convertersActive = converterPaths.includes(currentPath);
           </summary>
           <div class="mobile-menu-submenu">
             <a class:list={['mobile-menu-subitem', currentPath === '/image-tools/' && 'is-current']} href="/image-tools/">All Image Tools</a>
-            <a class:list={['mobile-menu-subitem', currentPath === '/remove-watermark/' && 'is-current']} href="/remove-watermark/">Remove Watermark</a>
-            <a class:list={['mobile-menu-subitem', currentPath === '/gemini-ai-logo-remover/' && 'is-current']} href="/gemini-ai-logo-remover/">Gemini Watermark Remover</a>
+            {featuredImageTools.map((tool) => <a class:list={['mobile-menu-subitem', currentPath === tool.href && 'is-current']} href={tool.href}>{tool.name}</a>)}
           </div>
         </details>
 
@@ -208,7 +212,6 @@ const convertersActive = converterPaths.includes(currentPath);
   .nav-tool-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #eef0f6; font-size: 12px; font-weight: 690; }
   .nav-tool-copy small { color: #858d9d; font-size: 9.75px; line-height: 1.35; }
 
-  /* Mobile navigation owns its typography. It does not inherit generic nav/link sizing. */
   .mobile-menu,
   .mobile-menu * {
     font-family: inherit;
