@@ -1,0 +1,32 @@
+---
+interface Props {
+  format?: 'source' | 'png' | 'jpg' | 'webp';
+  quality?: number;
+  showQuality?: boolean;
+}
+
+const { format = 'source', quality = 92, showQuality = true } = Astro.props;
+---
+
+<section class="image-output-panel" data-role="output-panel">
+  <label>
+    <span>Output format</span>
+    <select data-role="output-format">
+      <option value="source" selected={format === 'source'}>Same as source</option>
+      <option value="png" selected={format === 'png'}>PNG</option>
+      <option value="jpg" selected={format === 'jpg'}>JPG</option>
+      <option value="webp" selected={format === 'webp'}>WebP</option>
+    </select>
+  </label>
+
+  {showQuality && (
+    <label>
+      <span>Quality <output data-role="quality-value">{quality}</output></span>
+      <input data-role="output-quality" type="range" min="1" max="100" value={quality} />
+    </label>
+  )}
+</section>
+
+<style>
+  .image-output-panel{display:grid;grid-template-columns:minmax(180px,260px) minmax(220px,1fr);gap:14px;align-items:end}.image-output-panel label{display:grid;gap:6px}.image-output-panel label>span{font-size:.78rem;font-weight:700}.image-output-panel select,.image-output-panel input{width:100%}@media(max-width:640px){.image-output-panel{grid-template-columns:1fr}}
+</style>
