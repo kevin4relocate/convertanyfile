@@ -1,32 +1,53 @@
 ---
 interface Props {
-  format?: 'source' | 'png' | 'jpg' | 'webp';
+  format?: 'source' | 'png' | 'jpg' | 'jpeg' | 'webp';
   quality?: number;
   showQuality?: boolean;
+  variant?: 'generic' | 'mask';
 }
 
-const { format = 'source', quality = 92, showQuality = true } = Astro.props;
+const { format = 'source', quality = 96, showQuality = true, variant = 'generic' } = Astro.props;
 ---
 
-<section class="image-output-panel" data-role="output-panel">
-  <label>
-    <span>Output format</span>
-    <select data-role="output-format">
-      <option value="source" selected={format === 'source'}>Same as source</option>
-      <option value="png" selected={format === 'png'}>PNG</option>
-      <option value="jpg" selected={format === 'jpg'}>JPG</option>
-      <option value="webp" selected={format === 'webp'}>WebP</option>
-    </select>
-  </label>
-
-  {showQuality && (
+{variant === 'mask' ? (
+  <section class="image-output-panel gemini-output-panel" data-role="output-panel" aria-label="Output settings">
+    <div class="gemini-output-format-block">
+      <span>Output</span><strong>Format</strong>
+      <div class="gemini-output-pills" role="radiogroup" aria-label="Output format">
+        <button class:list={['gemini-output-pill', format === 'source' && 'is-active']} type="button" role="radio" aria-checked={format === 'source'} data-output-value="source">Same as source</button>
+        <button class:list={['gemini-output-pill', format === 'png' && 'is-active']} type="button" role="radio" aria-checked={format === 'png'} data-output-value="png">PNG</button>
+        <button class:list={['gemini-output-pill', (format === 'jpg' || format === 'jpeg') && 'is-active']} type="button" role="radio" aria-checked={format === 'jpg' || format === 'jpeg'} data-output-value="jpeg">JPG</button>
+        <button class:list={['gemini-output-pill', format === 'webp' && 'is-active']} type="button" role="radio" aria-checked={format === 'webp'} data-output-value="webp">WebP</button>
+      </div>
+    </div>
+    {showQuality && (
+      <label class="gemini-quality-block">
+        <span>Quality</span>
+        <div><input data-role="quality" type="range" min="80" max="100" value={quality} /><output data-role="quality-value">{quality}</output></div>
+        <small>JPEG/WebP only · PNG stays lossless</small>
+      </label>
+    )}
+  </section>
+) : (
+  <section class="image-output-panel" data-role="output-panel">
     <label>
-      <span>Quality <output data-role="quality-value">{quality}</output></span>
-      <input data-role="output-quality" type="range" min="1" max="100" value={quality} />
+      <span>Output format</span>
+      <select data-role="output-format">
+        <option value="source" selected={format === 'source'}>Same as source</option>
+        <option value="png" selected={format === 'png'}>PNG</option>
+        <option value="jpg" selected={format === 'jpg' || format === 'jpeg'}>JPG</option>
+        <option value="webp" selected={format === 'webp'}>WebP</option>
+      </select>
     </label>
-  )}
-</section>
+    {showQuality && (
+      <label>
+        <span>Quality <output data-role="quality-value">{quality}</output></span>
+        <input data-role="output-quality" type="range" min="1" max="100" value={quality} />
+      </label>
+    )}
+  </section>
+)}
 
 <style>
-  .image-output-panel{display:grid;grid-template-columns:minmax(180px,260px) minmax(220px,1fr);gap:14px;align-items:end}.image-output-panel label{display:grid;gap:6px}.image-output-panel label>span{font-size:.78rem;font-weight:700}.image-output-panel select,.image-output-panel input{width:100%}@media(max-width:640px){.image-output-panel{grid-template-columns:1fr}}
+  .image-output-panel{display:grid;grid-template-columns:minmax(180px,260px) minmax(220px,1fr);gap:14px;align-items:end}.image-output-panel label{display:grid;gap:6px}.image-output-panel label>span{font-size:.78rem;font-weight:700}.image-output-panel select,.image-output-panel input{width:100%}.gemini-output-panel{display:flex}@media(max-width:640px){.image-output-panel{grid-template-columns:1fr}.gemini-output-panel{display:grid}}
 </style>
