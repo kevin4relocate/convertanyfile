@@ -1,8 +1,21 @@
 import type { ConversionErrorCode } from '../../platform/converter/errors';
 
+export interface ImageResizeTransform {
+  width: number;
+  height: number;
+}
+
 export type ImageWorkerRequest =
   | { type: 'capabilities'; requestId: string }
-  | { type: 'convert'; requestId: string; input: ArrayBuffer; inputFormat?: string; output: string; quality: number };
+  | {
+      type: 'convert';
+      requestId: string;
+      input: ArrayBuffer;
+      inputFormat?: string;
+      output: string;
+      quality: number;
+      resize?: ImageResizeTransform;
+    };
 
 type WorkerFailure = { requestId: string; ok: false; error: string; code: ConversionErrorCode; retryable: boolean };
 
