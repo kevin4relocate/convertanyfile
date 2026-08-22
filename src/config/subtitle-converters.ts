@@ -12,10 +12,10 @@ export const SUBTITLE_CONVERTERS: readonly ConverterDefinition[] = [
   {
     ...subtitleBase,
     slug: 'subtitle-converter',
-    title: 'Free Online Subtitle Converter — SRT, VTT, ASS & More | ConvertAnyFile',
+    title: 'Free Subtitle Converter — SRT, VTT, ASS & More | ConvertAnyFile',
     description: 'Convert SRT, WebVTT, ASS, SSA and SBV locally with preflight cue analysis, timing shift, formatting cleanup, transcript export, batch conversion and no upload.',
-    h1: 'Convert subtitles locally.',
-    eyebrow: 'Subtitle converter preview',
+    h1: 'Free online subtitle converter',
+    eyebrow: 'Subtitle converter',
     intro: 'Inspect and convert common timed-text subtitle formats in a browser worker without uploading the source file.',
   },
   {
