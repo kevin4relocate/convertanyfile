@@ -1,11 +1,11 @@
 export const SUBTITLE_FAQ = [
   {
     question: 'Which subtitle formats can I add?',
-    answer: 'The Preview accepts SRT, VTT/WebVTT, ASS, SSA, and SBV. Before a file becomes Ready, the complete subtitle is parsed in a local worker so malformed later cues are caught during admission rather than after conversion starts.',
+    answer: 'The Subtitle Converter accepts SRT, VTT/WebVTT, ASS, SSA, and SBV. Before a file becomes Ready, the complete subtitle is parsed in a local worker so malformed later cues are caught during admission rather than after conversion starts.',
   },
   {
     question: 'Which subtitle formats can I export?',
-    answer: 'Certified Preview outputs are SRT, VTT, SBV, and plain TXT. The public catalog exposes 17 useful cross-format routes. ASS and SSA remain input-only because their richer styling, positioning, karaoke, and effect model cannot be recreated faithfully by the simpler outputs.',
+    answer: 'Supported outputs are SRT, VTT, SBV, and plain TXT. The public catalog exposes 17 useful cross-format routes. ASS and SSA remain input-only because their richer styling, positioning, karaoke, and effect model cannot be recreated faithfully by the simpler outputs.',
   },
   {
     question: 'What does the preflight analysis show?',
@@ -41,6 +41,6 @@ export const SUBTITLE_FAQ = [
   },
   {
     question: 'Why does the Subtitle converter have file-size limits?',
-    answer: 'Subtitle conversion is lightweight, but complete preflight parsing and unexpectedly large timed-text files can still consume browser memory and CPU. Preview limits are 50 files, 5 MB per file, 50 MB total input, and a 100,000-cue parser guard.',
+    answer: 'Subtitle conversion is lightweight, but complete preflight parsing and unexpectedly large timed-text files can still consume browser memory and CPU. Current limits are 50 files, 5 MB per file, 50 MB total input, and a 100,000-cue parser guard.',
   },
 ] as const;
