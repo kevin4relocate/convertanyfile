@@ -3,8 +3,9 @@
 import type { RegionBlurRect, RegionBlurWorkerRequest, RegionBlurWorkerResponse } from './protocol';
 
 const scope = self as DedicatedWorkerGlobalScope;
-const MAX_REGION_PIXELS = 8_000_000;
-const MAX_WORK_PIXELS = 12_000_000;
+const MAX_SOURCE_PIXELS = 12_000_000;
+const MAX_REGION_PIXELS = 4_000_000;
+const MAX_WORK_PIXELS = 6_000_000;
 
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 
@@ -14,7 +15,7 @@ function normalizedRect(rect: RegionBlurRect, width: number, height: number): Re
   const right = clamp(Math.round(rect.x + rect.width), x + 1, width);
   const bottom = clamp(Math.round(rect.y + rect.height), y + 1, height);
   const normalized = { x, y, width: right - x, height: bottom - y };
-  if (normalized.width * normalized.height > MAX_REGION_PIXELS) throw new Error('Selected blur region exceeds the browser safety limit');
+  if (normalized.width * normalized.height > MAX_REGION_PIXELS) throw new Error('Selected blur region exceeds the 4 MP browser safety limit');
   return normalized;
 }
 
@@ -69,7 +70,7 @@ function blurVertical(input: Uint8ClampedArray, output: Uint8ClampedArray, width
 
 function blurRegion(request: RegionBlurWorkerRequest): { pixels: ArrayBuffer; affectedPixels: number } {
   const { width, height } = request;
-  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width * height > 20_000_000) throw new Error('Invalid or unsafe image dimensions');
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || width * height > MAX_SOURCE_PIXELS) throw new Error('Selected-region blur supports source images up to 12 MP');
   const source = new Uint8ClampedArray(request.pixels);
   if (source.length !== width * height * 4) throw new Error('Unexpected image pixel buffer length');
   const rect = normalizedRect(request.rect, width, height);
@@ -82,10 +83,10 @@ function blurRegion(request: RegionBlurWorkerRequest): { pixels: ArrayBuffer; af
   const bottom = Math.min(height, rect.y + rect.height + padding);
   const workWidth = right - left;
   const workHeight = bottom - top;
-  if (workWidth * workHeight > MAX_WORK_PIXELS) throw new Error('Selected blur region needs too much browser memory');
+  if (workWidth * workHeight > MAX_WORK_PIXELS) throw new Error('Selected blur region needs too much browser memory; make the selection smaller');
 
-  let workA = new Uint8ClampedArray(workWidth * workHeight * 4);
-  let workB = new Uint8ClampedArray(workA.length);
+  const workA = new Uint8ClampedArray(workWidth * workHeight * 4);
+  const workB = new Uint8ClampedArray(workA.length);
   for (let y = 0; y < workHeight; y += 1) {
     const sourceStart = ((top + y) * width + left) * 4;
     workA.set(source.subarray(sourceStart, sourceStart + workWidth * 4), y * workWidth * 4);
