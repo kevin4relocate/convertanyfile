@@ -34,7 +34,7 @@ const faq = [
 ];
 ---
 <SubtitlePremiumStyles />
-<ArticleFrame toc={toc} related={asideRelated} relatedTitle="Related subtitle conversions" asideNote="Subtitle Preview runs a full timed-text preflight before conversion, then keeps fidelity loss explicit instead of pretending richer metadata survived.">
+<ArticleFrame toc={toc} related={asideRelated} relatedTitle="Related subtitle conversions" asideNote="The Subtitle Converter runs a full timed-text preflight before conversion, then keeps fidelity loss explicit instead of pretending richer metadata survived.">
   <div class="quick-answer"><strong>Quick answer</strong><p>Convert {inputLabel} to {outputLabel} locally in your browser. Before a file becomes Ready, the worker parses the complete subtitle, counts cues, detects text encoding, and identifies richer formatting or WebVTT metadata.</p></div>
 
   <h2 id="why">Why convert {inputLabel} to {outputLabel}?</h2>
@@ -45,7 +45,7 @@ const faq = [
   <div class="callout"><strong>Why this matters</strong><p>A file with a valid first cue but broken timing near the end is rejected during admission instead of failing only after you press Convert. Ambiguous SRT blocks containing multiple timestamp lines are also rejected rather than silently turning later timing into subtitle text.</p></div>
 
   <h2 id="preserved">What is preserved?</h2>
-  <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Subtitle detail</th><th>Preview behavior</th></tr></thead><tbody><tr><td><strong>Cue order</strong></td><td>Kept in source order; the converter does not sort or merge cues.</td></tr><tr><td><strong>Start / end timing</strong></td><td>Converted to millisecond timing where the destination supports it, with an optional exact global millisecond offset.</td></tr><tr><td><strong>Line breaks</strong></td><td>Dialogue line breaks are retained in timed subtitle outputs unless the chosen transcript mode changes spacing.</td></tr><tr><td><strong>Readable text</strong></td><td>Kept. Plain-text mode can intentionally remove inline formatting markup.</td></tr><tr><td><strong>Original file</strong></td><td>Never modified.</td></tr></tbody></table></div>
+  <div class="comparison-table-wrap"><table class="comparison-table"><thead><tr><th>Subtitle detail</th><th>Converter behavior</th></tr></thead><tbody><tr><td><strong>Cue order</strong></td><td>Kept in source order; the converter does not sort or merge cues.</td></tr><tr><td><strong>Start / end timing</strong></td><td>Converted to millisecond timing where the destination supports it, with an optional exact global millisecond offset.</td></tr><tr><td><strong>Line breaks</strong></td><td>Dialogue line breaks are retained in timed subtitle outputs unless the chosen transcript mode changes spacing.</td></tr><tr><td><strong>Readable text</strong></td><td>Kept. Plain-text mode can intentionally remove inline formatting markup.</td></tr><tr><td><strong>Original file</strong></td><td>Never modified.</td></tr></tbody></table></div>
 
   <h2 id="advanced">Advanced controls without turning this into a subtitle editor</h2>
   <div class="subtitle-premium-strip">
