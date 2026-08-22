@@ -5,6 +5,7 @@ import FaqList from '../components/FaqList.astro';
 import ArticleFrame from '../components/ArticleFrame.astro';
 import DataPairContent from '../components/DataPairContent.astro';
 import ArchivePairContent from '../components/ArchivePairContent.astro';
+import SubtitlePairContent from '../components/SubtitlePairContent.astro';
 import { ALL_PAIR_CONVERTERS, getAnyConverter } from '../config/converter-registry';
 import { PAIR_CONTENT } from '../content/pair-content';
 import { SEO_PAIR_CONTENT } from '../content/seo-pair-content';
@@ -36,13 +37,13 @@ const faq = [
   {question:'What if one file fails?',answer:'The batch continues. Failed files can be retried individually when the failure may recover without throwing away successful results.'},
   {question:`Will ${outputLabel} automatically improve the image?`,answer:'No. A format conversion changes how the existing image is encoded or stored. It cannot restore source detail that was already missing or lost in an earlier compression step.'},
 ];
-const utilityCategory = converter.category === 'data' || converter.category === 'archive';
+const utilityCategory = converter.category === 'data' || converter.category === 'archive' || converter.category === 'subtitle';
 const schema={'@context':'https://schema.org','@type':'WebApplication',name:converter.h1,url:`${SITE.origin}/${converter.slug}/`,applicationCategory:utilityCategory ? 'UtilitiesApplication' : 'MultimediaApplication',operatingSystem:'Any',offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}};
 ---
 <SiteLayout title={converter.title} description={converter.description} schema={schema}>
 <ConverterPageFrame converter={converter} />
 
-{converter.category === 'data' ? <DataPairContent converter={converter} /> : converter.category === 'archive' ? <ArchivePairContent converter={converter} /> : <>
+{converter.category === 'data' ? <DataPairContent converter={converter} /> : converter.category === 'archive' ? <ArchivePairContent converter={converter} /> : converter.category === 'subtitle' ? <SubtitlePairContent converter={converter} /> : <>
 <ArticleFrame toc={toc} related={asideRelated} relatedTitle="Related conversions" asideNote="The conversion engine checks the file signature and runtime codec capability before relying on the format extension.">
   <div class="quick-answer"><strong>Quick answer</strong><p>{content?.when}</p></div>
 

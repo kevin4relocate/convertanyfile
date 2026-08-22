@@ -6,48 +6,51 @@ const toc = [
   { id: 'browser-first', label: 'What browser-first means' },
   { id: 'privacy', label: 'Privacy model' },
   { id: 'reliability', label: 'Reliability before format count' },
-  { id: 'live', label: 'What is live today' },
+  { id: 'live', label: 'What is available today' },
   { id: 'future', label: 'How the platform can grow' },
 ];
 const related = [
   { href: '/image-converter/', label: 'Image Converter' },
   { href: '/data-converter/', label: 'Data Converter' },
   { href: '/archive-converter/', label: 'Archive Converter' },
+  { href: '/subtitle-converter/', label: 'Subtitle Converter Preview' },
+  { href: '/image-tools/', label: 'Image Tools' },
   { href: '/formats/', label: 'Supported formats' },
-  { href: '/faq/', label: 'FAQ' },
 ];
 ---
-<SiteLayout title="About ConvertAnyFile — Browser-First File Conversion" description="Learn how ConvertAnyFile runs image, archive, and structured-data conversion locally in the browser with shared infrastructure, category-specific safety rules, and no account required.">
-<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>About</span></div><span class="eyebrow">About ConvertAnyFile</span><h1>File conversion without turning every file into a server upload.</h1><p>ConvertAnyFile is a focused conversion platform: one shared interface, separate category engines, and local processing wherever the browser can do the job reliably.</p></div></section>
-<ArticleFrame toc={toc} related={related} relatedTitle="Explore ConvertAnyFile" asideNote="Image, structured Data, and Archive conversion are live. New categories are promoted only after their browser workflow has real validation, safety limits, and regression coverage.">
-  <div class="quick-answer"><strong>The short version</strong><p>ConvertAnyFile aims to make routine file conversion feel immediate: choose or drop files, pick an output, convert locally when practical, and download the result without creating an account or waiting for an upload queue.</p></div>
+<SiteLayout title="About ConvertAnyFile — Browser-First File Tools" description="Learn how ConvertAnyFile runs image, archive, structured-data and Subtitle Preview conversion plus focused Image Tools locally in the browser with category-specific safety rules.">
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>About</span></div><span class="eyebrow">About ConvertAnyFile</span><h1>File tools without turning every file into a server upload.</h1><p>ConvertAnyFile is a browser-first platform: one shared interface, separate category engines, focused Image Tools, and local processing wherever the browser can do the job reliably.</p></div></section>
+<ArticleFrame toc={toc} related={related} relatedTitle="Explore ConvertAnyFile" asideNote="Image, structured Data, and Archive conversion are live. Subtitle is available as a Preview, while focused Image Tools use their own local editing runtime.">
+  <div class="quick-answer"><strong>The short version</strong><p>ConvertAnyFile aims to make routine file work feel immediate: choose or drop files, pick an output or focused image edit, process locally when practical, and download the result without creating an account or waiting for an upload queue.</p></div>
 
   <h2 id="why">Why ConvertAnyFile exists</h2>
-  <p>File formats create small but constant friction. A phone photo arrives as HEIC, a website expects WebP, a spreadsheet export needs JSON, an API dataset needs CSV, or a downloaded package arrives as RAR or 7Z when the next workflow expects ZIP. None of those routine tasks should require a complicated editing suite or a long upload-and-wait process.</p>
-  <p>The goal is not to claim support for every extension ever created. The goal is to make the conversions that are supported feel fast, predictable, and easy to understand. That means the tool should tell you what it can process, protect the browser from unsafe batches, document structural trade-offs, and keep working even when one file in a batch fails.</p>
+  <p>File formats create small but constant friction. A phone photo arrives as HEIC, a website expects WebP, a spreadsheet export needs JSON, an API dataset needs CSV, a subtitle track needs VTT instead of SRT, or a downloaded package arrives as RAR or 7Z when the next workflow expects ZIP. None of those routine tasks should require a complicated editing suite or a long upload-and-wait process.</p>
+  <p>The goal is not to claim support for every extension ever created. The goal is to make supported workflows fast, predictable, and easy to understand. That means the tool should tell you what it can process, protect the browser from unsafe batches, document structural trade-offs, and keep working when one file in a batch fails.</p>
 
   <h2 id="browser-first">What browser-first means</h2>
   <p>For supported local converters, the conversion engine runs inside your browser using JavaScript, browser workers, and WebAssembly where the category needs it. Your device provides the CPU and memory for the job, while the website provides the interface, category engine code, format rules, and download workflow.</p>
-  <p>Image, Data, and Archive each use their own engine behind the same batch interface. Heavy code is loaded only when needed; for example, the pinned 7Z/RAR decoder is lazy-loaded only for those Archive inputs.</p>
-  <ul class="content-checklist"><li>No account is required for the core browser converter.</li><li>Original files stay unchanged; conversion creates new downloadable copies.</li><li>Batch processing is designed to continue when an individual file fails.</li><li>Category engines and heavier dependencies are loaded only when the relevant workflow needs them.</li></ul>
+  <p>Image, Data, Archive, and the Subtitle Preview each use their own engine behind the same batch interface. Heavy code is loaded only when needed; for example, the pinned 7Z/RAR decoder is lazy-loaded only for those Archive inputs, while Subtitle uses a lightweight timed-text worker. Image Tools use a separate stateful mask editor because interactive pixel editing has different needs from format conversion.</p>
+  <ul class="content-checklist"><li>No account is required for the core browser workflows.</li><li>Original files stay unchanged; conversion or editing creates new downloadable copies.</li><li>Batch processing is designed to continue when an individual file fails.</li><li>Category engines and heavier dependencies are loaded only when the relevant workflow needs them.</li></ul>
 
   <h2 id="privacy">A privacy model built around the workflow</h2>
-  <p>The live Image, Data, and Archive converters process supported source bytes in the browser session rather than sending those files through a conversion upload queue. Data parsing runs in a browser worker, Image uses its dedicated local image engine, and Archive parses and repackages supported containers locally.</p>
-  <p>That does not mean every website request is invisible to the internet. Static pages, analytics, advertising services if introduced, and normal web requests are separate concerns and must be disclosed accurately in the privacy policy. Privacy claims should match the actual conversion path rather than implying that the browser has no network activity at all.</p>
+  <p>The live Image, Data, and Archive converters, the Subtitle Preview, and supported Image Tools process source contents in the browser session rather than sending those files through a conversion or editing upload queue. Data and Subtitle parsing run in browser workers, Image uses its dedicated local image engine, Archive parses and repackages supported containers locally, and Image Tools repair selected pixels in a local worker.</p>
+  <p>That does not mean every website request is invisible to the internet. Static pages, analytics, advertising services if introduced, and normal web requests are separate concerns and must be disclosed accurately in the privacy policy. Privacy claims should match the actual processing path rather than implying that the browser has no network activity at all.</p>
 
   <h2 id="reliability">Reliability before format count</h2>
-  <p>A long format list is useful only when the formats actually work. Image separates recognized inputs, runtime capabilities, and certified outputs. Data uses UTF-8 validation and deterministic table/JSON rules. Archive validates container signatures and integrity, rejects unsafe paths and unsupported special entries, and applies expanded-size guards so compressed files cannot bypass browser-memory limits.</p>
-  <p>The browser also has real limits. A compressed image can expand dramatically after decoding, JSON can occupy much more memory after parsing, and an archive can expand far beyond its compressed size. Category-specific batch limits, sequential conversion, cancellation, failure isolation, and worker recovery are therefore product features rather than arbitrary restrictions.</p>
+  <p>A long format list is useful only when the formats actually work. Image separates recognized inputs, runtime capabilities, and certified outputs. Data uses deterministic table/JSON rules. Archive validates container signatures and integrity, rejects unsafe paths and unsupported special entries, and applies expanded-size guards. Subtitle validates real timed-text structure and rejects malformed cue timing rather than guessing.</p>
+  <p>The browser also has real limits. A compressed image can expand dramatically after decoding, JSON can occupy much more memory after parsing, an archive can expand far beyond its compressed size, and an unexpectedly huge subtitle file can contain an excessive number of cues. Category-specific batch limits, sequential conversion, cancellation, failure isolation, and worker recovery are therefore product features rather than arbitrary restrictions.</p>
   <div class="callout"><strong>Product principle</strong><p>New categories should be added only when their browser workflow is dependable enough to explain honestly, test automatically, and protect with sensible CPU and memory limits.</p></div>
 
-  <h2 id="live">What is live today</h2>
-  <p><strong>Image</strong> provides runtime-certified image outputs, real WASM conversion regressions, browser memory guards, multi-format batches, and explicit single-image fidelity rules.</p>
-  <p><strong>Data</strong> covers CSV, TSV, JSON, JSONL, and NDJSON input with CSV, TSV, JSON, and JSONL output. It supports quoted delimited fields, header normalization, nested-object flattening, line-oriented JSON, output line endings, optional UTF-8 BOM, and batch ZIP downloads.</p>
-  <p><strong>Archive</strong> accepts ZIP, TAR, TAR.GZ/TGZ, GZIP/GZ, 7Z, and supported RAR4/RAR5 input. Certified public outputs are ZIP, TAR, and TAR.GZ. The engine includes CRC/checksum validation, path and expansion safety rules, and input-only lazy WASM decoding for 7Z/RAR.</p>
+  <h2 id="live">What is available today</h2>
+  <p><strong>Image — Live.</strong> Runtime-certified image outputs, WASM conversion regressions, browser memory guards, multi-format batches, and explicit single-image fidelity rules.</p>
+  <p><strong>Data — Live.</strong> CSV, TSV, JSON, JSONL, and NDJSON input with deterministic table and JSON outputs plus batch ZIP downloads.</p>
+  <p><strong>Archive — Live.</strong> ZIP, TAR, TAR.GZ/TGZ, GZIP/GZ, 7Z, and supported RAR4/RAR5 input with certified ZIP, TAR, and TAR.GZ output plus integrity, path, and expansion safety rules.</p>
+  <p><strong>Subtitle — Preview.</strong> SRT, VTT/WebVTT, ASS, SSA, and SBV input with SRT, VTT, SBV, and TXT output, complete timed-text preflight, exact timing shift, formatting cleanup, and transcript controls.</p>
+  <p><strong>Image Tools — Live.</strong> Focused local visible-watermark workflows include the general Remove Watermark editor and the Gemini Watermark Remover, both backed by the shared local batch mask runtime.</p>
 
   <h2 id="future">How the platform can grow without becoming a pile of copied tools</h2>
-  <p>The site is built around shared navigation, layout, converter frame, batch queue, progress, cancellation, retry semantics, downloads, ZIP packaging, SEO routing, sitemap generation, and common design rules. Category engines plug into that platform rather than rebuilding the entire website for every file type.</p>
-  <p>Image, Data, and Archive also prove that output settings can be engine-declared: Image can expose quality, Data can expose headers and line endings, and Archive can expose ZIP compression through the same shell.</p>
-  <p>Future audio, subtitle, font, contact, calendar, or geographic-file converters can reuse the interaction model while keeping their own validation, safety policy, and conversion implementation isolated. The result should feel like one coherent product instead of hundreds of unrelated mini-tools.</p>
+  <p>The site is built around shared navigation, layout, converter frames, batch queues, progress, cancellation, retry semantics, downloads, ZIP packaging, SEO routing, sitemap generation, and common design rules. Category engines plug into that platform rather than rebuilding the entire website for every file type.</p>
+  <p>The current categories also prove that output settings can be engine-declared: Image can expose quality, Data can expose headers and line endings, Archive can expose ZIP compression, and Subtitle can expose timing shift, transcript modes, line endings, and BOM through the same shell.</p>
+  <p>Future audio, font, contact, calendar, or geographic-file converters can reuse the interaction model while keeping their own validation, safety policy, and conversion implementation isolated. The result should feel like one coherent product instead of hundreds of unrelated mini-tools.</p>
 </ArticleFrame>
 </SiteLayout>

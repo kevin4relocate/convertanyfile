@@ -226,6 +226,14 @@ class ConverterController {
         select.value = control.defaultValue;
         select.addEventListener('change', () => { this.resetResults(); this.render(); });
         label.append(title, select);
+      } else if (control.type === 'number') {
+        const title = document.createElement('span'); title.textContent = control.label;
+        const wrap = document.createElement('span'); wrap.className = 'number-setting-wrap';
+        const input = document.createElement('input'); input.type = 'number'; input.min = String(control.min); input.max = String(control.max); input.step = String(control.step); input.value = String(control.defaultValue); input.dataset.settingId = control.id; input.setAttribute('aria-label', control.label);
+        input.addEventListener('input', () => { this.resetResults(); this.render(); });
+        wrap.append(input);
+        if (control.suffix) { const suffix = document.createElement('span'); suffix.className = 'number-setting-suffix'; suffix.textContent = control.suffix; wrap.append(suffix); }
+        label.append(title, wrap);
       } else {
         const input = document.createElement('input'); input.type = 'checkbox'; input.checked = control.defaultValue; input.dataset.settingId = control.id; input.setAttribute('aria-label', control.label);
         const title = document.createElement('span'); title.textContent = control.label;
@@ -287,7 +295,9 @@ class ConverterController {
       } else {
         const element = this.extraControls.querySelector<HTMLInputElement | HTMLSelectElement>(`[data-setting-id="${escapeSelector(control.id)}"]`);
         if (!element) { settings[control.id] = control.defaultValue; continue; }
-        settings[control.id] = control.type === 'checkbox' && element instanceof HTMLInputElement ? element.checked : element.value;
+        if (control.type === 'checkbox' && element instanceof HTMLInputElement) settings[control.id] = element.checked;
+        else if (control.type === 'number' && element instanceof HTMLInputElement) settings[control.id] = Number(element.value);
+        else settings[control.id] = element.value;
       }
     }
     return settings;
