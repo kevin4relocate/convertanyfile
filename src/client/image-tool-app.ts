@@ -61,11 +61,21 @@ function initStickyImageToolActions(root: HTMLElement): void {
   sync();
 }
 
+function prepareSharedEditorCopy(root: HTMLElement, toolId: string | undefined): void {
+  if (toolId !== 'remove-object') return;
+  root.dataset.targetLabel = 'object';
+  const toolbarCopy = root.querySelector<HTMLElement>('.gemini-toolbar-copy strong');
+  if (toolbarCopy) toolbarCopy.textContent = 'Choose a shape that tightly covers the visible object';
+  const selectionStatus = root.querySelector<HTMLElement>('[data-role="selection-status"]');
+  if (selectionStatus) selectionStatus.textContent = 'Draw a tight mask over the object, then move, resize or rotate it before processing.';
+}
+
 async function initializeImageTool(root: HTMLElement): Promise<void> {
   if (root.dataset.imageToolReady === 'true') return;
   root.dataset.imageToolReady = 'true';
   const toolId = root.dataset.toolId;
   if (toolId === 'remove-watermark' || toolId === 'gemini-ai-logo-remover' || toolId === 'remove-object') {
+    prepareSharedEditorCopy(root, toolId);
     const module = await import('../image-tools/shared/batch-mask-editor');
     module.mountBatchMaskEditor(root);
     initStickyImageToolActions(root);
