@@ -20,6 +20,12 @@ export const ARCHIVE_BATCH_POLICY: BatchPolicy = {
   maxFileBytes: 75 * MIB,
 };
 
+export const SUBTITLE_BATCH_POLICY: BatchPolicy = {
+  maxFiles: 50,
+  maxTotalBytes: 50 * MIB,
+  maxFileBytes: 5 * MIB,
+};
+
 export interface AdmissionResult {
   accepted: File[];
   rejected: Array<{ file: File; reason: 'file-size' | 'file-count' | 'total-size' }>;
