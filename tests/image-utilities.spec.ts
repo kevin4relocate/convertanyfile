@@ -92,7 +92,13 @@ test('Blur Image runs a real Gaussian blur worker transform', async ({ page }) =
   await page.goto('/blur-image/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Blur images locally');
   await addTinyImage(page);
-  await page.locator('[data-role="blur-strength"]').fill('4');
+  await page.locator('[data-role="blur-strength"]').evaluate((node) => {
+    const input = node as HTMLInputElement;
+    input.value = '4';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await expect(page.locator('[data-role="blur-value"]')).toHaveText('4');
   await page.locator('[data-role="run"]').click();
   await expectDone(page);
 });
