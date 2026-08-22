@@ -1,0 +1,30 @@
+---
+import SiteLayout from '../../../layouts/SiteLayout.astro';
+import ArticleFrame from '../../../components/ArticleFrame.astro';
+import { SITE } from '../../../config/site';
+const canonical = `${SITE.origin}/guides/how-to-remove-gemini-watermark-from-image/`;
+const toc=[{id:'identify',label:'Identify the visible mark'},{id:'remove',label:'Remove the watermark'},{id:'batch',label:'Batch images'},{id:'nano-banana',label:'Gemini and Nano Banana'},{id:'scope',label:'Visible vs invisible signals'}];
+const related=[{href:'/gemini-ai-logo-remover/',label:'Open Gemini Watermark Remover'},{href:'/remove-watermark/',label:'General Remove Watermark'},{href:'/guides/how-to-remove-watermark-from-image/',label:'General watermark removal guide'}];
+const schemas=[
+  {
+    '@context':'https://schema.org','@type':'Article',headline:'How to Remove the Gemini Watermark from an Image',description:'A practical browser-based guide to removing the small visible Gemini watermark from an image or batch while keeping invisible provenance signals out of scope.',url:canonical,mainEntityOfPage:canonical,author:{'@type':'Organization',name:'ConvertAnyFile'},publisher:{'@type':'Organization',name:'ConvertAnyFile',url:SITE.origin},
+  },
+  {
+    '@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[
+      {'@type':'ListItem',position:1,name:'Home',item:`${SITE.origin}/`},
+      {'@type':'ListItem',position:2,name:'Guides',item:`${SITE.origin}/guides/`},
+      {'@type':'ListItem',position:3,name:'How to Remove the Gemini Watermark from an Image',item:canonical},
+    ],
+  },
+];
+---
+<SiteLayout title="How to Remove the Gemini Watermark from an Image | ConvertAnyFile" description="Learn how to remove the small visible Gemini watermark from JPG, PNG or WebP images locally in your browser, including batch workflow, mask placement and visible-vs-invisible watermark limits." canonical={canonical} schema={schemas}>
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/guides/">Guides</a><span>/</span><span>Gemini Watermark</span></div><span class="eyebrow">Gemini Watermark Guide</span><h1>How to remove the visible Gemini watermark from an image</h1><p>Use a tight Circle or 4-Point Star mask over the visible sparkle mark, repair the selected pixels locally, review the result and download without uploading the source image.</p></div></section>
+<ArticleFrame toc={toc} related={related} asideNote="ConvertAnyFile is not affiliated with or endorsed by Google or Gemini. Only edit images you own or have permission to modify.">
+<h2 id="identify">1. Identify the visible Gemini watermark</h2><p>This workflow is for the small <strong>visible</strong> Gemini-style sparkle watermark already present in an image. It is not a detector for the model that created the file and it does not inspect invisible provenance signals. If the mark is a different shape, text, or a larger overlay, the <a href="/remove-watermark/">general Remove Watermark tool</a> may be a better fit.</p>
+<h2 id="remove">2. Remove the visible watermark with the smallest practical mask</h2><p>Open the <a href="/gemini-ai-logo-remover/">Gemini Watermark Remover</a> and add a JPG, PNG or WebP image. The editor starts with a 4-Point Star mask because it follows a compact sparkle footprint. Switch to Circle when the visible glow is more rounded.</p><p>Drag inside the mask to move it, use a corner handle to resize it, and use the round handle to rotate it. Position the mask against an image edge or corner when needed. Keep the mask tight enough to avoid covering unrelated detail, then run the repair and inspect the After preview before downloading.</p>
+<h2 id="batch">3. Remove Gemini watermarks from a batch</h2><p>You can add up to 50 images. When the images share an aspect ratio, the editor starts with <strong>One mask for all</strong>. This is useful when the visible watermark repeats in the same relative position and approximate size. Mixed aspect ratios start with <strong>Edit individually</strong> so each image can keep a different mask.</p><p>You can begin with one shared mask and then switch to individual editing for exceptions. Long batches run sequentially in the browser, can be cancelled, and keep successful results that already completed. Multiple successful results can be downloaded together as a ZIP.</p>
+<h2 id="nano-banana">4. What about Gemini and Nano Banana images?</h2><p>Gemini image-generation experiences can use models commonly referred to as Nano Banana. A visible watermark may appear depending on the product, account, region and current Gemini watermark setting. ConvertAnyFile does not need to know which model created the image; if the file contains the small visible sparkle mark, you can manually fit the mask over it.</p><p>For future Gemini media, check Gemini Apps' official Media watermark setting if it is available to your account. That setting controls visible watermarks for new media; this guide is for existing image files that already contain a visible mark.</p>
+<h2 id="scope">5. Visible watermark removal is not SynthID removal</h2><p>The editor changes visible selected pixels only. It does not claim to detect or remove invisible SynthID watermarks, Content Credentials, C2PA provenance data, authenticity signals or other invisible identification systems. Google documents visible-watermark controls separately from those identification layers.</p><p>Use the tool only on files you own or have permission to edit, and keep an original copy when provenance, archival history or future re-editing matters.</p>
+</ArticleFrame>
+</SiteLayout>
