@@ -2,6 +2,8 @@
 import { NAV_ITEMS, SITE } from '../config/site';
 const currentPath = Astro.url.pathname;
 const imageToolsActive = currentPath === '/image-tools/' || currentPath === '/remove-watermark/' || currentPath === '/gemini-ai-logo-remover/';
+const converterPaths = ['/image-converter/', '/data-converter/', '/archive-converter/', '/subtitle-converter/'];
+const convertersActive = converterPaths.includes(currentPath);
 ---
 <header class="site-header">
   <div class="site-container header-inner">
@@ -40,11 +42,18 @@ const imageToolsActive = currentPath === '/image-tools/' || currentPath === '/re
     <details class="mobile-nav">
       <summary><span class="mobile-nav-icon" aria-hidden="true"><span></span><span></span><span></span></span><span>Menu</span></summary>
       <nav aria-label="Mobile navigation">
-        {NAV_ITEMS.map((item) => <a class:list={[item.label === 'Image Tools' && imageToolsActive && 'is-current']} href={item.href}>{item.label}</a>)}
-        <a href="/image-converter/">Image Converter</a>
-        <a href="/data-converter/">Data Converter</a>
-        <a href="/archive-converter/">Archive Converter</a>
-        <a href="/subtitle-converter/">Subtitle Converter</a>
+        <details class:list={['mobile-converter-group', convertersActive && 'is-current']} open={convertersActive}>
+          <summary><span>Converters</span><span class="mobile-group-chevron" aria-hidden="true">⌄</span></summary>
+          <div class="mobile-converter-links">
+            <a class:list={[currentPath === '/image-converter/' && 'is-current']} href="/image-converter/">Image Converter</a>
+            <a class:list={[currentPath === '/data-converter/' && 'is-current']} href="/data-converter/">Data Converter</a>
+            <a class:list={[currentPath === '/archive-converter/' && 'is-current']} href="/archive-converter/">Archive Converter</a>
+            <a class:list={[currentPath === '/subtitle-converter/' && 'is-current']} href="/subtitle-converter/">Subtitle Converter</a>
+          </div>
+        </details>
+        {NAV_ITEMS.filter((item) => item.label !== 'Converters').map((item) => (
+          <a class:list={[item.label === 'Image Tools' && imageToolsActive && 'is-current']} href={item.href}>{item.label}</a>
+        ))}
       </nav>
     </details>
   </div>
@@ -175,8 +184,51 @@ const imageToolsActive = currentPath === '/image-tools/' || currentPath === '/re
   .nav-tool-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #eef0f6; font-size: 12px; font-weight: 690; }
   .nav-tool-copy small { color: #858d9d; font-size: 9.75px; line-height: 1.35; }
 
+  .mobile-converter-group {
+    width:100%;
+    margin:0;
+    padding:0;
+    border:0;
+    background:transparent;
+  }
+  .mobile-converter-group > summary {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    width:100%;
+    padding:0;
+    border:0;
+    background:transparent;
+    color:inherit;
+    cursor:pointer;
+    list-style:none;
+    font:inherit;
+  }
+  .mobile-converter-group > summary::-webkit-details-marker { display:none; }
+  .mobile-group-chevron { color:#8f96a6; transition:transform .15s ease; }
+  .mobile-converter-group[open] .mobile-group-chevron { transform:rotate(180deg); }
+  .mobile-converter-links {
+    display:grid;
+    gap:0;
+    margin:3px 0 7px 8px;
+    padding:2px 0 2px 16px;
+    border-left:1px solid #343b4a;
+  }
+  .mobile-converter-links a {
+    min-height:36px!important;
+    display:flex!important;
+    align-items:center;
+    padding:6px 0!important;
+    color:#969dac!important;
+    font-size:12.5px!important;
+    font-weight:650!important;
+  }
+  .mobile-converter-links a.is-current { color:#f1f0ff!important; }
+
   @media (max-width: 980px) {
     .nav-submenu { width: 286px; }
-    .mobile-nav > nav > a.is-current { color: #f1f0ff !important; }
+    .mobile-nav > nav > a.is-current,
+    .mobile-converter-group.is-current > summary { color:#f1f0ff!important; }
   }
 </style>
