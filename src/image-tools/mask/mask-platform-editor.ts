@@ -1,12 +1,28 @@
 import type { ImageEditScope } from '../../platform/image-tools/types';
+import { resolveScopedSettings } from '../core/batch-state';
 import { mountBatchMaskEditor } from '../shared/batch-mask-editor';
 
 const VALID_SCOPES = new Set<ImageEditScope>(['shared', 'individual']);
+
+export function resolveMaskScopeSettings<TSettings>(
+  mode: ImageEditScope,
+  sharedSettings: TSettings,
+  individualSettings?: TSettings
+): TSettings {
+  return resolveScopedSettings(mode, sharedSettings, individualSettings);
+}
 
 function syncPlatformScope(root: HTMLElement, mode: ImageEditScope): void {
   root.dataset.platformScope = mode;
   const shell = root.querySelector<HTMLElement>('[data-role="image-batch-shell"]');
   if (shell) shell.dataset.platformScope = mode;
+}
+
+function readScopeFromUi(root: HTMLElement): ImageEditScope | undefined {
+  const selected = [...root.querySelectorAll<HTMLElement>('[data-edit-mode]')]
+    .find((button) => button.getAttribute('aria-checked') === 'true');
+  const mode = selected?.dataset.editMode as ImageEditScope | undefined;
+  return mode && VALID_SCOPES.has(mode) ? mode : undefined;
 }
 
 export function mountMaskBatchPlatformEditor(root: HTMLElement): void {
@@ -20,6 +36,13 @@ export function mountMaskBatchPlatformEditor(root: HTMLElement): void {
   root.dataset.platformRuntime = 'batch-v1';
   syncPlatformScope(root, 'shared');
 
+  const scopeButtons = [...root.querySelectorAll<HTMLElement>('[data-edit-mode]')];
+  const observer = new MutationObserver(() => {
+    const mode = readScopeFromUi(root);
+    if (mode) syncPlatformScope(root, mode);
+  });
+  scopeButtons.forEach((button) => observer.observe(button, { attributes: true, attributeFilter: ['aria-checked'] }));
+
   root.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
@@ -29,4 +52,6 @@ export function mountMaskBatchPlatformEditor(root: HTMLElement): void {
   });
 
   mountBatchMaskEditor(root);
+  const mountedScope = readScopeFromUi(root);
+  if (mountedScope) syncPlatformScope(root, mountedScope);
 }
