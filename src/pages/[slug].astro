@@ -39,8 +39,19 @@ const faq = [
 ];
 const utilityCategory = converter.category === 'data' || converter.category === 'archive' || converter.category === 'subtitle';
 const schema={'@context':'https://schema.org','@type':'WebApplication',name:converter.h1,url:`${SITE.origin}/${converter.slug}/`,applicationCategory:utilityCategory ? 'UtilitiesApplication' : 'MultimediaApplication',operatingSystem:'Any',offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}};
+const categoryLanding = {
+  image: { name: 'Image Converter', item: `${SITE.origin}/image-converter/` },
+  data: { name: 'Data Converter', item: `${SITE.origin}/data-converter/` },
+  archive: { name: 'Archive Converter', item: `${SITE.origin}/archive-converter/` },
+  subtitle: { name: 'Subtitle Converter', item: `${SITE.origin}/subtitle-converter/` },
+}[converter.category as 'image' | 'data' | 'archive' | 'subtitle'];
+const breadcrumbSchema = {'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[
+  {'@type':'ListItem',position:1,name:'Home',item:`${SITE.origin}/`},
+  {'@type':'ListItem',position:2,name:categoryLanding?.name ?? 'Converters',item:categoryLanding?.item ?? `${SITE.origin}/#converters`},
+  {'@type':'ListItem',position:3,name:converter.h1,item:`${SITE.origin}/${converter.slug}/`},
+]};
 ---
-<SiteLayout title={converter.title} description={converter.description} schema={schema}>
+<SiteLayout title={converter.title} description={converter.description} schema={[schema, breadcrumbSchema]}>
 <ConverterPageFrame converter={converter} />
 
 {converter.category === 'data' ? <DataPairContent converter={converter} /> : converter.category === 'archive' ? <ArchivePairContent converter={converter} /> : converter.category === 'subtitle' ? <SubtitlePairContent converter={converter} /> : <>
