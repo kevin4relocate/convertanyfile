@@ -16,7 +16,7 @@ const assets = [
   },
   {
     source: `${ORT_BASE}/ort-wasm-simd-threaded.mjs`,
-    target: join(OUTPUT_DIR, 'ort-wasm-simd-threaded.mjs.js'),
+    target: join(OUTPUT_DIR, 'ort-wasm-simd-threaded.mjs'),
     minBytes: 20_000,
     maxBytes: 30_000,
   },
