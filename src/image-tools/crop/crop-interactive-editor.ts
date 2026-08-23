@@ -104,7 +104,9 @@ export function mountCropInteractiveEditor(root:HTMLElement):void {
 
   const applyRect=(rect:CropRect):void=>{
     setNumber(x,rect.x);setNumber(y,rect.y);setNumber(width,rect.width);setNumber(height,rect.height);
-    emit(x,'input');emit(y,'input');emit(width,'input');emit(height,'input');
+    // The deterministic runtime reads all controls when any one crop field emits.
+    // One event per pointer move keeps direct manipulation smooth.
+    emit(x,'input');
     requestAnimationFrame(syncSelection);
   };
 
@@ -113,7 +115,8 @@ export function mountCropInteractiveEditor(root:HTMLElement):void {
     const nextAspect:CropAspect=preset==='rectangle'?'free':preset==='square'||preset==='circle'?'1:1':preset as CropAspect;
     aspect.value=nextAspect;
     setNumber(x,8);setNumber(y,8);setNumber(width,84);setNumber(height,84);
-    emit(shape,'change');emit(aspect,'change');emit(x,'input');emit(y,'input');emit(width,'input');emit(height,'input');
+    // A single settings event commits shape, ratio and normalized geometry together.
+    emit(shape,'change');
     requestAnimationFrame(syncSelection);
   };
 
@@ -137,7 +140,7 @@ export function mountCropInteractiveEditor(root:HTMLElement):void {
     }
     const left=rect.x,right=rect.x+rect.width,top=rect.y,bottom=rect.y+rect.height;
     const anchorX=handle.includes('w')?right:left,anchorY=handle.includes('n')?bottom:top;
-    let pointX=clamp((handle.includes('w')?left:right)+dx,0,100),pointY=clamp((handle.includes('n')?top:bottom)+dy,0,100);
+    const pointX=clamp((handle.includes('w')?left:right)+dx,0,100),pointY=clamp((handle.includes('n')?top:bottom)+dy,0,100);
     const dirX=handle.includes('w')?-1:1,dirY=handle.includes('n')?-1:1;
     let nextWidth=Math.max(2,Math.abs(pointX-anchorX)),nextHeight=Math.max(2,Math.abs(pointY-anchorY));
     const targetRatio=ratioFor(aspect.value as CropAspect,image.naturalWidth,image.naturalHeight);
