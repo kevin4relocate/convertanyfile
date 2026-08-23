@@ -14,6 +14,7 @@ export type ResizeSettings = {
   height: number;
   percent: number;
   lockAspect: boolean;
+  pixelAnchor: 'width' | 'height';
   fitWidth: number;
   fitHeight: number;
 };
@@ -62,7 +63,7 @@ export type DeterministicSettings =
 export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSettings {
   switch (toolId) {
     case 'resize-image':
-      return { mode: 'pixels', width: 1920, height: 1080, percent: 50, lockAspect: true, fitWidth: 1920, fitHeight: 1080 };
+      return { mode: 'pixels', width: 1920, height: 1080, percent: 50, lockAspect: true, pixelAnchor: 'width', fitWidth: 1920, fitHeight: 1080 };
     case 'compress-image':
       return { format: 'webp', quality: 82 };
     case 'remove-image-metadata':
