@@ -21,20 +21,31 @@ test.describe('Phase 4 image tools', () => {
     await expect(app.locator('[data-role="download-batch"]')).toBeEnabled();
   });
 
-  test('metadata tool exposes clean-output settings and per-image overrides', async ({ page }) => {
+  test('metadata tool uses focused privacy workflow without a visual preview', async ({ page }) => {
     await page.goto('/remove-image-metadata/');
     const app = page.locator('[data-image-tool-app]');
     await expect(app).toHaveAttribute('data-tool-id','remove-image-metadata');
-    await expect(app).toHaveAttribute('data-platform-runtime','batch-v1');
+    await expect(app).toHaveAttribute('data-platform-runtime','metadata-v1');
+    await expect(app.locator('[data-role="source-preview"]')).toHaveCount(0);
+    await expect(app.locator('[data-edit-scope]')).toHaveCount(0);
+
     await app.locator('[data-role="file-input"]').setInputFiles([png('meta-a.png'),png('meta-b.png')]);
-    await app.locator('[data-edit-scope="individual"]').click();
-    await app.locator('[data-setting="format"]').selectOption('webp');
-    await app.locator('[data-setting="quality"]').evaluate((element) => {
+    await expect(app.locator('[data-role="batch-count"]')).toHaveText('2');
+    await expect(app.locator('[data-role="scan-summary"]')).not.toContainText('Scanning');
+    await expect(app.locator('[data-role="shared-format"]')).toHaveValue('source');
+
+    await app.locator('[data-role="advanced-panel"] summary').click();
+    await app.locator('[data-role="item-format"]').selectOption('webp');
+    await app.locator('[data-role="item-quality"]').evaluate((element) => {
       const input = element as HTMLInputElement;
       input.value = '80';
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    await expect(app.locator('[data-role="batch-list"]')).toContainText('CUSTOM');
+    await expect(app.locator('[data-role="batch-list"]')).toContainText('CUSTOM OUTPUT');
+
+    await app.locator('[data-role="process-batch"]').click();
+    await expect(app.locator('[data-role="progress-label"]')).toContainText('2 cleaned');
+    await expect(app.locator('[data-role="download-batch"]')).toBeEnabled();
   });
 
   test('remove object uses object copy and advanced canvas controls', async ({ page }) => {
