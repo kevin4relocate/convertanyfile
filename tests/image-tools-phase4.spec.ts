@@ -25,6 +25,15 @@ test.describe('Phase 4 image tools', () => {
     await expect(app.locator('[data-role="download-batch"]')).toBeEnabled();
   });
 
+  test('bulk rename keeps long desktop preview filenames on one aligned row', async ({ page }) => {
+    await page.goto('/bulk-rename-images/');
+    const app = page.locator('[data-image-tool-app]');
+    await app.locator('[data-role="file-input"]').setInputFiles(png('this_is_a_very_long_source_filename_that_should_not_break_the_preview_layout.png'));
+    const original = app.locator('[data-role="selected-original"]');
+    await expect(original).toHaveCSS('white-space','nowrap');
+    await expect(original).toHaveCSS('text-overflow','ellipsis');
+  });
+
   test('metadata tool exposes clean-output settings and per-image overrides', async ({ page }) => {
     await page.goto('/remove-image-metadata/');
     const app = page.locator('[data-image-tool-app]');
@@ -53,5 +62,20 @@ test.describe('Phase 4 image tools', () => {
     await expect(app.locator('[data-role="selection-status"]')).toContainText('object');
     await app.locator('[data-role="zoom-in"]').click();
     await expect(app.locator('[data-role="zoom-value"]')).toHaveText('125%');
+  });
+
+  test('mask scope controls stay fixed when switching shared and individual modes', async ({ page }) => {
+    await page.goto('/remove-object/');
+    const app = page.locator('[data-image-tool-app]');
+    await app.locator('[data-role="file-input"]').setInputFiles(png('object.png'));
+    const options = app.locator('.gemini-edit-mode-options');
+    const before = await options.boundingBox();
+    expect(before).not.toBeNull();
+    await app.locator('[data-edit-mode="individual"]').click();
+    await expect(app.locator('[data-edit-mode="individual"]')).toHaveAttribute('aria-checked','true');
+    const after = await options.boundingBox();
+    expect(after).not.toBeNull();
+    expect(Math.abs((after?.x ?? 0) - (before?.x ?? 0))).toBeLessThan(1.5);
+    expect(Math.abs((after?.width ?? 0) - (before?.width ?? 0))).toBeLessThan(1.5);
   });
 });
