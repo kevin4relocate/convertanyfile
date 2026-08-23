@@ -27,6 +27,7 @@ const {
   schema,
 } = Astro.props;
 const schemas = Array.isArray(schema) ? schema : schema ? [schema] : [];
+const isHomePage = Astro.url.pathname === '/';
 const websiteSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
@@ -76,7 +77,7 @@ const websiteSchema = {
         document.head.appendChild(analyticsScript);
       }
     </script>
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>
+    {isHomePage && <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>}
     {schemas.map((item) => <script is:inline type="application/ld+json" set:html={JSON.stringify(item)}></script>)}
   </head>
   <body>
