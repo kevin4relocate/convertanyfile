@@ -1,0 +1,45 @@
+<section class="image-tool-preview-grid crop-editor-grid" data-role="preview-panel">
+  <article class="image-tool-preview-panel crop-editor-panel">
+    <header>
+      <div><span>Crop area</span><strong>Drag to position · resize from corners</strong></div>
+      <small data-role="source-meta"></small>
+    </header>
+    <div class="crop-editor-frame" data-role="crop-editor-frame">
+      <img data-role="source-preview" src="" alt="Image to crop" hidden />
+      <span data-role="source-empty">Select an image to start cropping</span>
+      <div class="crop-selection" data-role="crop-selection" hidden>
+        <span class="crop-selection__grid" aria-hidden="true"></span>
+        <button type="button" class="crop-handle crop-handle--nw" data-crop-handle="nw" aria-label="Resize crop from top left"></button>
+        <button type="button" class="crop-handle crop-handle--ne" data-crop-handle="ne" aria-label="Resize crop from top right"></button>
+        <button type="button" class="crop-handle crop-handle--sw" data-crop-handle="sw" aria-label="Resize crop from bottom left"></button>
+        <button type="button" class="crop-handle crop-handle--se" data-crop-handle="se" aria-label="Resize crop from bottom right"></button>
+      </div>
+    </div>
+  </article>
+
+  <article class="image-tool-preview-panel">
+    <header>
+      <div><span>After</span><strong>Live crop preview</strong></div>
+      <small data-role="preview-meta"></small>
+    </header>
+    <div class="crop-result-frame">
+      <img data-role="result-preview" src="" alt="Crop preview" hidden />
+      <span data-role="result-empty">Crop preview will appear here</span>
+    </div>
+  </article>
+</section>
+
+<style>
+  .crop-editor-grid{margin-top:0}
+  .crop-editor-frame,.crop-result-frame{position:relative;height:380px;display:grid;place-items:center;overflow:hidden;background:repeating-conic-gradient(#11161f 0 25%,#151b25 0 50%) 50%/18px 18px}
+  .crop-editor-frame>img,.crop-result-frame>img{display:block;max-width:100%;max-height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+  .crop-editor-frame>span,.crop-result-frame>span{padding:20px;color:#858d9d;font-size:10px;text-align:center}
+  .crop-selection{position:absolute;z-index:3;border:2px solid #8d86ff;box-shadow:0 0 0 9999px rgba(3,6,11,.58);cursor:move;touch-action:none}
+  .crop-selection.is-circle{border-radius:50%}
+  .crop-selection__grid{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to right,transparent 33.1%,rgba(255,255,255,.28) 33.3%,rgba(255,255,255,.28) 33.7%,transparent 33.9%,transparent 66.1%,rgba(255,255,255,.28) 66.3%,rgba(255,255,255,.28) 66.7%,transparent 66.9%),linear-gradient(to bottom,transparent 33.1%,rgba(255,255,255,.28) 33.3%,rgba(255,255,255,.28) 33.7%,transparent 33.9%,transparent 66.1%,rgba(255,255,255,.28) 66.3%,rgba(255,255,255,.28) 66.7%,transparent 66.9%)}
+  .crop-selection.is-circle .crop-selection__grid{opacity:.5;border-radius:50%}
+  .crop-handle{position:absolute;width:16px;height:16px;padding:0;border:2px solid #f2f1ff;border-radius:5px;background:#6f66ff;box-shadow:0 2px 7px rgba(0,0,0,.35);touch-action:none;cursor:nwse-resize}
+  .crop-handle--nw{left:-9px;top:-9px}.crop-handle--ne{right:-9px;top:-9px;cursor:nesw-resize}.crop-handle--sw{left:-9px;bottom:-9px;cursor:nesw-resize}.crop-handle--se{right:-9px;bottom:-9px}
+  @media(max-width:1050px){.crop-editor-frame,.crop-result-frame{height:330px}}
+  @media(max-width:760px){.crop-editor-frame,.crop-result-frame{height:290px}}
+</style>
