@@ -31,7 +31,10 @@ export function mountAdvancedCanvasController(root:HTMLElement):void {
     setMaskProcessingOptions({paddingPx,featherPx});
     if(paddingValue)paddingValue.value=`${paddingPx}px`;
     if(featherValue)featherValue.value=`${featherPx}px`;
-    if(notify)root.dispatchEvent(new CustomEvent('image-mask-effects-change'));
+    if(notify){
+      const quality=root.querySelector<HTMLInputElement>('[data-role="quality"]');
+      if(quality)quality.dispatchEvent(new Event('input',{bubbles:true}));
+    }
   };
   const command=(detail:CanvasCommand):void=>root.dispatchEvent(new CustomEvent<CanvasCommand>('image-canvas-command',{detail,bubbles:false}));
 
