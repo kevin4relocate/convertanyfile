@@ -13,12 +13,12 @@ export async function encodeCanvas(
     ? undefined
     : Math.min(1, Math.max(0, options.quality));
 
-  if (canvas instanceof OffscreenCanvas) {
+  if (typeof OffscreenCanvas !== 'undefined' && canvas instanceof OffscreenCanvas) {
     return canvas.convertToBlob({ type: options.type, quality });
   }
 
   return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
+    (canvas as HTMLCanvasElement).toBlob((blob) => {
       if (blob) resolve(blob);
       else reject(new Error(`Unable to encode ${options.type} output.`));
     }, options.type, quality);
