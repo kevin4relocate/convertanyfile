@@ -112,4 +112,18 @@ test.describe('Image Tools watermark visual standard', () => {
     await expect(app.locator('[data-role="preview-panel"] .image-tool-preview-panel')).toHaveCount(2);
     await expect(app.locator('[data-role="model-status"]')).toContainText('Local AI runtime');
   });
+
+  test('production Image Tools do not expose preview badges and keep four how-to cards on desktop', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop production layout regression');
+    await page.goto('/resize-image/');
+    await expect(page.locator('.converter-page-eyebrow')).toHaveText('Image Tools');
+    await expect(page.locator('body')).not.toContainText('Image Tools · Preview');
+    await expect(page.locator('.image-tool-status')).toHaveCount(0);
+    const columns = await page.locator('.image-tool-howto-grid').evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').filter(Boolean).length);
+    expect(columns).toBe(4);
+
+    await page.goto('/remove-background/');
+    await expect(page.locator('.converter-page-eyebrow')).toHaveText('Image Tools · Local AI');
+    await expect(page.locator('body')).not.toContainText('AI Preview');
+  });
 });
