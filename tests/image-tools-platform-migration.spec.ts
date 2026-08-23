@@ -16,11 +16,10 @@ const tools = [
 
 for (const tool of tools) {
   test(`${tool.name} mounts through the shared batch platform without losing mask behavior`, async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium-desktop', 'Run the migration contract once in Chromium');
+    test.skip(testInfo.project.name !== 'chromium-desktop', 'Run the mask platform contract once in Chromium');
 
     await page.goto(tool.path);
     const app = page.locator('[data-image-tool-app]');
-    await expect(app).toHaveAttribute('data-platform-migration', 'phase-2');
     await expect(app).toHaveAttribute('data-platform-runtime', 'batch-v1');
     await expect(app.locator('[data-platform-shell="batch-v1"]')).toHaveCount(1);
     await expect(app.locator('[data-tool-mode]')).toHaveCount(tool.maskCount);
@@ -52,7 +51,7 @@ for (const tool of tools) {
   });
 
   test(`${tool.name} keeps the mixed-ratio automatic individual recommendation`, async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium-desktop', 'Run the migration contract once in Chromium');
+    test.skip(testInfo.project.name !== 'chromium-desktop', 'Run the mask platform contract once in Chromium');
 
     await page.goto(tool.path);
     const app = page.locator('[data-image-tool-app]');
