@@ -1,12 +1,12 @@
 import { createZipBlob, downloadBlob } from '../core/download';
 import { encodeCanvas, extensionForOutput, type ImageOutputFormat } from '../core/output-encoder';
-import { renderToolCanvas, resizeDimensions, sourceExtension, sourceMime } from './operations';
+import { renderToolCanvas, sourceExtension, sourceMime } from './operations';
 import {
   defaultSettingsFor,
+  type CompressSettings,
   type DeterministicSettings,
   type DeterministicToolId,
   type OutputChoice,
-  type ResizeSettings,
 } from './types';
 
 type Status = 'ready' | 'processing' | 'done' | 'error';
@@ -23,7 +23,6 @@ type Item = {
   outputName?: string;
   error?: string;
 };
-
 type State = {
   mode: 'shared' | 'individual';
   sharedSettings: DeterministicSettings;
@@ -35,14 +34,7 @@ type State = {
   previewTimer?: number;
 };
 
-const VALID_TOOL_IDS = new Set<DeterministicToolId>([
-  'resize-image',
-  'compress-image',
-  'rotate-flip-image',
-  'crop-image',
-  'blur-image',
-]);
-
+const VALID_TOOL_IDS = new Set<DeterministicToolId>(['resize-image', 'compress-image', 'rotate-flip-image', 'crop-image', 'blur-image']);
 const q = <T extends Element>(root: ParentNode, selector: string): T => {
   const element = root.querySelector<T>(selector);
   if (!element) throw new Error(`Image tool is missing ${selector}`);
@@ -50,41 +42,33 @@ const q = <T extends Element>(root: ParentNode, selector: string): T => {
 };
 const maybe = <T extends Element>(root: ParentNode, selector: string): T | undefined => root.querySelector<T>(selector) ?? undefined;
 const clone = <T>(value: T): T => structuredClone(value);
-const extension = (name: string): string => name.includes('.') ? name.slice(name.lastIndexOf('.') + 1).toLowerCase() : '';
-const baseName = (name: string): string => name.replace(/\.[^.]+$/, '').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'image';
+const ext = (name: string): string => name.includes('.') ? name.slice(name.lastIndexOf('.') + 1).toLowerCase() : '';
+const base = (name: string): string => name.replace(/\.[^.]+$/, '').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'image';
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+const asRecord = (settings: DeterministicSettings): Record<string, unknown> => settings as unknown as Record<string, unknown>;
 
-function outputMime(file: File, output: OutputChoice): ImageOutputFormat {
+function mimeFor(file: File, output: OutputChoice): ImageOutputFormat {
   if (output === 'source') return sourceMime(file);
   if (output === 'jpg') return 'image/jpeg';
   if (output === 'webp') return 'image/webp';
   return 'image/png';
 }
 
-function outputExtension(file: File, output: OutputChoice): string {
-  return output === 'source' ? sourceExtension(file) : output === 'jpg' ? 'jpg' : output;
-}
-
-function settingsRecord(settings: DeterministicSettings): Record<string, unknown> {
-  return settings as unknown as Record<string, unknown>;
-}
-
 export function mountDeterministicImageTool(root: HTMLElement): void {
-  const rawToolId = root.dataset.toolId;
-  if (!rawToolId || !VALID_TOOL_IDS.has(rawToolId as DeterministicToolId)) {
-    throw new Error(`Unsupported deterministic image tool: ${rawToolId ?? 'unknown'}`);
-  }
-  const toolId = rawToolId as DeterministicToolId;
+  const rawId = root.dataset.toolId;
+  if (!rawId || !VALID_TOOL_IDS.has(rawId as DeterministicToolId)) throw new Error(`Unsupported image tool: ${rawId ?? 'unknown'}`);
+  const toolId = rawId as DeterministicToolId;
   root.dataset.platformRuntime = 'batch-v1';
+  root.dataset.platformScope = 'shared';
 
   const notice = q<HTMLElement>(root, '[data-role="notice"]');
   const input = q<HTMLInputElement>(root, '[data-role="file-input"]');
-  const dropzone = q<HTMLElement>(root, '[data-role="batch-dropzone"]');
+  const drop = q<HTMLElement>(root, '[data-role="batch-dropzone"]');
   const list = q<HTMLElement>(root, '[data-role="batch-list"]');
   const count = q<HTMLElement>(root, '[data-role="batch-count"]');
   const modeSummary = q<HTMLElement>(root, '[data-role="mode-summary"]');
-  const addMore = q<HTMLButtonElement>(root, '[data-role="add-more"]');
-  const clearAll = q<HTMLButtonElement>(root, '[data-role="clear-all"]');
+  const add = q<HTMLButtonElement>(root, '[data-role="add-more"]');
+  const clear = q<HTMLButtonElement>(root, '[data-role="clear-all"]');
   const scopeButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-edit-scope]')];
   const useShared = q<HTMLButtonElement>(root, '[data-role="use-shared-settings"]');
   const applyAll = q<HTMLButtonElement>(root, '[data-role="apply-current-to-all"]');
@@ -113,29 +97,14 @@ export function mountDeterministicImageTool(root: HTMLElement): void {
   const maxDimension = Number(root.dataset.maxDimension || 12_000);
   const maxTotalBytes = 200 * 1024 * 1024;
 
-  const state: State = {
-    mode: 'shared',
-    sharedSettings: defaultSettingsFor(toolId),
-    items: [],
-    processing: false,
-    cancel: false,
-    previewGeneration: 0,
-  };
-
+  const state: State = { mode: 'shared', sharedSettings: defaultSettingsFor(toolId), items: [], processing: false, cancel: false, previewGeneration: 0 };
   const active = (): Item | undefined => state.items.find((item) => item.id === state.activeId);
-  const effectiveSettings = (item: Item): DeterministicSettings => state.mode === 'individual' && item.settings ? item.settings : state.sharedSettings;
-  const showNotice = (message: string, tone: 'info' | 'error' = 'info'): void => {
-    notice.hidden = false;
-    notice.dataset.type = tone;
-    notice.textContent = message;
-  };
-  const hideNotice = (): void => {
-    notice.hidden = true;
-    notice.textContent = '';
-    delete notice.dataset.type;
-  };
+  const effective = (item: Item): DeterministicSettings => state.mode === 'individual' && item.settings ? item.settings : state.sharedSettings;
 
-  function invalidateResults(): void {
+  const hideNotice = (): void => { notice.hidden = true; notice.textContent = ''; delete notice.dataset.type; };
+  const showNotice = (text: string, type: 'info' | 'error' = 'info'): void => { notice.hidden = false; notice.textContent = text; notice.dataset.type = type; };
+
+  function invalidate(): void {
     for (const item of state.items) {
       item.status = 'ready';
       item.result = undefined;
@@ -147,17 +116,14 @@ export function mountDeterministicImageTool(root: HTMLElement): void {
     updateActions();
   }
 
-  function writeSetting(control: HTMLInputElement | HTMLSelectElement, value: unknown): void {
-    if (control instanceof HTMLInputElement && control.type === 'checkbox') {
-      control.checked = Boolean(value);
-      return;
-    }
-    control.value = String(value ?? '');
+  function writeControl(control: HTMLInputElement | HTMLSelectElement, value: unknown): void {
+    if (control instanceof HTMLInputElement && control.type === 'checkbox') control.checked = Boolean(value);
+    else control.value = String(value ?? '');
   }
 
-  function readSettings(base: DeterministicSettings): DeterministicSettings {
-    const next = clone(base);
-    const record = settingsRecord(next);
+  function readSettings(baseSettings: DeterministicSettings): DeterministicSettings {
+    const next = clone(baseSettings);
+    const record = asRecord(next);
     for (const control of settingInputs) {
       const key = control.dataset.setting;
       if (!key || !(key in record)) continue;
@@ -168,12 +134,11 @@ export function mountDeterministicImageTool(root: HTMLElement): void {
     return next;
   }
 
-  function syncConditionalSettings(settings: DeterministicSettings): void {
-    const record = settingsRecord(settings);
+  function syncConditional(settings: DeterministicSettings): void {
+    const record = asRecord(settings);
     root.querySelectorAll<HTMLElement>('[data-setting-group]').forEach((group) => {
-      const name = group.dataset.settingGroup;
-      const visible = name === record.mode || name === record.scope;
-      group.hidden = !visible;
+      const key = group.dataset.settingGroup;
+      group.hidden = key !== record.mode && key !== record.scope;
     });
     root.querySelectorAll<HTMLOutputElement>('[data-output-for]').forEach((output) => {
       const key = output.dataset.outputFor;
@@ -185,15 +150,41 @@ export function mountDeterministicImageTool(root: HTMLElement): void {
 
   function renderSettings(): void {
     const item = active();
-    const settings = item ? effectiveSettings(item) : state.sharedSettings;
-    const record = settingsRecord(settings);
+    const settings = item ? effective(item) : state.sharedSettings;
+    const record = asRecord(settings);
     for (const control of settingInputs) {
       const key = control.dataset.setting;
-      if (key && key in record) writeSetting(control, record[key]);
+      if (key && key in record) writeControl(control, record[key]);
     }
-    syncConditionalSettings(settings);
+    syncConditional(settings);
     useShared.hidden = state.mode !== 'individual' || !item || item.settingsOrigin !== 'custom';
     applyAll.hidden = state.mode !== 'individual' || !item;
+  }
+
+  function changeSettings(): void {
+    const item = active();
+    const current = item ? effective(item) : state.sharedSettings;
+    const next = readSettings(current);
+    if (state.mode === 'individual' && item) {
+      item.settings = next;
+      item.settingsOrigin = 'custom';
+    } else state.sharedSettings = next;
+    syncConditional(next);
+    invalidate();
+    renderSettings();
+    schedulePreview();
+  }
+
+  function maintainResizeAspect(control: HTMLInputElement | HTMLSelectElement): void {
+    if (toolId !== 'resize-image' || !['width', 'height'].includes(control.dataset.setting ?? '')) return;
+    const lock = maybe<HTMLInputElement>(root, '[data-setting="lockAspect"]');
+    const item = active();
+    if (!lock?.checked || !item) return;
+    const width = q<HTMLInputElement>(root, '[data-setting="width"]');
+    const height = q<HTMLInputElement>(root, '[data-setting="height"]');
+    const ratio = item.width / Math.max(1, item.height);
+    if (control.dataset.setting === 'width') height.value = String(Math.max(1, Math.round(Number(width.value) / ratio)));
+    else width.value = String(Math.max(1, Math.round(Number(height.value) * ratio)));
   }
 
   function setMode(mode: 'shared' | 'individual'): void {
@@ -206,45 +197,13 @@ export function mountDeterministicImageTool(root: HTMLElement): void {
       button.setAttribute('aria-checked', String(selected));
       button.classList.toggle('is-active', selected);
     });
-    modeSummary.textContent = mode === 'shared'
-      ? `One setup applies to all ${state.items.length} images.`
-      : 'Each image can override the shared settings.';
+    modeSummary.textContent = mode === 'shared' ? `One setup applies to all ${state.items.length} images.` : 'Each image can override the shared settings.';
     renderSettings();
     renderQueue();
     schedulePreview();
   }
 
-  function changeSettings(): void {
-    const item = active();
-    const current = item ? effectiveSettings(item) : state.sharedSettings;
-    const next = readSettings(current);
-    if (state.mode === 'individual' && item) {
-      item.settings = next;
-      item.settingsOrigin = 'custom';
-    } else {
-      state.sharedSettings = next;
-    }
-    syncConditionalSettings(next);
-    invalidateResults();
-    renderSettings();
-    schedulePreview();
-  }
-
-  function maintainResizeAspect(changed: HTMLInputElement | HTMLSelectElement): void {
-    if (toolId !== 'resize-image' || state.mode === 'individual' && !active()) return;
-    if (changed.dataset.setting !== 'width' && changed.dataset.setting !== 'height') return;
-    const lock = maybe<HTMLInputElement>(root, '[data-setting="lockAspect"]');
-    if (!lock?.checked) return;
-    const item = active();
-    if (!item) return;
-    const width = q<HTMLInputElement>(root, '[data-setting="width"]');
-    const height = q<HTMLInputElement>(root, '[data-setting="height"]');
-    const ratio = item.width / Math.max(1, item.height);
-    if (changed.dataset.setting === 'width') height.value = String(Math.max(1, Math.round(Number(width.value) / ratio)));
-    else width.value = String(Math.max(1, Math.round(Number(height.value) * ratio));
-  }
-
-  function statusText(item: Item): string {
+  function itemStatus(item: Item): string {
     if (item.status === 'processing') return 'Processing…';
     if (item.status === 'done') return 'Done';
     if (item.status === 'error') return item.error || 'Failed';
@@ -261,97 +220,46 @@ export function mountDeterministicImageTool(root: HTMLElement): void {
       card.tabIndex = state.processing ? -1 : 0;
       card.setAttribute('role', 'button');
       card.setAttribute('aria-label', `Edit ${item.file.name}`);
-      const image = document.createElement('img');
-      image.src = item.url;
-      image.alt = '';
-      const copy = document.createElement('div');
-      copy.className = 'deterministic-file-card__copy';
-      const name = document.createElement('strong');
-      name.textContent = item.file.name;
-      const meta = document.createElement('small');
-      meta.textContent = statusText(item);
-      const badges = document.createElement('div');
-      badges.className = 'deterministic-file-card__badges';
-      const origin = document.createElement('span');
-      origin.className = `deterministic-badge${item.settingsOrigin === 'custom' ? ' deterministic-badge--custom' : ''}`;
-      origin.textContent = item.settingsOrigin.toUpperCase();
-      badges.append(origin);
-      if (item.status === 'done' || item.status === 'error') {
-        const status = document.createElement('span');
-        status.className = 'deterministic-badge';
-        status.textContent = item.status.toUpperCase();
-        badges.append(status);
-      }
-      copy.append(name, meta, badges);
-      const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'deterministic-file-remove';
-      remove.textContent = '×';
-      remove.title = 'Remove image';
-      remove.disabled = state.processing;
-      remove.addEventListener('click', (event) => {
-        event.stopPropagation();
-        removeItem(item.id);
-      });
-      const select = (): void => {
-        if (state.processing) return;
-        state.activeId = item.id;
-        renderSettings();
-        renderQueue();
-        schedulePreview();
-      };
+      const image = document.createElement('img'); image.src = item.url; image.alt = '';
+      const copy = document.createElement('div'); copy.className = 'deterministic-file-card__copy';
+      const name = document.createElement('strong'); name.textContent = item.file.name;
+      const meta = document.createElement('small'); meta.textContent = itemStatus(item);
+      const badges = document.createElement('div'); badges.className = 'deterministic-file-card__badges';
+      const origin = document.createElement('span'); origin.className = `deterministic-badge${item.settingsOrigin === 'custom' ? ' deterministic-badge--custom' : ''}`; origin.textContent = item.settingsOrigin.toUpperCase();
+      badges.append(origin); copy.append(name, meta, badges);
+      const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'deterministic-file-remove'; remove.textContent = '×'; remove.title = 'Remove image'; remove.disabled = state.processing;
+      remove.addEventListener('click', (event) => { event.stopPropagation(); removeItem(item.id); });
+      const select = (): void => { if (!state.processing) { state.activeId = item.id; renderSettings(); renderQueue(); schedulePreview(); } };
       card.addEventListener('click', select);
-      card.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          select();
-        }
-      });
-      card.append(image, copy, remove);
-      list.append(card);
+      card.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); select(); } });
+      card.append(image, copy, remove); list.append(card);
     }
     updateActions();
   }
 
   function clearPreview(): void {
-    sourcePreview.hidden = true;
-    sourcePreview.removeAttribute('src');
-    sourceEmpty.hidden = false;
-    resultPreview.hidden = true;
-    resultPreview.removeAttribute('src');
-    resultEmpty.hidden = false;
-    sourceMeta.textContent = '';
-    previewMeta.textContent = '';
+    sourcePreview.hidden = true; sourcePreview.removeAttribute('src'); sourceEmpty.hidden = false;
+    resultPreview.hidden = true; resultPreview.removeAttribute('src'); resultEmpty.hidden = false;
+    sourceMeta.textContent = ''; previewMeta.textContent = '';
   }
 
   async function renderPreview(): Promise<void> {
     const item = active();
-    if (!item) {
-      clearPreview();
-      return;
-    }
+    if (!item) { clearPreview(); return; }
     const generation = ++state.previewGeneration;
-    sourcePreview.src = item.url;
-    sourcePreview.hidden = false;
-    sourceEmpty.hidden = true;
+    sourcePreview.src = item.url; sourcePreview.hidden = false; sourceEmpty.hidden = true;
     sourceMeta.textContent = `${item.width.toLocaleString()} × ${item.height.toLocaleString()}`;
     try {
       const bitmap = await createImageBitmap(item.file);
       try {
-        const canvas = renderToolCanvas(bitmap, toolId, effectiveSettings(item), 1200);
+        const canvas = renderToolCanvas(bitmap, toolId, effective(item), 1200);
         if (generation !== state.previewGeneration) return;
-        resultPreview.src = canvas.toDataURL('image/png');
-        resultPreview.hidden = false;
-        resultEmpty.hidden = true;
+        resultPreview.src = canvas.toDataURL('image/png'); resultPreview.hidden = false; resultEmpty.hidden = true;
         previewMeta.textContent = `${canvas.width.toLocaleString()} × ${canvas.height.toLocaleString()} preview`;
-      } finally {
-        bitmap.close();
-      }
+      } finally { bitmap.close(); }
     } catch (error) {
       if (generation !== state.previewGeneration) return;
-      resultPreview.hidden = true;
-      resultEmpty.hidden = false;
-      resultEmpty.textContent = 'Preview unavailable';
+      resultPreview.hidden = true; resultEmpty.hidden = false; resultEmpty.textContent = 'Preview unavailable';
       previewMeta.textContent = error instanceof Error ? error.message : 'Unable to render preview';
     }
   }
@@ -364,229 +272,117 @@ export function mountDeterministicImageTool(root: HTMLElement): void {
   function updateActions(): void {
     const done = state.items.filter((item) => item.status === 'done' && item.result).length;
     readyCount.textContent = `${state.items.length} image${state.items.length === 1 ? '' : 's'} ready`;
-    processButton.disabled = state.processing || state.items.length === 0;
-    downloadButton.disabled = state.processing || done === 0;
-    addMore.disabled = state.processing;
-    clearAll.disabled = state.processing;
+    processButton.disabled = state.processing || !state.items.length;
+    downloadButton.disabled = state.processing || !done;
+    add.disabled = state.processing; clear.disabled = state.processing;
     scopeButtons.forEach((button) => { button.disabled = state.processing; });
   }
 
   async function addFiles(files: readonly File[]): Promise<void> {
     if (!files.length || state.processing) return;
     hideNotice();
-    let total = state.items.reduce((sum, item) => sum + item.file.size, 0);
-    let rejected = 0;
-    let limited = 0;
+    let totalBytes = state.items.reduce((sum, item) => sum + item.file.size, 0);
+    let rejected = 0, limited = 0;
     for (const file of files) {
-      if (state.items.length >= maxFiles || total + file.size > maxTotalBytes) {
-        limited += 1;
-        continue;
-      }
-      const ext = extension(file.name);
-      if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext) || file.size > maxFileBytes) {
-        rejected += 1;
-        continue;
-      }
+      if (state.items.length >= maxFiles || totalBytes + file.size > maxTotalBytes) { limited += 1; continue; }
+      if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext(file.name)) || file.size > maxFileBytes) { rejected += 1; continue; }
       try {
-        const bitmap = await createImageBitmap(file);
-        const width = bitmap.width;
-        const height = bitmap.height;
-        bitmap.close();
-        if (width > maxDimension || height > maxDimension || width * height > maxPixels) {
-          rejected += 1;
-          continue;
-        }
-        state.items.push({
-          id: crypto.randomUUID(),
-          file,
-          width,
-          height,
-          url: URL.createObjectURL(file),
-          settingsOrigin: 'shared',
-          status: 'ready',
-        });
-        total += file.size;
-      } catch {
-        rejected += 1;
-      }
+        const bitmap = await createImageBitmap(file); const width = bitmap.width, height = bitmap.height; bitmap.close();
+        if (width > maxDimension || height > maxDimension || width * height > maxPixels) { rejected += 1; continue; }
+        state.items.push({ id: crypto.randomUUID(), file, width, height, url: URL.createObjectURL(file), settingsOrigin: 'shared', status: 'ready' });
+        totalBytes += file.size;
+      } catch { rejected += 1; }
     }
     input.value = '';
     if (!state.activeId && state.items[0]) state.activeId = state.items[0].id;
-    renderSettings();
-    renderQueue();
-    schedulePreview();
-    if (rejected || limited) {
-      const messages = [];
-      if (rejected) messages.push(`${rejected} image${rejected === 1 ? '' : 's'} skipped by format, file-size, or decoded-size limits`);
-      if (limited) messages.push(`${limited} image${limited === 1 ? '' : 's'} skipped by batch limits`);
-      showNotice(messages.join(' · '), 'info');
-    }
+    renderSettings(); renderQueue(); schedulePreview();
+    if (rejected || limited) showNotice(`${rejected ? `${rejected} skipped by format or size limits` : ''}${rejected && limited ? ' · ' : ''}${limited ? `${limited} skipped by batch limits` : ''}`);
   }
 
   function removeItem(id: string): void {
     if (state.processing) return;
-    const index = state.items.findIndex((item) => item.id === id);
-    if (index < 0) return;
-    const [removed] = state.items.splice(index, 1);
-    if (removed) URL.revokeObjectURL(removed.url);
+    const index = state.items.findIndex((item) => item.id === id); if (index < 0) return;
+    const [removed] = state.items.splice(index, 1); if (removed) URL.revokeObjectURL(removed.url);
     if (state.activeId === id) state.activeId = state.items[Math.min(index, state.items.length - 1)]?.id;
-    renderSettings();
-    renderQueue();
-    schedulePreview();
+    renderSettings(); renderQueue(); schedulePreview();
   }
 
   function resetAll(): void {
     if (state.processing) return;
-    state.previewGeneration += 1;
-    if (state.previewTimer) window.clearTimeout(state.previewTimer);
-    for (const item of state.items) URL.revokeObjectURL(item.url);
-    state.items = [];
-    state.activeId = undefined;
-    state.mode = 'shared';
-    state.sharedSettings = defaultSettingsFor(toolId);
-    input.value = '';
-    progress.hidden = true;
-    clearPreview();
-    hideNotice();
-    renderSettings();
-    renderQueue();
+    state.previewGeneration += 1; if (state.previewTimer) window.clearTimeout(state.previewTimer);
+    state.items.forEach((item) => URL.revokeObjectURL(item.url));
+    state.items = []; state.activeId = undefined; state.mode = 'shared'; state.sharedSettings = defaultSettingsFor(toolId); input.value = '';
+    progress.hidden = true; clearPreview(); hideNotice(); renderSettings(); renderQueue();
+  }
+
+  function outputFor(item: Item): { format: OutputChoice; quality: number } {
+    if (toolId === 'compress-image') {
+      const settings = effective(item) as CompressSettings;
+      return { format: settings.format, quality: clamp(settings.quality, 1, 100) };
+    }
+    return { format: outputFormat.value as OutputChoice, quality: clamp(Number(outputQuality.value), 1, 100) };
   }
 
   async function processBatch(): Promise<void> {
     if (state.processing || !state.items.length) return;
-    state.processing = true;
-    state.cancel = false;
-    hideNotice();
-    progress.hidden = false;
-    progressLabel.textContent = 'Processing images…';
-    progressBar.max = 100;
-    cancel.disabled = false;
-    updateActions();
-    const quality = clamp(Number(outputQuality.value) / 100, 0.01, 1);
-    const output = outputFormat.value as OutputChoice;
-    let completed = 0;
-    let failed = 0;
+    state.processing = true; state.cancel = false; hideNotice(); progress.hidden = false; progressLabel.textContent = 'Processing images…'; progressBar.max = 100; cancel.disabled = false; updateActions();
+    let completed = 0, failed = 0;
     for (const item of state.items) {
       if (state.cancel) break;
-      item.status = 'processing';
-      item.error = undefined;
-      renderQueue();
+      item.status = 'processing'; item.error = undefined; renderQueue();
       try {
         const bitmap = await createImageBitmap(item.file);
         try {
-          const canvas = renderToolCanvas(bitmap, toolId, effectiveSettings(item));
-          const mime = outputMime(item.file, output);
-          item.result = await encodeCanvas(canvas, { type: mime, quality: mime === 'image/png' ? undefined : quality });
-          const ext = output === 'source' ? outputExtension(item.file, output) : extensionForOutput(mime);
-          item.outputName = `${baseName(item.file.name)}-${suffix}.${ext}`;
-          item.status = 'done';
-          completed += 1;
-        } finally {
-          bitmap.close();
-        }
+          const settings = effective(item);
+          const canvas = renderToolCanvas(bitmap, toolId, settings);
+          const output = outputFor(item);
+          const mime = mimeFor(item.file, output.format);
+          item.result = await encodeCanvas(canvas, { type: mime, quality: mime === 'image/png' ? undefined : output.quality / 100 });
+          const extension = output.format === 'source' ? sourceExtension(item.file) : extensionForOutput(mime);
+          item.outputName = `${base(item.file.name)}-${suffix}.${extension}`;
+          item.status = 'done'; completed += 1;
+        } finally { bitmap.close(); }
       } catch (error) {
-        item.status = 'error';
-        item.error = error instanceof Error ? error.message : 'Unable to process this image.';
-        failed += 1;
+        item.status = 'error'; item.error = error instanceof Error ? error.message : 'Unable to process image.'; failed += 1;
       }
-      const finished = completed + failed;
-      progressCount.textContent = `${finished} / ${state.items.length}`;
-      progressBar.value = Math.round(finished / state.items.length * 100);
-      renderQueue();
+      const finished = completed + failed; progressCount.textContent = `${finished} / ${state.items.length}`; progressBar.value = Math.round(finished / state.items.length * 100); renderQueue();
     }
-    state.processing = false;
-    cancel.disabled = true;
+    state.processing = false; cancel.disabled = true;
     progressLabel.textContent = state.cancel ? `Stopped · ${completed} completed` : failed ? `${completed} completed · ${failed} failed` : `${completed} completed`;
     updateActions();
-    const current = active();
-    if (current?.status === 'done') schedulePreview();
-    if (failed) showNotice(`${failed} image${failed === 1 ? '' : 's'} could not be processed. Successful results are still available.`, 'info');
+    if (failed) showNotice(`${failed} image${failed === 1 ? '' : 's'} failed. Successful results remain available.`);
   }
 
   async function downloadResults(): Promise<void> {
-    const files = state.items
-      .filter((item): item is Item & { result: Blob; outputName: string } => Boolean(item.result && item.outputName && item.status === 'done'))
-      .map((item) => ({ filename: item.outputName, blob: item.result }));
+    const files = state.items.filter((item): item is Item & { result: Blob; outputName: string } => Boolean(item.result && item.outputName && item.status === 'done')).map((item) => ({ filename: item.outputName, blob: item.result }));
     if (!files.length) return;
-    if (files.length === 1) {
-      downloadBlob(files[0].blob, files[0].filename);
-      return;
-    }
-    const zip = await createZipBlob(files);
-    downloadBlob(zip, `${toolId}-results.zip`);
+    if (files.length === 1) { downloadBlob(files[0].blob, files[0].filename); return; }
+    downloadBlob(await createZipBlob(files), `${toolId}-results.zip`);
   }
 
   settingInputs.forEach((control) => {
     const eventName = control instanceof HTMLInputElement && control.type === 'range' ? 'input' : 'change';
-    control.addEventListener(eventName, () => {
-      maintainResizeAspect(control);
-      changeSettings();
-    });
-    if (control instanceof HTMLInputElement && control.type === 'number') {
-      control.addEventListener('input', () => {
-        maintainResizeAspect(control);
-        changeSettings();
-      });
-    }
+    control.addEventListener(eventName, () => { maintainResizeAspect(control); changeSettings(); });
+    if (control instanceof HTMLInputElement && control.type === 'number') control.addEventListener('input', () => { maintainResizeAspect(control); changeSettings(); });
   });
-
-  outputQuality.addEventListener('input', () => {
-    outputQualityValue.textContent = outputQuality.value;
-    invalidateResults();
-  });
-  outputFormat.addEventListener('change', invalidateResults);
-  scopeButtons.forEach((button) => button.addEventListener('click', () => {
-    const requested = button.dataset.editScope;
-    if (requested === 'shared' || requested === 'individual') setMode(requested);
-  }));
-  useShared.addEventListener('click', () => {
-    const item = active();
-    if (!item || state.processing) return;
-    item.settings = undefined;
-    item.settingsOrigin = 'shared';
-    invalidateResults();
-    renderSettings();
-    schedulePreview();
-  });
+  outputQuality.addEventListener('input', () => { outputQualityValue.textContent = outputQuality.value; invalidate(); });
+  outputFormat.addEventListener('change', invalidate);
+  scopeButtons.forEach((button) => button.addEventListener('click', () => { const mode = button.dataset.editScope; if (mode === 'shared' || mode === 'individual') setMode(mode); }));
+  useShared.addEventListener('click', () => { const item = active(); if (!item || state.processing) return; item.settings = undefined; item.settingsOrigin = 'shared'; invalidate(); renderSettings(); schedulePreview(); });
   applyAll.addEventListener('click', () => {
-    const item = active();
-    if (!item || state.processing) return;
-    state.sharedSettings = clone(effectiveSettings(item));
-    for (const candidate of state.items) {
-      candidate.settings = undefined;
-      candidate.settingsOrigin = 'shared';
-    }
-    invalidateResults();
-    renderSettings();
-    renderQueue();
-    schedulePreview();
+    const item = active(); if (!item || state.processing) return;
+    state.sharedSettings = clone(effective(item));
+    state.items.forEach((candidate) => { candidate.settings = undefined; candidate.settingsOrigin = 'shared'; });
+    invalidate(); renderSettings(); renderQueue(); schedulePreview();
   });
-  dropzone.addEventListener('dragover', (event) => { event.preventDefault(); dropzone.classList.add('is-dragging'); });
-  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('is-dragging'));
-  dropzone.addEventListener('drop', (event) => {
-    event.preventDefault();
-    dropzone.classList.remove('is-dragging');
-    void addFiles([...event.dataTransfer!.files]);
-  });
+  drop.addEventListener('dragover', (event) => { event.preventDefault(); drop.classList.add('is-dragging'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('is-dragging'));
+  drop.addEventListener('drop', (event) => { event.preventDefault(); drop.classList.remove('is-dragging'); void addFiles([...event.dataTransfer!.files]); });
   input.addEventListener('change', () => void addFiles([...input.files ?? []]));
-  addMore.addEventListener('click', () => input.click());
-  clearAll.addEventListener('click', resetAll);
-  processButton.addEventListener('click', () => void processBatch());
-  downloadButton.addEventListener('click', () => void downloadResults());
-  cancel.addEventListener('click', () => {
-    if (!state.processing) return;
-    state.cancel = true;
-    cancel.disabled = true;
-    progressLabel.textContent = 'Stopping after current image…';
-  });
+  add.addEventListener('click', () => input.click()); clear.addEventListener('click', resetAll);
+  processButton.addEventListener('click', () => void processBatch()); downloadButton.addEventListener('click', () => void downloadResults());
+  cancel.addEventListener('click', () => { if (state.processing) { state.cancel = true; cancel.disabled = true; progressLabel.textContent = 'Stopping after current image…'; } });
 
-  if (toolId === 'resize-image') {
-    const resize = state.sharedSettings as ResizeSettings;
-    const mode = maybe<HTMLSelectElement>(root, '[data-setting="mode"]');
-    if (mode) mode.value = resize.mode;
-  }
   outputQualityValue.textContent = outputQuality.value;
-  renderSettings();
-  renderQueue();
-  clearPreview();
+  renderSettings(); renderQueue(); clearPreview();
 }
