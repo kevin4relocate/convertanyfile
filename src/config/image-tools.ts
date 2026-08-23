@@ -9,6 +9,13 @@ const MASK_BATCH_CAPABILITIES = {
   supportsOutputFormat: true,
 } as const;
 const CORE_BATCH_CAPABILITIES = MASK_BATCH_CAPABILITIES;
+const SEGMENTATION_CAPABILITIES = {
+  supportsBatch: true,
+  supportsSharedSettings: true,
+  supportsIndividualSettings: true,
+  supportsPreview: true,
+  supportsOutputFormat: false,
+} as const;
 
 export const REMOVE_WATERMARK_TOOL: ImageToolDefinition = {
   id: 'remove-watermark', slug: 'remove-watermark', displayName: 'Remove Watermark',
@@ -129,6 +136,19 @@ export const REMOVE_OBJECT_TOOL: ImageToolDefinition = {
   policyNote: 'Local repair works best on small objects over smooth or repeated backgrounds. Large or complex removals can create visible artifacts, so inspect the preview before reuse.',
 };
 
+export const REMOVE_BACKGROUND_TOOL: ImageToolDefinition = {
+  ...coreBase,
+  id: 'remove-background', slug: 'remove-background', displayName: 'Remove Background', category: 'segmentation',
+  title: 'Remove Image Background Online Free — Local AI Batch Tool | ConvertAnyFile',
+  description: 'Remove image backgrounds locally with a self-hosted U²-NetP ONNX model. Batch JPG, PNG and WebP images with shared or per-image cutout settings and PNG output.',
+  h1: 'Remove image backgrounds locally.', eyebrow: 'Image Tools · AI Preview',
+  intro: 'Create transparent or solid-background cutouts without uploading source images to an inference API. The self-hosted AI model runs in your browser, supports a shared batch setup or per-image overrides, and exports PNG results.',
+  capabilities: SEGMENTATION_CAPABILITIES,
+  outputKind: 'zip',
+  downloadSuffix: 'background-removed',
+  policyNote: 'U²-NetP works best when an image has a clear primary foreground subject. Hair, fur, glass, shadows, semi-transparent materials, low-contrast boundaries and full-frame graphics can produce imperfect masks; inspect and refine the preview before reuse.',
+};
+
 export const IMAGE_TOOL_ROADMAP = [
   { id: 'remove-watermark', label: 'Remove Watermark', status: 'live', description: 'Batch visible-watermark repair with six manual mask modes, including a movable text mask.', href: '/remove-watermark/' },
   { id: 'gemini-ai-logo-remover', label: 'Gemini AI Logo Remover', status: 'live', description: 'Focused local repair for a small visible sparkle mark.', href: '/gemini-ai-logo-remover/' },
@@ -140,5 +160,5 @@ export const IMAGE_TOOL_ROADMAP = [
   { id: 'bulk-rename-images', label: 'Bulk Rename Images', status: 'preview', description: 'Rename a batch without changing image bytes.', href: '/bulk-rename-images/' },
   { id: 'remove-image-metadata', label: 'Remove Image Metadata', status: 'preview', description: 'Strip EXIF, GPS and software metadata locally.', href: '/remove-image-metadata/' },
   { id: 'remove-object', label: 'Remove Object', status: 'preview', description: 'Mask and repair small unwanted objects locally.', href: '/remove-object/' },
-  { id: 'remove-background', label: 'Remove Background', status: 'planned', description: 'Background isolation belongs to a later, separately validated engine.', href: null },
+  { id: 'remove-background', label: 'Remove Background', status: 'preview', description: 'Self-hosted U²-NetP segmentation with transparent or solid-background PNG output.', href: '/remove-background/' },
 ] as const;
