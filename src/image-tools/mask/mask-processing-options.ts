@@ -1,9 +1,10 @@
 export interface MaskProcessingOptions {
   paddingPx: number;
   featherPx: number;
+  maxRepairRatio: number;
 }
 
-let current: MaskProcessingOptions = { paddingPx: 0, featherPx: 0 };
+let current: MaskProcessingOptions = { paddingPx: 0, featherPx: 0, maxRepairRatio: 0.15 };
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
@@ -11,6 +12,7 @@ export function setMaskProcessingOptions(next: Partial<MaskProcessingOptions>): 
   current = {
     paddingPx: clamp(Number(next.paddingPx ?? current.paddingPx) || 0, 0, 64),
     featherPx: clamp(Number(next.featherPx ?? current.featherPx) || 0, 0, 32),
+    maxRepairRatio: clamp(Number(next.maxRepairRatio ?? current.maxRepairRatio) || 0.15, 0.05, 0.5),
   };
   return { ...current };
 }
@@ -20,5 +22,5 @@ export function getMaskProcessingOptions(): MaskProcessingOptions {
 }
 
 export function resetMaskProcessingOptions(): void {
-  current = { paddingPx: 0, featherPx: 0 };
+  current = { paddingPx: 0, featherPx: 0, maxRepairRatio: 0.15 };
 }
