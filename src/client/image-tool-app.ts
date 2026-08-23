@@ -1,5 +1,6 @@
 import { mountRegisteredImageTool } from '../image-tools/core/tool-registry';
 import { mountCropInteractiveEditor } from '../image-tools/crop/crop-interactive-editor';
+import { mountBlurInteractiveEditor } from '../image-tools/blur/blur-interactive-editor';
 
 function syncQualityControls(root: HTMLElement): void {
   const pairs: Array<{ format?: HTMLSelectElement; quality?: HTMLInputElement }> = [
@@ -115,6 +116,7 @@ async function initializeImageTool(root: HTMLElement): Promise<void> {
     if (!mounted) throw new Error(`Unsupported image tool: ${toolId}`);
     syncQualityControls(root);
     if (toolId === 'crop-image') mountCropInteractiveEditor(root);
+    if (toolId === 'blur-image') mountBlurInteractiveEditor(root);
     initStickyImageToolActions(root);
     root.dataset.imageToolReady = 'true';
   } catch (error) {
