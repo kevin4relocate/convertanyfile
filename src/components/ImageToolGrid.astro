@@ -1,11 +1,12 @@
 ---
 import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
-interface Props { compact?: boolean; }
-const { compact = false } = Astro.props;
+interface Props { compact?: boolean; ids?: readonly string[]; excludeId?: string; }
+const { compact = false, ids, excludeId } = Astro.props;
 const statusLabel = (status: string): string => status === 'live' ? 'Live' : status === 'preview' ? 'Preview' : 'Planned';
+const tools = IMAGE_TOOL_ROADMAP.filter((tool) => (!ids || ids.includes(tool.id)) && tool.id !== excludeId);
 ---
 <div class:list={['image-tool-grid', compact && 'image-tool-grid--compact']}>
-  {IMAGE_TOOL_ROADMAP.map((tool) => tool.href ? (
+  {tools.map((tool) => tool.href ? (
     <a class="image-tool-card-link" href={tool.href}>
       <span class="image-tool-card-icon" aria-hidden="true">{tool.label.slice(0, 1)}</span>
       <span class="image-tool-card-copy">
