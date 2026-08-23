@@ -19,6 +19,15 @@ export function resizeDimensions(width: number, height: number, settings: Resize
     const factor = Math.min(integer(settings.fitWidth, width) / Math.max(1, width), integer(settings.fitHeight, height) / Math.max(1, height));
     return { width: integer(width * factor), height: integer(height * factor) };
   }
+  if (settings.lockAspect) {
+    const ratio = width / Math.max(1, height);
+    if (settings.pixelAnchor === 'height') {
+      const targetHeight = integer(settings.height, height);
+      return { width: integer(targetHeight * ratio, width), height: targetHeight };
+    }
+    const targetWidth = integer(settings.width, width);
+    return { width: targetWidth, height: integer(targetWidth / Math.max(1e-6, ratio), height) };
+  }
   return { width: integer(settings.width, width), height: integer(settings.height, height) };
 }
 
