@@ -29,6 +29,13 @@
   -webkit-appearance: none;
 }
 
+/* Match Remove Watermark's edge-to-edge topbar and immediate workspace start. */
+.deterministic-tool .image-tool-standard-workspace,
+.rename-tool .rename-standard-workspace,
+.background-removal-tool .background-standard-workspace {
+  padding-top: 0 !important;
+}
+
 .image-editor-card button:disabled,
 .image-editor-card input:disabled,
 .image-editor-card select:disabled {
