@@ -26,7 +26,7 @@ const maxFiles = tool.maxFiles ?? 50;
           <label><span>Start number</span><input data-role="start-number" type="number" min="0" max="999999" value="1" /></label>
           <label><span>Number padding</span><input data-role="padding" type="number" min="1" max="8" value="3" /></label>
         </div>
-        <label class="rename-custom" data-role="custom-name-wrap" hidden><span>Custom filename for selected image</span><input data-role="custom-name" maxlength="180" placeholder="Leave blank to use the shared pattern" /><small>The original extension is kept unless you include a supported extension.</small></label>
+        <label class="rename-custom" data-role="custom-name-wrap" hidden><span>Custom filename for selected image</span><input data-role="custom-name" maxlength="180" placeholder="Leave blank to use the shared pattern" /><small>The original extension is always preserved. Renaming never converts image bytes.</small></label>
       </section>
       <section class="rename-preview"><div><span>Rename preview</span><strong data-role="selected-original">Select an image</strong></div><div class="rename-arrow">→</div><strong data-role="selected-result">New filename appears here</strong></section>
     </div>
