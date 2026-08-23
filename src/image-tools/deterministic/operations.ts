@@ -17,7 +17,7 @@ export function resizeDimensions(width: number, height: number, settings: Resize
   }
   if (settings.mode === 'fit') {
     const factor = Math.min(integer(settings.fitWidth, width) / Math.max(1, width), integer(settings.fitHeight, height) / Math.max(1, height));
-    return { width: integer(width * factor), height: integer(height * factor) };
+    return { width: integer(width * factor), height: integer(height * factor), };
   }
   if (settings.lockAspect) {
     const ratio = width / Math.max(1, height);
@@ -31,7 +31,7 @@ export function resizeDimensions(width: number, height: number, settings: Resize
   return { width: integer(settings.width, width), height: integer(settings.height, height) };
 }
 
-function cropRect(width: number, height: number, settings: CropSettings): { sx: number; sy: number; sw: number; sh: number } {
+export function cropRect(width: number, height: number, settings: CropSettings): { sx: number; sy: number; sw: number; sh: number } {
   let sw = clamp(settings.width, 1, 100) / 100 * width;
   let sh = clamp(settings.height, 1, 100) / 100 * height;
   let sx = clamp(settings.x, 0, 100) / 100 * width;
@@ -94,8 +94,19 @@ export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolI
   }
   if (toolId === 'rotate-flip-image') return drawRotateFlip(bitmap, settings as RotateFlipSettings, maxDimension);
   if (toolId === 'crop-image') {
-    const crop = cropRect(bitmap.width, bitmap.height, settings as CropSettings), size = scaledSize(crop.sw, crop.sh, maxDimension);
-    const { canvas, context } = canvas2d(size.width, size.height); context.drawImage(bitmap, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height); return canvas;
+    const cropSettings = settings as CropSettings;
+    const crop = cropRect(bitmap.width, bitmap.height, cropSettings), size = scaledSize(crop.sw, crop.sh, maxDimension);
+    const { canvas, context } = canvas2d(size.width, size.height);
+    if (cropSettings.shape === 'circle') {
+      context.save();
+      context.beginPath();
+      context.ellipse(canvas.width / 2, canvas.height / 2, canvas.width / 2, canvas.height / 2, 0, 0, Math.PI * 2);
+      context.clip();
+      context.drawImage(bitmap, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height);
+      context.restore();
+      return canvas;
+    }
+    context.drawImage(bitmap, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height); return canvas;
   }
   if (toolId === 'blur-image') return drawBlur(bitmap, settings as BlurSettings, maxDimension);
   // Compress and metadata removal both intentionally re-render decoded pixels.
