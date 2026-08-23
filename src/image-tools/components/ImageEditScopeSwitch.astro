@@ -22,7 +22,9 @@ const {
   individualLabel = 'Edit individually',
   individualHint = variant === 'mask' ? 'Per-image mask' : 'Per-image overrides',
 } = Astro.props;
-
+const guidance = variant === 'mask'
+  ? 'The editor chooses a starting mode from the uploaded layouts.'
+  : 'Start with one shared setup, then override individual images when needed.';
 const rootClass = variant === 'mask' ? 'image-edit-scope gemini-edit-mode-bar' : 'image-edit-scope';
 ---
 
@@ -30,7 +32,7 @@ const rootClass = variant === 'mask' ? 'image-edit-scope gemini-edit-mode-bar' :
   <div class={variant === 'mask' ? 'gemini-edit-mode-copy' : 'image-edit-scope__copy'}>
     <span class="image-edit-scope__label">{label}</span>
     <strong>{title}</strong>
-    <small data-role="edit-mode-copy">The editor chooses a starting mode from the uploaded layouts.</small>
+    <small data-role="edit-mode-copy">{guidance}</small>
   </div>
   <div class={variant === 'mask' ? 'image-edit-scope__options gemini-edit-mode-options' : 'image-edit-scope__options'} role="radiogroup" aria-label={label}>
     <button
