@@ -17,6 +17,9 @@ interface Props {
 const { tool, kicker, heading, copy, bullets } = Astro.props;
 const seo = IMAGE_TOOL_SEO[tool.id];
 const schemas = imageToolSchemas(tool, ['Browser-based local image processing', ...bullets]);
+const howToIntro = tool.id === 'compress-image'
+  ? 'Compression re-encodes the visible image. Choose an output format and quality level, process locally, then compare the resulting file sizes before downloading.'
+  : seo?.howToIntro;
 ---
 <SiteLayout title={tool.title} description={tool.description} schema={schemas}>
   <ImageToolPageFrame tool={tool} />
@@ -30,7 +33,7 @@ const schemas = imageToolSchemas(tool, ['Browser-based local image processing', 
   </div></section>
 
   {seo && <section class="content-wide-section gemini-content-section"><div class="site-container">
-    <div class="section-heading wide"><span class="section-kicker">How to use it</span><h2>{seo.howToHeading}</h2><p>{seo.howToIntro}</p></div>
+    <div class="section-heading wide"><span class="section-kicker">How to use it</span><h2>{seo.howToHeading}</h2><p>{howToIntro}</p></div>
     <div class="steps-grid image-tool-howto-grid">{seo.steps.map((step, index) => <article class="step-card"><span class="step-number">{String(index + 1).padStart(2, '0')}</span><h3>{step.title}</h3><p>{step.text}</p></article>)}</div>
   </div></section>}
 
