@@ -2,6 +2,11 @@ import { expect, test } from '@playwright/test';
 
 test.describe('Phase 5 image tools', () => {
   test('remove background mounts its isolated segmentation runtime without eager inference', async ({ page }) => {
+    const runtimeRequests: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().includes('/runtime/background-removal/')) runtimeRequests.push(request.url());
+    });
+
     await page.goto('/remove-background/');
     const app = page.locator('[data-image-tool-app]');
     await expect(app).toHaveAttribute('data-tool-id', 'remove-background');
@@ -13,6 +18,7 @@ test.describe('Phase 5 image tools', () => {
     await expect(app.locator('[data-setting="background"]')).toHaveValue('transparent');
     await expect(app.locator('[data-role="process-batch"]')).toBeDisabled();
     await expect(page.getByText('Output: PNG')).toBeVisible();
+    expect(runtimeRequests).toEqual([]);
   });
 
   test('image tools hub exposes Remove Background as a preview route', async ({ page }) => {
@@ -25,7 +31,7 @@ test.describe('Phase 5 image tools', () => {
     await page.goto('/remove-watermark/');
     const watermark = page.locator('[data-image-tool-app]');
     await expect(watermark).toHaveAttribute('data-advanced-canvas', 'true');
-    await expect(watermark.locator('[data-role="zoom-value"]')).toHaveValue('100%');
+    await expect(watermark.locator('[data-role="zoom-value"]')).toHaveText('100%');
     await expect(watermark.locator('[data-role="mask-padding"]')).toBeAttached();
     await expect(watermark.locator('[data-role="mask-feather"]')).toBeAttached();
 
