@@ -1,0 +1,36 @@
+/* Shared visual normalization for the Image Tools workspace.
+ * Remove Watermark is the reference surface; tool-specific editors keep their
+ * behavior while native controls render with the same rhythm and typography. */
+.image-editor-card button,
+.image-editor-card input,
+.image-editor-card select,
+.image-editor-card output {
+  font-family: inherit;
+}
+
+.image-editor-card button,
+.image-editor-card select,
+.image-editor-card input:not([type="range"]):not([type="checkbox"]):not([type="color"]) {
+  line-height: 1.2;
+}
+
+.image-editor-card input[type="range"] {
+  accent-color: var(--accent);
+}
+
+.image-editor-card input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.image-editor-card input[type="number"]::-webkit-inner-spin-button,
+.image-editor-card input[type="number"]::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.image-editor-card button:disabled,
+.image-editor-card input:disabled,
+.image-editor-card select:disabled {
+  cursor: not-allowed;
+}
