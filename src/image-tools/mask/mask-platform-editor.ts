@@ -21,6 +21,32 @@ function readScopeFromUi(root:HTMLElement):ImageEditScope|undefined {
   return mode&&VALID_SCOPES.has(mode)?mode:undefined;
 }
 
+function mountRepairPreviewFeedback(root:HTMLElement):void {
+  const list=root.querySelector<HTMLElement>('[data-role="batch-list"]');
+  const empty=root.querySelector<HTMLElement>('[data-role="result-empty"]');
+  const label=root.querySelector<HTMLElement>('[data-role="result-label"]');
+  if(!list||!empty||!label)return;
+  const title=empty.querySelector<HTMLElement>('span');
+  const copy=empty.querySelector<HTMLElement>('small');
+  const sync=():void=>{
+    const activeError=list.querySelector<HTMLElement>('.gemini-file-card.is-sample.has-error .gemini-file-copy small');
+    if(activeError?.textContent){
+      empty.hidden=false;
+      label.textContent='Repair failed';
+      if(title)title.textContent='Unable to create preview';
+      if(copy)copy.textContent=activeError.textContent;
+      return;
+    }
+    if(!empty.hidden){
+      if(label.textContent==='Repair failed')label.textContent='Run repair to preview';
+      if(title)title.textContent='Result preview';
+      if(copy)copy.textContent='The selected image result appears here after repair.';
+    }
+  };
+  new MutationObserver(sync).observe(list,{childList:true,subtree:true,characterData:true});
+  sync();
+}
+
 export function mountMaskBatchPlatformEditor(root:HTMLElement):void {
   if(root.dataset.platformMigration!=='phase-2')throw new Error('Mask batch platform shell is missing its Phase 2 migration marker.');
   if(!root.querySelector('[data-platform-shell="batch-v1"]'))throw new Error('Mask batch platform shell is unavailable.');
@@ -32,6 +58,7 @@ export function mountMaskBatchPlatformEditor(root:HTMLElement):void {
   root.addEventListener('click',event=>{const target=event.target;if(!(target instanceof Element))return;const button=target.closest<HTMLElement>('[data-edit-mode]'),requested=button?.dataset.editMode as ImageEditScope|undefined;if(requested&&VALID_SCOPES.has(requested))syncPlatformScope(root,requested);});
 
   mountBatchMaskEditor(root);
+  mountRepairPreviewFeedback(root);
   if(root.dataset.advancedCanvas==='true')mountAdvancedCanvasController(root);
   const mountedScope=readScopeFromUi(root);if(mountedScope)syncPlatformScope(root,mountedScope);
 }
