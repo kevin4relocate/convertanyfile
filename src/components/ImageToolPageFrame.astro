@@ -1,5 +1,6 @@
 ---
 import type { ImageToolDefinition } from '../platform/image-tools/types';
+import BackgroundRemovalShell from './BackgroundRemovalShell.astro';
 import BatchMaskEditorShell from './BatchMaskEditorShell.astro';
 import BulkRenameImageShell from './BulkRenameImageShell.astro';
 import DeterministicImageToolShell from './DeterministicImageToolShell.astro';
@@ -7,6 +8,7 @@ interface Props { tool: ImageToolDefinition; }
 const { tool } = Astro.props;
 const usesMaskEditor = tool.category === 'mask' || tool.id === 'remove-watermark' || tool.id === 'gemini-ai-logo-remover';
 const usesRenameEditor = tool.category === 'naming';
+const usesSegmentationEditor = tool.category === 'segmentation';
 ---
 <section class="converter-page-hero image-tool-page-hero">
   <div class="site-container converter-page-hero-inner">
@@ -16,4 +18,4 @@ const usesRenameEditor = tool.category === 'naming';
     <p>{tool.intro}</p>
   </div>
 </section>
-<section class="image-tool-page-tool"><div class="site-container">{usesMaskEditor ? <BatchMaskEditorShell tool={tool} /> : usesRenameEditor ? <BulkRenameImageShell tool={tool} /> : <DeterministicImageToolShell tool={tool} />}</div></section>
+<section class="image-tool-page-tool"><div class="site-container">{usesMaskEditor ? <BatchMaskEditorShell tool={tool} /> : usesRenameEditor ? <BulkRenameImageShell tool={tool} /> : usesSegmentationEditor ? <BackgroundRemovalShell tool={tool} /> : <DeterministicImageToolShell tool={tool} />}</div></section>
