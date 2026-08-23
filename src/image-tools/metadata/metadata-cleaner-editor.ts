@@ -108,12 +108,12 @@ export function mountMetadataCleaner(root: HTMLElement): void {
     itemQuality.disabled = !enabled;
     resetItem.disabled = !enabled || (!item?.format && item?.quality === undefined);
     if (!item) {
-      itemFormat.value = 'source';
+      itemFormat.value = 'shared';
       itemQuality.value = sharedQuality.value;
       itemQualityValue.textContent = sharedQuality.value;
       return;
     }
-    itemFormat.value = item.format ?? 'source';
+    itemFormat.value = item.format ?? 'shared';
     itemQuality.value = String(item.quality ?? Number(sharedQuality.value));
     itemQualityValue.textContent = itemQuality.value;
   }
@@ -145,6 +145,7 @@ export function mountMetadataCleaner(root: HTMLElement): void {
       if (item.processing) meta.textContent = 'Creating clean copy…';
       else if (item.error) meta.textContent = item.error;
       else if (item.scanStatus === 'scanning') meta.textContent = 'Scanning metadata…';
+      else if (item.scanStatus === 'error') meta.textContent = 'Metadata scan unavailable';
       else if (item.report?.detected) meta.textContent = `${uniqueLabels(item.report).join(', ')} found`;
       else meta.textContent = 'No supported metadata detected';
       const tags = document.createElement('div'); tags.className = 'metadata-tags';
@@ -157,7 +158,7 @@ export function mountMetadataCleaner(root: HTMLElement): void {
       copy.append(name, meta, tags);
       const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '×'; remove.title = 'Remove image'; remove.disabled = processing;
       remove.addEventListener('click', (event) => { event.stopPropagation(); removeItem(item.id); });
-      const select = (): void => { if (!processing) { activeId = item.id; renderList(); renderAdvanced(); } };
+      const select = (): void => { if (!processing) { activeId = item.id; renderList(); } };
       card.addEventListener('click', select);
       card.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); select(); } });
       card.append(image, copy, remove);
@@ -257,7 +258,7 @@ export function mountMetadataCleaner(root: HTMLElement): void {
 
   sharedQuality.addEventListener('input', () => { sharedQualityValue.textContent = sharedQuality.value; invalidateResults(); renderAdvanced(); });
   sharedFormat.addEventListener('change', invalidateResults);
-  itemFormat.addEventListener('change', () => { const item = active(); if (!item) return; item.format = itemFormat.value === 'source' ? undefined : itemFormat.value as OutputChoice; invalidateResults(); renderList(); });
+  itemFormat.addEventListener('change', () => { const item = active(); if (!item) return; item.format = itemFormat.value === 'shared' ? undefined : itemFormat.value as OutputChoice; invalidateResults(); renderList(); });
   itemQuality.addEventListener('input', () => { const item = active(); if (!item) return; item.quality = Number(itemQuality.value); itemQualityValue.textContent = itemQuality.value; invalidateResults(); renderList(); });
   resetItem.addEventListener('click', () => { const item = active(); if (!item) return; item.format = undefined; item.quality = undefined; invalidateResults(); renderList(); });
   add.addEventListener('click', () => input.click());
