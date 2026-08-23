@@ -38,10 +38,6 @@ const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
   'remove-background': backgroundRemovalLoader,
 };
 
-export function hasImageToolLoader(toolId: string): boolean {
-  return Object.prototype.hasOwnProperty.call(IMAGE_TOOL_LOADERS, toolId);
-}
-
 export async function mountRegisteredImageTool(toolId: string, root: HTMLElement): Promise<boolean> {
   const loader = IMAGE_TOOL_LOADERS[toolId];
   if (!loader) return false;
