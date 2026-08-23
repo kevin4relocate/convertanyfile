@@ -4,32 +4,45 @@ const PNG_2X2 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFkl
 const png = (name:string) => ({ name, mimeType:'image/png', buffer:PNG_2X2 });
 
 test.describe('Phase 4 image tools', () => {
-  test('bulk rename keeps a shared pattern and supports individual filename overrides', async ({ page }) => {
+  test('bulk rename exposes simple methods and previews every file', async ({ page }) => {
     await page.goto('/bulk-rename-images/');
     const app = page.locator('[data-image-tool-app]');
     await expect(app).toHaveAttribute('data-tool-id','bulk-rename-images');
     await expect(app).toHaveAttribute('data-platform-runtime','batch-v1');
+    await expect(app.locator('[data-rename-method]')).toHaveCount(5);
+    await expect(app.locator('[data-rename-method="number"]')).toContainText('Numbering');
+    await expect(app.locator('[data-rename-method="prefix"]')).toContainText('Prefix');
+    await expect(app.locator('[data-rename-method="suffix"]')).toContainText('Suffix');
+    await expect(app.locator('[data-rename-method="replace"]')).toContainText('Replace text');
+    await expect(app.locator('[data-rename-method="pattern"]')).toContainText('Custom pattern');
+
     await app.locator('[data-role="file-input"]').setInputFiles([png('first.png'),png('second.png')]);
     await expect(app.locator('[data-role="batch-count"]')).toHaveText('2');
-    await expect(app.locator('[data-role="batch-list"]')).toContainText('image-001.png');
+    await expect(app.locator('[data-role="rename-preview-list"] .rename-preview-row')).toHaveCount(2);
+    await expect(app.locator('[data-role="rename-preview-list"]')).toContainText('first.png');
+    await expect(app.locator('[data-role="rename-preview-list"]')).toContainText('image-001.png');
+    await expect(app.locator('[data-role="rename-preview-list"]')).toContainText('image-002.png');
+
+    await app.locator('[data-rename-method="prefix"]').click();
+    await app.locator('[data-role="prefix"]').fill('2026-');
+    await expect(app.locator('[data-role="rename-preview-list"]')).toContainText('2026-first.png');
+    await expect(app.locator('[data-role="rename-preview-list"]')).toContainText('2026-second.png');
+
     await app.locator('[data-edit-scope="individual"]').click();
     await expect(app).toHaveAttribute('data-platform-scope','individual');
-    await app.locator('[data-role="custom-name"]').fill('hero-image');
-    await expect(app.locator('[data-role="selected-result"]')).toHaveText('hero-image.png');
-    await expect(app.locator('[data-role="batch-list"]')).toContainText('CUSTOM');
-
     await app.locator('[data-role="custom-name"]').fill('hero-image.jpg');
-    await expect(app.locator('[data-role="selected-result"]')).toHaveText('hero-image.png');
+    await expect(app.locator('[data-role="rename-preview-list"] .rename-preview-row').first()).toContainText('hero-image.png');
+    await expect(app.locator('[data-role="batch-list"]')).toContainText('CUSTOM');
 
     await app.locator('[data-role="process-batch"]').click();
     await expect(app.locator('[data-role="download-batch"]')).toBeEnabled();
   });
 
-  test('bulk rename keeps long desktop preview filenames on one aligned row', async ({ page }) => {
+  test('bulk rename full preview keeps long filenames aligned', async ({ page }) => {
     await page.goto('/bulk-rename-images/');
     const app = page.locator('[data-image-tool-app]');
     await app.locator('[data-role="file-input"]').setInputFiles(png('this_is_a_very_long_source_filename_that_should_not_break_the_preview_layout.png'));
-    const original = app.locator('[data-role="selected-original"]');
+    const original = app.locator('.rename-preview-row strong').first();
     await expect(original).toHaveCSS('white-space','nowrap');
     await expect(original).toHaveCSS('text-overflow','ellipsis');
   });
