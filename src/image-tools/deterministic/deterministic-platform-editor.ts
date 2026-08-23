@@ -85,6 +85,14 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
   function renderSettings():void {
     const item=active(),settings=item?effective(item):state.sharedSettings,record=asRecord(settings);
     for(const control of settingInputs){const key=control.dataset.setting;if(key&&key in record)writeControl(control,record[key]);}
+    if(toolId==='resize-image'&&item){
+      const resize=settings as ResizeSettings;
+      if(resize.mode==='pixels'&&resize.lockAspect){
+        const dimensions=resizeDimensions(item.width,item.height,resize);
+        q<HTMLInputElement>(root,'[data-setting="width"]').value=String(dimensions.width);
+        q<HTMLInputElement>(root,'[data-setting="height"]').value=String(dimensions.height);
+      }
+    }
     syncConditional(settings);useShared.hidden=state.mode!=='individual'||!item||item.settingsOrigin!=='custom';applyAll.hidden=state.mode!=='individual'||!item;
   }
   function changeSettings(control?:HTMLInputElement|HTMLSelectElement):void {
