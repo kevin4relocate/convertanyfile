@@ -31,7 +31,7 @@ const schemas = imageToolSchemas(tool, ['Browser-based local image processing', 
 
   {seo && <section class="content-wide-section gemini-content-section"><div class="site-container">
     <div class="section-heading wide"><span class="section-kicker">How to use it</span><h2>{seo.howToHeading}</h2><p>{seo.howToIntro}</p></div>
-    <div class="steps-grid">{seo.steps.map((step, index) => <article class="step-card"><span class="step-number">{String(index + 1).padStart(2, '0')}</span><h3>{step.title}</h3><p>{step.text}</p></article>)}</div>
+    <div class="steps-grid image-tool-howto-grid">{seo.steps.map((step, index) => <article class="step-card"><span class="step-number">{String(index + 1).padStart(2, '0')}</span><h3>{step.title}</h3><p>{step.text}</p></article>)}</div>
   </div></section>}
 
   {seo && <section class="content-wide-section white gemini-content-section"><div class="site-container">
