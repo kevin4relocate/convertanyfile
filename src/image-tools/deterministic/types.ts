@@ -3,7 +3,8 @@ export type DeterministicToolId =
   | 'compress-image'
   | 'rotate-flip-image'
   | 'crop-image'
-  | 'blur-image';
+  | 'blur-image'
+  | 'remove-image-metadata';
 
 export type OutputChoice = 'source' | 'png' | 'jpg' | 'webp';
 
@@ -18,6 +19,11 @@ export type ResizeSettings = {
 };
 
 export type CompressSettings = {
+  format: OutputChoice;
+  quality: number;
+};
+
+export type MetadataSettings = {
   format: OutputChoice;
   quality: number;
 };
@@ -48,6 +54,7 @@ export type BlurSettings = {
 export type DeterministicSettings =
   | ResizeSettings
   | CompressSettings
+  | MetadataSettings
   | RotateFlipSettings
   | CropSettings
   | BlurSettings;
@@ -58,6 +65,8 @@ export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSe
       return { mode: 'pixels', width: 1920, height: 1080, percent: 50, lockAspect: true, fitWidth: 1920, fitHeight: 1080 };
     case 'compress-image':
       return { format: 'webp', quality: 82 };
+    case 'remove-image-metadata':
+      return { format: 'source', quality: 92 };
     case 'rotate-flip-image':
       return { rotation: 0, flipHorizontal: false, flipVertical: false };
     case 'crop-image':
