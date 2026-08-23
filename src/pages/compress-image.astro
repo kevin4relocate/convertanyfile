@@ -1,0 +1,11 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { COMPRESS_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={COMPRESS_IMAGE_TOOL}
+  kicker="Quality-controlled local compression"
+  heading="Compress a batch with one output setup."
+  copy="Keep image dimensions while changing output format and quality. JPEG and WebP respond strongly to the quality slider, while PNG stays lossless."
+  bullets={['Compress JPG, PNG and WebP without uploading source images.', 'Choose Same as source, PNG, JPG or WebP output.', 'Adjust output quality before processing.', 'Use individual mode when a few images need different settings.', 'Download successful batch results as a ZIP.']}
+/>
