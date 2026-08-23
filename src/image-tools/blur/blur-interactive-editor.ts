@@ -6,18 +6,53 @@ const numeric=(input:HTMLInputElement):number=>Number(input.value||'0');
 const setNumber=(input:HTMLInputElement,value:number):void=>{input.value=String(Math.round(clamp(value,0,100)*100)/100);};
 const emit=(input:HTMLInputElement|HTMLSelectElement,event:'input'|'change'):void=>input.dispatchEvent(new Event(event,{bubbles:true}));
 
+function makeScopeButton(value:'whole'|'region',title:string,copy:string):HTMLButtonElement{
+  const button=document.createElement('button');
+  button.type='button';button.className='blur-scope-button';button.dataset.blurScope=value;button.setAttribute('aria-pressed','false');
+  const strong=document.createElement('strong');strong.textContent=title;
+  const small=document.createElement('small');small.textContent=copy;
+  button.append(strong,small);return button;
+}
+
+function makeHandle(handle:Handle):HTMLButtonElement{
+  const button=document.createElement('button');button.type='button';button.className=`blur-handle blur-handle--${handle}`;button.dataset.blurHandle=handle;
+  const names:{[key in Handle]:string}={nw:'top left',ne:'top right',sw:'bottom left',se:'bottom right'};
+  button.setAttribute('aria-label',`Resize blur area from ${names[handle]}`);return button;
+}
+
 export function mountBlurInteractiveEditor(root:HTMLElement):void{
   if(root.dataset.toolId!=='blur-image'||root.dataset.blurEditorReady==='true')return;
-  const frame=root.querySelector<HTMLElement>('[data-role="blur-editor-frame"]');
   const image=root.querySelector<HTMLImageElement>('[data-role="source-preview"]');
-  const selection=root.querySelector<HTMLElement>('[data-role="blur-selection"]');
+  const frame=image?.closest<HTMLElement>('.image-preview-panel__frame');
   const scope=root.querySelector<HTMLSelectElement>('[data-setting="scope"]');
   const x=root.querySelector<HTMLInputElement>('[data-setting="x"]');
   const y=root.querySelector<HTMLInputElement>('[data-setting="y"]');
   const width=root.querySelector<HTMLInputElement>('[data-setting="width"]');
   const height=root.querySelector<HTMLInputElement>('[data-setting="height"]');
-  const buttons=[...root.querySelectorAll<HTMLButtonElement>('[data-blur-scope]')];
-  if(!frame||!image||!selection||!scope||!x||!y||!width||!height)return;
+  const radius=root.querySelector<HTMLInputElement>('[data-setting="radius"]');
+  const settings=root.querySelector<HTMLElement>('.deterministic-settings');
+  const grid=scope?.closest<HTMLElement>('.setting-grid');
+  if(!frame||!image||!scope||!x||!y||!width||!height||!radius||!settings||!grid)return;
+
+  const scopeLabel=scope.closest<HTMLElement>('label');if(scopeLabel)scopeLabel.hidden=true;
+  const radiusLabel=radius.closest<HTMLElement>('label');radiusLabel?.classList.add('blur-strength-control');
+
+  const visual=document.createElement('div');visual.className='blur-visual-controls';
+  const heading=document.createElement('div');heading.className='blur-visual-heading';heading.innerHTML='<div><span>Blur area</span><strong>Choose what to blur, then adjust the strength.</strong></div><small>Selected area can be dragged and resized directly on the image.</small>';
+  const modes=document.createElement('div');modes.className='blur-scope-toolbar';modes.setAttribute('role','group');modes.setAttribute('aria-label','Blur area');
+  const whole=makeScopeButton('whole','Blur whole image','Apply blur across the complete image.');
+  const region=makeScopeButton('region','Blur selected area','Draw one movable rectangular blur area.');modes.append(whole,region);visual.append(heading,modes);
+  settings.insertBefore(visual,grid);
+
+  const advanced=document.createElement('details');advanced.className='blur-advanced';advanced.hidden=true;
+  const summary=document.createElement('summary');summary.textContent='Advanced coordinates';advanced.append(summary);
+  const advancedGrid=document.createElement('div');advancedGrid.className='setting-grid blur-advanced-grid';
+  for(const control of [x,y,width,height]){const label=control.closest<HTMLElement>('label');if(label)advancedGrid.append(label);}
+  advanced.append(advancedGrid);settings.append(advanced);
+
+  const selection=document.createElement('div');selection.className='blur-selection';selection.dataset.role='blur-selection';selection.hidden=true;
+  const label=document.createElement('span');label.className='blur-selection-label';label.textContent='Blur area';selection.append(label,makeHandle('nw'),makeHandle('ne'),makeHandle('sw'),makeHandle('se'));frame.append(selection);
+  const buttons=[whole,region];
 
   let dragging:false|{pointerId:number;handle?:Handle;startX:number;startY:number;rect:Rect;imageRect:DOMRect}=false;
   const rect=():Rect=>({x:clamp(numeric(x),0,99),y:clamp(numeric(y),0,99),width:clamp(numeric(width),1,100),height:clamp(numeric(height),1,100)});
@@ -28,12 +63,11 @@ export function mountBlurInteractiveEditor(root:HTMLElement):void{
   });
 
   const syncSelection=():void=>{
-    syncButtons();
+    syncButtons();advanced.hidden=scope.value!=='region';
     if(scope.value!=='region'||image.hidden||!image.complete||!image.naturalWidth||!image.naturalHeight){selection.hidden=true;return;}
     const imageRect=image.getBoundingClientRect(),frameRect=frame.getBoundingClientRect();
     if(!imageRect.width||!imageRect.height){selection.hidden=true;return;}
-    const current=rect();
-    const w=Math.min(current.width,100-current.x),h=Math.min(current.height,100-current.y);
+    const current=rect(),w=Math.min(current.width,100-current.x),h=Math.min(current.height,100-current.y);
     selection.hidden=false;
     selection.style.left=`${imageRect.left-frameRect.left+current.x/100*imageRect.width}px`;
     selection.style.top=`${imageRect.top-frameRect.top+current.y/100*imageRect.height}px`;
@@ -48,8 +82,7 @@ export function mountBlurInteractiveEditor(root:HTMLElement):void{
   };
 
   buttons.forEach(button=>button.addEventListener('click',()=>{
-    const value=button.dataset.blurScope;
-    if(value!=='whole'&&value!=='region')return;
+    const value=button.dataset.blurScope;if(value!=='whole'&&value!=='region')return;
     scope.value=value;emit(scope,'change');requestAnimationFrame(syncSelection);
   }));
 
@@ -62,9 +95,7 @@ export function mountBlurInteractiveEditor(root:HTMLElement):void{
 
   selection.addEventListener('pointermove',(event)=>{
     if(!dragging||event.pointerId!==dragging.pointerId)return;
-    const {imageRect,rect:base,handle}=dragging;
-    const dx=(event.clientX-dragging.startX)/Math.max(1,imageRect.width)*100;
-    const dy=(event.clientY-dragging.startY)/Math.max(1,imageRect.height)*100;
+    const {imageRect,rect:base,handle}=dragging,dx=(event.clientX-dragging.startX)/Math.max(1,imageRect.width)*100,dy=(event.clientY-dragging.startY)/Math.max(1,imageRect.height)*100;
     if(!handle){applyRect({...base,x:base.x+dx,y:base.y+dy});return;}
     let left=base.x,right=base.x+base.width,top=base.y,bottom=base.y+base.height;
     if(handle.includes('w'))left=clamp(base.x+dx,0,right-2);else right=clamp(right+dx,left+2,100);
@@ -75,9 +106,7 @@ export function mountBlurInteractiveEditor(root:HTMLElement):void{
   const end=(event:PointerEvent):void=>{if(dragging&&event.pointerId===dragging.pointerId){dragging=false;try{selection.releasePointerCapture(event.pointerId);}catch{}}};
   selection.addEventListener('pointerup',end);selection.addEventListener('pointercancel',end);
   [scope,x,y,width,height].forEach(control=>{control.addEventListener('input',()=>requestAnimationFrame(syncSelection));control.addEventListener('change',()=>requestAnimationFrame(syncSelection));});
-  image.addEventListener('load',()=>requestAnimationFrame(syncSelection));
-  root.addEventListener('click',()=>requestAnimationFrame(syncSelection));
-  window.addEventListener('resize',syncSelection,{passive:true});
-  window.addEventListener('pagehide',()=>window.removeEventListener('resize',syncSelection),{once:true});
+  image.addEventListener('load',()=>requestAnimationFrame(syncSelection));root.addEventListener('click',()=>requestAnimationFrame(syncSelection));
+  window.addEventListener('resize',syncSelection,{passive:true});window.addEventListener('pagehide',()=>window.removeEventListener('resize',syncSelection),{once:true});
   root.dataset.blurEditorReady='true';requestAnimationFrame(syncSelection);
 }
