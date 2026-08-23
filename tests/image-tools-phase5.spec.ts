@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('Phase 5 image tools', () => {
+test.describe('Final image tools expansion', () => {
   test('remove background mounts its isolated segmentation runtime without eager inference', async ({ page }) => {
     const runtimeRequests: string[] = [];
     page.on('request', (request) => {
@@ -27,18 +27,26 @@ test.describe('Phase 5 image tools', () => {
     await expect(page.getByText('Phase 5 preview')).toBeVisible();
   });
 
-  test('advanced mask controls stay on general repair tools while Gemini stays simplified', async ({ page }) => {
+  test('advanced mask controls expose visible undo and redo while Gemini stays simplified', async ({ page }) => {
     await page.goto('/remove-watermark/');
     const watermark = page.locator('[data-image-tool-app]');
     await expect(watermark).toHaveAttribute('data-advanced-canvas', 'true');
     await expect(watermark.locator('[data-role="zoom-value"]')).toHaveText('100%');
     await expect(watermark.locator('[data-role="mask-padding"]')).toBeAttached();
     await expect(watermark.locator('[data-role="mask-feather"]')).toBeAttached();
+    await expect(watermark.locator('[data-role="undo"]')).toBeAttached();
+    await expect(watermark.locator('[data-role="redo"]')).toBeAttached();
+    await expect(watermark.locator('[data-role="redo"]')).toBeDisabled();
+
+    await page.goto('/remove-object/');
+    const objectTool = page.locator('[data-image-tool-app]');
+    await expect(objectTool.locator('[data-role="redo"]')).toBeAttached();
 
     await page.goto('/gemini-ai-logo-remover/');
     const gemini = page.locator('[data-image-tool-app]');
     await expect(gemini).toHaveAttribute('data-advanced-canvas', 'false');
     await expect(gemini.locator('[data-role="mask-padding"]')).toHaveCount(0);
     await expect(gemini.locator('[data-role="mask-feather"]')).toHaveCount(0);
+    await expect(gemini.locator('[data-role="redo"]')).toHaveCount(0);
   });
 });
