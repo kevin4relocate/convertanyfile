@@ -17,6 +17,10 @@ test.describe('Phase 4 image tools', () => {
     await app.locator('[data-role="custom-name"]').fill('hero-image');
     await expect(app.locator('[data-role="selected-result"]')).toHaveText('hero-image.png');
     await expect(app.locator('[data-role="batch-list"]')).toContainText('CUSTOM');
+
+    await app.locator('[data-role="custom-name"]').fill('hero-image.jpg');
+    await expect(app.locator('[data-role="selected-result"]')).toHaveText('hero-image.png');
+
     await app.locator('[data-role="process-batch"]').click();
     await expect(app.locator('[data-role="download-batch"]')).toBeEnabled();
   });
