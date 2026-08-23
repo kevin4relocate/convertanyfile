@@ -1,16 +1,7 @@
 export type ImageToolStatus = 'preview' | 'live' | 'planned';
 export type ImageToolCategory = 'transform' | 'encode' | 'geometry' | 'mask' | 'metadata' | 'naming' | 'segmentation';
 export type ImageEditScope = 'shared' | 'individual';
-export type ImageToolOutputKind = 'image' | 'zip' | 'metadata' | 'filename';
 export type ImageMaskMode = 'rect' | 'circle' | 'square' | 'diamond' | 'star4' | 'text';
-
-export interface ImageToolCapabilities {
-  supportsBatch: boolean;
-  supportsSharedSettings: boolean;
-  supportsIndividualSettings: boolean;
-  supportsPreview?: boolean;
-  supportsOutputFormat?: boolean;
-}
 
 export interface ImageToolDefinition {
   id: string;
@@ -22,20 +13,22 @@ export interface ImageToolDefinition {
   eyebrow: string;
   intro: string;
   status: ImageToolStatus;
+  category: ImageToolCategory;
   acceptedExtensions: readonly string[];
   acceptedMimeTypes: readonly string[];
   maxFileBytes: number;
   maxPixels: number;
   maxDimension: number;
   maxFiles?: number;
-  category?: ImageToolCategory;
-  capabilities?: ImageToolCapabilities;
-  outputKind?: ImageToolOutputKind;
+  downloadSuffix: string;
+  policyNote: string;
+}
+
+export interface MaskImageToolDefinition extends ImageToolDefinition {
+  category: 'mask';
   selectionModes: readonly ImageMaskMode[];
   defaultSelectionMode: ImageMaskMode;
   removeActionLabel: string;
-  downloadSuffix: string;
-  policyNote: string;
 }
 
 export interface PixelPoint { x: number; y: number; }
