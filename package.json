@@ -12,7 +12,8 @@
     "fixtures:archive": "node scripts/sync-archive-test-fixtures.mjs",
     "dev": "npm run runtime:all && astro dev",
     "check": "astro check",
-    "build": "npm run runtime:all && astro build",
+    "check:cloudflare-assets": "node scripts/check-cloudflare-static-assets.mjs",
+    "build": "npm run runtime:all && astro build && npm run check:cloudflare-assets",
     "preview": "astro preview",
     "test:e2e": "npm run fixtures:archive && playwright test",
     "test:production": "playwright test --config=playwright.production.config.ts"
