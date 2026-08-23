@@ -4,6 +4,14 @@ const PNG_2X2 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP4z8DA8J+BkYHh////DAAe9gT9Ce00PgAAAABJRU5ErkJggg==',
   'base64',
 );
+const PNG_4X2 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAAE0lEQVR42mP8z8DwnwEJMDGgAQA/JwICXm3wVAAAAABJRU5ErkJggg==',
+  'base64',
+);
+const PNG_2X4 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAIAAAAECAYAAACk7+45AAAAFklEQVR42mP8z8Dwn4GBgYGJAQowGQBDcQIGRy9a5gAAAABJRU5ErkJggg==',
+  'base64',
+);
 
 const TOOLS = [
   ['/resize-image/', 'resize-image'],
@@ -23,6 +31,8 @@ for (const [path, toolId] of TOOLS) {
     await expect(app.locator('[data-role="batch-dropzone"]')).toBeVisible();
     await expect(app.locator('[data-edit-scope="shared"]')).toBeAttached();
     await expect(app.locator('[data-edit-scope="individual"]')).toBeAttached();
+    await expect(app.locator('[data-role="batch-dropzone"]')).toContainText('10 MB each');
+    await expect(app.locator('[data-role="edit-mode-copy"]')).toContainText('Start with one shared setup');
   });
 }
 
@@ -42,6 +52,33 @@ test('resize supports shared and per-image overrides', async ({ page }, testInfo
   await expect(app.locator('.deterministic-file-card').first()).toContainText('CUSTOM');
   await app.locator('.deterministic-file-card').nth(1).click();
   await expect(app.locator('[data-setting="width"]')).toHaveValue('1920');
+});
+
+test('locked shared resize preserves each image ratio in a mixed batch', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run mixed-ratio resize coverage once in Chromium');
+  await page.goto('/resize-image/');
+  const app = page.locator('[data-tool-id="resize-image"]');
+  await app.locator('[data-role="file-input"]').setInputFiles([
+    { name: 'wide.png', mimeType: 'image/png', buffer: PNG_4X2 },
+    { name: 'tall.png', mimeType: 'image/png', buffer: PNG_2X4 },
+  ]);
+
+  await app.locator('[data-setting="width"]').fill('8');
+  await expect(app.locator('[data-setting="height"]')).toHaveValue('4');
+
+  await app.locator('.deterministic-file-card').nth(1).click();
+  await expect(app.locator('[data-setting="width"]')).toHaveValue('8');
+  await expect(app.locator('[data-setting="height"]')).toHaveValue('16');
+  await expect(app.locator('[data-role="preview-meta"]')).toContainText('8 × 16 preview');
+});
+
+test('resize rejects unsafe output canvas dimensions before processing', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run resize safety coverage once in Chromium');
+  await page.goto('/resize-image/');
+  const app = page.locator('[data-tool-id="resize-image"]');
+  await app.locator('[data-role="file-input"]').setInputFiles({ name: 'wide.png', mimeType: 'image/png', buffer: PNG_4X2 });
+  await app.locator('[data-setting="width"]').fill('12000');
+  await expect(app.locator('[data-role="preview-meta"]')).toContainText('safety limit');
 });
 
 test('compress keeps output quality as an individual override', async ({ page }, testInfo) => {
