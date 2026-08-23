@@ -29,7 +29,11 @@ test.describe('Phase 4 image tools', () => {
     await app.locator('[data-role="file-input"]').setInputFiles([png('meta-a.png'),png('meta-b.png')]);
     await app.locator('[data-edit-scope="individual"]').click();
     await app.locator('[data-setting="format"]').selectOption('webp');
-    await app.locator('[data-setting="quality"]').fill('80');
+    await app.locator('[data-setting="quality"]').evaluate((element) => {
+      const input = element as HTMLInputElement;
+      input.value = '80';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
     await expect(app.locator('[data-role="batch-list"]')).toContainText('CUSTOM');
   });
 
@@ -38,12 +42,12 @@ test.describe('Phase 4 image tools', () => {
     const app = page.locator('[data-image-tool-app]');
     await expect(app).toHaveAttribute('data-tool-id','remove-object');
     await expect(app).toHaveAttribute('data-advanced-canvas','true');
-    await expect(app.locator('[data-role="zoom-value"]')).toHaveValue('100%');
+    await expect(app.locator('[data-role="zoom-value"]')).toHaveText('100%');
     await expect(app.locator('[data-role="mask-padding"]')).toHaveValue('4');
     await expect(app.locator('[data-role="mask-feather"]')).toHaveValue('4');
     await app.locator('[data-role="file-input"]').setInputFiles(png('object.png'));
     await expect(app.locator('[data-role="selection-status"]')).toContainText('object');
     await app.locator('[data-role="zoom-in"]').click();
-    await expect(app.locator('[data-role="zoom-value"]')).toHaveValue('125%');
+    await expect(app.locator('[data-role="zoom-value"]')).toHaveText('125%');
   });
 });
