@@ -8,9 +8,15 @@ import {
 
 type EditMode = 'shared' | 'individual';
 type Preference = 'auto' | 'manual';
+type CanvasCommand =
+  | { type:'undo' }
+  | { type:'redo' }
+  | { type:'delete' }
+  | { type:'duplicate' }
+  | { type:'nudge'; dx:number; dy:number };
 type Item = {
   id:string; file:File; width:number; height:number; ratio:number; ratioLabel:string; url:string;
-  ops?:Op[]; history?:Op[][]; origin?:'shared'|'custom'; status:'ready'|'processing'|'done'|'error';
+  ops?:Op[]; history?:Op[][]; redo?:Op[][]; origin?:'shared'|'custom'; status:'ready'|'processing'|'done'|'error';
   result?:Blob; ext?:string; error?:string;
 };
 type Interaction =
@@ -55,7 +61,7 @@ export function mountBatchMaskEditor(root:HTMLElement):void {
   const supported=new Set<Mode>(modeButtons.map(button=>button.dataset.toolMode as Mode)), requested=root.dataset.defaultMode as Mode|undefined;
   const initial=requested&&supported.has(requested)?requested:(supported.has('star4')?'star4':[...supported][0]||'rect');
 
-  const state:{items:Item[];active?:string;bitmap?:ImageBitmap;w:number;h:number;mode:Mode;edit:EditMode;pref:Preference;shared:Op[];sharedHist:Op[][];ops:Op[];history:Op[][];selected?:number;interaction?:Interaction;output:'source'|'png'|'jpeg'|'webp';processing:boolean;cancel:boolean;generation:number}={items:[],w:0,h:0,mode:initial,edit:'shared',pref:'auto',shared:[],sharedHist:[],ops:[],history:[],output:'source',processing:false,cancel:false,generation:0};
+  const state:{items:Item[];active?:string;bitmap?:ImageBitmap;w:number;h:number;mode:Mode;edit:EditMode;pref:Preference;shared:Op[];sharedHist:Op[][];sharedRedo:Op[][];ops:Op[];history:Op[][];redo:Op[][];selected?:number;interaction?:Interaction;output:'source'|'png'|'jpeg'|'webp';processing:boolean;cancel:boolean;generation:number}={items:[],w:0,h:0,mode:initial,edit:'shared',pref:'auto',shared:[],sharedHist:[],sharedRedo:[],ops:[],history:[],redo:[],output:'source',processing:false,cancel:false,generation:0};
 
   const active=()=>state.items.find(item=>item.id===state.active);
   const mixed=()=>state.items.length>1&&state.items.slice(1).some(item=>!ratioMatch(item.ratio,state.items[0]!.ratio));
@@ -64,21 +70,22 @@ export function mountBatchMaskEditor(root:HTMLElement):void {
   const scopeText=()=>state.edit==='shared'?`Changes apply to all ${state.items.length} ${state.items.length===1?'image':'images'}.`:'Changes apply only to this image.';
   const hideNotice=()=>{notice.hidden=true;notice.textContent='';delete notice.dataset.type;};
   const showNotice=(message:string,type:'info'|'error'='info')=>{notice.hidden=false;notice.textContent=message;notice.dataset.type=type;};
-  const pushHistory=(before:Op[])=>{state.history.push(opsCopy(before));if(state.history.length>HISTORY_MAX)state.history.shift();};
+  const cap=(stack:Op[][])=>{if(stack.length>HISTORY_MAX)stack.shift();};
+  const pushHistory=(before:Op[])=>{state.history.push(opsCopy(before));cap(state.history);state.redo=[];};
 
   function persist(origin?:'shared'|'custom'):void {
     if(state.edit==='shared'){
-      state.shared=opsCopy(state.ops);state.sharedHist=histCopy(state.history);
+      state.shared=opsCopy(state.ops);state.sharedHist=histCopy(state.history);state.sharedRedo=histCopy(state.redo);
       for(const item of state.items)if(item.origin==='shared'){item.ops=opsCopy(state.shared);if(!state.shared.length)item.origin=undefined;}
     }else{
-      const item=active();if(!item)return;item.ops=opsCopy(state.ops);item.history=histCopy(state.history);
+      const item=active();if(!item)return;item.ops=opsCopy(state.ops);item.history=histCopy(state.history);item.redo=histCopy(state.redo);
       item.origin=origin??(state.shared.length&&sameOps(item.ops,state.shared)?'shared':item.ops.length?'custom':undefined);
     }
   }
-  function ensure(item:Item):void { if(item.ops!==undefined)return;item.ops=state.shared.length?opsCopy(state.shared):[];item.history=[];item.origin=state.shared.length?'shared':undefined; }
+  function ensure(item:Item):void { if(item.ops!==undefined)return;item.ops=state.shared.length?opsCopy(state.shared):[];item.history=[];item.redo=[];item.origin=state.shared.length?'shared':undefined; }
   function activate():void {
-    if(state.edit==='shared'){state.ops=opsCopy(state.shared);state.history=histCopy(state.sharedHist);}
-    else{const item=active();if(item){ensure(item);state.ops=opsCopy(item.ops??[]);state.history=histCopy(item.history??[]);}else{state.ops=[];state.history=[];}}
+    if(state.edit==='shared'){state.ops=opsCopy(state.shared);state.history=histCopy(state.sharedHist);state.redo=histCopy(state.sharedRedo);}
+    else{const item=active();if(item){ensure(item);state.ops=opsCopy(item.ops??[]);state.history=histCopy(item.history??[]);state.redo=histCopy(item.redo??[]);}else{state.ops=[];state.history=[];state.redo=[];}}
     state.selected=state.ops.length?state.ops.length-1:undefined;state.interaction=undefined;syncText();
   }
   function syncText():void { if(!textInput)return;const operation=state.selected===undefined?undefined:state.ops[state.selected];textInput.value=operation?.type==='text'?operation.text:''; }
@@ -107,7 +114,7 @@ export function mountBatchMaskEditor(root:HTMLElement):void {
   function setMode(mode:Mode):void {
     if(!supported.has(mode))return;state.mode=mode;modeButtons.forEach(button=>{const selected=button.dataset.toolMode===mode;button.classList.toggle('is-active',selected);button.setAttribute('aria-pressed',String(selected));});
     mask.dataset.mode=mode;if(textBox)textBox.hidden=mode!=='text';
-    selStatus.textContent=mode==='text'?`Type watermark text, then drag to move, use a corner to resize, or use the round handle to rotate. ${scopeText()}`:`Draw a mask, then drag to move, use a corner to resize, or use the round handle to rotate. ${scopeText()}`;syncText();
+    selStatus.textContent=mode==='text'?`Type ${target} text, then drag to move, use a corner to resize, or use the round handle to rotate. ${scopeText()}`:`Draw a mask, then drag to move, use a corner to resize, or use the round handle to rotate. ${scopeText()}`;syncText();
   }
 
   function clearResult():void {empty.hidden=false;resultLabel.textContent='Run repair to preview';result.getContext('2d')?.clearRect(0,0,result.width,result.height);}
@@ -162,8 +169,8 @@ export function mountBatchMaskEditor(root:HTMLElement):void {
   }
   function autoMode():void {if(state.pref!=='auto'||!state.items.length){updateModeUi();return;}const next:EditMode=mixed()?'individual':'shared';if(next!==state.edit)setEdit(next,'auto');else updateModeUi();}
   function setEdit(mode:EditMode,preference:Preference='manual'):void {if(state.processing)return;persist();state.edit=mode;state.pref=preference;if(mode==='individual')state.items.forEach(ensure);activate();invalidate();const item=active();if(item)sourceMeta.textContent=`${item.width} × ${item.height} · ${item.ratioLabel} · ${mode==='shared'?'shared mask':'individual mask'}`;renderMask();renderQueue();}
-  function removeItem(id:string):void {if(state.processing)return;persist();const index=state.items.findIndex(item=>item.id===id);if(index<0)return;const [item]=state.items.splice(index,1);if(item)URL.revokeObjectURL(item.url);invalidate();if(state.active===id){state.bitmap?.close();state.bitmap=undefined;state.active=state.items[0]?.id;if(state.active)void load(state.active);}if(!state.items.length){state.shared=[];state.sharedHist=[];state.ops=[];state.history=[];state.pref='auto';state.edit='shared';state.active=undefined;state.selected=undefined;clearResult();}else autoMode();renderQueue();}
-  function clearAll():void {state.generation++;state.bitmap?.close();state.items.forEach(item=>URL.revokeObjectURL(item.url));state.items=[];state.active=undefined;state.w=state.h=0;state.shared=[];state.sharedHist=[];state.ops=[];state.history=[];state.selected=undefined;state.edit='shared';state.pref='auto';state.processing=state.cancel=false;input.value='';worker.reset('Batch cleared');clearResult();progress.hidden=true;summary.textContent='Ready to process';hideNotice();renderMask();renderQueue();}
+  function removeItem(id:string):void {if(state.processing)return;persist();const index=state.items.findIndex(item=>item.id===id);if(index<0)return;const [item]=state.items.splice(index,1);if(item)URL.revokeObjectURL(item.url);invalidate();if(state.active===id){state.bitmap?.close();state.bitmap=undefined;state.active=state.items[0]?.id;if(state.active)void load(state.active);}if(!state.items.length){state.shared=[];state.sharedHist=[];state.sharedRedo=[];state.ops=[];state.history=[];state.redo=[];state.pref='auto';state.edit='shared';state.active=undefined;state.selected=undefined;clearResult();}else autoMode();renderQueue();}
+  function clearAll():void {state.generation++;state.bitmap?.close();state.items.forEach(item=>URL.revokeObjectURL(item.url));state.items=[];state.active=undefined;state.w=state.h=0;state.shared=[];state.sharedHist=[];state.sharedRedo=[];state.ops=[];state.history=[];state.redo=[];state.selected=undefined;state.edit='shared';state.pref='auto';state.processing=state.cancel=false;input.value='';worker.reset('Batch cleared');clearResult();progress.hidden=true;summary.textContent='Ready to process';hideNotice();renderMask();renderQueue();}
   async function addFiles(files:readonly File[]):Promise<void>{if(!files.length||state.processing)return;hideNotice();let total=state.items.reduce((sum,item)=>sum+item.file.size,0),large=0,rejected=0,limited=0,accepted=0;for(const file of files){if(state.items.length>=maxFiles||total+file.size>maxTotal){limited++;continue;}if(!['jpg','jpeg','png','webp'].includes(ext(file.name))||file.size>maxFile){file.size>maxFile?large++:rejected++;continue;}try{const bitmap=await createImageBitmap(file),width=bitmap.width,height=bitmap.height;bitmap.close();if(width>maxDim||height>maxDim||width*height>maxPixels){rejected++;continue;}const item:Item={id:crypto.randomUUID(),file,width,height,ratio:width/height,ratioLabel:ratioLabel(width,height),url:URL.createObjectURL(file),status:'ready'};if(state.edit==='individual')ensure(item);state.items.push(item);total+=file.size;accepted++;}catch{rejected++;}}
     input.value='';autoMode();if(accepted&&!state.active){state.active=state.items[0]?.id;if(state.active)await load(state.active);}else renderQueue();const errors=[];if(large)errors.push(`${large} skipped — max 10 MB per image`);if(limited)errors.push(`${limited} skipped — max ${maxFiles} images / 200 MB total`);if(rejected)errors.push(`${rejected} skipped by format or decoded-size limits`);if(errors.length)showNotice(errors.join(' · '),'info');}
 
@@ -188,11 +195,35 @@ export function mountBatchMaskEditor(root:HTMLElement):void {
   async function downloadResults():Promise<void>{const successful=state.items.filter(item=>item.result&&item.status==='done');if(!successful.length)return;if(successful.length===1){const item=successful[0]!;save(item.result!,`${base(item.file.name)}-${suffix}.${item.ext??sourceExt(item.file)}`);return;}download.disabled=true;download.textContent='Building ZIP…';try{const JSZip=(await import('jszip')).default,zip=new JSZip(),used=new Map<string,number>();for(const item of successful){const raw=`${base(item.file.name)}-${suffix}`,count=used.get(raw)??0;used.set(raw,count+1);zip.file(`${raw}${count?`-${count+1}`:''}.${item.ext??sourceExt(item.file)}`,item.result!);}const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}}),geometry=mixed()?'mixed':(state.items[0]?.ratioLabel??'batch').replace(':','x').replace('.','p');save(blob,`${suffix}-${geometry}-${successful.length}-images.zip`);}catch(error){showNotice(error instanceof Error?error.message:'Unable to build ZIP','error');}finally{download.textContent='Download ZIP';controls();}}
   function controls():void {const preparedCount=preparedItems().length,hasMask=state.ops.length>0,hasResults=state.items.some(item=>item.result);remove.disabled=!preparedCount||state.processing;download.disabled=!hasResults||state.processing;undo.disabled=!state.history.length||state.processing;clearMask.disabled=!hasMask||state.processing;useShared.disabled=state.processing;add.disabled=state.processing;clear.disabled=state.processing;input.disabled=state.processing;modeButtons.forEach(button=>button.disabled=state.processing);editButtons.forEach(button=>button.disabled=state.processing);outButtons.forEach(button=>button.disabled=state.processing);quality.disabled=state.processing||state.output==='png';if(textInput)textInput.disabled=state.processing;drop.disabled=state.processing;cancel.hidden=!state.processing;cancel.disabled=!state.processing||state.cancel;updateModeUi();}
 
+  function commitKeyboardChange(before:Op[]):void {pushHistory(before);if(state.edit==='individual')state.pref='manual';persist(state.edit==='individual'?'custom':undefined);invalidate();syncText();renderMask();controls();}
+  function doUndo():void {const previous=state.history.pop();if(!previous)return;state.redo.push(opsCopy(state.ops));cap(state.redo);state.ops=opsCopy(previous);state.selected=state.ops.length?Math.min(state.selected??state.ops.length-1,state.ops.length-1):undefined;if(state.edit==='individual')state.pref='manual';persist();invalidate();syncText();renderMask();controls();}
+  function doRedo():void {const next=state.redo.pop();if(!next)return;state.history.push(opsCopy(state.ops));cap(state.history);state.ops=opsCopy(next);state.selected=state.ops.length?Math.min(state.selected??state.ops.length-1,state.ops.length-1):undefined;if(state.edit==='individual')state.pref='manual';persist();invalidate();syncText();renderMask();controls();}
+
   editButtons.forEach(button=>button.addEventListener('click',()=>{const mode=button.dataset.editMode as EditMode;if(mode==='shared'||mode==='individual')setEdit(mode,'manual');}));
   useShared.addEventListener('click',()=>{if(state.edit!=='individual'||!state.shared.length)return;const item=active();if(!item)return;pushHistory(state.ops);state.ops=opsCopy(state.shared);state.selected=state.ops.length?state.ops.length-1:undefined;state.pref='manual';persist('shared');invalidate();renderMask();controls();});
   modeButtons.forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.toolMode as Mode)));
-  undo.addEventListener('click',()=>{const previous=state.history.pop();if(!previous)return;state.ops=opsCopy(previous);state.selected=state.ops.length?state.ops.length-1:undefined;if(state.edit==='individual')state.pref='manual';persist();invalidate();syncText();renderMask();controls();});
+  undo.addEventListener('click',doUndo);
   clearMask.addEventListener('click',()=>{if(!state.ops.length)return;pushHistory(state.ops);state.ops=[];state.selected=undefined;if(state.edit==='individual')state.pref='manual';persist();invalidate();syncText();renderMask();controls();});
+
+  root.addEventListener('image-canvas-command',(event:Event)=>{
+    if(state.processing||!active())return;
+    const command=(event as CustomEvent<CanvasCommand>).detail;if(!command||command.type==='undo')return;
+    if(command.type==='redo'){doRedo();return;}
+    const selectedIndex=state.selected,operation=selectedIndex===undefined?undefined:state.ops[selectedIndex];if(!operation)return;
+    const before=opsCopy(state.ops);
+    if(command.type==='delete'){
+      state.ops.splice(selectedIndex,1);state.selected=state.ops.length?Math.min(selectedIndex,state.ops.length-1):undefined;commitKeyboardChange(before);return;
+    }
+    if(command.type==='duplicate'){
+      const copy=opsCopy([operation])[0];if(!copy)return;
+      copy.rect=moveRotatedRect(copy.rect,copy.rotation,12/Math.max(1,mask.width),12/Math.max(1,mask.height),mask.width,mask.height);
+      state.ops.push(copy);state.selected=state.ops.length-1;commitKeyboardChange(before);return;
+    }
+    if(command.type==='nudge'){
+      operation.rect=moveRotatedRect(operation.rect,operation.rotation,command.dx/Math.max(1,mask.width),command.dy/Math.max(1,mask.height),mask.width,mask.height);
+      if(!sameOps(before,state.ops))commitKeyboardChange(before);
+    }
+  });
 
   if(textInput)textInput.addEventListener('input',()=>{if(state.mode!=='text'||!active()||state.processing)return;const text=textInput.value.slice(0,80).trim(),operation=state.selected===undefined?undefined:state.ops[state.selected],before=opsCopy(state.ops);if(!text){if(operation?.type==='text'){state.ops.splice(state.selected!,1);state.selected=state.ops.length?state.ops.length-1:undefined;}}else if(operation?.type==='text'){operation.text=text;operation.rect=textRectFor(text,operation.rect);}else{state.ops.push({type:'text',rect:textRectFor(text),text,rotation:0});state.selected=state.ops.length-1;}if(!sameOps(before,state.ops)){pushHistory(before);if(state.edit==='individual')state.pref='manual';persist(state.edit==='individual'?'custom':undefined);invalidate();renderMask();controls();}});
 
