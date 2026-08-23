@@ -7,6 +7,7 @@ export type RemoveWatermarkWorkerRequest = {
   width: number;
   height: number;
   operations: MaskOperation[];
+  maxRepairRatio?: number;
 };
 
 export type RemoveWatermarkWorkerResponse =
