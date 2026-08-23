@@ -1,7 +1,7 @@
 ---
 import '../styles/gemini-logo-batch.css';
 import '../styles/gemini-logo-release.css';
-import type { ImageMaskMode, ImageToolDefinition } from '../platform/image-tools/types';
+import type { ImageMaskMode, MaskImageToolDefinition } from '../platform/image-tools/types';
 import ImageBatchShell from '../image-tools/components/ImageBatchShell.astro';
 import ImageBatchDropzone from '../image-tools/components/ImageBatchDropzone.astro';
 import ImageEditScopeSwitch from '../image-tools/components/ImageEditScopeSwitch.astro';
@@ -9,7 +9,7 @@ import ImageOutputPanel from '../image-tools/components/ImageOutputPanel.astro';
 import ImageBatchProgress from '../image-tools/components/ImageBatchProgress.astro';
 import ImageBatchActionBar from '../image-tools/components/ImageBatchActionBar.astro';
 
-interface Props { tool: ImageToolDefinition; }
+interface Props { tool: MaskImageToolDefinition; }
 const { tool } = Astro.props;
 const accept = tool.acceptedExtensions.map((extension) => `.${extension}`).join(',');
 const modes = tool.selectionModes.filter((mode): mode is Extract<ImageMaskMode, 'rect' | 'circle' | 'square' | 'diamond' | 'star4' | 'text'> => ['rect','circle','square','diamond','star4','text'].includes(mode));
