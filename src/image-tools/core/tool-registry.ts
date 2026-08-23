@@ -14,6 +14,11 @@ const deterministicToolLoader: ImageToolLoader = async () => {
   return { mount: module.mountDeterministicImageTool };
 };
 
+const metadataToolLoader: ImageToolLoader = async () => {
+  const module = await import('../metadata/metadata-cleaner-editor');
+  return { mount: module.mountMetadataCleaner };
+};
+
 const renameToolLoader: ImageToolLoader = async () => {
   const module = await import('../naming/bulk-rename-editor');
   return { mount: module.mountBulkRenameImages };
@@ -28,7 +33,7 @@ const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
   'rotate-flip-image': deterministicToolLoader,
   'crop-image': deterministicToolLoader,
   'blur-image': deterministicToolLoader,
-  'remove-image-metadata': deterministicToolLoader,
+  'remove-image-metadata': metadataToolLoader,
   'bulk-rename-images': renameToolLoader,
 };
 
