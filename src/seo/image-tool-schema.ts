@@ -4,9 +4,10 @@ import type { ImageToolDefinition } from '../platform/image-tools/types';
 export function imageToolSchemas(
   tool: ImageToolDefinition,
   featureList: readonly string[],
-  applicationCategory = 'MultimediaApplication',
+  applicationCategory?: string,
 ): Array<Record<string, unknown>> {
   const url = `${SITE.origin}/${tool.slug}/`;
+  const category = applicationCategory ?? (tool.category === 'metadata' || tool.category === 'naming' ? 'UtilitiesApplication' : 'MultimediaApplication');
   return [
     {
       '@context': 'https://schema.org',
@@ -14,7 +15,7 @@ export function imageToolSchemas(
       name: `ConvertAnyFile ${tool.displayName}`,
       url,
       description: tool.description,
-      applicationCategory,
+      applicationCategory: category,
       operatingSystem: 'Any',
       isAccessibleForFree: true,
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
