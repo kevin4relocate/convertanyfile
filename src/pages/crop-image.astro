@@ -4,8 +4,8 @@ import { CROP_IMAGE_TOOL } from '../config/image-tools';
 ---
 <CoreImageToolPage
   tool={CROP_IMAGE_TOOL}
-  kicker="Free crop and common aspect ratios"
-  heading="Reuse normalized crop settings across a batch."
-  copy="Set crop position and size as percentages or constrain the result to a common aspect ratio. This makes a shared crop portable across different pixel dimensions, while individual mode handles different compositions."
-  bullets={['Free crop with percentage-based X, Y, width and height.', 'Presets for original, 1:1, 4:3, 3:2, 16:9 and 9:16.', 'Live preview for the active image.', 'Per-image overrides for mixed compositions.', 'Browser-only processing with file or ZIP download.']}
+  kicker="Visual crop shapes and common aspect ratios"
+  heading="Frame a crop directly on the image, then reuse it across a batch."
+  copy="Choose Rectangle, Square, Circle or a common aspect ratio, then drag the crop box over the subject and resize it from the corners. Shared mode reuses the framing across similar images, while individual mode handles different compositions."
+  bullets={['Drag the crop box directly on the image and resize it from four corner handles.', 'Rectangle, Square and Circle crop shapes.', 'Presets for original, 4:3, 3:2, 16:9 and 9:16 framing.', 'Circle crops export PNG with transparent corners.', 'Advanced percentage coordinates remain available for exact batch positioning.']}
 />
