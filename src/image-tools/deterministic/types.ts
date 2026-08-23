@@ -5,6 +5,8 @@ export type DeterministicToolId =
   | 'crop-image'
   | 'blur-image';
 
+export type OutputChoice = 'source' | 'png' | 'jpg' | 'webp';
+
 export type ResizeSettings = {
   mode: 'pixels' | 'percent' | 'fit';
   width: number;
@@ -16,7 +18,8 @@ export type ResizeSettings = {
 };
 
 export type CompressSettings = {
-  preserveDimensions: true;
+  format: OutputChoice;
+  quality: number;
 };
 
 export type RotateFlipSettings = {
@@ -49,14 +52,12 @@ export type DeterministicSettings =
   | CropSettings
   | BlurSettings;
 
-export type OutputChoice = 'source' | 'png' | 'jpg' | 'webp';
-
 export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSettings {
   switch (toolId) {
     case 'resize-image':
       return { mode: 'pixels', width: 1920, height: 1080, percent: 50, lockAspect: true, fitWidth: 1920, fitHeight: 1080 };
     case 'compress-image':
-      return { preserveDimensions: true };
+      return { format: 'webp', quality: 82 };
     case 'rotate-flip-image':
       return { rotation: 0, flipHorizontal: false, flipVertical: false };
     case 'crop-image':
