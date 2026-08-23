@@ -1,8 +1,10 @@
 ---
 import type { ImageToolDefinition } from '../platform/image-tools/types';
 import BatchMaskEditorShell from './BatchMaskEditorShell.astro';
+import DeterministicImageToolShell from './DeterministicImageToolShell.astro';
 interface Props { tool: ImageToolDefinition; }
 const { tool } = Astro.props;
+const usesMaskEditor = tool.category === 'mask' || tool.id === 'remove-watermark' || tool.id === 'gemini-ai-logo-remover';
 ---
 <section class="converter-page-hero image-tool-page-hero">
   <div class="site-container converter-page-hero-inner">
@@ -12,4 +14,4 @@ const { tool } = Astro.props;
     <p>{tool.intro}</p>
   </div>
 </section>
-<section class="image-tool-page-tool"><div class="site-container"><BatchMaskEditorShell tool={tool} /></div></section>
+<section class="image-tool-page-tool"><div class="site-container">{usesMaskEditor ? <BatchMaskEditorShell tool={tool} /> : <DeterministicImageToolShell tool={tool} />}</div></section>
