@@ -10,6 +10,9 @@ const { tool } = Astro.props;
 const maskTool = tool.category === 'mask' ? tool as MaskImageToolDefinition : undefined;
 const usesRenameEditor = tool.category === 'naming';
 const usesSegmentationEditor = tool.category === 'segmentation';
+const publicEyebrow = tool.status === 'preview'
+  ? tool.category === 'segmentation' ? 'Image Tools · Local AI' : 'Image Tools'
+  : tool.eyebrow;
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -26,7 +29,7 @@ const includeBreadcrumbSchema = tool.id !== 'gemini-ai-logo-remover';
 <section class="converter-page-hero image-tool-page-hero">
   <div class="site-container converter-page-hero-inner">
     <div class="breadcrumbs converter-page-breadcrumbs"><a href="/">Home</a><span>/</span><a href="/image-tools/">Image Tools</a><span>/</span><span>{tool.displayName}</span></div>
-    <span class="eyebrow converter-page-eyebrow">{tool.eyebrow}</span>
+    <span class="eyebrow converter-page-eyebrow">{publicEyebrow}</span>
     <h1>{tool.h1}</h1>
     <p>{tool.intro}</p>
   </div>
