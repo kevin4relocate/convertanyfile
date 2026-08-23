@@ -1,0 +1,11 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { RESIZE_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={RESIZE_IMAGE_TOOL}
+  kicker="Pixels, percentage, or fit-to-box"
+  heading="Resize a whole batch without repeating the same setup."
+  copy="Choose exact dimensions, scale by percentage, or fit each source inside a maximum box. Shared mode is fast for a batch; individual mode handles exceptions without starting over."
+  bullets={['Resize JPG, PNG and WebP images locally.', 'Use exact pixels, percentage scaling, or fit-to-box.', 'Lock width and height to the active image aspect ratio.', 'Preview the active image before running the full batch.', 'Download one result directly or multiple results as a ZIP.']}
+/>
