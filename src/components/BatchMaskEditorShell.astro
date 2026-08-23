@@ -8,6 +8,7 @@ import ImageEditScopeSwitch from '../image-tools/components/ImageEditScopeSwitch
 import ImageOutputPanel from '../image-tools/components/ImageOutputPanel.astro';
 import ImageBatchProgress from '../image-tools/components/ImageBatchProgress.astro';
 import ImageBatchActionBar from '../image-tools/components/ImageBatchActionBar.astro';
+import ImageToolHeaderActions from '../image-tools/components/ImageToolHeaderActions.astro';
 
 interface Props { tool: MaskImageToolDefinition; }
 const { tool } = Astro.props;
@@ -30,7 +31,7 @@ const modeLabel = (mode: ImageMaskMode): string => ({rect:'Rectangle',circle:'Ci
 
   <section class="gemini-batch-workspace" data-role="editor" hidden>
     <ImageBatchShell variant="mask" mode="shared">
-      <Fragment slot="header"><header class="gemini-batch-header"><div><span>Images</span><strong><span data-role="batch-count">0</span> images ready</strong><small data-role="ratio-status">Upload images and the editor will choose a safe starting mode automatically.</small></div><div class="gemini-batch-header-actions"><button class="text-button strong" data-role="add-more" type="button">+ Add images</button><button class="text-button" data-role="clear-all" type="button">Clear all</button></div></header></Fragment>
+      <Fragment slot="header"><header class="gemini-batch-header"><div><span>Images</span><strong><span data-role="batch-count">0</span> images ready</strong><small data-role="ratio-status">Upload images and the editor will choose a safe starting mode automatically.</small></div><ImageToolHeaderActions /></header></Fragment>
       <Fragment slot="scope"><ImageEditScopeSwitch variant="mask" mode="shared" /></Fragment>
       <Fragment slot="queue"><div class="gemini-file-queue" data-role="batch-list" aria-label="Batch images"></div></Fragment>
 
