@@ -1,0 +1,51 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ImageToolPageFrame from './ImageToolPageFrame.astro';
+import ImageToolGrid from './ImageToolGrid.astro';
+import FaqList from './FaqList.astro';
+import type { ImageToolDefinition } from '../platform/image-tools/types';
+import { IMAGE_TOOL_SEO } from '../content/image-tool-seo';
+import { imageToolSchemas } from '../seo/image-tool-schema';
+
+interface Props {
+  tool: ImageToolDefinition;
+  kicker: string;
+  heading: string;
+  copy: string;
+  bullets: string[];
+}
+const { tool, kicker, heading, copy, bullets } = Astro.props;
+const seo = IMAGE_TOOL_SEO[tool.id];
+const schemas = imageToolSchemas(tool, ['Browser-based local image processing', ...bullets]);
+---
+<SiteLayout title={tool.title} description={tool.description} schema={schemas}>
+  <ImageToolPageFrame tool={tool} />
+
+  <section class="content-wide-section white gemini-content-section"><div class="site-container">
+    <div class="content-intro-grid">
+      <div class="section-heading wide"><span class="section-kicker">{kicker}</span><h2>{heading}</h2><p>{copy}</p></div>
+      <div class="content-summary-card"><strong>Private by design</strong><p>Source images are decoded and processed locally in your browser. No image-processing API upload is required for this tool.</p></div>
+    </div>
+    <ul class="content-checklist">{bullets.map((bullet) => <li>{bullet}</li>)}</ul>
+  </div></section>
+
+  {seo && <section class="content-wide-section gemini-content-section"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">How to use it</span><h2>{seo.howToHeading}</h2><p>{seo.howToIntro}</p></div>
+    <div class="steps-grid">{seo.steps.map((step, index) => <article class="step-card"><span class="step-number">{String(index + 1).padStart(2, '0')}</span><h3>{step.title}</h3><p>{step.text}</p></article>)}</div>
+  </div></section>}
+
+  {seo && <section class="content-wide-section white gemini-content-section"><div class="site-container">
+    <div class="content-intro-grid">
+      <div class="section-heading wide"><span class="section-kicker">When to use it</span><h2>{seo.useCasesHeading}</h2><p>{seo.useCasesIntro}</p></div>
+      <div class="content-summary-card"><strong>Batch or individual</strong><p>Use Apply to all when the same setup fits the batch. Switch to Edit individually when one image needs different settings without rebuilding the rest of the queue.</p></div>
+    </div>
+    <ul class="content-checklist">{seo.useCases.map((item) => <li>{item}</li>)}</ul>
+  </div></section>}
+
+  {seo && <section class="content-wide-section gemini-content-section"><div class="site-container"><FaqList items={seo.faq} title={`${tool.displayName} FAQ`} intro={`Practical answers about ${tool.displayName.toLowerCase()}, local processing, batch behavior and output limitations.`} /></div></section>}
+
+  <section class="content-wide-section white gemini-content-section"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">Related Image Tools</span><h2>Continue editing without uploading your source images.</h2><p>Use a related tool for the next step instead of repeating the upload-and-download workflow on a separate service.</p></div>
+    <ImageToolGrid compact ids={seo?.relatedIds} excludeId={tool.id} />
+  </div></section>
+</SiteLayout>

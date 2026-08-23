@@ -1,0 +1,11 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { BLUR_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={BLUR_IMAGE_TOOL}
+  kicker="Whole image or manual region"
+  heading="Blur consistently across a batch, or customize individual images."
+  copy="Blur the full frame or define a rectangular region with percentage coordinates. Shared settings work well for repeated layouts; individual mode lets each image keep its own region."
+  bullets={['Blur the whole image or a manual rectangular region.', 'Adjust blur strength from light to strong.', 'Define region position and size as percentages.', 'Preview the active image before processing.', 'Export successful results individually or together as a ZIP.']}
+/>

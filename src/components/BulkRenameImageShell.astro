@@ -1,0 +1,45 @@
+---
+import type { ImageToolDefinition } from '../platform/image-tools/types';
+import ImageBatchShell from '../image-tools/components/ImageBatchShell.astro';
+import ImageBatchDropzone from '../image-tools/components/ImageBatchDropzone.astro';
+import ImageEditScopeSwitch from '../image-tools/components/ImageEditScopeSwitch.astro';
+import ImageBatchProgress from '../image-tools/components/ImageBatchProgress.astro';
+import ImageBatchActionBar from '../image-tools/components/ImageBatchActionBar.astro';
+import ImageToolHeaderActions from '../image-tools/components/ImageToolHeaderActions.astro';
+interface Props { tool: ImageToolDefinition; }
+const { tool } = Astro.props;
+const accept = tool.acceptedExtensions.map((extension) => `.${extension}`).join(',');
+const maxFiles = tool.maxFiles ?? 50;
+const maxFileMb = Math.max(1, Math.round(tool.maxFileBytes / (1024 * 1024)));
+---
+<div class="image-editor-card rename-tool" data-image-tool-app data-tool-id={tool.id} data-max-file-bytes={tool.maxFileBytes} data-max-files={maxFiles} data-has-items="false">
+  <div class="image-editor-topbar"><div><span>Local image tool</span><strong>{tool.displayName}</strong></div><div class="image-editor-local-state"><span aria-hidden="true"></span>Bytes unchanged</div></div>
+  <div class="image-editor-notice" data-role="notice" role="status" aria-live="polite" hidden></div>
+  <section class="rename-standard-workspace">
+    <ImageBatchShell variant="linear">
+      <div slot="header" class="rename-header"><div><span>Images</span><strong><span data-role="batch-count">0</span> images ready</strong><small data-role="mode-summary">One filename pattern applies to the batch.</small></div><ImageToolHeaderActions /></div>
+      <div slot="upload"><ImageBatchDropzone variant="standard" accept={accept} maxFiles={maxFiles} maxFileMb={maxFileMb} /></div>
+      <ImageEditScopeSwitch slot="scope" variant="standard" mode="shared" />
+      <div slot="queue" class="rename-queue" data-role="batch-list" aria-label="Batch images"></div>
+      <div slot="workspace" class="rename-workspace">
+        <section class="rename-settings">
+          <div><span>Shared pattern</span><strong>Build the batch filenames</strong></div>
+          <div class="rename-grid">
+            <label><span>Pattern</span><input data-role="pattern" value="image-{number}" maxlength="120" /><small>Tokens: {`{name}`} {`{number}`} {`{ext}`}</small></label>
+            <label><span>Start number</span><input data-role="start-number" type="number" min="0" max="999999" value="1" /></label>
+            <label><span>Number padding</span><input data-role="padding" type="number" min="1" max="8" value="3" /></label>
+          </div>
+          <label class="rename-custom" data-role="custom-name-wrap" hidden><span>Custom filename for selected image</span><input data-role="custom-name" maxlength="180" placeholder="Leave blank to use the shared pattern" /><small>The original extension is always preserved. Renaming never converts image bytes.</small></label>
+        </section>
+        <section class="rename-preview"><div><span>Rename preview</span><strong data-role="selected-original">Select an image</strong></div><div class="rename-arrow">→</div><strong data-role="selected-result">New filename appears here</strong></section>
+      </div>
+      <ImageBatchProgress slot="progress" total={0} cancellable={false} />
+      <ImageBatchActionBar slot="actions" processLabel="Rename files" downloadLabel="Download ZIP" />
+    </ImageBatchShell>
+    <p class="image-tool-policy-note">{tool.policyNote}</p>
+  </section>
+</div>
+<script src="../client/image-tool-app.ts"></script>
+<style is:global>
+.rename-tool{padding:0}.rename-standard-workspace{padding:8px 14px 14px}.rename-header{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:8px 2px 10px}.rename-header>div:first-child{min-width:0;display:grid;gap:2px}.rename-header span,.rename-settings span,.rename-preview span{color:#8e95a5;font-size:10px;font-weight:700;letter-spacing:.055em;text-transform:uppercase}.rename-header strong{font-size:15px;font-weight:740}.rename-header small{color:#939aa9;font-size:10.5px;line-height:1.4}.rename-queue{display:flex;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#343c4d transparent;padding:0 0 8px;margin-bottom:2px}.rename-queue::-webkit-scrollbar{height:8px}.rename-queue::-webkit-scrollbar-thumb{border:2px solid #141923;border-radius:999px;background:#343c4d}.rename-card{min-width:218px;flex:0 0 218px;display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px;border:1px solid #29313f;border-radius:11px;background:#10151e;cursor:pointer;scroll-snap-align:start;transition:border-color .14s ease,background .14s ease}.rename-card.is-active{border-color:#625bc2;background:#17172a}.rename-card img{width:52px;height:44px;object-fit:cover;border-radius:8px}.rename-card__copy{display:grid;gap:2px;min-width:0}.rename-card__copy strong,.rename-card__copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rename-card__copy strong{font-size:11px;font-weight:700}.rename-card__copy small{color:#838b9b;font-size:9px}.rename-badge{width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 5px;border:1px solid #3b4352;border-radius:999px;color:#9098a8;font-size:8px;font-weight:680}.rename-badge.custom{border-color:#5b557e;color:#beb9e9}.rename-remove{width:24px;height:24px;display:grid;place-items:center;padding:0;border:1px solid #343c4d;border-radius:7px;background:#171c27;color:#8f97a7;font-size:16px;line-height:1;cursor:pointer}.rename-remove:hover:not(:disabled){border-color:#68413f;background:#291918;color:#ff9f98}.rename-workspace{display:grid;gap:10px}.rename-settings{display:grid;gap:11px;padding:11px 12px;border:1px solid #2b3240;border-radius:13px;background:#10151e}.rename-settings>div:first-child{display:grid;gap:2px}.rename-settings>div:first-child strong{font-size:12px;font-weight:720}.rename-grid{display:grid;grid-template-columns:minmax(220px,2fr) repeat(2,minmax(120px,1fr));gap:10px}.rename-grid label,.rename-custom{display:grid;gap:6px}.rename-grid input,.rename-custom input{width:100%;box-sizing:border-box;min-height:38px;border:1px solid #363f50;border-radius:9px;background:#0c1118;color:#eef1f6;padding:7px 9px;font:inherit;font-size:11px}.rename-grid small,.rename-custom small{font-size:9.5px;color:#858fa0;line-height:1.4}.rename-preview{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);gap:12px;align-items:center;padding:11px 12px;border:1px solid #2b3240;border-radius:13px;background:#10151e}.rename-preview>div:first-child{display:grid;gap:3px;min-width:0}.rename-preview strong{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}.rename-arrow{display:grid;place-items:center;font-size:20px;color:#7c73ff}.rename-tool[data-has-items="false"] .image-batch-shell__scope,.rename-tool[data-has-items="false"] .image-batch-shell__workspace,.rename-tool[data-has-items="false"] .image-batch-shell__progress,.rename-tool[data-has-items="false"] .image-batch-shell__actions,.rename-tool[data-has-items="false"] .rename-header{display:none}.rename-tool[data-has-items="true"] .image-batch-shell__upload{display:none}@media(max-width:760px){.rename-standard-workspace{padding:8px 10px 10px}.rename-header{align-items:stretch;flex-direction:column}.rename-grid{grid-template-columns:1fr}.rename-card{min-width:210px;flex-basis:210px}.rename-preview{grid-template-columns:1fr}.rename-preview strong{white-space:normal;overflow-wrap:anywhere}.rename-arrow{transform:rotate(90deg);justify-self:start}}
+</style>

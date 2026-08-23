@@ -6,6 +6,7 @@ import '../styles/product-polish.css';
 import '../styles/dark-theme.css';
 import '../styles/critical-dark-overrides.css';
 import '../styles/image-tools.css';
+import '../styles/image-tools-standard.css';
 import '../styles/tool-sticky-actions.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
@@ -27,6 +28,7 @@ const {
   schema,
 } = Astro.props;
 const schemas = Array.isArray(schema) ? schema : schema ? [schema] : [];
+const isHomePage = Astro.url.pathname === '/';
 const websiteSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
@@ -76,7 +78,7 @@ const websiteSchema = {
         document.head.appendChild(analyticsScript);
       }
     </script>
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>
+    {isHomePage && <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>}
     {schemas.map((item) => <script is:inline type="application/ld+json" set:html={JSON.stringify(item)}></script>)}
   </head>
   <body>

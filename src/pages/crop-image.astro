@@ -1,0 +1,11 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { CROP_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={CROP_IMAGE_TOOL}
+  kicker="Free crop and common aspect ratios"
+  heading="Reuse normalized crop settings across a batch."
+  copy="Set crop position and size as percentages or constrain the result to a common aspect ratio. This makes a shared crop portable across different pixel dimensions, while individual mode handles different compositions."
+  bullets={['Free crop with percentage-based X, Y, width and height.', 'Presets for original, 1:1, 4:3, 3:2, 16:9 and 9:16.', 'Live preview for the active image.', 'Per-image overrides for mixed compositions.', 'Browser-only processing with file or ZIP download.']}
+/>

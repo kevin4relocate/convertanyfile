@@ -1,0 +1,14 @@
+<div class="image-tool-header-actions">
+  <button class="image-tool-header-action image-tool-header-action--primary" type="button" data-role="add-more">+ Add images</button>
+  <button class="image-tool-header-action" type="button" data-role="clear-all">Clear all</button>
+</div>
+
+<style>
+  .image-tool-header-actions{display:flex;align-items:center;justify-content:flex-end;gap:2px;flex-wrap:wrap}
+  .image-tool-header-action{min-height:34px;display:inline-flex;align-items:center;justify-content:center;padding:7px 9px;border:0;border-radius:9px;background:transparent;color:#9aa1b0;cursor:pointer;font:inherit;font-size:11px;font-weight:680;line-height:1;white-space:nowrap;transition:background .14s ease,color .14s ease}
+  .image-tool-header-action:hover:not(:disabled){background:#202634;color:#f4f5fb}
+  .image-tool-header-action--primary{color:#aaa4ff}
+  .image-tool-header-action--primary:hover:not(:disabled){background:rgba(124,115,255,.13);color:#c6c2ff}
+  .image-tool-header-action:disabled{opacity:.42;cursor:not-allowed}
+  @media(max-width:720px){.image-tool-header-actions{width:100%;justify-content:flex-end}}
+</style>

@@ -1,0 +1,86 @@
+---
+import type { ImageToolDefinition } from '../platform/image-tools/types';
+import ImageBatchShell from '../image-tools/components/ImageBatchShell.astro';
+import ImageBatchDropzone from '../image-tools/components/ImageBatchDropzone.astro';
+import ImageEditScopeSwitch from '../image-tools/components/ImageEditScopeSwitch.astro';
+import ImagePreviewPanel from '../image-tools/components/ImagePreviewPanel.astro';
+import ImageOutputPanel from '../image-tools/components/ImageOutputPanel.astro';
+import ImageBatchProgress from '../image-tools/components/ImageBatchProgress.astro';
+import ImageBatchActionBar from '../image-tools/components/ImageBatchActionBar.astro';
+import ImageToolHeaderActions from '../image-tools/components/ImageToolHeaderActions.astro';
+
+interface Props { tool: ImageToolDefinition; }
+const { tool } = Astro.props;
+const accept = tool.acceptedExtensions.map((extension) => `.${extension}`).join(',');
+const maxFiles = tool.maxFiles ?? 50;
+const maxFileMb = Math.max(1, Math.round(tool.maxFileBytes / (1024 * 1024)));
+const isResize = tool.id === 'resize-image';
+const isCompress = tool.id === 'compress-image';
+const isRotate = tool.id === 'rotate-flip-image';
+const isCrop = tool.id === 'crop-image';
+const isBlur = tool.id === 'blur-image';
+const isMetadata = tool.id === 'remove-image-metadata';
+const hasEmbeddedOutput = isCompress || isMetadata;
+const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isMetadata ? 'Remove metadata' : 'Process images';
+---
+
+<div class="image-editor-card deterministic-tool" data-image-tool-app data-tool-id={tool.id} data-download-suffix={tool.downloadSuffix} data-max-file-bytes={tool.maxFileBytes} data-max-pixels={tool.maxPixels} data-max-dimension={tool.maxDimension} data-max-files={maxFiles} data-has-items="false">
+  <div class="image-editor-topbar"><div><span>Local image tool</span><strong>{tool.displayName}</strong></div><div class="image-editor-local-state"><span aria-hidden="true"></span>Browser-only</div></div>
+  <div class="image-editor-notice" data-role="notice" role="status" aria-live="polite" hidden></div>
+
+  <section class="image-tool-standard-workspace">
+    <ImageBatchShell variant="linear">
+      <div slot="header" class="deterministic-header"><div><span>Images</span><strong><span data-role="batch-count">0</span> images ready</strong><small data-role="mode-summary">One setup applies to the whole batch.</small></div><ImageToolHeaderActions /></div>
+      <div slot="upload" data-role="upload-view"><ImageBatchDropzone variant="standard" accept={accept} maxFiles={maxFiles} maxFileMb={maxFileMb} /></div>
+      <ImageEditScopeSwitch slot="scope" variant="standard" mode="shared" />
+      <div slot="queue" class="deterministic-queue" data-role="batch-list" aria-label="Batch images"></div>
+
+      <div slot="workspace" class="deterministic-workspace">
+        <section class="deterministic-settings" aria-label={`${tool.displayName} settings`}>
+          <div class="deterministic-settings__heading"><div><span>Settings</span><strong>{tool.displayName}</strong></div><div class="deterministic-settings__copy-actions"><button type="button" data-role="use-shared-settings" hidden>Use shared settings</button><button type="button" data-role="apply-current-to-all" hidden>Apply current to all</button></div></div>
+
+          {isResize && <div class="setting-grid">
+            <label><span>Resize mode</span><select data-setting="mode"><option value="pixels">Pixels</option><option value="percent">Percentage</option><option value="fit">Fit inside box</option></select></label>
+            <label data-setting-group="pixels"><span>Width</span><input data-setting="width" type="number" min="1" max="12000" value="1920" /></label>
+            <label data-setting-group="pixels"><span>Height</span><input data-setting="height" type="number" min="1" max="12000" value="1080" /></label>
+            <label data-setting-group="pixels" class="check-setting"><input data-setting="lockAspect" type="checkbox" checked /><span>Lock aspect ratio</span></label>
+            <label data-setting-group="percent" hidden><span>Scale</span><div class="range-row"><input data-setting="percent" type="range" min="1" max="300" value="50" /><output data-output-for="percent">50%</output></div></label>
+            <label data-setting-group="fit" hidden><span>Max width</span><input data-setting="fitWidth" type="number" min="1" max="12000" value="1920" /></label>
+            <label data-setting-group="fit" hidden><span>Max height</span><input data-setting="fitHeight" type="number" min="1" max="12000" value="1080" /></label>
+          </div>}
+
+          {isCompress && <div class="setting-grid">
+            <label><span>Output format</span><select data-setting="format"><option value="webp">WebP</option><option value="jpg">JPG</option><option value="source">Same as source</option><option value="png">PNG</option></select></label>
+            <label><span>Quality</span><div class="range-row"><input data-setting="quality" type="range" min="1" max="100" value="82" /><output data-output-for="quality">82</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Dimensions stay unchanged.</strong><p>JPEG and WebP respond most strongly to quality. PNG remains lossless.</p></div>
+          </div>}
+
+          {isMetadata && <div class="setting-grid">
+            <label><span>Clean output format</span><select data-setting="format"><option value="source">Same as source</option><option value="jpg">JPG</option><option value="webp">WebP</option><option value="png">PNG</option></select></label>
+            <label><span>Quality</span><div class="range-row"><input data-setting="quality" type="range" min="1" max="100" value="92" /><output data-output-for="quality">92</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>EXIF, GPS and software tags are not copied.</strong><p>The browser decodes visible pixels and creates a new file. Pixel-embedded text or marks remain visible.</p></div>
+          </div>}
+
+          {isRotate && <div class="setting-grid"><label><span>Rotation</span><select data-setting="rotation"><option value="0">0°</option><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">270° clockwise</option></select></label><label class="check-setting"><input data-setting="flipHorizontal" type="checkbox" /><span>Flip horizontal</span></label><label class="check-setting"><input data-setting="flipVertical" type="checkbox" /><span>Flip vertical</span></label></div>}
+
+          {isCrop && <div class="setting-grid"><label><span>Aspect ratio</span><select data-setting="aspect"><option value="free">Free</option><option value="original">Original</option><option value="1:1">1:1</option><option value="4:3">4:3</option><option value="3:2">3:2</option><option value="16:9">16:9</option><option value="9:16">9:16</option></select></label><label><span>X position %</span><input data-setting="x" type="number" min="0" max="99" value="0" /></label><label><span>Y position %</span><input data-setting="y" type="number" min="0" max="99" value="0" /></label><label><span>Width %</span><input data-setting="width" type="number" min="1" max="100" value="100" /></label><label><span>Height %</span><input data-setting="height" type="number" min="1" max="100" value="100" /></label></div>}
+
+          {isBlur && <div class="setting-grid"><label><span>Blur area</span><select data-setting="scope"><option value="whole">Whole image</option><option value="region">Selected region</option></select></label><label><span>Blur strength</span><div class="range-row"><input data-setting="radius" type="range" min="1" max="60" value="12" /><output data-output-for="radius">12 px</output></div></label><label data-setting-group="region" hidden><span>X position %</span><input data-setting="x" type="number" min="0" max="99" value="25" /></label><label data-setting-group="region" hidden><span>Y position %</span><input data-setting="y" type="number" min="0" max="99" value="25" /></label><label data-setting-group="region" hidden><span>Width %</span><input data-setting="width" type="number" min="1" max="100" value="50" /></label><label data-setting-group="region" hidden><span>Height %</span><input data-setting="height" type="number" min="1" max="100" value="50" /></label></div>}
+        </section>
+
+        <ImagePreviewPanel beforeLabel="Original" afterLabel={isMetadata ? 'Clean pixel copy' : 'Live preview'} />
+      </div>
+
+      <div slot="output" class:list={['deterministic-output', hasEmbeddedOutput && 'deterministic-output--hidden']}><ImageOutputPanel quality={92} /></div>
+      <ImageBatchProgress slot="progress" total={0} />
+      <ImageBatchActionBar slot="actions" processLabel={processLabel} />
+    </ImageBatchShell>
+    <p class="image-tool-policy-note">{tool.policyNote}</p>
+  </section>
+</div>
+
+<script src="../client/image-tool-app.ts"></script>
+
+<style is:global>
+.deterministic-tool{padding:0}.image-tool-standard-workspace{padding:8px 14px 14px}.deterministic-header{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:8px 2px 10px}.deterministic-header>div:first-child{min-width:0;display:grid;gap:2px}.deterministic-header span,.deterministic-settings__heading span{color:#8e95a5;font-size:10px;font-weight:700;letter-spacing:.055em;text-transform:uppercase}.deterministic-header strong{font-size:15px;font-weight:740}.deterministic-header small{color:#939aa9;font-size:10.5px;line-height:1.4}.deterministic-settings__copy-actions{display:flex;gap:7px;flex-wrap:wrap}.deterministic-settings button{min-height:34px;border:1px solid #343c4d;border-radius:8px;background:#171c27;color:#aeb4c2;padding:6px 10px;cursor:pointer;font:inherit;font-size:10.5px;font-weight:700}.deterministic-settings button:hover:not(:disabled){border-color:#4b5266;color:#f1f2f7}.deterministic-queue{display:flex;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#343c4d transparent;padding:0 0 8px;margin-bottom:2px}.deterministic-queue::-webkit-scrollbar{height:8px}.deterministic-queue::-webkit-scrollbar-thumb{border:2px solid #141923;border-radius:999px;background:#343c4d}.deterministic-file-card{min-width:218px;flex:0 0 218px;display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px;border:1px solid #29313f;border-radius:11px;background:#10151e;color:inherit;text-align:left;cursor:pointer;scroll-snap-align:start;transition:border-color .14s ease,background .14s ease}.deterministic-file-card.is-active{border-color:#625bc2;background:#17172a;box-shadow:none}.deterministic-file-card img{width:52px;height:44px;object-fit:cover;border-radius:8px}.deterministic-file-card__copy{display:grid;gap:2px;min-width:0}.deterministic-file-card__copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:700}.deterministic-file-card__copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#838b9b;font-size:9px}.deterministic-file-card__badges{min-height:15px;display:flex;align-items:center;gap:4px;overflow:hidden}.deterministic-badge{width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 5px;border:1px solid #3b4352;border-radius:999px;color:#9098a8;font-size:8px;font-weight:680}.deterministic-badge--custom{border-color:#5b557e;color:#beb9e9}.deterministic-file-remove{width:24px;height:24px;display:grid;place-items:center;padding:0;border:1px solid #343c4d;border-radius:7px;background:#171c27;color:#8f97a7;font-size:16px;line-height:1;cursor:pointer}.deterministic-file-remove:hover:not(:disabled){border-color:#68413f;background:#291918;color:#ff9f98}.deterministic-workspace{display:grid;gap:10px}.deterministic-settings{display:grid;gap:11px;padding:11px 12px;border:1px solid #2b3240;border-radius:13px;background:#10151e}.deterministic-settings__heading{display:flex;justify-content:space-between;gap:12px;align-items:center}.deterministic-settings__heading>div:first-child{display:grid;gap:2px}.deterministic-settings__heading strong{font-size:12px;font-weight:720}.setting-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}.setting-grid label{display:grid;gap:6px}.setting-grid label>span{font-size:10px;font-weight:700;color:#969dad}.setting-grid input:not([type="checkbox"]),.setting-grid select{width:100%;box-sizing:border-box;min-height:38px;border:1px solid #363f50;border-radius:9px;background:#0c1118;color:#eef1f6;padding:7px 9px;font:inherit;font-size:11px}.check-setting{display:flex!important;align-items:center;gap:8px;align-self:end;min-height:38px}.range-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}.range-row input{accent-color:var(--accent)}.range-row output{min-width:48px;text-align:right;font-size:10px;color:#a7afbd}.setting-note{padding:11px;border:1px solid #283140;border-radius:9px;background:#0c1118;color:#aeb6c4}.setting-note strong{font-size:11px}.setting-note p{margin:5px 0 0;font-size:10.5px;line-height:1.45}.setting-note--wide{grid-column:1/-1}.deterministic-output--hidden{display:none}.deterministic-tool[data-has-items="false"] .image-batch-shell__scope,.deterministic-tool[data-has-items="false"] .image-batch-shell__workspace,.deterministic-tool[data-has-items="false"] .image-batch-shell__output,.deterministic-tool[data-has-items="false"] .image-batch-shell__progress,.deterministic-tool[data-has-items="false"] .image-batch-shell__actions,.deterministic-tool[data-has-items="false"] .deterministic-header{display:none}.deterministic-tool[data-has-items="true"] .image-batch-shell__upload{display:none}@media(max-width:720px){.image-tool-standard-workspace{padding:8px 10px 10px}.deterministic-header,.deterministic-settings__heading{align-items:stretch;flex-direction:column}.setting-grid{grid-template-columns:1fr}.deterministic-file-card{min-width:210px;flex-basis:210px}}
+</style>

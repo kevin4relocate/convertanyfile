@@ -1,0 +1,72 @@
+---
+import type { ImageToolDefinition } from '../platform/image-tools/types';
+import ImageBatchShell from '../image-tools/components/ImageBatchShell.astro';
+import ImageBatchDropzone from '../image-tools/components/ImageBatchDropzone.astro';
+import ImageEditScopeSwitch from '../image-tools/components/ImageEditScopeSwitch.astro';
+import ImagePreviewPanel from '../image-tools/components/ImagePreviewPanel.astro';
+import ImageBatchProgress from '../image-tools/components/ImageBatchProgress.astro';
+import ImageBatchActionBar from '../image-tools/components/ImageBatchActionBar.astro';
+import ImageToolHeaderActions from '../image-tools/components/ImageToolHeaderActions.astro';
+
+interface Props { tool: ImageToolDefinition; }
+const { tool } = Astro.props;
+const accept = tool.acceptedExtensions.map((extension) => `.${extension}`).join(',');
+const maxFiles = tool.maxFiles ?? 50;
+const maxFileMb = Math.max(1, Math.round(tool.maxFileBytes / (1024 * 1024)));
+---
+<div
+  class="image-editor-card background-removal-tool"
+  data-image-tool-app
+  data-tool-id={tool.id}
+  data-max-file-bytes={tool.maxFileBytes}
+  data-max-pixels={tool.maxPixels}
+  data-max-dimension={tool.maxDimension}
+  data-max-files={maxFiles}
+  data-has-items="false"
+>
+  <div class="image-editor-topbar">
+    <div><span>Local AI image tool</span><strong>{tool.displayName}</strong></div>
+    <div class="image-editor-local-state"><span aria-hidden="true"></span>Browser-only</div>
+  </div>
+  <div class="image-editor-notice" data-role="notice" role="status" aria-live="polite" hidden></div>
+
+  <section class="background-standard-workspace">
+    <ImageBatchShell variant="linear">
+      <div slot="header" class="background-header">
+        <div><span>Images</span><strong><span data-role="batch-count">0</span> images ready</strong><small data-role="mode-summary">One cutout setup applies to the whole batch.</small></div>
+        <ImageToolHeaderActions />
+      </div>
+
+      <div slot="upload"><ImageBatchDropzone variant="standard" accept={accept} maxFiles={maxFiles} maxFileMb={maxFileMb} /></div>
+      <ImageEditScopeSwitch slot="scope" variant="standard" mode="shared" />
+      <div slot="queue" class="background-queue" data-role="batch-list" aria-label="Background removal batch"></div>
+
+      <div slot="workspace" class="background-workspace">
+        <section class="background-settings" aria-label="Background removal settings">
+          <div class="background-settings__heading">
+            <div><span>Cutout settings</span><strong>Refine the local AI mask</strong></div>
+            <div class="background-settings__copy-actions"><button type="button" data-role="use-shared-settings" hidden>Use shared settings</button><button type="button" data-role="apply-current-to-all" hidden>Apply current to all</button></div>
+          </div>
+          <p class="background-model-status" data-role="model-status">Local AI runtime loads on first use (~18 MB) and is cached by the browser.</p>
+          <div class="background-setting-grid">
+            <label><span>Cutout level</span><div class="background-range"><input data-setting="threshold" type="range" min="15" max="85" value="50" /><output data-output-for="threshold">50%</output></div><small>Higher values remove more uncertain edge pixels.</small></label>
+            <label><span>Edge feather</span><div class="background-range"><input data-setting="feather" type="range" min="0" max="30" value="8" /><output data-output-for="feather">8</output></div><small>Softens the transition around the generated subject mask.</small></label>
+            <label><span>Background</span><select data-setting="background"><option value="transparent">Transparent</option><option value="white">White</option><option value="black">Black</option><option value="custom">Custom color</option></select></label>
+            <label data-role="custom-color-wrap" hidden><span>Custom color</span><input data-setting="color" type="color" value="#ffffff" /></label>
+          </div>
+          <div class="background-setting-note"><strong>U²-NetP · browser-side inference</strong><p>Best on photos with a clear primary subject. Fine hair, transparent materials, shadows and low-contrast edges may need adjustment.</p></div>
+        </section>
+        <div class="background-preview-wrap"><ImagePreviewPanel beforeLabel="Original" afterLabel="Background removed" /></div>
+      </div>
+
+      <div slot="output" class="background-output-note"><div><span>Output</span><strong>PNG</strong></div><small>Transparent and solid-background results use PNG so alpha and edge detail are preserved.</small></div>
+      <ImageBatchProgress slot="progress" total={0} />
+      <ImageBatchActionBar slot="actions" processLabel="Remove backgrounds" downloadLabel="Download ZIP" />
+    </ImageBatchShell>
+    <p class="image-tool-policy-note">{tool.policyNote}</p>
+  </section>
+</div>
+<script src="../client/image-tool-app.ts"></script>
+<style is:global>
+.background-removal-tool{padding:0}.background-standard-workspace{padding:8px 14px 14px}.background-header{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:8px 2px 10px}.background-header>div:first-child,.background-settings__heading>div:first-child{min-width:0;display:grid;gap:2px}.background-header span,.background-settings__heading span,.background-setting-grid label>span,.background-output-note span{color:#8e95a5;font-size:10px;font-weight:700;letter-spacing:.055em;text-transform:uppercase}.background-header strong{font-size:15px;font-weight:740}.background-header small{color:#939aa9;font-size:10.5px;line-height:1.4}.background-settings__copy-actions{display:flex;gap:7px;flex-wrap:wrap}.background-settings button{min-height:34px;border:1px solid #343c4d;border-radius:8px;background:#171c27;color:#aeb4c2;padding:6px 10px;cursor:pointer;font:inherit;font-size:10.5px;font-weight:700}.background-settings button:hover:not(:disabled){border-color:#4b5266;color:#f1f2f7}.background-queue{display:flex;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#343c4d transparent;padding:0 0 8px;margin-bottom:2px}.background-queue::-webkit-scrollbar{height:8px}.background-queue::-webkit-scrollbar-thumb{border:2px solid #141923;border-radius:999px;background:#343c4d}.background-file-card{min-width:218px;flex:0 0 218px;display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px;border:1px solid #29313f;border-radius:11px;background:#10151e;cursor:pointer;scroll-snap-align:start;transition:border-color .14s ease,background .14s ease}.background-file-card.is-active{border-color:#625bc2;background:#17172a;box-shadow:none}.background-file-card img{width:52px;height:44px;object-fit:cover;border-radius:8px}.background-file-card__copy{display:grid;gap:2px;min-width:0}.background-file-card__copy strong,.background-file-card__copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.background-file-card__copy strong{font-size:11px;font-weight:700}.background-file-card__copy small{color:#838b9b;font-size:9px}.background-badge{justify-self:start;width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 5px;border:1px solid #3b4352;border-radius:999px;color:#9098a8;font-size:8px;font-weight:680}.background-badge.custom{border-color:#5b557e;color:#beb9e9}.background-file-remove{width:24px;height:24px;display:grid;place-items:center;padding:0;border:1px solid #343c4d;border-radius:7px;background:#171c27;color:#8f97a7;font-size:16px;line-height:1;cursor:pointer}.background-file-remove:hover:not(:disabled){border-color:#68413f;background:#291918;color:#ff9f98}.background-workspace{display:grid;gap:10px}.background-settings{display:grid;gap:11px;padding:11px 12px;border:1px solid #2b3240;border-radius:13px;background:#10151e}.background-settings__heading{display:flex;justify-content:space-between;gap:12px;align-items:center}.background-settings__heading strong{font-size:12px;font-weight:720}.background-model-status{margin:0;padding:9px 10px;border:1px solid #283140;border-radius:9px;background:#0c1118;color:#9da6b5;font-size:10px;line-height:1.45}.background-setting-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}.background-setting-grid label{display:grid;gap:6px}.background-setting-grid select,.background-setting-grid input[type="color"]{width:100%;box-sizing:border-box;min-height:38px;border:1px solid #363f50;border-radius:9px;background:#0c1118;color:#eef1f6;padding:6px 8px;font:inherit;font-size:11px}.background-setting-grid input[type="color"]{padding:3px}.background-setting-grid small{font-size:9.5px;color:#858fa0;line-height:1.4}.background-range{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}.background-range input{accent-color:var(--accent)}.background-range output{min-width:42px;text-align:right;font-size:10px;color:#a7afbd}.background-setting-note{padding:11px;border:1px solid #283140;border-radius:9px;background:#0c1118;color:#aeb6c4}.background-setting-note strong{font-size:11px}.background-setting-note p{margin:5px 0 0;font-size:10.5px;line-height:1.45}.background-output-note{display:grid;grid-template-columns:minmax(120px,.35fr) minmax(0,1fr);gap:15px;align-items:center;padding:11px 12px;border:1px solid #2b3240;border-radius:13px;background:#10151e}.background-output-note>div{display:grid;gap:2px}.background-output-note>div strong{font-size:12px;font-weight:720}.background-output-note>small{color:#858d9d;font-size:9.5px;line-height:1.45}.background-preview-wrap .image-preview-panel__frame{background-color:#11161f;background-image:linear-gradient(45deg,rgba(255,255,255,.045) 25%,transparent 25%),linear-gradient(-45deg,rgba(255,255,255,.045) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,rgba(255,255,255,.045) 75%),linear-gradient(-45deg,transparent 75%,rgba(255,255,255,.045) 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}.background-removal-tool[data-has-items="false"] .image-batch-shell__scope,.background-removal-tool[data-has-items="false"] .image-batch-shell__workspace,.background-removal-tool[data-has-items="false"] .image-batch-shell__output,.background-removal-tool[data-has-items="false"] .image-batch-shell__progress,.background-removal-tool[data-has-items="false"] .image-batch-shell__actions,.background-removal-tool[data-has-items="false"] .background-header{display:none}.background-removal-tool[data-has-items="true"] .image-batch-shell__upload{display:none}@media(max-width:720px){.background-standard-workspace{padding:8px 10px 10px}.background-header,.background-settings__heading,.background-output-note{align-items:stretch;grid-template-columns:1fr;flex-direction:column}.background-setting-grid{grid-template-columns:1fr}.background-file-card{min-width:210px;flex-basis:210px}}
+</style>

@@ -1,0 +1,72 @@
+---
+interface Props {
+  accept?: string;
+  maxFiles?: number;
+  disabled?: boolean;
+  variant?: 'generic' | 'standard' | 'mask';
+  maxFileMb?: number;
+  maxTotalMb?: number;
+}
+
+const {
+  accept = 'image/jpeg,image/png,image/webp',
+  maxFiles = 50,
+  disabled = false,
+  variant = 'generic',
+  maxFileMb = 10,
+  maxTotalMb = 200,
+} = Astro.props;
+---
+
+{variant === 'mask' ? (
+  <section class="image-tool-upload gemini-batch-upload" data-role="upload-view">
+    <button class="image-tool-drop-zone" data-role="drop-zone" type="button" disabled={disabled}>
+      <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" /></svg></span>
+      <strong>Add images</strong>
+      <span>Any aspect ratios · up to {maxFiles} images · {maxFileMb} MB each · {maxTotalMb} MB total</span>
+      <span class="choose-button">Choose images</span>
+      <small><span class="privacy-dot" aria-hidden="true"></span> Images stay on your device</small>
+    </button>
+    <input data-role="file-input" type="file" accept={accept} multiple hidden disabled={disabled} />
+  </section>
+) : variant === 'standard' ? (
+  <label class="image-tool-standard-upload" data-role="batch-dropzone">
+    <div class="image-tool-drop-zone">
+      <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" /></svg></span>
+      <strong>Add images</strong>
+      <span>Any aspect ratios · up to {maxFiles} images · {maxFileMb} MB each · {maxTotalMb} MB total</span>
+      <span class="choose-button">Choose images</span>
+      <small><span class="privacy-dot" aria-hidden="true"></span> Images stay on your device</small>
+    </div>
+    <input class="image-tool-standard-file-input" data-role="file-input" type="file" accept={accept} multiple disabled={disabled} />
+  </label>
+) : (
+  <label class="image-batch-dropzone" data-role="batch-dropzone">
+    <input type="file" data-role="file-input" accept={accept} multiple disabled={disabled} />
+    <strong>Drop images here or choose files</strong>
+    <small>Up to {maxFiles} images · {maxFileMb} MB each · {maxTotalMb} MB total · processed locally.</small>
+  </label>
+)}
+
+<style>
+  .image-batch-dropzone{display:grid;place-items:center;gap:6px;min-height:150px;padding:24px;border:1px dashed var(--border-color,#3b4352);border-radius:14px;text-align:center;cursor:pointer;background:rgba(127,127,127,.04)}
+  .image-batch-dropzone:focus-within{outline:2px solid currentColor;outline-offset:2px}
+  .image-batch-dropzone input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+  .image-batch-dropzone small{opacity:.68}
+
+  /* Same compact first-use surface as Remove Watermark, while keeping label-to-file-input behavior. */
+  .image-tool-standard-upload{position:relative;display:block;cursor:pointer}
+  .image-tool-standard-file-input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;opacity:0}
+  .image-tool-standard-upload:focus-within .image-tool-drop-zone{outline:2px solid rgba(124,115,255,.45);outline-offset:2px}
+  .image-tool-standard-upload .image-tool-drop-zone{min-height:116px;display:grid;grid-template-columns:46px minmax(0,1fr) auto;grid-template-rows:auto auto auto;grid-template-areas:"icon title choose" "icon meta choose" "icon privacy choose";align-items:center;justify-items:start;gap:3px 15px;padding:15px 17px;text-align:left}
+  .image-tool-standard-upload .image-tool-drop-zone>.drop-icon{grid-area:icon;margin:0;width:44px;height:44px;border-radius:13px}
+  .image-tool-standard-upload .image-tool-drop-zone>strong{grid-area:title;font-size:16px;font-weight:720;line-height:1.2}
+  .image-tool-standard-upload .image-tool-drop-zone>span:not(.drop-icon):not(.choose-button){grid-area:meta;font-size:11px;line-height:1.35}
+  .image-tool-standard-upload .image-tool-drop-zone>.choose-button{grid-area:choose;align-self:center;margin:0;white-space:nowrap;font-size:12px;font-weight:720;padding:10px 15px}
+  .image-tool-standard-upload .image-tool-drop-zone>small{grid-area:privacy;margin:0;font-size:10px}
+  .image-tool-standard-upload.is-dragging .image-tool-drop-zone{border-color:#8179ff;background:#15172a;box-shadow:inset 0 0 0 3px rgba(124,115,255,.075)}
+
+  @media(max-width:640px){
+    .image-tool-standard-upload .image-tool-drop-zone{min-height:210px;grid-template-columns:1fr;grid-template-rows:auto;grid-template-areas:"icon" "title" "meta" "choose" "privacy";justify-items:center;text-align:center;gap:8px}
+  }
+</style>
