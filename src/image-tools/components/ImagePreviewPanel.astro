@@ -14,23 +14,34 @@ const {
 } = Astro.props;
 ---
 
-<section class="image-preview-panel" data-role="preview-panel">
-  <figure>
-    <figcaption><span>{beforeLabel}</span><small data-role="source-meta"></small></figcaption>
+<section class="image-tool-preview-grid image-preview-pair" data-role="preview-panel">
+  <article class="image-tool-preview-panel">
+    <header>
+      <div><span>Before</span><strong>{beforeLabel}</strong></div>
+      <small data-role="source-meta"></small>
+    </header>
     <div class="image-preview-panel__frame">
       <img data-role="source-preview" src={beforeUrl ?? ''} alt={beforeLabel} hidden={!beforeUrl} />
       <span data-role="source-empty" hidden={Boolean(beforeUrl)}>No image selected</span>
     </div>
-  </figure>
-  <figure>
-    <figcaption><span>{afterLabel}</span><small data-role="preview-meta"></small></figcaption>
+  </article>
+  <article class="image-tool-preview-panel">
+    <header>
+      <div><span>After</span><strong>{afterLabel}</strong></div>
+      <small data-role="preview-meta"></small>
+    </header>
     <div class="image-preview-panel__frame">
       <img data-role="result-preview" src={afterUrl ?? ''} alt={afterLabel} hidden={!afterUrl} />
       <span data-role="result-empty" hidden={Boolean(afterUrl)}>Preview will appear here</span>
     </div>
-  </figure>
+  </article>
 </section>
 
 <style>
-  .image-preview-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.image-preview-panel figure{display:grid;gap:7px;margin:0}.image-preview-panel figcaption{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:.75rem;font-weight:700;opacity:.78}.image-preview-panel figcaption small{font-weight:500;opacity:.72}.image-preview-panel__frame{min-height:220px;border:1px solid var(--border-color,#303744);border-radius:12px;display:grid;place-items:center;overflow:hidden;background:rgba(127,127,127,.05)}.image-preview-panel__frame img{max-width:100%;max-height:520px;object-fit:contain}.image-preview-panel__frame>span{padding:20px;opacity:.5;text-align:center}@media(max-width:720px){.image-preview-panel{grid-template-columns:1fr}}
+  .image-preview-pair{margin-top:0}
+  .image-preview-panel__frame{position:relative;min-height:260px;display:grid;place-items:center;overflow:hidden;background:repeating-conic-gradient(#11161f 0 25%,#151b25 0 50%) 50%/18px 18px}
+  .image-preview-panel__frame img{display:block;max-width:100%;max-height:520px;object-fit:contain}
+  .image-preview-panel__frame>span{padding:20px;color:#858d9d;font-size:10px;text-align:center}
+  @media(max-width:1050px){.image-preview-panel__frame{min-height:220px}}
+  @media(max-width:760px){.image-preview-panel__frame{min-height:190px}}
 </style>
