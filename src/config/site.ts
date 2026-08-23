@@ -4,7 +4,7 @@ export const SITE = {
   origin: 'https://convertanyfile.net',
   tagline: 'Fast, private file conversion and image tools in your browser.',
   description:
-    'Convert supported files and use focused image tools directly in your browser with local processing, privacy-first workflows, and no account required.',
+    'Convert supported image, archive, structured-data, and subtitle files and use focused image tools directly in your browser with local processing, privacy-first workflows, and no account required.',
 } as const;
 
 export const NAV_ITEMS = [
@@ -23,6 +23,7 @@ export const FOOTER_GROUPS = [
       { label: 'Image Converter', href: '/image-converter/' },
       { label: 'Data Converter', href: '/data-converter/' },
       { label: 'Archive Converter', href: '/archive-converter/' },
+      { label: 'Subtitle Converter', href: '/subtitle-converter/' },
       { label: 'Image Tools', href: '/image-tools/' },
       { label: 'Resize Image', href: '/resize-image/' },
       { label: 'Compress Image', href: '/compress-image/' },
@@ -37,6 +38,7 @@ export const FOOTER_GROUPS = [
     title: 'Learn',
     links: [
       { label: 'Guides', href: '/guides/' },
+      { label: 'SRT to VTT', href: '/srt-to-vtt/' },
       { label: 'Remove Watermark Guide', href: '/guides/how-to-remove-watermark-from-image/' },
       { label: 'Remove Text Watermark', href: '/guides/how-to-remove-text-watermark-from-image/' },
       { label: 'Gemini Watermark Guide', href: '/guides/how-to-remove-gemini-watermark-from-image/' },
@@ -75,5 +77,12 @@ export const PLATFORM_CATEGORIES = [
     status: 'live',
     description: '7Z, RAR, ZIP, TAR, TAR.GZ/TGZ and GZIP conversion with local browser processing.',
     href: '/archive-converter/',
+  },
+  {
+    id: 'subtitle',
+    label: 'Subtitles',
+    status: 'live',
+    description: 'SRT, VTT, ASS, SSA and SBV with full-file preflight, timing tools, text cleanup and transcript export.',
+    href: '/subtitle-converter/',
   },
 ] as const;
