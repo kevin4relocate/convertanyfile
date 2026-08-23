@@ -122,11 +122,16 @@ test('explicit PNG output disables meaningless quality controls', async ({ page 
   await expect(outputQuality).toBeEnabled();
 });
 
-test('crop and blur expose geometry-specific controls', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run core geometry control coverage once in Chromium');
+test('crop exposes direct manipulation presets and advanced coordinates', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run crop geometry control coverage once in Chromium');
   await page.goto('/crop-image/');
-  await expect(page.locator('[data-setting="aspect"]')).toContainText('16:9');
-  await expect(page.locator('[data-setting="width"]')).toHaveValue('100');
+  const crop = page.locator('[data-tool-id="crop-image"]');
+  await expect(crop.locator('[data-crop-preset="rectangle"]')).toBeAttached();
+  await expect(crop.locator('[data-crop-preset="square"]')).toBeAttached();
+  await expect(crop.locator('[data-crop-preset="circle"]')).toBeAttached();
+  await expect(crop.locator('[data-setting="aspect"]')).toContainText('16:9');
+  await expect(crop.locator('[data-setting="width"]')).toHaveValue('84');
+  await expect(crop.locator('.crop-advanced summary')).toHaveText('Advanced coordinates');
 
   await page.goto('/blur-image/');
   const blur = page.locator('[data-tool-id="blur-image"]');
