@@ -14,14 +14,22 @@ const deterministicToolLoader: ImageToolLoader = async () => {
   return { mount: module.mountDeterministicImageTool };
 };
 
+const renameToolLoader: ImageToolLoader = async () => {
+  const module = await import('../naming/bulk-rename-editor');
+  return { mount: module.mountBulkRenameImages };
+};
+
 const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
   'remove-watermark': maskToolLoader,
   'gemini-ai-logo-remover': maskToolLoader,
+  'remove-object': maskToolLoader,
   'resize-image': deterministicToolLoader,
   'compress-image': deterministicToolLoader,
   'rotate-flip-image': deterministicToolLoader,
   'crop-image': deterministicToolLoader,
   'blur-image': deterministicToolLoader,
+  'remove-image-metadata': deterministicToolLoader,
+  'bulk-rename-images': renameToolLoader,
 };
 
 export function hasImageToolLoader(toolId: string): boolean {
