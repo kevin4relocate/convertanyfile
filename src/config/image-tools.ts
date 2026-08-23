@@ -80,11 +80,11 @@ export const CROP_IMAGE_TOOL: ImageToolDefinition = {
 
 export const BLUR_IMAGE_TOOL: ImageToolDefinition = {
   ...previewBase, id: 'blur-image', slug: 'blur-image', displayName: 'Blur Image', category: 'geometry',
-  title: 'Blur Images Online Free — Whole Image or Region | ConvertAnyFile',
-  description: 'Blur an entire image or a percentage-based region locally with batch and per-image settings for JPG, PNG and WebP.',
-  h1: 'Blur images or selected regions.', eyebrow: 'Image Tools · Preview',
-  intro: 'Blur the whole image or define a rectangular region using percentage coordinates. Apply one setup to the batch, customize exceptions individually, and preview locally before processing.',
-  downloadSuffix: 'blurred', policyNote: 'Region blur is a manual rectangle and does not automatically detect faces, text, license plates, or other sensitive content.',
+  title: 'Blur Images Online Free — Whole Image or Draggable Region | ConvertAnyFile',
+  description: 'Blur a whole JPG, PNG or WebP image or drag and resize a selected blur area directly on the image, with batch and per-image settings.',
+  h1: 'Blur images or selected areas.', eyebrow: 'Image Tools · Preview',
+  intro: 'Choose Blur whole image or Blur selected area. For a selected area, drag the rectangle directly over the image and resize it from the corners, then adjust blur strength and preview the result. Advanced percentage coordinates remain available when exact placement is useful.',
+  downloadSuffix: 'blurred', policyNote: 'Selected-area blur is a manual draggable rectangle and does not automatically detect faces, text, license plates, or other sensitive content. Review privacy-sensitive outputs carefully.',
 };
 
 export const REMOVE_IMAGE_METADATA_TOOL: ImageToolDefinition = {
@@ -99,12 +99,12 @@ export const REMOVE_IMAGE_METADATA_TOOL: ImageToolDefinition = {
 
 export const BULK_RENAME_IMAGES_TOOL: ImageToolDefinition = {
   ...previewBase, id: 'bulk-rename-images', slug: 'bulk-rename-images', displayName: 'Bulk Rename Images', category: 'naming',
-  title: 'Bulk Rename Images Online Free — Rename JPG, PNG & WebP | ConvertAnyFile',
-  description: 'Rename up to 50 image files at once with number tokens, shared patterns and per-image filename overrides without changing image bytes.',
+  title: 'Bulk Rename Images Online Free — Number, Prefix, Suffix & Replace | ConvertAnyFile',
+  description: 'Rename up to 50 JPG, PNG and WebP files with numbering, prefix, suffix, replace-text or custom-pattern methods, with a full batch preview and unchanged image bytes.',
   h1: 'Bulk rename image files.', eyebrow: 'Image Tools · Preview',
-  intro: 'Build a shared filename pattern for the batch, switch to individual mode for exceptions, preview every resulting filename, then download the original image bytes under their new names.',
+  intro: 'Choose Numbering, Prefix, Suffix or Replace text for a simple batch rename, or use Custom pattern for advanced combinations. Review every original and new filename in the full batch preview, then download the unchanged image bytes under their new names.',
   downloadSuffix: 'renamed',
-  policyNote: 'Renaming changes filenames only. The original image extension, bytes, quality, metadata and visible pixels are left unchanged.',
+  policyNote: 'Renaming changes filenames only. The original image extension, bytes, quality, metadata and visible pixels are left unchanged. Review the complete filename preview before preparing downloads.',
 };
 
 export const REMOVE_OBJECT_TOOL: MaskImageToolDefinition = {
@@ -136,8 +136,8 @@ export const IMAGE_TOOL_ROADMAP = [
   { id: 'compress-image', label: 'Compress Image', status: 'preview', description: 'Reduce image size with output-format and quality controls.', href: '/compress-image/' },
   { id: 'rotate-flip-image', label: 'Rotate / Flip', status: 'preview', description: 'Rotate or mirror one image or a batch locally.', href: '/rotate-flip-image/' },
   { id: 'crop-image', label: 'Crop Image', status: 'preview', description: 'Drag a crop box directly with rectangle, square, circle and common ratio presets.', href: '/crop-image/' },
-  { id: 'blur-image', label: 'Blur Image', status: 'preview', description: 'Blur an image or a selected rectangular region.', href: '/blur-image/' },
-  { id: 'bulk-rename-images', label: 'Bulk Rename Images', status: 'preview', description: 'Rename a batch without changing image bytes or source extensions.', href: '/bulk-rename-images/' },
+  { id: 'blur-image', label: 'Blur Image', status: 'preview', description: 'Blur a whole image or drag and resize a selected blur region.', href: '/blur-image/' },
+  { id: 'bulk-rename-images', label: 'Bulk Rename Images', status: 'preview', description: 'Rename with numbering, prefix, suffix, replace text or custom patterns and preview the full batch.', href: '/bulk-rename-images/' },
   { id: 'remove-image-metadata', label: 'Remove Image Metadata', status: 'preview', description: 'Strip EXIF, GPS and software metadata locally.', href: '/remove-image-metadata/' },
   { id: 'remove-object', label: 'Remove Object', status: 'preview', description: 'Mask and repair small unwanted objects locally.', href: '/remove-object/' },
   { id: 'remove-background', label: 'Remove Background', status: 'preview', description: 'Self-hosted U²-NetP segmentation with transparent or solid-background PNG output.', href: '/remove-background/' },
