@@ -31,8 +31,6 @@ export interface ImageToolDefinition {
   category?: ImageToolCategory;
   capabilities?: ImageToolCapabilities;
   outputKind?: ImageToolOutputKind;
-
-  /** Legacy mask-tool fields. Kept during the platform migration. */
   selectionModes: readonly ImageMaskMode[];
   defaultSelectionMode: ImageMaskMode;
   removeActionLabel: string;
@@ -40,21 +38,13 @@ export interface ImageToolDefinition {
   policyNote: string;
 }
 
-export interface PixelPoint {
-  x: number;
-  y: number;
-}
+export interface PixelPoint { x: number; y: number; }
+export interface PixelRect { x: number; y: number; width: number; height: number; }
 
-export interface PixelRect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
+type MaskEffects = { rotation?: number; feather?: number };
 export type MaskOperation =
-  | { type: 'rect'; rect: PixelRect; rotation?: number }
-  | { type: 'ellipse'; rect: PixelRect; rotation?: number }
-  | { type: 'diamond'; rect: PixelRect; rotation?: number }
-  | { type: 'star4'; rect: PixelRect; rotation?: number }
-  | { type: 'text'; rect: PixelRect; text: string; rotation?: number };
+  | ({ type: 'rect'; rect: PixelRect } & MaskEffects)
+  | ({ type: 'ellipse'; rect: PixelRect } & MaskEffects)
+  | ({ type: 'diamond'; rect: PixelRect } & MaskEffects)
+  | ({ type: 'star4'; rect: PixelRect } & MaskEffects)
+  | ({ type: 'text'; rect: PixelRect; text: string } & MaskEffects);
