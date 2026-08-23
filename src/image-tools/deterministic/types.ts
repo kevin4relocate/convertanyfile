@@ -36,6 +36,7 @@ export type RotateFlipSettings = {
 };
 
 export type CropSettings = {
+  shape: 'rect' | 'circle';
   aspect: 'free' | 'original' | '1:1' | '4:3' | '3:2' | '16:9' | '9:16';
   x: number;
   y: number;
@@ -71,7 +72,7 @@ export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSe
     case 'rotate-flip-image':
       return { rotation: 0, flipHorizontal: false, flipVertical: false };
     case 'crop-image':
-      return { aspect: 'free', x: 0, y: 0, width: 100, height: 100 };
+      return { shape: 'rect', aspect: 'free', x: 0, y: 0, width: 100, height: 100 };
     case 'blur-image':
       return { scope: 'whole', radius: 12, x: 25, y: 25, width: 50, height: 50 };
   }
