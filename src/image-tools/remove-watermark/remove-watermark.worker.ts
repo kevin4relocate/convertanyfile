@@ -8,7 +8,7 @@ scope.addEventListener('message', (event: MessageEvent<RemoveWatermarkWorkerRequ
   const request = event.data;
   try {
     const pixels = new Uint8ClampedArray(request.pixels);
-    const result = inpaintMaskedPixels(pixels, request.width, request.height, request.operations);
+    const result = inpaintMaskedPixels(pixels, request.width, request.height, request.operations, request.maxRepairRatio);
     const output = result.pixels.buffer as ArrayBuffer;
     const response: RemoveWatermarkWorkerResponse = {
       type: 'inpaint-result',
