@@ -7,12 +7,18 @@ export function downloadBlob(blob: Blob, filename: string): void {
   document.body.append(anchor);
   anchor.click();
   anchor.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+
+  // Safari can defer reading the object URL until after the click handler returns.
+  // Keep it alive briefly instead of revoking it in the same task.
+  window.setTimeout(() => URL.revokeObjectURL(url), 2_000);
 }
 
 export async function createZipBlob(files: readonly { filename: string; blob: Blob }[]): Promise<Blob> {
   const { default: JSZip } = await import('jszip');
   const zip = new JSZip();
   for (const file of files) zip.file(file.filename, file.blob);
-  return zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+
+  // JPG, PNG and WebP payloads are already compressed. Re-deflating them adds
+  // significant browser CPU/memory cost for little or no size reduction.
+  return zip.generateAsync({ type: 'blob', compression: 'STORE', streamFiles: true });
 }
