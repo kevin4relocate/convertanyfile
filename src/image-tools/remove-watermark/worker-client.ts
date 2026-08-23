@@ -11,9 +11,7 @@ function prepareOperations(operations: readonly MaskOperation[]): MaskOperation[
     const rect = pad > 0
       ? { x: operation.rect.x - pad, y: operation.rect.y - pad, width: operation.rect.width + pad * 2, height: operation.rect.height + pad * 2 }
       : { ...operation.rect };
-    return operation.type === 'text'
-      ? { ...operation, rect, feather: featherPx }
-      : { ...operation, rect, feather: featherPx };
+    return { ...operation, rect, feather: featherPx };
   });
 }
 
