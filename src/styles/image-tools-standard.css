@@ -36,6 +36,12 @@
   padding-top: 0 !important;
 }
 
+/* Compression changes encoding/file size, not the picture geometry. A large
+ * before/after image pair adds visual noise without helping that decision. */
+.deterministic-tool[data-tool-id="compress-image"] [data-role="preview-panel"] {
+  display: none !important;
+}
+
 /*
  * One filmstrip contract for every Image Tools runtime. These selectors are
  * deliberately more specific than the shell-local legacy classes so the
