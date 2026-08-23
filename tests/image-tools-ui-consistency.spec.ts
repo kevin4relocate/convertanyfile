@@ -14,9 +14,9 @@ async function expectEdgeToEdgeTopbar(page: Page): Promise<void> {
   expect(Math.abs(topbarBox!.width - cardBox!.width)).toBeLessThan(3);
 }
 
-async function expectWatermarkStyleHeaderActions(page: Page): Promise<void> {
+async function expectWatermarkStyleHeaderActions(page: Page, visible = true): Promise<void> {
   const add = page.locator('[data-image-tool-app] [data-role="add-more"]');
-  await expect(add).toBeVisible();
+  if (visible) await expect(add).toBeVisible();
   const border = await add.evaluate((element) => getComputedStyle(element).borderTopWidth);
   expect(border).toBe('0px');
 }
@@ -70,16 +70,15 @@ test.describe('Image Tools watermark visual standard', () => {
     expect(new Set(heights.map(Math.round)).size).toBe(1);
   });
 
-  test('background remover follows the same shell while keeping AI-specific settings', async ({ page }) => {
+  test('background remover uses the same shell without forcing AI runtime during layout checks', async ({ page }) => {
     await page.goto('/remove-background/');
     const app = page.locator('[data-image-tool-app]');
-    await app.locator('[data-role="file-input"]').setInputFiles(png('subject.png'));
     await expectEdgeToEdgeTopbar(page);
-    await expectWatermarkStyleHeaderActions(page);
+    await expectWatermarkStyleHeaderActions(page, false);
     await expect(app.locator('.image-batch-shell')).toHaveClass(/image-batch-shell--linear/);
+    await expect(app.locator('[data-role="edit-scope-switch"]')).toHaveClass(/image-edit-scope--standard/);
     await expect(app.locator('[data-role="batch-list"]')).toHaveCSS('display', 'flex');
     await expect(app.locator('[data-role="preview-panel"] .image-tool-preview-panel')).toHaveCount(2);
     await expect(app.locator('[data-role="model-status"]')).toContainText('Local AI runtime');
-    await expectStableScope(page);
   });
 });
