@@ -20,6 +20,7 @@ type Response =
   | { type: 'segment-result'; requestId: string; ok: true; mask: ArrayBuffer }
   | { type: 'segment-result'; requestId: string; ok: false; error: string };
 
+const scope = self as DedicatedWorkerGlobalScope;
 const ORT_MODULE_URL = '/runtime/background-removal/ort.wasm.min.mjs';
 const ORT_WASM_URL = '/runtime/background-removal/ort-wasm-simd-threaded.wasm';
 const ORT_MJS_URL = '/runtime/background-removal/ort-wasm-simd-threaded.mjs.js';
@@ -28,7 +29,7 @@ const INPUT_SIZE = 320;
 let sessionPromise: Promise<{ ort: OrtModule; session: OrtSession }> | undefined;
 
 function post(message: Response, transfer: Transferable[] = []): void {
-  self.postMessage(message, { transfer });
+  scope.postMessage(message, transfer);
 }
 
 async function fetchModel(requestId: string): Promise<ArrayBuffer> {
@@ -91,7 +92,7 @@ function normalizeMask(source: Float32Array | number[]): Float32Array {
   return mask;
 }
 
-self.addEventListener('message', (event: MessageEvent<Request>) => {
+scope.addEventListener('message', (event: MessageEvent<Request>) => {
   const request = event.data;
   if (!request || request.type !== 'segment') return;
   void (async () => {
@@ -112,3 +113,5 @@ self.addEventListener('message', (event: MessageEvent<Request>) => {
     }
   })();
 });
+
+export {};
