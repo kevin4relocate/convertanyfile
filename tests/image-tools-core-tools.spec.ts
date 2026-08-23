@@ -23,7 +23,7 @@ const TOOLS = [
 
 for (const [path, toolId] of TOOLS) {
   test(`${toolId} mounts on the shared batch platform`, async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium-desktop', 'Run Phase 3 platform coverage once in Chromium');
+    test.skip(testInfo.project.name !== 'chromium-desktop', 'Run core image platform coverage once in Chromium');
     await page.goto(path);
     const app = page.locator(`[data-image-tool-app][data-tool-id="${toolId}"]`);
     await expect(app).toHaveAttribute('data-image-tool-ready', 'true');
@@ -37,7 +37,7 @@ for (const [path, toolId] of TOOLS) {
 }
 
 test('resize supports shared and per-image overrides', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run Phase 3 interaction coverage once in Chromium');
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run core image interaction coverage once in Chromium');
   await page.goto('/resize-image/');
   const app = page.locator('[data-tool-id="resize-image"]');
   await app.locator('[data-role="file-input"]').setInputFiles([
@@ -82,7 +82,7 @@ test('resize rejects unsafe output canvas dimensions before processing', async (
 });
 
 test('compress keeps output quality as an individual override', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run Phase 3 interaction coverage once in Chromium');
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run core image interaction coverage once in Chromium');
   await page.goto('/compress-image/');
   const app = page.locator('[data-tool-id="compress-image"]');
   await app.locator('[data-role="file-input"]').setInputFiles([
@@ -100,8 +100,30 @@ test('compress keeps output quality as an individual override', async ({ page },
   await expect(app.locator('[data-setting="quality"]')).toHaveValue('82');
 });
 
+test('explicit PNG output disables meaningless quality controls', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run output control coverage once in Chromium');
+
+  await page.goto('/compress-image/');
+  const compress = page.locator('[data-tool-id="compress-image"]');
+  const embeddedFormat = compress.locator('[data-setting="format"]');
+  const embeddedQuality = compress.locator('[data-setting="quality"]');
+  await embeddedFormat.selectOption('png');
+  await expect(embeddedQuality).toBeDisabled();
+  await embeddedFormat.selectOption('webp');
+  await expect(embeddedQuality).toBeEnabled();
+
+  await page.goto('/rotate-flip-image/');
+  const rotate = page.locator('[data-tool-id="rotate-flip-image"]');
+  const outputFormat = rotate.locator('[data-role="output-format"]');
+  const outputQuality = rotate.locator('[data-role="output-quality"]');
+  await outputFormat.selectOption('png');
+  await expect(outputQuality).toBeDisabled();
+  await outputFormat.selectOption('webp');
+  await expect(outputQuality).toBeEnabled();
+});
+
 test('crop and blur expose geometry-specific controls', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run Phase 3 control coverage once in Chromium');
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Run core geometry control coverage once in Chromium');
   await page.goto('/crop-image/');
   await expect(page.locator('[data-setting="aspect"]')).toContainText('16:9');
   await expect(page.locator('[data-setting="width"]')).toHaveValue('100');
