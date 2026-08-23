@@ -1,0 +1,14 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ImageToolPageFrame from '../components/ImageToolPageFrame.astro';
+import ImageToolGrid from '../components/ImageToolGrid.astro';
+import { BULK_RENAME_IMAGES_TOOL } from '../config/image-tools';
+import { SITE } from '../config/site';
+const tool = BULK_RENAME_IMAGES_TOOL;
+const schema = { '@context':'https://schema.org', '@type':'WebApplication', name:`ConvertAnyFile ${tool.displayName}`, url:`${SITE.origin}/${tool.slug}/`, applicationCategory:'UtilitiesApplication', operatingSystem:'Any', offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}, featureList:['Batch rename up to 50 images','Shared filename pattern','Per-image filename override','Original image bytes unchanged','ZIP download'] };
+---
+<SiteLayout title={tool.title} description={tool.description} schema={schema}>
+  <ImageToolPageFrame tool={tool} />
+  <section class="content-wide-section white gemini-content-section"><div class="site-container"><div class="content-intro-grid"><div class="section-heading wide"><span class="section-kicker">Filename-only operation</span><h2>Rename files without touching image quality or metadata.</h2><p>Bulk Rename does not decode or re-encode the image. It keeps the original bytes and prepares new download filenames from a pattern such as <strong>image-001.jpg</strong>. Switch to Edit individually when a few images need custom names.</p></div><div class="content-summary-card"><strong>Bytes stay unchanged</strong><p>Visible pixels, compression quality and embedded metadata remain exactly as they were in the uploaded file. Only the downloaded filename changes.</p></div></div><ul class="content-checklist"><li>Use {`{name}`}, {`{number}`} and {`{ext}`} tokens.</li><li>Choose the starting number and zero-padding length.</li><li>Duplicate generated names are made unique automatically.</li><li>Download one renamed file directly or multiple files in a ZIP.</li></ul></div></section>
+  <section class="content-wide-section gemini-content-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Related Image Tools</span><h2>Rename first, then continue with local image tools.</h2></div><ImageToolGrid compact /></div></section>
+</SiteLayout>
