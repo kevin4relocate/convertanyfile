@@ -1,13 +1,21 @@
 import { mountRegisteredImageTool } from '../image-tools/core/tool-registry';
 
 async function initializeImageTool(root: HTMLElement): Promise<void> {
-  if (root.dataset.imageToolReady === 'true') return;
-  root.dataset.imageToolReady = 'true';
+  const state = root.dataset.imageToolReady;
+  if (state === 'true' || state === 'mounting') return;
 
   const toolId = root.dataset.toolId;
-  if (!toolId) return;
+  if (!toolId) throw new Error('Image tool configuration is missing its tool id.');
 
-  await mountRegisteredImageTool(toolId, root);
+  root.dataset.imageToolReady = 'mounting';
+  try {
+    const mounted = await mountRegisteredImageTool(toolId, root);
+    if (!mounted) throw new Error(`Unsupported image tool: ${toolId}`);
+    root.dataset.imageToolReady = 'true';
+  } catch (error) {
+    delete root.dataset.imageToolReady;
+    throw error;
+  }
 }
 
 function bootImageTools(): void {
