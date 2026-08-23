@@ -24,7 +24,8 @@ test.describe('Final image tools expansion', () => {
   test('image tools hub exposes Remove Background as a preview route', async ({ page }) => {
     await page.goto('/image-tools/');
     await expect(page.getByRole('link', { name: /Remove Background/i })).toHaveAttribute('href', '/remove-background/');
-    await expect(page.getByText('Phase 5 preview')).toBeVisible();
+    await expect(page.getByText('Local AI background removal')).toBeVisible();
+    await expect(page.getByText('Phase 5 preview')).toHaveCount(0);
   });
 
   test('advanced mask controls expose visible undo and redo while Gemini stays simplified', async ({ page }) => {
