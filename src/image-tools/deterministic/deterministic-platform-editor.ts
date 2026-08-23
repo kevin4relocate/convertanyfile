@@ -22,6 +22,11 @@ const ext = (name:string):string => name.includes('.') ? name.slice(name.lastInd
 const base = (name:string):string => name.replace(/\.[^.]+$/,'').replace(/[\\/:*?"<>|]+/g,'-').trim() || 'image';
 const clamp = (value:number,min:number,max:number):number => Math.min(max,Math.max(min,value));
 const asRecord = (settings:DeterministicSettings):Record<string,unknown> => settings as unknown as Record<string,unknown>;
+const formatBytes = (bytes:number):string => {
+  if(bytes<1024)return `${bytes} B`;
+  if(bytes<1024*1024)return `${Math.max(1,Math.round(bytes/1024))} KB`;
+  return `${(bytes/(1024*1024)).toFixed(bytes>=10*1024*1024?1:2)} MB`;
+};
 
 function mimeFor(file:File, output:OutputChoice):ImageOutputFormat {
   if(output==='source')return sourceMime(file);
@@ -117,7 +122,20 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
     scopeButtons.forEach(button=>{const selected=button.dataset.editScope===mode;button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-checked',String(selected));button.classList.toggle('is-active',selected);});
     modeSummary.textContent=mode==='shared'?`One setup applies to all ${state.items.length} images.`:'Each image can override the shared settings.';renderSettings();renderQueue();schedulePreview();
   }
-  function itemStatus(item:Item):string {if(item.status==='processing')return'Processing…';if(item.status==='done')return'Done';if(item.status==='error')return item.error||'Failed';return`${item.width} × ${item.height}`;}
+  function itemStatus(item:Item):string {
+    if(item.status==='processing')return'Processing…';
+    if(item.status==='error')return item.error||'Failed';
+    if(toolId==='compress-image'){
+      if(item.status==='done'&&item.result){
+        const ratio=item.file.size>0?1-item.result.size/item.file.size:0;
+        const change=ratio>=0?`${Math.round(ratio*100)}% saved`:`${Math.round(Math.abs(ratio)*100)}% larger`;
+        return`${formatBytes(item.file.size)} → ${formatBytes(item.result.size)} · ${change}`;
+      }
+      return formatBytes(item.file.size);
+    }
+    if(item.status==='done')return'Done';
+    return`${item.width} × ${item.height}`;
+  }
 
   function renderQueue():void {
     list.replaceChildren();count.textContent=String(state.items.length);root.dataset.hasItems=String(state.items.length>0);
@@ -133,6 +151,7 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
 
   function clearPreview():void {sourcePreview.hidden=true;sourcePreview.removeAttribute('src');sourceEmpty.hidden=false;resultPreview.hidden=true;resultPreview.removeAttribute('src');resultEmpty.hidden=false;sourceMeta.textContent='';previewMeta.textContent='';}
   async function renderPreview():Promise<void> {
+    if(toolId==='compress-image'){clearPreview();return;}
     const item=active();if(!item){clearPreview();return;}const generation=++state.previewGeneration;
     sourcePreview.src=item.url;sourcePreview.hidden=false;sourceEmpty.hidden=true;sourceMeta.textContent=`${item.width.toLocaleString()} × ${item.height.toLocaleString()}`;
     try{
