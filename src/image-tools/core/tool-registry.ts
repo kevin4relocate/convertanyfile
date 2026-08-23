@@ -9,9 +9,19 @@ const maskToolLoader: ImageToolLoader = async () => {
   return { mount: module.mountMaskBatchPlatformEditor };
 };
 
+const deterministicToolLoader: ImageToolLoader = async () => {
+  const module = await import('../deterministic/deterministic-platform-editor');
+  return { mount: module.mountDeterministicImageTool };
+};
+
 const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
   'remove-watermark': maskToolLoader,
   'gemini-ai-logo-remover': maskToolLoader,
+  'resize-image': deterministicToolLoader,
+  'compress-image': deterministicToolLoader,
+  'rotate-flip-image': deterministicToolLoader,
+  'crop-image': deterministicToolLoader,
+  'blur-image': deterministicToolLoader,
 };
 
 export function hasImageToolLoader(toolId: string): boolean {
