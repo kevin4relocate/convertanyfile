@@ -14,69 +14,55 @@ const { tool } = Astro.props;
 const accept = tool.acceptedExtensions.map((extension) => `.${extension}`).join(',');
 const modes = tool.selectionModes.filter((mode): mode is Extract<ImageMaskMode, 'rect' | 'circle' | 'square' | 'diamond' | 'star4' | 'text'> => ['rect','circle','square','diamond','star4','text'].includes(mode));
 const isGemini = tool.id === 'gemini-ai-logo-remover';
+const isObject = tool.id === 'remove-object';
 const hasText = modes.includes('text');
-const targetLabel = isGemini ? 'AI logo' : 'watermark';
+const targetLabel = isGemini ? 'AI logo' : isObject ? 'object' : 'watermark';
+const advancedCanvas = !isGemini;
 const maxFiles = tool.maxFiles ?? 50;
+const toolbarCopy = isGemini ? 'Fit a simple shape over the visible logo' : isObject ? 'Choose a tight shape around the unwanted object' : 'Choose the closest shape for the visible watermark';
 const modeLabel = (mode: ImageMaskMode): string => ({rect:'Rectangle',circle:'Circle',square:'Square',diamond:'Diamond',star4:'4-Point Star',text:'Text'} as Record<string,string>)[mode] ?? mode;
 ---
-<div
-  class="image-editor-card gemini-batch-card shared-mask-editor"
-  data-image-tool-app
-  data-tool-id={tool.id}
-  data-platform-migration="phase-2"
-  data-default-mode={tool.defaultSelectionMode}
-  data-target-label={targetLabel}
-  data-download-suffix={tool.downloadSuffix}
-  data-max-file-bytes={tool.maxFileBytes}
-  data-max-pixels={tool.maxPixels}
-  data-max-dimension={tool.maxDimension}
-  data-max-files={maxFiles}
-  data-max-total-bytes={200 * 1024 * 1024}
->
+<div class="image-editor-card gemini-batch-card shared-mask-editor" data-image-tool-app data-tool-id={tool.id} data-platform-migration="phase-2" data-advanced-canvas={String(advancedCanvas)} data-default-mode={tool.defaultSelectionMode} data-target-label={targetLabel} data-download-suffix={tool.downloadSuffix} data-max-file-bytes={tool.maxFileBytes} data-max-pixels={tool.maxPixels} data-max-dimension={tool.maxDimension} data-max-files={maxFiles} data-max-total-bytes={200 * 1024 * 1024}>
   <div class="image-editor-topbar"><div><span>Local image tool</span><strong>{tool.displayName}</strong></div><div class="image-editor-local-state"><span aria-hidden="true"></span>Browser-only</div></div>
   <div class="image-editor-notice" data-role="notice" role="status" aria-live="polite" hidden></div>
   <aside class="gemini-batch-warning" data-role="batch-warning" aria-label="Batch compatibility status" hidden><span class="gemini-batch-warning-icon" data-role="batch-warning-icon" aria-hidden="true">✓</span><div><strong data-role="batch-warning-title">Batch status</strong><p data-role="batch-warning-copy"></p></div></aside>
-
   <ImageBatchDropzone variant="mask" accept={accept} maxFiles={maxFiles} maxFileMb={10} maxTotalMb={200} />
 
   <section class="gemini-batch-workspace" data-role="editor" hidden>
     <ImageBatchShell variant="mask" mode="shared">
-      <Fragment slot="header">
-        <header class="gemini-batch-header"><div><span>Images</span><strong><span data-role="batch-count">0</span> images ready</strong><small data-role="ratio-status">Upload images and the editor will choose a safe starting mode automatically.</small></div><div class="gemini-batch-header-actions"><button class="text-button strong" data-role="add-more" type="button">+ Add images</button><button class="text-button" data-role="clear-all" type="button">Clear all</button></div></header>
-      </Fragment>
-
-      <Fragment slot="scope">
-        <ImageEditScopeSwitch variant="mask" mode="shared" />
-      </Fragment>
-
-      <Fragment slot="queue">
-        <div class="gemini-file-queue" data-role="batch-list" aria-label="Batch images"></div>
-      </Fragment>
+      <Fragment slot="header"><header class="gemini-batch-header"><div><span>Images</span><strong><span data-role="batch-count">0</span> images ready</strong><small data-role="ratio-status">Upload images and the editor will choose a safe starting mode automatically.</small></div><div class="gemini-batch-header-actions"><button class="text-button strong" data-role="add-more" type="button">+ Add images</button><button class="text-button" data-role="clear-all" type="button">Clear all</button></div></header></Fragment>
+      <Fragment slot="scope"><ImageEditScopeSwitch variant="mask" mode="shared" /></Fragment>
+      <Fragment slot="queue"><div class="gemini-file-queue" data-role="batch-list" aria-label="Batch images"></div></Fragment>
 
       <Fragment slot="workspace">
         <div class="image-tool-toolbar gemini-shape-toolbar shared-mask-toolbar" role="toolbar" aria-label={`${tool.displayName} selection tools`}>
-          <div class="gemini-toolbar-copy"><span>Mask</span><strong>{isGemini ? 'Fit a simple shape over the visible logo' : 'Choose the closest shape for the visible watermark'}</strong></div>
+          <div class="gemini-toolbar-copy"><span>Mask</span><strong>{toolbarCopy}</strong></div>
           <div class="image-tool-toolbar-group image-tool-toolbar-primary">
             {modes.map((mode) => <button class:list={['image-tool-mode', mode === tool.defaultSelectionMode && 'is-active']} data-tool-mode={mode} type="button" aria-pressed={mode === tool.defaultSelectionMode ? 'true' : 'false'}>{mode === 'rect' && <svg class="image-tool-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="1.5" /></svg>}{mode === 'circle' && <svg class="image-tool-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5" /></svg>}{mode === 'square' && <svg class="image-tool-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="1.5" /></svg>}{mode === 'diamond' && <svg class="image-tool-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 21 12 12 21 3 12Z" /></svg>}{mode === 'star4' && <svg class="image-tool-mode-icon image-tool-mode-icon--star4" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c.8 5.2 4.6 9 9.8 9.8-5.2.8-9 4.6-9.8 9.8-.8-5.2-4.6-9-9.8-9.8 5.2-.8 9-4.6 9.8-9.8Z" /></svg>}{mode === 'text' && <span class="image-tool-mode-text-icon" aria-hidden="true">T</span>}<span>{modeLabel(mode)}</span></button>)}
           </div>
           <div class="image-tool-toolbar-group gemini-mask-history"><button class="image-tool-quiet-button" data-role="reset-to-shared" type="button" hidden>Use shared mask</button><button class="image-tool-quiet-button" data-role="undo" type="button" disabled>Undo</button><button class="image-tool-quiet-button" data-role="reset-mask" type="button" disabled>Clear mask</button></div>
         </div>
 
+        {advancedCanvas && <div class="advanced-canvas-bar" aria-label="Advanced canvas controls">
+          <div class="advanced-canvas-zoom"><span>Canvas</span><button type="button" data-role="zoom-out" aria-label="Zoom out">−</button><output data-role="zoom-value">100%</output><button type="button" data-role="zoom-in" aria-label="Zoom in">+</button><button type="button" data-role="zoom-fit">Fit</button><small>Space + drag to pan · Ctrl/Cmd + wheel to zoom</small></div>
+          <label><span>Mask padding</span><input type="range" data-role="mask-padding" min="0" max="32" value={isObject ? '4' : '2'} /><output data-role="mask-padding-value">{isObject ? '4px' : '2px'}</output></label>
+          <label><span>Feather</span><input type="range" data-role="mask-feather" min="0" max="16" value={isObject ? '4' : '2'} /><output data-role="mask-feather-value">{isObject ? '4px' : '2px'}</output></label>
+        </div>}
+
         {hasText && <div class="batch-text-mask-control" data-role="text-mask-control" hidden><label><span>Text mask</span><input data-role="text-mask-input" maxlength="80" autocomplete="off" placeholder="Type visible watermark text" /></label><small>Creates a solid bold text mask. Drag it to any edge or corner, resize from a corner, and rotate with the round handle. Manual masking only — no OCR.</small></div>}
         <div class="image-tool-selection-status gemini-selection-status"><span class="image-tool-selection-dot" aria-hidden="true"></span><span data-role="selection-status">Draw a mask, drag it to any edge or corner, resize from a corner, or rotate with the round handle.</span></div>
-        <div class="image-tool-preview-grid gemini-preview-grid"><article class="image-tool-preview-panel"><header><div><span data-role="source-scope">Shared sample</span><strong data-role="source-name">Choose an image</strong></div><small data-role="source-meta">Mask editing</small></header><div class="image-tool-canvas-wrap" data-role="canvas-wrap"><canvas data-role="original-canvas" aria-label="Image preview"></canvas><canvas class="image-tool-mask-canvas" data-role="mask-canvas" aria-label={`${tool.displayName} selection mask`}></canvas></div></article><article class="image-tool-preview-panel"><header><div><span>After</span><strong>Repair preview</strong></div><small data-role="result-label">Run repair to preview</small></header><div class="image-tool-result-wrap"><canvas data-role="result-canvas" aria-label="Repaired image preview"></canvas><div class="image-tool-result-empty" data-role="result-empty"><span>Result preview</span><small>The selected image result appears here after repair.</small></div></div></article></div>
+        <div class="image-tool-preview-grid gemini-preview-grid"><article class="image-tool-preview-panel"><header><div><span data-role="source-scope">Shared sample</span><strong data-role="source-name">Choose an image</strong></div><small data-role="source-meta">Mask editing</small></header><div class:list={['image-tool-canvas-wrap', advancedCanvas && 'advanced-canvas-viewport']} data-role="canvas-wrap"><canvas data-role="original-canvas" aria-label="Image preview"></canvas><canvas class="image-tool-mask-canvas" data-role="mask-canvas" aria-label={`${tool.displayName} selection mask`}></canvas></div></article><article class="image-tool-preview-panel"><header><div><span>After</span><strong>Repair preview</strong></div><small data-role="result-label">Run repair to preview</small></header><div class="image-tool-result-wrap"><canvas data-role="result-canvas" aria-label="Repaired image preview"></canvas><div class="image-tool-result-empty" data-role="result-empty"><span>Result preview</span><small>The selected image result appears here after repair.</small></div></div></article></div>
       </Fragment>
 
       <Fragment slot="output"><ImageOutputPanel variant="mask" format="source" quality={96} /></Fragment>
       <Fragment slot="progress"><ImageBatchProgress variant="mask" completed={0} total={0} /></Fragment>
-      <Fragment slot="actions"><ImageBatchActionBar variant="mask" processLabel={`${tool.removeActionLabel} from batch`} downloadLabel="Download ZIP" preparedSummary="Draw a mask to prepare images." /></Fragment>
+      <Fragment slot="actions"><ImageBatchActionBar variant="mask" processLabel={`${tool.removeActionLabel} from batch`} downloadLabel="Download ZIP" preparedSummary={`Draw a mask over the ${targetLabel} to prepare images.`} /></Fragment>
     </ImageBatchShell>
-
     <p class="image-tool-policy-note">{tool.policyNote}</p>
     {isGemini && <p class="gemini-non-affiliation">ConvertAnyFile is not affiliated with or endorsed by Google or Gemini.</p>}
   </section>
 </div>
 <script src="../client/image-tool-app.ts"></script>
 <style is:global>
-.shared-mask-toolbar .image-tool-toolbar-primary{flex-wrap:wrap}.image-tool-mode-text-icon{width:15px;height:15px;display:grid;place-items:center;font:800 13px/1 ui-sans-serif,system-ui;color:currentColor}.batch-text-mask-control{display:grid;grid-template-columns:minmax(230px,420px) minmax(0,1fr);gap:14px;align-items:stretch;margin:10px 0 12px;padding:12px 14px;border:1px solid #2b3240;border-radius:12px;background:#10151e}.batch-text-mask-control[hidden]{display:none!important}.batch-text-mask-control label{display:grid;grid-template-rows:auto 38px;gap:6px}.batch-text-mask-control label>span{color:#969dad;font-size:10px;font-weight:680;letter-spacing:.035em;text-transform:uppercase}.batch-text-mask-control input{width:100%;height:38px;box-sizing:border-box;padding:8px 11px;border:1px solid #363f50;border-radius:9px;background:#0c1118;color:#f1f3f8;font:inherit;font-size:12px;outline:none}.batch-text-mask-control input:focus{border-color:#7169db;box-shadow:0 0 0 3px rgba(124,115,255,.12)}.batch-text-mask-control small{display:flex;align-items:center;min-height:38px;margin-top:16px;color:#8992a3;font-size:10.5px;line-height:1.45}@media(max-width:760px){.batch-text-mask-control{grid-template-columns:1fr;align-items:stretch}.batch-text-mask-control small{min-height:0;margin-top:0}.shared-mask-toolbar .image-tool-toolbar-primary{display:flex;width:100%}.shared-mask-toolbar .image-tool-mode{flex:1 1 calc(33.333% - 6px);min-width:96px}}
+.shared-mask-toolbar .image-tool-toolbar-primary{flex-wrap:wrap}.image-tool-mode-text-icon{width:15px;height:15px;display:grid;place-items:center;font:800 13px/1 ui-sans-serif,system-ui;color:currentColor}.advanced-canvas-bar{display:grid;grid-template-columns:minmax(320px,1.5fr) minmax(180px,1fr) minmax(180px,1fr);gap:10px;align-items:end;margin:10px 0 12px;padding:10px 12px;border:1px solid #2b3240;border-radius:12px;background:#10151e}.advanced-canvas-zoom{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.advanced-canvas-bar span{font-size:10px;font-weight:700;text-transform:uppercase;color:#969dad}.advanced-canvas-bar button{min-height:32px;padding:5px 9px;border:1px solid #363f50;border-radius:8px;background:#0c1118;color:#e8ebf3}.advanced-canvas-zoom output{min-width:44px;text-align:center;font-size:11px}.advanced-canvas-zoom small{width:100%;font-size:10px;color:#808999}.advanced-canvas-bar label{display:grid;grid-template-columns:auto 48px;gap:5px 8px;align-items:center}.advanced-canvas-bar label span{grid-column:1/-1}.advanced-canvas-bar input{width:100%}.advanced-canvas-bar label output{font-size:10px;text-align:right;color:#a7afbd}.advanced-canvas-viewport{overflow:hidden}.advanced-canvas-viewport canvas{will-change:transform}.advanced-canvas-viewport.is-pan-ready{cursor:grab}.advanced-canvas-viewport.is-panning{cursor:grabbing}.batch-text-mask-control{display:grid;grid-template-columns:minmax(230px,420px) minmax(0,1fr);gap:14px;align-items:stretch;margin:10px 0 12px;padding:12px 14px;border:1px solid #2b3240;border-radius:12px;background:#10151e}.batch-text-mask-control[hidden]{display:none!important}.batch-text-mask-control label{display:grid;grid-template-rows:auto 38px;gap:6px}.batch-text-mask-control label>span{color:#969dad;font-size:10px;font-weight:680;letter-spacing:.035em;text-transform:uppercase}.batch-text-mask-control input{width:100%;height:38px;box-sizing:border-box;padding:8px 11px;border:1px solid #363f50;border-radius:9px;background:#0c1118;color:#f1f3f8;font:inherit;font-size:12px;outline:none}.batch-text-mask-control input:focus{border-color:#7169db;box-shadow:0 0 0 3px rgba(124,115,255,.12)}.batch-text-mask-control small{display:flex;align-items:center;min-height:38px;margin-top:16px;color:#8992a3;font-size:10.5px;line-height:1.45}@media(max-width:860px){.advanced-canvas-bar{grid-template-columns:1fr 1fr}.advanced-canvas-zoom{grid-column:1/-1}}@media(max-width:760px){.advanced-canvas-bar{grid-template-columns:1fr}.advanced-canvas-zoom{grid-column:auto}.batch-text-mask-control{grid-template-columns:1fr;align-items:stretch}.batch-text-mask-control small{min-height:0;margin-top:0}.shared-mask-toolbar .image-tool-toolbar-primary{display:flex;width:100%}.shared-mask-toolbar .image-tool-mode{flex:1 1 calc(33.333% - 6px);min-width:96px}}
 </style>
