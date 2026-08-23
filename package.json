@@ -7,10 +7,12 @@
   "engines": { "node": ">=22.19.0" },
   "scripts": {
     "runtime:archive": "node scripts/sync-libarchive-runtime.mjs",
+    "runtime:background": "node scripts/sync-background-removal-runtime.mjs",
+    "runtime:all": "npm run runtime:archive && npm run runtime:background",
     "fixtures:archive": "node scripts/sync-archive-test-fixtures.mjs",
-    "dev": "npm run runtime:archive && astro dev",
+    "dev": "npm run runtime:all && astro dev",
     "check": "astro check",
-    "build": "npm run runtime:archive && astro build",
+    "build": "npm run runtime:all && astro build",
     "preview": "astro preview",
     "test:e2e": "npm run fixtures:archive && playwright test",
     "test:production": "playwright test --config=playwright.production.config.ts"
