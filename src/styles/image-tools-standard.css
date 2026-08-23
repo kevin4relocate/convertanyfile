@@ -156,9 +156,26 @@
   cursor: not-allowed;
 }
 
+/* Production content rhythm: four equal steps on desktop, then 2 → 1. */
+.image-tool-howto-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media(max-width:900px) {
+  .image-tool-howto-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media(max-width:720px) {
   .image-editor-card :is(.gemini-file-card,.deterministic-file-card,.rename-card,.background-file-card) {
     min-width: 210px;
     flex-basis: 210px;
+  }
+}
+
+@media(max-width:680px) {
+  .image-tool-howto-grid {
+    grid-template-columns: 1fr;
   }
 }
