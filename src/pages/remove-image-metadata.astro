@@ -1,0 +1,16 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { REMOVE_IMAGE_METADATA_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={REMOVE_IMAGE_METADATA_TOOL}
+  kicker="Clean pixel copy"
+  heading="Strip metadata without uploading the source image."
+  copy="The browser decodes visible pixels and encodes a new JPG, PNG or WebP. EXIF, GPS and common software metadata are not copied into the generated file."
+  bullets={[
+    'Process one image or up to 50 in a batch.',
+    'Use Same as source, JPG, PNG or WebP output.',
+    'Edit output format and quality per image when needed.',
+    'Visible pixel content is preserved; metadata visibly printed into an image cannot be removed as metadata.',
+  ]}
+/>
