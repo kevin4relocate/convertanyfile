@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { REMOVE_OBJECT_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={REMOVE_OBJECT_TOOL}
+  kicker="Manual local repair"
+  heading="Mask a small unwanted object, then repair only the selected pixels."
+  copy="Use a tight shape over the object, adjust padding and feather, zoom in for precision, and choose one shared mask for repeated layouts or individual masks for exceptions."
+  bullets={[
+    'Rectangle, Circle, Square, Diamond and 4-Point Star masks.',
+    'Move, resize and rotate masks after drawing.',
+    'Zoom, Fit and Space + drag panning for closer placement.',
+    'Mask padding expands the repair area; feather softens the repaired boundary.',
+    'Local repair is best for small selections over smooth or repeated backgrounds.',
+  ]}
+/>
