@@ -27,7 +27,6 @@ export const FOOTER_GROUPS = [
       { label: 'Image Tools', href: '/image-tools/' },
       { label: 'Resize Image', href: '/resize-image/' },
       { label: 'Compress Image', href: '/compress-image/' },
-      { label: 'Remove Background', href: '/remove-background/' },
       { label: 'Remove Metadata', href: '/remove-image-metadata/' },
       { label: 'Remove Watermark', href: '/remove-watermark/' },
       { label: 'Gemini Watermark Remover', href: '/gemini-ai-logo-remover/' },
