@@ -108,14 +108,18 @@ export const BULK_RENAME_IMAGES_TOOL: ImageToolDefinition = {
 };
 
 export const REMOVE_OBJECT_TOOL: MaskImageToolDefinition = {
-  ...previewBase, id: 'remove-object', slug: 'remove-object', displayName: 'Remove Object', category: 'mask',
+  ...previewBase,
+  maxPixels: 10_000_000,
+  maxDimension: 6_000,
+  maxFiles: 10,
+  id: 'remove-object', slug: 'remove-object', displayName: 'Remove Object', category: 'mask',
   title: 'Remove Objects from Images Online — Manual Local Repair | ConvertAnyFile',
   description: 'Mask a small unwanted object and repair selected pixels locally in your browser, with batch and per-image mask workflows.',
   h1: 'Remove small objects from images.', eyebrow: 'Image Tools · Preview',
   intro: 'Draw a tight mask over a small unwanted object, move, resize or rotate the mask, use one mask for repeated layouts or edit images individually, then preview and download the repaired result.',
   selectionModes: ['rect', 'circle', 'square', 'diamond', 'star4'], defaultSelectionMode: 'rect', removeActionLabel: 'Remove object',
   downloadSuffix: 'object-removed',
-  policyNote: 'Local repair works best on small objects over smooth or repeated backgrounds. Large or complex removals can create visible artifacts, so inspect the preview before reuse.',
+  policyNote: 'Local repair is intentionally limited to small selections so the browser stays responsive. Keep the mask tight around the unwanted object; large or complex removals are not a good fit for this local repair engine.',
 };
 
 export const IMAGE_TOOL_ROADMAP = [
