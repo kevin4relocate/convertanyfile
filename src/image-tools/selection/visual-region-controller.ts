@@ -81,7 +81,10 @@ export function mountVisualRegionController(root:HTMLElement):void {
     const selectedShape=shape.value||'rect';overlay.dataset.shape=selectedShape;
     shapeButtons.forEach(button=>{const active=button.dataset.selectionShape===selectedShape;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active));});
     if(scope){scopeButtons.forEach(button=>{const active=button.dataset.blurScope===scope.value;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active));});}
-    if(aspect){aspectButtons.forEach(button=>{const active=button.dataset.aspectPreset===aspect.value;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active));});}
+    if(aspect){
+      const shapeLocksAspect=selectedShape==='square'||selectedShape==='circle';
+      aspectButtons.forEach(button=>{const active=button.dataset.aspectPreset===aspect.value;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active));button.disabled=shapeLocksAspect;});
+    }
     const regionActive=toolId==='crop-image'||scope?.value==='region';regionOnly.forEach(element=>element.hidden=!regionActive);
     overlay.hidden=!regionActive||source.hidden||!source.src;
     root.dataset.visualRegionActive=String(regionActive);
@@ -98,14 +101,16 @@ export function mountVisualRegionController(root:HTMLElement):void {
   };
 
   shapeButtons.forEach(button=>button.addEventListener('click',()=>{
-    const value=button.dataset.selectionShape;if(!value)return;shape.value=value;shape.dispatchEvent(new Event('change',{bubbles:true}));
+    const value=button.dataset.selectionShape;if(!value)return;
+    shape.value=value;shape.dispatchEvent(new Event('change',{bubbles:true}));
+    if(toolId==='crop-image'&&aspect&&(value==='square'||value==='circle')){aspect.value='1:1';aspect.dispatchEvent(new Event('change',{bubbles:true}));}
     if(value==='square'||value==='circle')writeRect(enforceAspect(readRect()),true);syncControls();render();
   }));
   scopeButtons.forEach(button=>button.addEventListener('click',()=>{
     if(!scope)return;const value=button.dataset.blurScope;if(value!=='whole'&&value!=='region')return;scope.value=value;scope.dispatchEvent(new Event('change',{bubbles:true}));syncControls();render();
   }));
   aspectButtons.forEach(button=>button.addEventListener('click',()=>{
-    if(!aspect)return;const value=button.dataset.aspectPreset;if(!value)return;aspect.value=value;aspect.dispatchEvent(new Event('change',{bubbles:true}));writeRect(enforceAspect(readRect()),true);render();
+    if(!aspect||button.disabled)return;const value=button.dataset.aspectPreset;if(!value)return;aspect.value=value;aspect.dispatchEvent(new Event('change',{bubbles:true}));writeRect(enforceAspect(readRect()),true);render();
   }));
   aspect?.addEventListener('change',()=>{writeRect(enforceAspect(readRect()),true);render();});
   for(const input of [x,y,width,height])input.addEventListener('input',()=>{
