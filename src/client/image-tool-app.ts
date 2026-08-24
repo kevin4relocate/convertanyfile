@@ -1,4 +1,5 @@
 import { mountRegisteredImageTool } from '../image-tools/core/tool-registry';
+import { mountVisualRegionController } from '../image-tools/selection/visual-region-controller';
 
 function syncQualityControls(root: HTMLElement): void {
   const pairs: Array<{ format?: HTMLSelectElement; quality?: HTMLInputElement }> = [
@@ -113,6 +114,7 @@ async function initializeImageTool(root: HTMLElement): Promise<void> {
     const mounted = await mountRegisteredImageTool(toolId, root);
     if (!mounted) throw new Error(`Unsupported image tool: ${toolId}`);
     syncQualityControls(root);
+    mountVisualRegionController(root);
     initStickyImageToolActions(root);
     root.dataset.imageToolReady = 'true';
   } catch (error) {
