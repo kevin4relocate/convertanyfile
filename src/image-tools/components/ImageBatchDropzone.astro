@@ -30,13 +30,18 @@ const {
     <input data-role="file-input" type="file" accept={accept} multiple hidden disabled={disabled} />
   </section>
 ) : (
-  <label class="image-batch-dropzone" data-role="batch-dropzone">
-    <input type="file" data-role="file-input" accept={accept} multiple disabled={disabled} />
-    <strong>Drop images here or choose files</strong>
-    <small>Process up to {maxFiles} images locally in your browser.</small>
-  </label>
+  <section class="image-tool-upload gemini-batch-upload" data-role="upload-view">
+    <label class="image-tool-drop-zone image-tool-drop-zone--label" data-role="batch-dropzone">
+      <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" /></svg></span>
+      <strong>Add images</strong>
+      <span>Any aspect ratios · up to {maxFiles} images · {maxFileMb} MB each · {maxTotalMb} MB total</span>
+      <span class="choose-button">Choose images</span>
+      <small><span class="privacy-dot" aria-hidden="true"></span> Images stay on your device</small>
+      <input data-role="file-input" type="file" accept={accept} multiple hidden disabled={disabled} />
+    </label>
+  </section>
 )}
 
 <style>
-  .image-batch-dropzone{display:grid;place-items:center;gap:6px;min-height:150px;padding:24px;border:1px dashed var(--border-color,#3b4352);border-radius:14px;text-align:center;cursor:pointer;background:rgba(127,127,127,.04)}.image-batch-dropzone:focus-within{outline:2px solid currentColor;outline-offset:2px}.image-batch-dropzone input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.image-batch-dropzone small{opacity:.68}
+  .image-tool-drop-zone--label{cursor:pointer}.image-tool-drop-zone--label.is-dragging{border-color:var(--accent,#7c73ff);box-shadow:0 0 0 3px rgba(124,115,255,.12)}
 </style>
