@@ -47,5 +47,6 @@ const percent = total > 0 ? Math.min(100, Math.round((completed / total) * 100))
   .image-batch-progress--standard progress::-webkit-progress-value{background:#716aff;border-radius:999px}
   .image-batch-progress--standard progress::-moz-progress-bar{background:#716aff;border-radius:999px}
   .image-batch-progress--standard button{justify-self:start;min-height:32px;padding:5px 10px;border:1px solid #363f50;border-radius:8px;background:#0c1118;color:#c9ced8;cursor:pointer;font:inherit;font-size:10px;font-weight:700}
+  .image-batch-progress--standard button:disabled{display:none}
   .image-batch-progress--standard button:hover:not(:disabled){border-color:#505b6e;background:#171e29;color:#f2f4f8}
 </style>
