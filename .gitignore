@@ -4,6 +4,5 @@ dist/
 playwright-report/
 test-results/
 public/vendor/libarchive-wasm/
-public/runtime/background-removal/
 tests/fixtures/archive-wasm/
 .DS_Store
