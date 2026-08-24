@@ -18,6 +18,13 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run build
+      - name: Upload production build
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
 
   browser-smoke:
     name: Browser smoke (${{ matrix.label }})
@@ -45,7 +52,11 @@ jobs:
           node-version: '22.19.0'
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: npm run build
+      - name: Download production build
+        uses: actions/download-artifact@v4
+        with:
+          name: production-dist
+          path: dist/
       - name: Install ${{ matrix.browser }}
         run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: Run ${{ matrix.label }} tests
