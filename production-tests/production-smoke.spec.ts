@@ -46,13 +46,30 @@ test('production shell, analytics, robots, sitemap and 404 are healthy', async (
   expect(sitemap.status()).toBe(200);
   const sitemapXml = await sitemap.text();
   expect((sitemapXml.match(/<loc>/g) ?? []).length).toBeGreaterThanOrEqual(40);
-  for (const path of ['/', '/image-converter/', '/data-converter/', '/csv-to-json/', '/json-to-csv/', '/heic-to-jpg/']) {
+  for (const path of ['/', '/image-converter/', '/data-converter/', '/csv-to-json/', '/json-to-csv/', '/heic-to-jpg/', '/image-tools/', '/resize-image/', '/remove-image-metadata/', '/remove-watermark/']) {
     expect(sitemapXml).toContain(`<loc>${PROD_ORIGIN}${path}</loc>`);
   }
+  expect(sitemapXml).not.toContain(`<loc>${PROD_ORIGIN}/remove-object/</loc>`);
+  expect(sitemapXml).not.toContain(`<loc>${PROD_ORIGIN}/remove-background/</loc>`);
 
   const missing = await page.goto('/production-smoke-this-page-should-not-exist/', { waitUntil: 'domcontentloaded' });
   expect(missing?.status()).toBe(404);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex,nofollow');
+});
+
+test('public Image Tools routes are healthy and retired experimental routes stay unavailable', async ({ page, request }) => {
+  for (const path of ['/image-tools/','/resize-image/','/compress-image/','/rotate-flip-image/','/crop-image/','/blur-image/','/bulk-rename-images/','/remove-image-metadata/','/remove-watermark/','/gemini-ai-logo-remover/']) {
+    const response = await request.get(`${BASE_URL}${path}`);
+    expect(response.status(), `${path} should return 200`).toBe(200);
+  }
+  for (const path of ['/remove-object/','/remove-background/']) {
+    const response = await request.get(`${BASE_URL}${path}`);
+    expect(response.status(), `${path} should remain unavailable`).toBe(404);
+  }
+
+  await page.goto('/image-tools/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('a[href="/remove-object/"]')).toHaveCount(0);
+  await expect(page.locator('a[href="/remove-background/"]')).toHaveCount(0);
 });
 
 test('www permanently redirects to the canonical hostname and preserves path/query', async ({ request }) => {
