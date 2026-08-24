@@ -36,7 +36,16 @@ export class RemoveWatermarkWorkerClient {
   }
 
   async inpaint(pixels:ArrayBuffer,width:number,height:number,operations:MaskOperation[]):Promise<{pixels:ArrayBuffer;repairedPixels:number}> {
-    const request: RemoveWatermarkWorkerRequest = { type:'inpaint', requestId:crypto.randomUUID(), pixels, width, height, operations:prepareOperations(operations) };
+    const { maxMaskFraction } = getMaskProcessingOptions();
+    const request: RemoveWatermarkWorkerRequest = {
+      type:'inpaint',
+      requestId:crypto.randomUUID(),
+      pixels,
+      width,
+      height,
+      operations:prepareOperations(operations),
+      maxMaskFraction,
+    };
     const response = await this.send(request, [pixels], 75_000);
     if (!response.ok) throw new Error(response.error);
     return { pixels: response.pixels, repairedPixels: response.repairedPixels };
