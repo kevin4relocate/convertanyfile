@@ -107,28 +107,6 @@ export const BULK_RENAME_IMAGES_TOOL: ImageToolDefinition = {
   policyNote: 'Renaming changes filenames only. The original image extension, bytes, quality, metadata and visible pixels are left unchanged.',
 };
 
-export const REMOVE_OBJECT_TOOL: MaskImageToolDefinition = {
-  ...previewBase, id: 'remove-object', slug: 'remove-object', displayName: 'Remove Object', category: 'mask',
-  title: 'Remove Objects from Images Online — Manual Local Repair | ConvertAnyFile',
-  description: 'Mask a small unwanted object and repair selected pixels locally in your browser, with batch and per-image mask workflows.',
-  h1: 'Remove small objects from images.', eyebrow: 'Image Tools · Preview',
-  intro: 'Draw a tight mask over a small unwanted object, move, resize or rotate the mask, use one mask for repeated layouts or edit images individually, then preview and download the repaired result.',
-  selectionModes: ['rect', 'circle', 'square', 'diamond', 'star4'], defaultSelectionMode: 'rect', removeActionLabel: 'Remove object',
-  downloadSuffix: 'object-removed',
-  policyNote: 'Local repair works best on small objects over smooth or repeated backgrounds. Large or complex removals can create visible artifacts, so inspect the preview before reuse.',
-};
-
-export const REMOVE_BACKGROUND_TOOL: ImageToolDefinition = {
-  ...previewBase,
-  id: 'remove-background', slug: 'remove-background', displayName: 'Remove Background', category: 'segmentation',
-  title: 'Remove Image Background Online Free — Local AI Batch Tool | ConvertAnyFile',
-  description: 'Remove image backgrounds locally with a self-hosted U²-NetP ONNX model. Batch JPG, PNG and WebP images with shared or per-image cutout settings and PNG output.',
-  h1: 'Remove image backgrounds locally.', eyebrow: 'Image Tools · AI Preview',
-  intro: 'Create transparent or solid-background cutouts without uploading source images to an inference API. The self-hosted AI model runs in your browser, supports a shared batch setup or per-image overrides, and exports PNG results.',
-  downloadSuffix: 'background-removed',
-  policyNote: 'U²-NetP works best when an image has a clear primary foreground subject. Hair, fur, glass, shadows, semi-transparent materials, low-contrast boundaries and full-frame graphics can produce imperfect masks; inspect and refine the preview before reuse.',
-};
-
 export const IMAGE_TOOL_ROADMAP = [
   { id: 'remove-watermark', label: 'Remove Watermark', status: 'live', description: 'Batch visible-watermark repair with six manual mask modes, including a movable text mask.', href: '/remove-watermark/' },
   { id: 'gemini-ai-logo-remover', label: 'Gemini AI Logo Remover', status: 'live', description: 'Focused local repair for a small visible sparkle mark.', href: '/gemini-ai-logo-remover/' },
