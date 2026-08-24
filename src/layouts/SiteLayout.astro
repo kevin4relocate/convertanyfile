@@ -80,6 +80,7 @@ const websiteSchema = {
     </script>
     {isHomePage && <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>}
     {schemas.map((item) => <script is:inline type="application/ld+json" set:html={JSON.stringify(item)}></script>)}
+    <style is:global>.nav-tool-status{display:none!important}</style>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
