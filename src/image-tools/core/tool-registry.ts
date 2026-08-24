@@ -20,7 +20,7 @@ const renameToolLoader: ImageToolLoader = async () => {
 };
 
 const backgroundRemovalLoader: ImageToolLoader = async () => {
-  const module = await import('../background-removal/background-removal-editor');
+  const module = await import('../background-removal/background-removal-editor-v2');
   return { mount: module.mountBackgroundRemovalEditor };
 };
 
