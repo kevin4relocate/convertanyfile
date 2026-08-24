@@ -16,7 +16,12 @@ export function mountAdvancedCanvasController(root:HTMLElement):void {
   const canvases=[...wrap.querySelectorAll<HTMLCanvasElement>('canvas')];
   const zoomOut=root.querySelector<HTMLButtonElement>('[data-role="zoom-out"]'),zoomIn=root.querySelector<HTMLButtonElement>('[data-role="zoom-in"]'),zoomFit=root.querySelector<HTMLButtonElement>('[data-role="zoom-fit"]'),zoomValue=root.querySelector<HTMLOutputElement>('[data-role="zoom-value"]');
   const padding=root.querySelector<HTMLInputElement>('[data-role="mask-padding"]'),paddingValue=root.querySelector<HTMLOutputElement>('[data-role="mask-padding-value"]'),feather=root.querySelector<HTMLInputElement>('[data-role="mask-feather"]'),featherValue=root.querySelector<HTMLOutputElement>('[data-role="mask-feather-value"]');
-  const maxMaskFraction = root.dataset.targetLabel === 'object' ? 0.25 : 0.15;
+  const isObjectTool = root.dataset.targetLabel === 'object';
+  // The local repair engine is intentionally for small selections. A 25% object
+  // mask on a multi-megapixel image can require hundreds of millions of neighbor
+  // samples and look like a frozen tab even though the work runs in a Worker.
+  // Keep Remove Object much tighter while preserving the existing Watermark cap.
+  const maxMaskFraction = isObjectTool ? 0.06 : 0.15;
   let zoom=1,panX=0,panY=0,space=false,panning=false,startX=0,startY=0,originX=0,originY=0;
   resetMaskProcessingOptions();
 
