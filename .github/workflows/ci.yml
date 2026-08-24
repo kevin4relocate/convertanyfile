@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    name: Check and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.19.0'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check
+      - run: npm run build
+
+  browser-smoke:
+    name: Browser smoke (${{ matrix.label }})
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - label: Chromium desktop + mobile
+            browser: chromium
+            projects: --project=chromium-desktop --project=chromium-mobile
+          - label: Firefox desktop
+            browser: firefox
+            projects: --project=firefox-desktop
+          - label: WebKit desktop
+            browser: webkit
+            projects: --project=webkit-desktop
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.19.0'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Install ${{ matrix.browser }}
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Run ${{ matrix.label }} tests
+        run: npm run test:e2e -- ${{ matrix.projects }}
