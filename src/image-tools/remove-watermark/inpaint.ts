@@ -22,12 +22,13 @@ function isKnownNeighbor(mask:Uint8Array,width:number,height:number,x:number,y:n
 function fillFromKnownNeighbors(rgba:Uint8ClampedArray,mask:Uint8Array,width:number,height:number,x:number,y:number):void{const radius=5;let weightSum=0,red=0,green=0,blue=0,alpha=0;for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){if(dx===0&&dy===0)continue;const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=width||ny>=height)continue;const pi=ny*width+nx;if((mask[pi]??1)!==0)continue;const weight=1/(1+dx*dx+dy*dy),ri=pi*4;red+=(rgba[ri]??0)*weight;green+=(rgba[ri+1]??0)*weight;blue+=(rgba[ri+2]??0)*weight;alpha+=(rgba[ri+3]??255)*weight;weightSum+=weight;}if(weightSum<=0)return;const target=(y*width+x)*4;rgba[target]=Math.round(red/weightSum);rgba[target+1]=Math.round(green/weightSum);rgba[target+2]=Math.round(blue/weightSum);rgba[target+3]=Math.round(alpha/weightSum);}
 function blendPixel(rgba:Uint8ClampedArray,original:Uint8ClampedArray,index:number,amount:number):void{const offset=index*4,a=clamp(amount,0,1);for(let channel=0;channel<4;channel++)rgba[offset+channel]=Math.round((original[offset+channel]??0)*(1-a)+(rgba[offset+channel]??0)*a);}
 
-export function inpaintMaskedPixels(rgba:Uint8ClampedArray,width:number,height:number,operations:readonly MaskOperation[]):{pixels:Uint8ClampedArray;repairedPixels:number}{
+export function inpaintMaskedPixels(rgba:Uint8ClampedArray,width:number,height:number,operations:readonly MaskOperation[],maxMaskFraction=.15):{pixels:Uint8ClampedArray;repairedPixels:number}{
   const mask=rasterizeMask(width,height,operations),featherPx=feather(operations),original=featherPx>0?new Uint8ClampedArray(rgba):undefined;
   let count=0,minX=width,minY=height,maxX=-1,maxY=-1;
   for(let y=0;y<height;y++){const row=y*width;for(let x=0;x<width;x++)if((mask[row+x]??0)===1){count++;minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);}}
   if(!count)throw new Error('Add a visible-pixel mask before running repair.');
-  if(count>width*height*.15)throw new Error('The selected mask is too large for local repair. Select a smaller area.');
+  const safeMaskFraction=clamp(Number(maxMaskFraction)||.15,.05,.5);
+  if(count>width*height*safeMaskFraction){const selectedPercent=Math.round(count/(width*height)*100),limitPercent=Math.round(safeMaskFraction*100);throw new Error(`The selected mask covers about ${selectedPercent}% of the image. Keep it under ${limitPercent}% for local repair.`);}
   const queue=new Int32Array(count);let head=0,tail=0;
   for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++){const index=y*width+x;if((mask[index]??0)!==1||!isKnownNeighbor(mask,width,height,x,y))continue;mask[index]=2;queue[tail++]=index;}
   while(head<tail){
