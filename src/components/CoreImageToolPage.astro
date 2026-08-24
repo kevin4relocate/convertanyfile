@@ -16,6 +16,7 @@ interface Props {
 }
 const { tool, kicker, heading, copy, bullets } = Astro.props;
 const seo = IMAGE_TOOL_SEO[tool.id];
+const isMetadataCleanup = tool.id === 'remove-image-metadata';
 const schemas = imageToolSchemas(tool, ['Browser-based local image processing', ...bullets]);
 ---
 <SiteLayout title={tool.title} description={tool.description} schema={schemas}>
@@ -37,7 +38,10 @@ const schemas = imageToolSchemas(tool, ['Browser-based local image processing', 
   {seo && <section class="content-wide-section white gemini-content-section"><div class="site-container">
     <div class="content-intro-grid">
       <div class="section-heading wide"><span class="section-kicker">When to use it</span><h2>{seo.useCasesHeading}</h2><p>{seo.useCasesIntro}</p></div>
-      <div class="content-summary-card"><strong>Batch or individual</strong><p>Use Apply to all when the same setup fits the batch. Switch to Edit individually when one image needs different settings without rebuilding the rest of the queue.</p></div>
+      <div class="content-summary-card">
+        <strong>{isMetadataCleanup ? 'Simple batch cleanup' : 'Batch or individual'}</strong>
+        <p>{isMetadataCleanup ? 'Choose one output setup, clean every selected file, then download the new copies. There is no image-editing or per-image preview step.' : 'Use Apply to all when the same setup fits the batch. Switch to Edit individually when one image needs different settings without rebuilding the rest of the queue.'}</p>
+      </div>
     </div>
     <ul class="content-checklist">{seo.useCases.map((item) => <li>{item}</li>)}</ul>
   </div></section>}
