@@ -80,11 +80,11 @@ export const CROP_IMAGE_TOOL: ImageToolDefinition = {
 
 export const BLUR_IMAGE_TOOL: ImageToolDefinition = {
   ...liveBase, id: 'blur-image', slug: 'blur-image', displayName: 'Blur Image', category: 'geometry',
-  title: 'Blur Images Online Free — Whole Image or Region | ConvertAnyFile',
-  description: 'Blur an entire image or a percentage-based region locally with batch and per-image settings for JPG, PNG and WebP.',
-  h1: 'Blur images or selected regions.', eyebrow: 'Image Tools',
-  intro: 'Blur the whole image or define a rectangular region using percentage coordinates. Apply one setup to the batch, customize exceptions individually, and preview locally before processing.',
-  downloadSuffix: 'blurred', policyNote: 'Region blur is a manual rectangle and does not automatically detect faces, text, license plates, or other sensitive content.',
+  title: 'Blur Image Online Free — Blur Part of an Image | ConvertAnyFile',
+  description: 'Blur a whole image or a selected Rectangle or Circle area locally. Drag and resize the blur area, preview the effect, batch process and download.',
+  h1: 'Blur images online or blur a selected area.', eyebrow: 'Image Tools',
+  intro: 'Blur the whole image or choose Selected area, then use a Rectangle or Circle selection. Drag the highlighted area directly on the image, resize it from a corner, adjust blur strength, and reuse the setup across a batch or customize individual images.',
+  downloadSuffix: 'blurred', policyNote: 'Selected-area blur is manual and supports Rectangle or Circle. It does not automatically detect faces, text, license plates, or other sensitive content, so review the exported pixels when privacy matters.',
 };
 
 export const REMOVE_IMAGE_METADATA_TOOL: ImageToolDefinition = {
@@ -114,7 +114,7 @@ export const IMAGE_TOOL_ROADMAP = [
   { id: 'compress-image', label: 'Compress Image', status: 'live', description: 'Reduce image size with output-format and quality controls.', href: '/compress-image/' },
   { id: 'rotate-flip-image', label: 'Rotate / Flip', status: 'live', description: 'Rotate or mirror one image or a batch locally.', href: '/rotate-flip-image/' },
   { id: 'crop-image', label: 'Crop Image', status: 'live', description: 'Drag Rectangle, Square, Circle or Triangle crops with common aspect-ratio presets.', href: '/crop-image/' },
-  { id: 'blur-image', label: 'Blur Image', status: 'live', description: 'Blur an image or a selected rectangular region.', href: '/blur-image/' },
+  { id: 'blur-image', label: 'Blur Image', status: 'live', description: 'Blur the whole image or drag a Rectangle or Circle over a selected area.', href: '/blur-image/' },
   { id: 'bulk-rename-images', label: 'Bulk Rename Images', status: 'live', description: 'Rename a batch without changing image bytes or source extensions.', href: '/bulk-rename-images/' },
   { id: 'remove-image-metadata', label: 'Remove Image Metadata', status: 'live', description: 'Strip EXIF, GPS and software metadata locally.', href: '/remove-image-metadata/' },
 ] as const;
