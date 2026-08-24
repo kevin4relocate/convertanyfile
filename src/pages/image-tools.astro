@@ -7,12 +7,12 @@ import { SITE } from '../config/site';
 
 const everydayTools = ['resize-image','compress-image','rotate-flip-image','crop-image','blur-image'];
 const cleanupTools = ['remove-image-metadata','bulk-rename-images'];
-const removalTools = ['remove-watermark','remove-object','remove-background','gemini-ai-logo-remover'];
+const repairTools = ['remove-watermark','gemini-ai-logo-remover'];
 const faq = [
-  { question: 'Do these image tools upload my source images?', answer: 'The Image Tools are designed around browser-side processing. Supported transforms, manual repair, metadata cleanup, renaming, ZIP creation and local background-removal inference run in the browser instead of sending source images to an image-processing API.' },
+  { question: 'Do these image tools upload my source images?', answer: 'The current Image Tools are designed around browser-side processing. Supported transforms, visible-watermark repair, metadata cleanup, renaming and ZIP creation run locally instead of sending source images to an image-processing API.' },
   { question: 'Which image formats are supported?', answer: 'The current Image Tools accept JPG/JPEG, PNG and WebP. Individual tools may offer different output choices depending on whether transparency, lossless output or source-format preservation is needed.' },
-  { question: 'Can I edit multiple images at once?', answer: 'Yes. Most Image Tools support batches of up to 50 source images within the documented per-file and total-input limits. Use Apply to all for repeated settings or Edit individually for exceptions.' },
-  { question: 'What is the difference between Remove Object and Remove Background?', answer: 'Remove Object uses a manual mask and local repair for small selected areas. Remove Background uses a local segmentation model to create a foreground cutout and exports PNG with transparency or a solid replacement background.' },
+  { question: 'Can I edit multiple images at once?', answer: 'Yes. The current Image Tools support batch workflows within documented per-file, pixel and total-input limits. Tools with visual settings can reuse one setup across a batch or customize individual images when needed.' },
+  { question: 'What is the difference between the two watermark removers?', answer: 'Remove Watermark provides Rectangle, Circle, Square, Diamond, 4-Point Star and Text masks for general visible marks. Gemini Watermark Remover uses a smaller Circle and 4-Point Star workflow focused on a small visible Gemini-style sparkle mark.' },
 ];
 const schema = [
   {
@@ -20,7 +20,7 @@ const schema = [
     '@type': 'CollectionPage',
     name: 'ConvertAnyFile Image Tools',
     url: `${SITE.origin}/image-tools/`,
-    description: 'Browser-based image tools for resizing, compression, rotation, cropping, blur, renaming, metadata cleanup, background removal and manual image repair.',
+    description: 'Browser-based image tools for resizing, compression, rotation, cropping, blur, renaming, metadata cleanup and visible-watermark repair.',
     isPartOf: { '@type': 'WebSite', name: SITE.name, url: SITE.origin },
   },
   {
@@ -36,16 +36,16 @@ const schema = [
   },
 ];
 ---
-<SiteLayout title="Online Image Tools — Resize, Compress, Crop & Remove Background | ConvertAnyFile" description="Browser-based image tools for resizing, compressing, rotating, cropping, blurring, renaming, stripping metadata, removing backgrounds and repairing small objects or visible watermarks." schema={schema}>
-<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Image Tools</span></div><span class="eyebrow">Online Image Tools</span><h1>Edit images in your browser without uploading the source files.</h1><p>Resize, compress, rotate, crop, blur, rename, strip metadata, remove a background or repair small visible selections with focused tools that run locally where the browser supports the required processing.</p></div></section>
+<SiteLayout title="Online Image Tools — Resize, Compress, Crop & Remove Watermarks | ConvertAnyFile" description="Browser-based image tools for resizing, compressing, rotating, cropping, blurring, renaming, stripping metadata and removing visible watermarks locally." schema={schema}>
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Image Tools</span></div><span class="eyebrow">Online Image Tools</span><h1>Edit images in your browser without uploading the source files.</h1><p>Resize, compress, rotate, crop, blur, rename, strip metadata or repair visible watermarks with focused tools that run locally where the browser supports the required processing.</p></div></section>
 
 <section class="content-wide-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Resize, compress and compose</span><h2>Everyday image edits with one familiar batch workflow.</h2><p>Use these tools when the goal is to change dimensions, encoding, orientation, framing or blur. Start with one setup for the batch, then override individual images when compositions or output needs differ.</p></div><ImageToolGrid ids={everydayTools} /></div></section>
 
-<section class="content-wide-section white"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">File cleanup and organization</span><h2>Clean metadata or rename files without adding another upload step.</h2><p>Remove Image Metadata creates a new pixel copy without intentionally carrying source EXIF, GPS or software tags. Bulk Rename changes filenames only and preserves the original image bytes and extension.</p></div><ImageToolGrid ids={cleanupTools} /></div></section>
+<section class="content-wide-section white"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">File cleanup and organization</span><h2>Clean metadata or rename files without adding another upload step.</h2><p>Remove Image Metadata creates a newly encoded copy without intentionally carrying source EXIF, GPS or software tags. Bulk Rename changes filenames only and preserves the original image bytes and extension.</p></div><ImageToolGrid ids={cleanupTools} /></div></section>
 
-<section class="content-wide-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Remove and repair</span><h2>Choose automatic cutout or a manual repair workflow.</h2><p>Remove Background uses local segmentation for a foreground cutout. Remove Object and Remove Watermark use manual selections so you control exactly which visible pixels are repaired. The Gemini-focused remover keeps a streamlined mask set for that specific visible mark.</p></div><ImageToolGrid ids={removalTools} /></div></section>
+<section class="content-wide-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Visible watermark repair</span><h2>Choose a general mask workflow or a focused Gemini remover.</h2><p>Remove Watermark supports multiple manual shapes plus a movable text mask so you control the visible area being repaired. Gemini Watermark Remover keeps a smaller Circle and 4-Point Star toolset for the small visible sparkle mark it targets.</p></div><ImageToolGrid ids={repairTools} /></div></section>
 
-<section class="content-wide-section white"><div class="site-container"><div class="content-intro-grid"><div><span class="section-kicker">Shared or individual</span><h2>Apply one setup to repeated work, then customize exceptions.</h2><p>Most tools start with a shared batch setup. Switch to Edit individually when a particular image needs different dimensions, quality, orientation, crop, blur region, output format, filename, mask placement or background-cutout refinement.</p></div><div class="content-summary-card"><strong>Local by design</strong><p>Image decoding, previews, supported processing, local AI inference, ZIP creation and downloads happen in your browser. Bulk Rename does not decode or re-encode the image bytes at all.</p></div></div></div></section>
+<section class="content-wide-section white"><div class="site-container"><div class="content-intro-grid"><div><span class="section-kicker">Shared or individual</span><h2>Apply one setup to repeated work, then customize exceptions.</h2><p>Visual tools can start with a shared batch setup and switch to individual overrides when a particular image needs different dimensions, quality, orientation, crop, blur region, output format or mask placement. Metadata cleanup deliberately uses one simple batch setup, while Bulk Rename supports shared naming rules plus exceptions.</p></div><div class="content-summary-card"><strong>Local by design</strong><p>Image decoding, previews, supported processing, ZIP creation and downloads happen in your browser. Bulk Rename does not decode or re-encode the image bytes at all.</p></div></div></div></section>
 
-<section class="content-wide-section"><div class="site-container"><FaqList items={faq} title="Image Tools FAQ" intro="Common questions about local processing, supported formats, batch editing and the difference between manual repair and automatic background removal." /></div></section>
+<section class="content-wide-section"><div class="site-container"><FaqList items={faq} title="Image Tools FAQ" intro="Common questions about local processing, supported formats, batch editing, metadata cleanup and visible-watermark repair." /></div></section>
 </SiteLayout>
