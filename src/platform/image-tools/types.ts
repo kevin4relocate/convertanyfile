@@ -1,4 +1,4 @@
-export type ImageToolStatus = 'preview' | 'live' | 'planned';
+export type ImageToolStatus = 'live' | 'planned';
 export type ImageToolCategory = 'transform' | 'encode' | 'geometry' | 'mask' | 'metadata' | 'naming';
 export type ImageEditScope = 'shared' | 'individual';
 export type ImageMaskMode = 'rect' | 'circle' | 'square' | 'diamond' | 'star4' | 'text';
