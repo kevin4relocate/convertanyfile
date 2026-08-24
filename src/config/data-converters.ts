@@ -14,7 +14,7 @@ export const DATA_CONVERTERS: readonly ConverterDefinition[] = [
     slug: 'data-converter',
     title: 'Free Data Converter — CSV, JSON, TSV & JSONL | ConvertAnyFile',
     description: 'Convert CSV, TSV, JSON, JSONL and NDJSON files directly in your browser. Batch conversion, local processing, and ZIP download.',
-    h1: 'Convert structured data locally.',
+    h1: 'Free online data converter for CSV, JSON, TSV and JSONL.',
     eyebrow: 'Private data converter',
     intro: 'Convert CSV, TSV, JSON, JSONL and NDJSON without sending the source files to a conversion server.',
   },
