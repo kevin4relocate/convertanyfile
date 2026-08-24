@@ -30,7 +30,7 @@ export const GEMINI_AI_LOGO_REMOVER_TOOL: MaskImageToolDefinition = {
   title: 'Gemini Watermark Remover — Remove AI Logo Free | ConvertAnyFile',
   description: 'Remove the visible Gemini watermark from JPG, PNG or WebP images free in your browser. Process one image or up to 50 locally with no account or image upload.',
   h1: 'Remove the visible Gemini watermark from images', eyebrow: 'Free Gemini Watermark Remover',
-  intro: 'Remove a small visible Gemini-style sparkle watermark from one image or up to 50 images directly in your browser. Fit a Circle or 4-Point Star over the mark, move, resize or rotate the mask, repair locally, then download the result or a ZIP—no account or source-image upload required.',
+  intro: 'Remove the visible Gemini sparkle watermark from one image or up to 50 images in your browser. Fit a Circle or 4-Point Star over the mark, repair locally, then download.',
   status: 'live',
   selectionModes: ['circle', 'star4'], defaultSelectionMode: 'star4', removeActionLabel: 'Remove Gemini watermark',
   downloadSuffix: 'gemini-logo-removed',
