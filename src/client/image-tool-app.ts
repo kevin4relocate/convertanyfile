@@ -29,6 +29,11 @@ function syncQualityControls(root: HTMLElement): void {
   }
 }
 
+function setActionPriority(button: HTMLButtonElement, primary: boolean): void {
+  button.classList.toggle('image-tool-cta--primary', primary);
+  button.classList.toggle('image-tool-cta--secondary', !primary);
+}
+
 function initMaskResultActions(root: HTMLElement): void {
   if (root.dataset.maskResultActionsReady === 'true') return;
   const process = root.querySelector<HTMLButtonElement>('[data-role="remove"]');
@@ -36,11 +41,6 @@ function initMaskResultActions(root: HTMLElement): void {
   if (!process || !download) return;
 
   root.dataset.maskResultActionsReady = 'true';
-
-  const setPrimary = (button: HTMLButtonElement, primary: boolean): void => {
-    button.classList.toggle('image-tool-cta--primary', primary);
-    button.classList.toggle('image-tool-cta--secondary', !primary);
-  };
 
   const sync = (): void => {
     const hasResults = !download.disabled;
@@ -50,8 +50,8 @@ function initMaskResultActions(root: HTMLElement): void {
     }
 
     if (hasResults) {
-      setPrimary(process, false);
-      setPrimary(download, true);
+      setActionPriority(process, false);
+      setActionPriority(download, true);
       process.textContent = 'Run repair again';
       process.title = 'Process the current mask and settings again.';
       download.title = 'Download the processed result.';
@@ -59,8 +59,8 @@ function initMaskResultActions(root: HTMLElement): void {
       return;
     }
 
-    setPrimary(process, true);
-    setPrimary(download, false);
+    setActionPriority(process, true);
+    setActionPriority(download, false);
     if (process.textContent?.trim() === 'Run repair again') {
       process.textContent = process.dataset.processLabel || 'Process images';
     }
@@ -72,6 +72,66 @@ function initMaskResultActions(root: HTMLElement): void {
   const observer = new MutationObserver(sync);
   observer.observe(process, { attributes: true, attributeFilter: ['disabled', 'hidden'], childList: true, characterData: true, subtree: true });
   observer.observe(download, { attributes: true, attributeFilter: ['disabled', 'hidden'], childList: true, characterData: true, subtree: true });
+
+  window.addEventListener('pagehide', () => observer.disconnect(), { once: true });
+  sync();
+}
+
+function initDeterministicResultActions(root: HTMLElement): void {
+  if (!root.classList.contains('deterministic-tool')) return;
+  if (root.dataset.deterministicResultActionsReady === 'true') return;
+
+  const process = root.querySelector<HTMLButtonElement>('[data-role="process-batch"]');
+  const download = root.querySelector<HTMLButtonElement>('[data-role="download-batch"]');
+  const count = root.querySelector<HTMLElement>('[data-role="batch-count"]');
+  const readyCount = root.querySelector<HTMLElement>('[data-role="ready-count"]');
+  const actionDetail = root.querySelector<HTMLElement>('[data-role="batch-action-bar"] .image-batch-action-bar__summary small');
+  const progress = root.querySelector<HTMLElement>('[data-role="batch-progress"]');
+  const progressLabel = root.querySelector<HTMLElement>('[data-role="progress-label"]');
+  const cancel = root.querySelector<HTMLButtonElement>('[data-role="cancel-batch"]');
+  if (!process || !download) return;
+
+  root.dataset.deterministicResultActionsReady = 'true';
+  process.dataset.processLabel = process.textContent?.trim() || 'Process images';
+
+  const sync = (): void => {
+    const itemCount = Number(count?.textContent?.trim() || '0');
+    const hasResults = !download.disabled;
+    const progressVisible = progress ? !progress.hidden : false;
+    const processing = Boolean(cancel && progressVisible && !cancel.disabled);
+
+    if (hasResults && !processing) {
+      setActionPriority(process, false);
+      setActionPriority(download, true);
+      process.textContent = 'Run again';
+      process.title = 'Process the current settings again.';
+      download.title = 'Download the processed result.';
+      if (readyCount) readyCount.textContent = `${itemCount} image${itemCount === 1 ? '' : 's'} completed`;
+      if (actionDetail) actionDetail.textContent = 'Results are ready to download.';
+      if (progress) progress.hidden = true;
+      root.dataset.deterministicActionState = 'results-ready';
+      return;
+    }
+
+    setActionPriority(process, true);
+    setActionPriority(download, false);
+    if (process.textContent?.trim() === 'Run again') {
+      process.textContent = process.dataset.processLabel || 'Process images';
+    }
+    process.removeAttribute('title');
+    download.removeAttribute('title');
+    if (readyCount) readyCount.textContent = `${itemCount} image${itemCount === 1 ? '' : 's'} ready`;
+    if (actionDetail) actionDetail.textContent = 'Process the batch to prepare downloads.';
+    root.dataset.deterministicActionState = processing ? 'processing' : 'editing';
+  };
+
+  const observer = new MutationObserver(sync);
+  observer.observe(process, { attributes: true, attributeFilter: ['disabled', 'hidden', 'class'], childList: true, characterData: true, subtree: true });
+  observer.observe(download, { attributes: true, attributeFilter: ['disabled', 'hidden', 'class'], childList: true, characterData: true, subtree: true });
+  if (count) observer.observe(count, { childList: true, characterData: true, subtree: true });
+  if (progress) observer.observe(progress, { attributes: true, attributeFilter: ['hidden'] });
+  if (progressLabel) observer.observe(progressLabel, { childList: true, characterData: true, subtree: true });
+  if (cancel) observer.observe(cancel, { attributes: true, attributeFilter: ['disabled', 'hidden'] });
 
   window.addEventListener('pagehide', () => observer.disconnect(), { once: true });
   sync();
@@ -109,7 +169,8 @@ function initStickyImageToolActions(root: HTMLElement): void {
   const stickyCount = sticky.querySelector<HTMLElement>('[data-sticky-count]')!;
   const stickyDetail = sticky.querySelector<HTMLElement>('[data-sticky-detail]')!;
   const stickyPrimary = sticky.querySelector<HTMLButtonElement>('[data-sticky-primary]')!;
-  let actionVisible = true;
+  const initialRect = actionBar.getBoundingClientRect();
+  let actionVisible = initialRect.bottom > 0 && initialRect.top < window.innerHeight;
 
   const sync = (): void => {
     const primary = currentPrimary();
@@ -118,7 +179,7 @@ function initStickyImageToolActions(root: HTMLElement): void {
     const editorVisible = editor ? !editor.hidden && hasItems : hasItems;
     const progressVisible = progress ? !progress.hidden : false;
     const processing = processPrimary.textContent?.includes('Processing') === true
-      || Boolean(cancel && progressVisible && !cancel.hidden);
+      || Boolean(cancel && progressVisible && !cancel.hidden && !cancel.disabled);
     const unavailable = primary.disabled || primary.hidden || processing;
 
     stickyCount.textContent = `${count} ${count === 1 ? 'image' : 'images'}`;
@@ -133,7 +194,7 @@ function initStickyImageToolActions(root: HTMLElement): void {
   stickyPrimary.addEventListener('click', () => currentPrimary().click());
 
   const observer = new MutationObserver(sync);
-  observer.observe(root, { attributes: true, attributeFilter: ['data-has-items', 'data-mask-action-state'] });
+  observer.observe(root, { attributes: true, attributeFilter: ['data-has-items', 'data-mask-action-state', 'data-deterministic-action-state'] });
   if (editor) observer.observe(editor, { attributes: true, attributeFilter: ['hidden'] });
   observer.observe(processPrimary, { attributes: true, attributeFilter: ['disabled', 'hidden', 'class'], childList: true, characterData: true, subtree: true });
   if (downloadAction) observer.observe(downloadAction, { attributes: true, attributeFilter: ['disabled', 'hidden', 'class'], childList: true, characterData: true, subtree: true });
@@ -172,6 +233,7 @@ async function initializeImageTool(root: HTMLElement): Promise<void> {
     syncQualityControls(root);
     mountVisualRegionController(root);
     initMaskResultActions(root);
+    initDeterministicResultActions(root);
     initStickyImageToolActions(root);
     root.dataset.imageToolReady = 'true';
   } catch (error) {
