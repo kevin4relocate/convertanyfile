@@ -1,7 +1,21 @@
 ---
 import { NAV_ITEMS, SITE } from '../config/site';
+
 const currentPath = Astro.url.pathname;
-const imageToolsActive = currentPath === '/image-tools/' || currentPath === '/remove-watermark/' || currentPath === '/gemini-ai-logo-remover/';
+const imageToolLinks = [
+  { href: '/remove-watermark/', label: 'Remove Watermark', hint: 'Shapes · text mask', icon: 'W', live: true },
+  { href: '/gemini-ai-logo-remover/', label: 'Gemini Watermark Remover', hint: 'Circle · 4-Point Star', icon: '✦', live: true },
+  { href: '/resize-image/', label: 'Resize Image', hint: 'Pixels · percentage · fit', icon: 'R' },
+  { href: '/compress-image/', label: 'Compress Image', hint: 'Format · quality', icon: 'C' },
+  { href: '/rotate-flip-image/', label: 'Rotate / Flip', hint: 'Rotate · mirror', icon: 'R' },
+  { href: '/crop-image/', label: 'Crop Image', hint: 'Free · aspect ratios', icon: 'C' },
+  { href: '/blur-image/', label: 'Blur Image', hint: 'Whole image · region', icon: 'B' },
+  { href: '/bulk-rename-images/', label: 'Bulk Rename Images', hint: 'Patterns · numbering', icon: 'B' },
+  { href: '/remove-image-metadata/', label: 'Remove Image Metadata', hint: 'EXIF · GPS · software', icon: 'M' },
+  { href: '/remove-object/', label: 'Remove Object', hint: 'Manual local repair', icon: 'O' },
+  { href: '/remove-background/', label: 'Remove Background', hint: 'Local AI cutout', icon: 'B' },
+] as const;
+const imageToolsActive = currentPath === '/image-tools/' || imageToolLinks.some((tool) => tool.href === currentPath);
 const converterPaths = ['/image-converter/', '/data-converter/', '/archive-converter/', '/subtitle-converter/'];
 const convertersActive = converterPaths.includes(currentPath);
 ---
@@ -19,19 +33,22 @@ const convertersActive = converterPaths.includes(currentPath);
             <span>Image Tools</span>
             <svg class="nav-dropdown-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" /></svg>
           </summary>
-          <div class="nav-submenu">
+          <div class="nav-submenu nav-submenu--image-tools">
             <a class:list={['nav-submenu-overview', currentPath === '/image-tools/' && 'is-current']} href="/image-tools/">
               <span>All Image Tools</span>
               <span aria-hidden="true">→</span>
             </a>
-            <a class:list={['nav-tool-link', currentPath === '/remove-watermark/' && 'is-current']} href="/remove-watermark/">
-              <span class="nav-tool-icon" aria-hidden="true">W</span>
-              <span class="nav-tool-copy"><strong>Remove Watermark</strong><small>Batch · shapes · text mask</small></span>
-            </a>
-            <a class:list={['nav-tool-link', currentPath === '/gemini-ai-logo-remover/' && 'is-current']} href="/gemini-ai-logo-remover/">
-              <span class="nav-tool-icon nav-tool-icon--spark" aria-hidden="true">✦</span>
-              <span class="nav-tool-copy"><strong>Gemini Watermark Remover</strong><small>Visible mark · Circle · 4-Point Star</small></span>
-            </a>
+            <div class="nav-tool-grid">
+              {imageToolLinks.map((tool) => (
+                <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} href={tool.href}>
+                  <span class:list={['nav-tool-icon', tool.icon === '✦' && 'nav-tool-icon--spark']} aria-hidden="true">{tool.icon}</span>
+                  <span class="nav-tool-copy">
+                    <span class="nav-tool-title-row"><strong>{tool.label}</strong><small class:list={['nav-tool-status', tool.live && 'is-live']}>{tool.live ? 'LIVE' : 'PREVIEW'}</small></span>
+                    <small>{tool.hint}</small>
+                  </span>
+                </a>
+              ))}
+            </div>
           </div>
         </details>
       ) : <a href={item.href}>{item.label}</a>)}
@@ -62,8 +79,9 @@ const convertersActive = converterPaths.includes(currentPath);
           </summary>
           <div class="mobile-menu-submenu">
             <a class:list={['mobile-menu-subitem', currentPath === '/image-tools/' && 'is-current']} href="/image-tools/">All Image Tools</a>
-            <a class:list={['mobile-menu-subitem', currentPath === '/remove-watermark/' && 'is-current']} href="/remove-watermark/">Remove Watermark</a>
-            <a class:list={['mobile-menu-subitem', currentPath === '/gemini-ai-logo-remover/' && 'is-current']} href="/gemini-ai-logo-remover/">Gemini Watermark Remover</a>
+            {imageToolLinks.map((tool) => (
+              <a class:list={['mobile-menu-subitem', currentPath === tool.href && 'is-current']} href={tool.href}>{tool.label}</a>
+            ))}
           </div>
         </details>
 
@@ -154,6 +172,7 @@ const convertersActive = converterPaths.includes(currentPath);
     transform: translateX(-50%);
     backdrop-filter: blur(18px);
   }
+  .nav-submenu--image-tools { width: min(560px, calc(100vw - 32px)); }
   .nav-submenu::before {
     content: '';
     position: absolute;
@@ -179,6 +198,14 @@ const convertersActive = converterPaths.includes(currentPath);
   }
   .nav-submenu-overview:hover,
   .nav-submenu-overview.is-current { color: #f3f5fb !important; }
+  .nav-tool-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    max-height: min(65vh, 540px);
+    overflow-y: auto;
+    padding-right: 2px;
+  }
   .nav-tool-link {
     display: grid;
     grid-template-columns: 36px minmax(0, 1fr);
@@ -205,8 +232,20 @@ const convertersActive = converterPaths.includes(currentPath);
   }
   .nav-tool-icon--spark { color: #aaa4ff; font-size: 18px; }
   .nav-tool-copy { min-width: 0; display: grid; gap: 2px; }
-  .nav-tool-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #eef0f6; font-size: 12px; font-weight: 690; }
-  .nav-tool-copy small { color: #858d9d; font-size: 9.75px; line-height: 1.35; }
+  .nav-tool-title-row { min-width: 0; display: flex; align-items: center; gap: 6px; }
+  .nav-tool-copy strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #eef0f6; font-size: 12px; font-weight: 690; }
+  .nav-tool-copy > small { color: #858d9d; font-size: 9.75px; line-height: 1.35; }
+  .nav-tool-status {
+    flex: 0 0 auto;
+    padding: 1px 5px;
+    border: 1px solid #4b4771;
+    border-radius: 999px;
+    color: #aaa4e8;
+    font-size: 7px;
+    font-weight: 800;
+    letter-spacing: .05em;
+  }
+  .nav-tool-status.is-live { border-color: #245b4b; color: #61d5a6; }
 
   /* Mobile navigation owns its typography. It does not inherit generic nav/link sizing. */
   .mobile-menu,
@@ -264,6 +303,8 @@ const convertersActive = converterPaths.includes(currentPath);
     margin: 0 0 6px 8px;
     padding: 2px 0 3px 15px;
     border-left: 1px solid #343b4a;
+    max-height: 56vh;
+    overflow-y: auto;
   }
   .mobile-menu-subitem {
     min-height: 36px !important;
@@ -285,6 +326,8 @@ const convertersActive = converterPaths.includes(currentPath);
 
   @media (max-width: 980px) {
     .nav-submenu { width: 286px; }
+    .nav-submenu--image-tools { width: 286px; }
+    .nav-tool-grid { grid-template-columns: 1fr; }
     .mobile-nav > nav.mobile-menu > a.mobile-menu-row,
     .mobile-nav > nav.mobile-menu > details.mobile-menu-section > summary.mobile-menu-row {
       min-height: 46px !important;
