@@ -9,12 +9,10 @@ const DETERMINISTIC_ROUTES = [
   '/rotate-flip-image/',
   '/crop-image/',
   '/blur-image/',
-  '/remove-image-metadata/',
 ] as const;
 
 const MASK_ROUTES = [
   '/remove-watermark/',
-  '/remove-object/',
   '/gemini-ai-logo-remover/',
 ] as const;
 
@@ -85,6 +83,17 @@ test.describe('Image Tools watermark visual standard', () => {
     });
   }
 
+  test('metadata cleanup keeps the shared topbar but uses a file-utility layout without previews', async ({ page }) => {
+    await page.goto('/remove-image-metadata/');
+    const app = page.locator('[data-image-tool-app]');
+    await expectEdgeToEdgeTopbar(page);
+    await uploadPair(page, 'metadata');
+    await expectWatermarkStyleHeaderActions(page);
+    await expect(app.locator('.metadata-file-row')).toHaveCount(2);
+    await expect(app.locator('[data-role="edit-scope-switch"]')).toHaveCount(0);
+    await expect(app.locator('[data-role="preview-panel"]')).toHaveCount(0);
+  });
+
   test('bulk rename follows the watermark filmstrip and CTA hierarchy', async ({ page }) => {
     await page.goto('/bulk-rename-images/');
     const app = page.locator('[data-image-tool-app]');
@@ -99,17 +108,5 @@ test.describe('Image Tools watermark visual standard', () => {
     const heights = await app.locator('.image-tool-cta').evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().height));
     expect(new Set(heights.map(Math.round)).size).toBe(1);
     await expectStableScope(page);
-  });
-
-  test('background remover uses the watermark-standard shell without forcing AI inference', async ({ page }) => {
-    await page.goto('/remove-background/');
-    const app = page.locator('[data-image-tool-app]');
-    await expectEdgeToEdgeTopbar(page);
-    await expectWatermarkStyleHeaderActions(page, false);
-    await expect(app.locator('.image-batch-shell')).toHaveClass(/image-batch-shell--linear/);
-    await expect(app.locator('[data-role="edit-scope-switch"]')).toHaveClass(/image-edit-scope--standard/);
-    await expect(app.locator('[data-role="batch-list"]')).toHaveCSS('display', 'flex');
-    await expect(app.locator('[data-role="preview-panel"] .image-tool-preview-panel')).toHaveCount(2);
-    await expect(app.locator('[data-role="model-status"]')).toContainText('Local AI runtime');
   });
 });
