@@ -7,7 +7,6 @@
   "engines": { "node": ">=22.19.0" },
   "scripts": {
     "runtime:archive": "node scripts/sync-libarchive-runtime.mjs",
-    "runtime:background": "node scripts/sync-background-removal-runtime.mjs",
     "runtime:all": "npm run runtime:archive",
     "fixtures:archive": "node scripts/sync-archive-test-fixtures.mjs",
     "dev": "npm run runtime:all && astro dev",
