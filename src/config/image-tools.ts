@@ -92,7 +92,7 @@ export const REMOVE_IMAGE_METADATA_TOOL: ImageToolDefinition = {
   title: 'Remove Image Metadata Online — Strip EXIF & GPS Locally | ConvertAnyFile',
   description: 'Strip EXIF, GPS and software metadata from JPG, PNG and WebP images by re-encoding visible pixels locally in your browser.',
   h1: 'Remove metadata from images.', eyebrow: 'Image Tools · Preview',
-  intro: 'Create clean pixel-only copies without sending source images to a server. Choose output format and quality for the batch or customize individual images, then download one result or a ZIP.',
+  intro: 'Create clean copies without uploading source images. Choose one output format and quality for the batch, remove EXIF, GPS and common software tags locally, then download the cleaned files or a ZIP.',
   downloadSuffix: 'metadata-removed',
   policyNote: 'This tool removes metadata by decoding visible pixels and encoding a new image. It does not guarantee removal of information that is visibly embedded in the pixels themselves.',
 };
