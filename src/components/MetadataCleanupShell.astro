@@ -1,0 +1,128 @@
+---
+import type { ImageToolDefinition } from '../platform/image-tools/types';
+import ImageBatchProgress from '../image-tools/components/ImageBatchProgress.astro';
+import ImageToolHeaderActions from '../image-tools/components/ImageToolHeaderActions.astro';
+
+interface Props { tool: ImageToolDefinition; }
+const { tool } = Astro.props;
+const accept = tool.acceptedExtensions.map((extension) => `.${extension}`).join(',');
+const maxFiles = tool.maxFiles ?? 50;
+const maxFileMb = Math.max(1, Math.round(tool.maxFileBytes / (1024 * 1024)));
+---
+
+<div
+  class="image-editor-card metadata-cleanup-tool"
+  data-image-tool-app
+  data-tool-id={tool.id}
+  data-download-suffix={tool.downloadSuffix}
+  data-max-file-bytes={tool.maxFileBytes}
+  data-max-pixels={tool.maxPixels}
+  data-max-dimension={tool.maxDimension}
+  data-max-files={maxFiles}
+  data-has-items="false"
+>
+  <div class="image-editor-topbar">
+    <div><span>Local file cleanup</span><strong>{tool.displayName}</strong></div>
+    <div class="image-editor-local-state"><span aria-hidden="true"></span>Browser-only</div>
+  </div>
+
+  <div class="image-editor-notice" data-role="notice" role="status" aria-live="polite" hidden></div>
+
+  <section class="metadata-cleanup-shell">
+    <div data-role="upload-view">
+      <label class="metadata-upload" data-role="batch-dropzone">
+        <span class="metadata-upload__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" /></svg>
+        </span>
+        <span class="metadata-upload__copy">
+          <strong>Add image files</strong>
+          <small>JPG, PNG or WebP · up to {maxFiles} files · {maxFileMb} MB each</small>
+          <em><span aria-hidden="true"></span>Files stay on your device</em>
+        </span>
+        <span class="metadata-upload__button">Choose files</span>
+        <input data-role="file-input" type="file" accept={accept} multiple />
+      </label>
+    </div>
+
+    <section class="metadata-batch" data-role="editor" hidden>
+      <header class="metadata-batch__header">
+        <div>
+          <span>Files</span>
+          <strong><span data-role="batch-count">0</span> files ready</strong>
+          <small>One cleanup setup applies to the whole batch.</small>
+        </div>
+        <ImageToolHeaderActions />
+      </header>
+
+      <div class="metadata-file-list" data-role="batch-list" aria-label="Files selected for metadata cleanup"></div>
+
+      <section class="metadata-options" aria-label="Metadata cleanup options">
+        <div class="metadata-options__heading">
+          <div><span>Cleanup options</span><strong>Create new files without copied metadata</strong></div>
+          <p>Your originals are never changed.</p>
+        </div>
+
+        <div class="metadata-options__controls">
+          <label>
+            <span>Output format</span>
+            <select data-setting="format">
+              <option value="source">Same as source</option>
+              <option value="jpg">JPG</option>
+              <option value="webp">WebP</option>
+              <option value="png">PNG</option>
+            </select>
+          </label>
+          <label>
+            <span>Quality</span>
+            <div class="metadata-quality-row">
+              <input data-setting="quality" type="range" min="1" max="100" value="92" />
+              <output data-role="metadata-quality-value">92</output>
+            </div>
+          </label>
+        </div>
+
+        <div class="metadata-cleanup-map">
+          <article>
+            <span class="metadata-cleanup-map__status" aria-hidden="true">−</span>
+            <div><strong>EXIF & camera info</strong><small>Camera model, lens, capture settings and common EXIF fields are not copied.</small></div>
+          </article>
+          <article>
+            <span class="metadata-cleanup-map__status" aria-hidden="true">−</span>
+            <div><strong>GPS & location</strong><small>Embedded coordinates and related location metadata are not copied.</small></div>
+          </article>
+          <article>
+            <span class="metadata-cleanup-map__status" aria-hidden="true">−</span>
+            <div><strong>Software tags</strong><small>Common editor, device and processing tags are not copied into the new file.</small></div>
+          </article>
+          <article class="metadata-cleanup-map__kept">
+            <span class="metadata-cleanup-map__status" aria-hidden="true">✓</span>
+            <div><strong>Visible image stays</strong><small>Visible pixels and dimensions are preserved. The result is a newly encoded clean copy.</small></div>
+          </article>
+        </div>
+      </section>
+
+      <ImageBatchProgress total={0} label="Removing metadata…" />
+
+      <div class="image-batch-action-bar metadata-action-bar" data-role="batch-action-bar">
+        <div class="image-batch-action-bar__summary">
+          <strong data-role="ready-count">0 files ready</strong>
+          <small>Remove metadata first, then download the clean copies.</small>
+        </div>
+        <div class="image-batch-action-bar__actions">
+          <button class="image-tool-cta image-tool-cta--primary" type="button" data-role="process-batch" disabled>Remove metadata</button>
+          <button class="image-tool-cta image-tool-cta--secondary" type="button" data-role="download-batch" disabled>Download ZIP</button>
+        </div>
+      </div>
+    </section>
+
+    <p class="image-tool-policy-note">{tool.policyNote}</p>
+  </section>
+</div>
+
+<script src="../client/image-tool-app.ts"></script>
+
+<style is:global>
+.metadata-cleanup-tool{padding:0}.metadata-cleanup-shell{display:grid;gap:12px;padding:12px 14px 14px}.metadata-upload{position:relative;min-height:118px;display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:15px;padding:16px 18px;border:1px dashed #3a4353;border-radius:14px;background:#10151e;cursor:pointer;transition:border-color .14s ease,background .14s ease}.metadata-upload:hover,.metadata-upload.is-dragging{border-color:#746dff;background:#15172a}.metadata-upload input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);opacity:0}.metadata-upload__icon{width:46px;height:46px;display:grid;place-items:center;border:1px solid #343c4d;border-radius:13px;background:#151b25;color:#aaa4ff}.metadata-upload__icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.metadata-upload__copy{min-width:0;display:grid;gap:4px}.metadata-upload__copy strong{font-size:16px;font-weight:740}.metadata-upload__copy small{color:#8d95a5;font-size:11px;line-height:1.4}.metadata-upload__copy em{display:flex;align-items:center;gap:6px;color:#798294;font-size:9.5px;font-style:normal}.metadata-upload__copy em span{width:6px;height:6px;border-radius:50%;background:#35c78b;box-shadow:0 0 0 4px rgba(53,199,139,.08)}.metadata-upload__button{min-height:40px;display:inline-flex;align-items:center;justify-content:center;padding:0 16px;border:1px solid #746dff;border-radius:9px;background:#625bf6;color:#fff;font-size:11px;font-weight:720;white-space:nowrap}.metadata-batch{display:grid;gap:12px}.metadata-batch__header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:1px 2px 2px}.metadata-batch__header>div:first-child{display:grid;gap:2px}.metadata-batch__header>div:first-child>span,.metadata-options__heading span{color:#8e95a5;font-size:9.5px;font-weight:700;letter-spacing:.055em;text-transform:uppercase}.metadata-batch__header strong{font-size:15px;font-weight:740}.metadata-batch__header small{color:#8e96a6;font-size:10px}.metadata-file-list{display:grid;gap:6px}.metadata-file-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto auto;align-items:center;gap:10px;min-height:58px;padding:8px 10px;border:1px solid #29313f;border-radius:11px;background:#10151e}.metadata-file-row__icon{width:38px;height:38px;display:grid;place-items:center;border:1px solid #343d4c;border-radius:9px;background:#151b25;color:#aaa4ff;font-size:9px;font-weight:800;letter-spacing:.04em}.metadata-file-row__copy{min-width:0;display:grid;gap:3px}.metadata-file-row__copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:700}.metadata-file-row__copy small{color:#858d9d;font-size:9px}.metadata-file-row__status{padding:3px 7px;border:1px solid #3a4353;border-radius:999px;color:#9098a8;font-size:8px;font-weight:720;white-space:nowrap}.metadata-file-row__status[data-state="processing"]{border-color:#5b557e;color:#beb9e9}.metadata-file-row__status[data-state="done"]{border-color:#285b49;color:#61d5a6}.metadata-file-row__status[data-state="error"]{border-color:#704044;color:#ef9da4}.metadata-file-row__remove{width:28px;height:28px;border:0;border-radius:8px;background:transparent;color:#7f8797;cursor:pointer;font-size:17px;line-height:1}.metadata-file-row__remove:hover:not(:disabled){background:#202634;color:#f2f4f8}.metadata-options{display:grid;gap:12px;padding:13px;border:1px solid #2b3240;border-radius:13px;background:#0f141d}.metadata-options__heading{display:flex;justify-content:space-between;gap:20px;align-items:end}.metadata-options__heading>div{display:grid;gap:3px}.metadata-options__heading strong{font-size:13px;font-weight:720}.metadata-options__heading p{margin:0;color:#7f8797;font-size:9.5px}.metadata-options__controls{display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,1fr);gap:10px}.metadata-options__controls label{display:grid;gap:6px}.metadata-options__controls label>span{color:#9299a8;font-size:9.5px;font-weight:680}.metadata-options__controls select{height:38px;padding:0 10px;border:1px solid #343c4d;border-radius:9px;background:#0c1118;color:#e9ecf3;font:inherit;font-size:11px}.metadata-quality-row{height:38px;display:grid;grid-template-columns:minmax(0,1fr) 42px;align-items:center;gap:10px}.metadata-quality-row input{width:100%}.metadata-quality-row output{text-align:right;color:#b7bdc9;font-size:10px;font-weight:700}.metadata-cleanup-map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.metadata-cleanup-map article{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;align-items:start;padding:9px 10px;border:1px solid #28313f;border-radius:10px;background:#10151e}.metadata-cleanup-map__status{width:24px;height:24px;display:grid;place-items:center;border-radius:7px;background:rgba(239,111,118,.08);color:#e48b92;font-size:14px;font-weight:800}.metadata-cleanup-map__kept .metadata-cleanup-map__status{background:rgba(53,199,139,.08);color:#61d5a6}.metadata-cleanup-map article div{display:grid;gap:2px}.metadata-cleanup-map article strong{font-size:10px;font-weight:700}.metadata-cleanup-map article small{color:#7f8899;font-size:9px;line-height:1.4}.metadata-action-bar{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:11px 12px;border:1px solid #2b3240;border-radius:13px;background:#111720}.metadata-action-bar .image-batch-action-bar__summary{min-width:0;display:grid;gap:2px}.metadata-action-bar .image-batch-action-bar__summary strong{font-size:12px;font-weight:720}.metadata-action-bar .image-batch-action-bar__summary small{color:#858d9d;font-size:9.5px}.metadata-action-bar .image-batch-action-bar__actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}.metadata-action-bar .image-tool-cta{height:40px;min-width:156px;display:inline-flex;align-items:center;justify-content:center;padding:0 15px;border-radius:9px;cursor:pointer;font:inherit;font-size:11px;font-weight:720;white-space:nowrap}.metadata-action-bar .image-tool-cta--primary{border:1px solid #746dff;background:#625bf6;color:#fff;box-shadow:0 6px 16px rgba(81,73,218,.18)}.metadata-action-bar .image-tool-cta--secondary{border:1px solid #3a4353;background:#151b24;color:#d5dae4}.metadata-action-bar .image-tool-cta:disabled{opacity:.38;cursor:not-allowed;box-shadow:none}.metadata-cleanup-tool .image-tool-policy-note{margin:0;color:#767f90;font-size:9px;line-height:1.45}
+@media(max-width:760px){.metadata-upload{min-height:210px;grid-template-columns:1fr;justify-items:center;text-align:center}.metadata-upload__copy{justify-items:center}.metadata-options__heading{display:grid;gap:4px;align-items:start}.metadata-options__controls,.metadata-cleanup-map{grid-template-columns:1fr}.metadata-file-row{grid-template-columns:34px minmax(0,1fr) auto}.metadata-file-row__status{display:none}.metadata-action-bar{align-items:stretch;flex-direction:column}.metadata-action-bar .image-batch-action-bar__actions{display:grid;grid-template-columns:1fr 1fr;width:100%}.metadata-action-bar .image-tool-cta{min-width:0;width:100%}}
+@media(max-width:480px){.metadata-action-bar .image-batch-action-bar__actions{grid-template-columns:1fr}}
+</style>
