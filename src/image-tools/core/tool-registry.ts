@@ -19,11 +19,6 @@ const renameToolLoader: ImageToolLoader = async () => {
   return { mount: module.mountBulkRenameImages };
 };
 
-const backgroundRemovalLoader: ImageToolLoader = async () => {
-  const module = await import('../background-removal/background-removal-editor-v2');
-  return { mount: module.mountBackgroundRemovalEditor };
-};
-
 const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
   'remove-watermark': maskToolLoader,
   'gemini-ai-logo-remover': maskToolLoader,
@@ -35,7 +30,6 @@ const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
   'blur-image': deterministicToolLoader,
   'remove-image-metadata': deterministicToolLoader,
   'bulk-rename-images': renameToolLoader,
-  'remove-background': backgroundRemovalLoader,
 };
 
 export async function mountRegisteredImageTool(toolId: string, root: HTMLElement): Promise<boolean> {
