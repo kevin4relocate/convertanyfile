@@ -13,7 +13,6 @@ const imageToolLinks = [
   { href: '/bulk-rename-images/', label: 'Bulk Rename Images', hint: 'Patterns · numbering', icon: 'B' },
   { href: '/remove-image-metadata/', label: 'Remove Image Metadata', hint: 'EXIF · GPS · software', icon: 'M' },
   { href: '/remove-object/', label: 'Remove Object', hint: 'Manual local repair', icon: 'O' },
-  { href: '/remove-background/', label: 'Remove Background', hint: 'Local AI cutout', icon: 'B' },
 ] as const;
 const imageToolsActive = currentPath === '/image-tools/' || imageToolLinks.some((tool) => tool.href === currentPath);
 const converterPaths = ['/image-converter/', '/data-converter/', '/archive-converter/', '/subtitle-converter/'];
