@@ -1,0 +1,29 @@
+---
+interface Props {
+  countSuffix?: string;
+  statusText: string;
+  statusRole?: 'ratio-status' | 'mode-summary';
+  addLabel?: string;
+  clearLabel?: string;
+}
+
+const {
+  countSuffix = 'images ready',
+  statusText,
+  statusRole = 'mode-summary',
+  addLabel = '+ Add images',
+  clearLabel = 'Clear all',
+} = Astro.props;
+---
+
+<header class="gemini-batch-header image-tool-batch-header">
+  <div>
+    <span>Images</span>
+    <strong><span data-role="batch-count">0</span> {countSuffix}</strong>
+    <small data-role={statusRole}>{statusText}</small>
+  </div>
+  <div class="gemini-batch-header-actions">
+    <button class="text-button strong" data-role="add-more" type="button">{addLabel}</button>
+    <button class="text-button" data-role="clear-all" type="button">{clearLabel}</button>
+  </div>
+</header>
