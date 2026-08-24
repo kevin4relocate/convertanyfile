@@ -1,110 +1,114 @@
 # ConvertAnyFile
 
-ConvertAnyFile.net is a browser-first file conversion and image-editing platform built around one shared static site shell and local processing engines.
+ConvertAnyFile.net is a browser-first file conversion and image-tools platform built around a shared static Astro site and local processing engines.
 
-## Converter categories
+## Public converter categories
 
-### Image — Live
+### Image
 - Browser-side ImageMagick WASM conversion.
 - 50 files / 75 MB per file / 300 MB per batch.
 - Runtime codec detection plus a product-certified output whitelist.
-- EXIF orientation normalization, deterministic flattening for opaque outputs, and decoded-memory guards.
+- EXIF orientation normalization, deterministic flattening for opaque outputs, decoded-memory guards and sequential conversion.
 
-### Data — Live
-- CSV, TSV, JSON, JSONL, and NDJSON input.
-- CSV, TSV, JSON, and JSONL output.
-- UTF-8 validation and deterministic browser-worker parsing/serialization.
+### Data
+- CSV, TSV, JSON, JSONL and NDJSON input.
+- CSV, TSV, JSON and JSONL output.
+- UTF-8 validation and deterministic worker parsing/serialization.
 - 50 files / 20 MB per file / 100 MB per batch.
 
-### Archive — Live
-- Browser-side archive conversion for supported ZIP, TAR, TAR.GZ/TGZ, GZIP, 7Z, and RAR input families.
-- Category-specific archive safety limits and local ZIP/download workflows.
-- 7Z and RAR remain input-only; certified public outputs are ZIP, TAR, and TAR.GZ.
+### Archive
+- ZIP, TAR, TAR.GZ/TGZ, GZIP, 7Z and RAR input families.
+- 7Z and RAR are input-only; certified outputs are ZIP, TAR and TAR.GZ.
+- Archive-specific admission and expansion limits plus local ZIP/download workflows.
 
-### Subtitle — Preview
-- SRT, VTT/WebVTT, ASS, SSA, and SBV input.
-- SRT, VTT, SBV, and TXT output.
+### Subtitle
+- SRT, VTT/WebVTT, ASS, SSA and SBV input.
+- SRT, VTT, SBV and TXT output.
 - 17 real cross-format pair routes; no same-format placeholder routes.
 - Full-file worker preflight before a file becomes Ready.
-- Queue analysis includes cue count, timeline end, detected encoding, and richer-format/WebVTT metadata flags.
-- Exact whole-millisecond timing shift from -600000 to +600000 ms.
-- Plain-text cleanup for timed output plus TXT timestamp and cue-spacing modes.
-- LF/CRLF and optional UTF-8 BOM output controls.
-- UTF-8, UTF-16LE/BE BOM input with Windows-1252 compatibility fallback.
+- Timing shift, text cleanup, line-ending/BOM controls and transcript export.
 - 50 files / 5 MB per file / 50 MB total / 100,000-cue parser guard.
-- ASS/SSA are input-only because simpler outputs do not preserve their styling, positioning, karaoke, and effect model.
 
-All converter categories reuse the generic batch queue, progress, cancel, retry policy, per-file download, ZIP packaging, SEO shell, and responsive page frame. Category behavior stays behind `EngineAdapter` implementations.
+All converter categories reuse the generic queue, progress, cancel, retry, per-file download, ZIP packaging, SEO shell and responsive page frame. Category behavior stays behind `EngineAdapter` implementations.
 
-## Live Image Tools
+## Public Image Tools
 
-Image Tools are intentionally separate from the converter `EngineAdapter` stack because they need a stateful canvas editor, masks, Before/After previews, and per-image visual-edit state.
+Image Tools use focused browser-side workflows rather than the converter `EngineAdapter` pipeline.
 
-### Remove Watermark
-- One image or up to 50 JPG/JPEG, PNG, or WebP images.
-- 10 MB per source image / 200 MB total source input.
-- Rectangle, Circle, Square, Diamond, 4-Point Star, and manual Text masks.
-- Text mode builds a solid bold glyph-shaped mask, auto-sizes its selection bounds to the typed content, and is not OCR or automatic text detection.
-- All masks can be moved, resized, and rotated with visible handles.
-- Same-ratio batches start with **One mask for all**.
-- Mixed-ratio batches start with **Edit individually**.
-- Shared-mask copies, per-image Custom overrides, Undo, Clear, Cancel, Before/After, output controls, and ZIP download.
+### Visible watermark repair
 
-### Gemini AI Logo Remover / Gemini Watermark Remover
-- Uses the same shared batch mask editor and local repair worker.
-- Intentionally exposes only **Circle** and **4-Point Star**; 4-Point Star is the default.
-- Circle and Star masks use the same move/resize/rotate interaction as the general editor.
-- Same shared/individual batch recommendation, per-image overrides, Before/After, Cancel, output, and ZIP behavior.
-- SEO-facing copy targets visible Gemini watermark removal while the product remains explicit that it does not claim to remove invisible provenance systems.
+**Remove Watermark**
+- JPG/JPEG, PNG and WebP.
+- Rectangle, Circle, Square, Diamond, 4-Point Star and manual Text masks.
+- Shared or per-image masks, move/resize/rotate, Undo/Clear, Before/After, output controls and ZIP download.
+- Local deterministic repair; no cloud image-generation API.
+
+**Gemini Watermark Remover**
+- Uses the same stable local repair runtime.
+- Intentionally exposes only Circle and 4-Point Star; 4-Point Star is the default.
+- Targets the small visible Gemini-style sparkle mark and does not claim to remove invisible provenance systems.
 - ConvertAnyFile is not affiliated with or endorsed by Google or Gemini.
+
+### Deterministic image tools
+- Resize Image — pixels, percentage or fit-to-box.
+- Compress Image — output format and quality.
+- Rotate / Flip Image — 90/180/270-degree rotation and horizontal/vertical mirroring.
+- Crop Image — free crop and common aspect ratios.
+- Blur Image — whole-image or selected-region blur.
+
+These tools keep one active preview, cap preview rendering, process the batch sequentially and support shared settings with individual overrides where appropriate.
+
+### File utilities
+
+**Remove Image Metadata**
+- Dedicated file-cleanup workflow with no image editor preview.
+- Creates new JPG/PNG/WebP copies without intentionally copying common EXIF, GPS or software metadata fields.
+- Uses one simple batch setup and sequential processing.
+
+**Bulk Rename Images**
+- Renames files without decoding or re-encoding image bytes.
+- Supports shared filename patterns, numbering and individual overrides.
+
+Remove Object and Remove Background are not part of the current public release surface. Their previous experimental routes/runtime were removed from this release branch until a dependable implementation is available.
 
 ## Architecture
 
 ```text
 src/
-  components/                 shared Header/Footer, converter frames, BatchMaskEditorShell, FAQ/content UI
-  config/                     site config, converter registries, Image Tool definitions
-  content/                    reusable FAQ and guidance
+  components/                 shared Header/Footer, converter frames and Image Tool shells
+  config/                     site config, converter registries and public Image Tool definitions
+  content/                    reusable FAQ, guides and Image Tool SEO content
   layouts/                    shared Astro SEO/document shell
-  platform/converter/         generic converter batch policy, controls, ZIP/download
+  platform/converter/         generic converter batch policy, controls and ZIP/download
   platform/image-tools/       Image Tool types/contracts
   engines/image/              image conversion engine
   engines/data/               structured-data conversion engine
   engines/archive/            archive conversion engine
-  engines/subtitle/           timed-text parser, worker, runtime, protocol
-  image-tools/shared/         shared batch mask editor + mask geometry
+  engines/subtitle/           timed-text worker/parser/runtime
+  image-tools/deterministic/  resize/compress/rotate/crop/blur runtime
+  image-tools/metadata/       metadata cleanup runtime
+  image-tools/naming/         bulk rename runtime
+  image-tools/shared/         shared watermark batch editor + mask geometry
   image-tools/remove-watermark/ local visible-pixel repair worker/client
-  client/                     converter controller + Image Tool bootstrap
-  pages/                      static product, guide, format, and converter routes
+  client/                     converter and Image Tool bootstraps
+  pages/                      static product, guide, format and converter routes
 ```
 
-A new **converter category** implements `EngineAdapter`; it must not duplicate queue/download infrastructure. Subtitle therefore adds a category-specific worker/parser and generic numeric output-control support without forking the batch controller.
+A new converter category implements `EngineAdapter`; it must not duplicate queue/download infrastructure.
 
-A new **interactive Image Tool** should reuse the Image Tools shell/runtime when its workflow genuinely fits the same mask/editor contract. Product-specific choices belong in config, not copied editors. Remove Watermark and Gemini AI Logo Remover therefore share one runtime while exposing different mask sets.
+A new Image Tool should reuse an existing shell/runtime only when its workflow genuinely fits that contract. Tool-specific behavior belongs in config or a dedicated focused runtime rather than global CSS/DOM patches.
 
-See `ARCHITECTURE.md` for the platform contract.
+## Image Tools safety model
 
-## Converter page contract
+Current public Image Tools share these source limits unless a tool defines a stricter policy:
+- up to 50 images;
+- 10 MB per source image;
+- 20 megapixels decoded;
+- 12,000 pixels maximum side.
 
-Every public dedicated converter route renders through `ConverterPageFrame`. The frame keeps the main file action near the first desktop viewport while category-specific explanation stays below the shared converter.
+Visual and metadata processing is sequential so the site does not intentionally decode/process an entire batch in parallel. Preview-based deterministic tools cap the active preview at 1,200 px maximum dimension. Watermark repair runs in a Web Worker. Bulk Rename avoids pixel processing entirely.
 
-Category-specific converter shells, queue implementations, and duplicated download logic are not allowed. Output controls such as image quality, archive compression, data settings, and Subtitle timing shift are declared by the category output configuration and rendered by the shared controller.
-
-## Image Tools page contract
-
-Every live watermark editor route renders through `ImageToolPageFrame` → `BatchMaskEditorShell` and mounts `src/image-tools/shared/batch-mask-editor.ts`.
-
-The shared editor owns:
-- admission and batch queue;
-- automatic shared/individual recommendation;
-- shared and per-image mask state;
-- mask move/resize/rotate/Undo/Clear interaction;
-- solid auto-fitted Text mask interaction when supported by the tool;
-- sequential local repair and cancellation;
-- Before/After result restoration;
-- output encoding and browser-generated ZIP download.
-
-Tool config owns the public mask vocabulary and copy. Do not fork the runtime merely to hide or add mask buttons.
+Multiple completed results may remain in memory until download/ZIP creation, so browser/device memory still matters for unusually large batches. Safety limits and sequential processing reduce this risk but do not make browser memory unlimited.
 
 ## Local commands
 
@@ -116,6 +120,13 @@ npm run preview
 npm run test:e2e
 ```
 
+`npm run build` is a release gate. It now runs:
+1. required runtime synchronization;
+2. Astro diagnostics;
+3. the static Astro build;
+4. a full generated-page SEO audit;
+5. the Cloudflare static-asset count/size guard.
+
 ## Cloudflare Pages
 
 Use a static Pages deployment:
@@ -124,39 +135,34 @@ Use a static Pages deployment:
 - Build output directory: `dist`
 - Node: `22.19.0`
 
-No Pages Function, KV, D1, R2, or conversion backend is required for the current browser-first workflows.
+No Pages Function, KV, D1, R2 or conversion backend is required for the current browser-first workflows.
 
 ## SEO model
 
-- Canonicals are generated from `https://convertanyfile.net`.
+- Canonicals use `https://convertanyfile.net`.
 - `@astrojs/sitemap` generates the sitemap from actual static routes.
-- Pair pages are real converter presets backed by category engines.
-- Subtitle publishes only the 17 real cross-format routes backed by its writer matrix.
-- Image Tools receive routes only when the editing workflow is implemented; roadmap ideas do not create fake placeholder pages.
-- Product pages use substantive body copy, FAQ, internal links, and matching guides where useful.
+- `SiteLayout.astro` owns canonical, robots, Open Graph and Twitter metadata.
+- Converter pair pages are real engine-backed presets with unique content/schema.
+- Public Image Tools have unique titles/descriptions, crawlable explanatory content, FAQ/internal links where appropriate and structured data.
+- Planned or retired Image Tools do not receive public routes merely to increase page count.
+- `scripts/check-static-seo.mjs` audits every generated HTML page and fails the build for missing/duplicate core SEO metadata, bad canonicals, missing sitemap entries or links to retired heavy tools.
 
 ## Production release gates
 
-All live products must keep these shared gates green:
-- Astro diagnostics (`npm run check`)
-- production static build (`npm run build`)
-- sitemap/canonical/title/description/internal-link regressions
-- desktop/mobile layout checks
-- Chromium/Firefox/WebKit coverage appropriate to the workflow
-- safety/admission limits and cancellation semantics
-- previous production-product regressions.
+Before merging to `main`, keep these gates green:
+- `npm run check`;
+- `npm run build`;
+- Chromium desktop/mobile, Firefox and WebKit Playwright coverage;
+- converter fidelity and cancellation regressions;
+- Image Tool workflow/UX regressions;
+- sitemap/canonical/title/description/internal-link checks;
+- Cloudflare static asset count and maximum asset-size guard;
+- production smoke tests after deployment.
 
-Converter categories additionally require real output conversion tests for their supported matrix. Subtitle remains Preview until `SUBTITLE_RELEASE_CHECKLIST.md` and Cloudflare/browser validation are completed.
+CI is defined in `.github/workflows/ci.yml`. Production smoke coverage is defined in `.github/workflows/production-smoke.yml` and `production-tests/production-smoke.spec.ts`.
 
-Image Tools additionally require mask geometry and rotation, shared/individual state, local worker rasterization/repair, Before/After restoration, output/ZIP, touch interaction, and browser memory/cancel validation.
-
-See:
-- `IMAGE_RELEASE_CHECKLIST.md`
-- `DATA_RELEASE_CHECKLIST.md`
-- `ARCHIVE_RELEASE_CHECKLIST.md`
-- `IMAGE_TOOLS_RELEASE_CHECKLIST.md`
-- `SUBTITLE_RELEASE_CHECKLIST.md`
+See the category release checklists for additional product-specific verification.
 
 ## Expansion rule
 
-Add a public route only when its engine or interactive workflow is dependable, testable, and useful. Reuse the appropriate shared platform rather than copying a product-specific implementation.
+Add a public route only when its engine or interactive workflow is dependable, testable and useful. Reuse the appropriate platform rather than copying a product-specific implementation.

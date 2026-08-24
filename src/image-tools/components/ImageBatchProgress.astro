@@ -1,0 +1,52 @@
+---
+interface Props {
+  completed?: number;
+  total?: number;
+  label?: string;
+  cancellable?: boolean;
+  variant?: 'generic' | 'mask';
+}
+
+const {
+  completed = 0,
+  total = 0,
+  label = 'Processing images…',
+  cancellable = true,
+  variant = 'generic',
+} = Astro.props;
+const percent = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
+---
+
+{variant === 'mask' ? (
+  <div class="image-batch-progress gemini-batch-progress" data-role="batch-progress" hidden aria-live="polite">
+    <div class="image-batch-progress__topline">
+      <strong data-role="progress-label">{label}</strong>
+      <span data-role="progress-count">{completed} / {total}</span>
+    </div>
+    <div class="progress-track" aria-hidden="true"><span data-role="progress-bar" style={`width:${percent}%`}></span></div>
+    {cancellable && <button class="gemini-cancel-button" type="button" data-role="cancel" hidden>Cancel batch</button>}
+  </div>
+) : (
+  <section class="image-batch-progress image-batch-progress--standard" data-role="batch-progress" hidden={total === 0} aria-live="polite">
+    <div class="image-batch-progress__topline">
+      <strong data-role="progress-label">{label}</strong>
+      <span data-role="progress-count">{completed} / {total}</span>
+    </div>
+    <progress data-role="progress-bar" max="100" value={percent}>{percent}%</progress>
+    {cancellable && <button type="button" data-role="cancel-batch">Cancel batch</button>}
+  </section>
+)}
+
+<style>
+  .image-batch-progress{display:grid;gap:9px}.image-batch-progress[hidden]{display:none!important}.image-batch-progress__topline{display:flex;justify-content:space-between;gap:12px;align-items:center}
+  .image-batch-progress--standard{padding:10px 12px;border:1px solid #2b3240;border-radius:11px;background:#0f141d}
+  .image-batch-progress--standard strong{font-size:10px;font-weight:700}
+  .image-batch-progress--standard span{color:#8f96a6;font-size:9px}
+  .image-batch-progress--standard progress{width:100%;height:5px;border:0;border-radius:999px;overflow:hidden;background:#242b37;appearance:none;-webkit-appearance:none}
+  .image-batch-progress--standard progress::-webkit-progress-bar{background:#242b37;border-radius:999px}
+  .image-batch-progress--standard progress::-webkit-progress-value{background:#716aff;border-radius:999px}
+  .image-batch-progress--standard progress::-moz-progress-bar{background:#716aff;border-radius:999px}
+  .image-batch-progress--standard button{justify-self:start;min-height:32px;padding:5px 10px;border:1px solid #363f50;border-radius:8px;background:#0c1118;color:#c9ced8;cursor:pointer;font:inherit;font-size:10px;font-weight:700}
+  .image-batch-progress--standard button:disabled{display:none}
+  .image-batch-progress--standard button:hover:not(:disabled){border-color:#505b6e;background:#171e29;color:#f2f4f8}
+</style>

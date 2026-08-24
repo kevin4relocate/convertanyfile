@@ -1,0 +1,11 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { ROTATE_FLIP_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={ROTATE_FLIP_IMAGE_TOOL}
+  kicker="Rotate and mirror locally"
+  heading="Fix orientation across a batch, then handle exceptions individually."
+  copy="Rotate images by 90, 180 or 270 degrees and flip horizontally or vertically. Shared mode handles repeated orientation fixes quickly."
+  bullets={['Rotate 90°, 180° or 270° clockwise.', 'Flip horizontally, vertically, or combine both.', 'Preview orientation before batch processing.', 'Use per-image overrides for mixed orientations.', 'Export as source format, PNG, JPG or WebP.']}
+/>

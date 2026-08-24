@@ -1,0 +1,56 @@
+import type { ImageEditScope } from '../../platform/image-tools/types';
+import { mountAdvancedCanvasController } from '../canvas/advanced-canvas-controller';
+import { mountBatchMaskEditor } from '../shared/batch-mask-editor';
+
+const VALID_SCOPES = new Set<ImageEditScope>(['shared', 'individual']);
+
+export function resolveMaskScopeSettings<TSettings>(
+  mode: ImageEditScope,
+  sharedSettings: TSettings,
+  individualSettings?: TSettings,
+): TSettings {
+  return mode === 'individual' && individualSettings !== undefined ? individualSettings : sharedSettings;
+}
+
+function syncPlatformScope(root: HTMLElement, mode: ImageEditScope): void {
+  root.dataset.platformScope = mode;
+  const shell = root.querySelector<HTMLElement>('[data-role="image-batch-shell"]');
+  if (shell) shell.dataset.platformScope = mode;
+}
+
+function readScopeFromUi(root: HTMLElement): ImageEditScope | undefined {
+  const selected = [...root.querySelectorAll<HTMLElement>('[data-edit-mode]')]
+    .find((button) => button.getAttribute('aria-checked') === 'true');
+  const mode = selected?.dataset.editMode as ImageEditScope | undefined;
+  return mode && VALID_SCOPES.has(mode) ? mode : undefined;
+}
+
+export function mountMaskBatchPlatformEditor(root: HTMLElement): void {
+  if (!root.querySelector('[data-platform-shell="batch-v1"]')) {
+    throw new Error('Mask batch platform shell is unavailable.');
+  }
+
+  root.dataset.platformRuntime = 'batch-v1';
+  syncPlatformScope(root, 'shared');
+
+  const scopeButtons = [...root.querySelectorAll<HTMLElement>('[data-edit-mode]')];
+  const observer = new MutationObserver(() => {
+    const mode = readScopeFromUi(root);
+    if (mode) syncPlatformScope(root, mode);
+  });
+  scopeButtons.forEach((button) => observer.observe(button, { attributes: true, attributeFilter: ['aria-checked'] }));
+
+  root.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const button = target.closest<HTMLElement>('[data-edit-mode]');
+    const requested = button?.dataset.editMode as ImageEditScope | undefined;
+    if (requested && VALID_SCOPES.has(requested)) syncPlatformScope(root, requested);
+  });
+
+  mountBatchMaskEditor(root);
+  if (root.dataset.advancedCanvas === 'true') mountAdvancedCanvasController(root);
+
+  const mountedScope = readScopeFromUi(root);
+  if (mountedScope) syncPlatformScope(root, mountedScope);
+}

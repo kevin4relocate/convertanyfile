@@ -160,16 +160,17 @@ test('homepage cannot hide an active conversion by switching categories', async 
   await expect(imagePanel).toBeVisible();
 });
 
-test('public homepage presents only live converter categories', async ({ page }, testInfo) => {
+test('public homepage presents all live converter categories', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Launch-surface regression');
   await page.goto('/');
   const section = page.locator('#converters');
-  await expect(section.locator('.category-card--live')).toHaveCount(2);
+  await expect(section.locator('.category-card--live')).toHaveCount(4);
   await expect(section.locator('.category-card--planned')).toHaveCount(0);
   await expect(section.getByRole('link', { name: /Images/i })).toBeVisible();
   await expect(section.getByRole('link', { name: /Data/i })).toBeVisible();
+  await expect(section.getByRole('link', { name: /Archives/i })).toBeVisible();
+  await expect(section.getByRole('link', { name: /Subtitles/i })).toBeVisible();
   await expect(section).not.toContainText('Planned');
-  await expect(section).not.toContainText('Archives');
   await expect(section).not.toContainText('Audio');
 });
 

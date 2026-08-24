@@ -1,9 +1,28 @@
 ---
-import type { ImageToolDefinition } from '../platform/image-tools/types';
+import type { ImageToolDefinition, MaskImageToolDefinition } from '../platform/image-tools/types';
+import { SITE } from '../config/site';
 import BatchMaskEditorShell from './BatchMaskEditorShell.astro';
+import BulkRenameImageShell from './BulkRenameImageShell.astro';
+import DeterministicImageToolShell from './DeterministicImageToolShell.astro';
+import MetadataCleanupShell from './MetadataCleanupShell.astro';
 interface Props { tool: ImageToolDefinition; }
 const { tool } = Astro.props;
+const maskTool = tool.category === 'mask' ? tool as MaskImageToolDefinition : undefined;
+const usesRenameEditor = tool.category === 'naming';
+const usesMetadataCleanup = tool.id === 'remove-image-metadata';
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.origin}/` },
+    { '@type': 'ListItem', position: 2, name: 'Image Tools', item: `${SITE.origin}/image-tools/` },
+    { '@type': 'ListItem', position: 3, name: tool.displayName, item: `${SITE.origin}/${tool.slug}/` },
+  ],
+};
+// Gemini already carries a hand-tuned breadcrumb schema in its page content.
+const includeBreadcrumbSchema = tool.id !== 'gemini-ai-logo-remover';
 ---
+{includeBreadcrumbSchema && <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>}
 <section class="converter-page-hero image-tool-page-hero">
   <div class="site-container converter-page-hero-inner">
     <div class="breadcrumbs converter-page-breadcrumbs"><a href="/">Home</a><span>/</span><a href="/image-tools/">Image Tools</a><span>/</span><span>{tool.displayName}</span></div>
@@ -12,4 +31,4 @@ const { tool } = Astro.props;
     <p>{tool.intro}</p>
   </div>
 </section>
-<section class="image-tool-page-tool"><div class="site-container"><BatchMaskEditorShell tool={tool} /></div></section>
+<section class="image-tool-page-tool"><div class="site-container">{maskTool ? <BatchMaskEditorShell tool={maskTool} /> : usesRenameEditor ? <BulkRenameImageShell tool={tool} /> : usesMetadataCleanup ? <MetadataCleanupShell tool={tool} /> : <DeterministicImageToolShell tool={tool} />}</div></section>

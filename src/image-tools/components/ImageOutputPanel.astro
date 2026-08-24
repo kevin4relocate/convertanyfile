@@ -1,0 +1,67 @@
+---
+interface Props {
+  format?: 'source' | 'png' | 'jpg' | 'jpeg' | 'webp';
+  quality?: number;
+  showQuality?: boolean;
+  variant?: 'generic' | 'mask';
+}
+
+const { format = 'source', quality = 96, showQuality = true, variant = 'generic' } = Astro.props;
+---
+
+{variant === 'mask' ? (
+  <section class="image-output-panel gemini-output-panel" data-role="output-panel" aria-label="Output settings">
+    <div class="gemini-output-format-block">
+      <span>Output</span><strong>Format</strong>
+      <div class="gemini-output-pills" role="radiogroup" aria-label="Output format">
+        <button class:list={['gemini-output-pill', format === 'source' && 'is-active']} type="button" role="radio" aria-checked={format === 'source'} data-output-value="source">Same as source</button>
+        <button class:list={['gemini-output-pill', format === 'png' && 'is-active']} type="button" role="radio" aria-checked={format === 'png'} data-output-value="png">PNG</button>
+        <button class:list={['gemini-output-pill', (format === 'jpg' || format === 'jpeg') && 'is-active']} type="button" role="radio" aria-checked={format === 'jpg' || format === 'jpeg'} data-output-value="jpeg">JPG</button>
+        <button class:list={['gemini-output-pill', format === 'webp' && 'is-active']} type="button" role="radio" aria-checked={format === 'webp'} data-output-value="webp">WebP</button>
+      </div>
+    </div>
+    {showQuality && (
+      <label class="gemini-quality-block">
+        <span>Quality</span>
+        <div><input data-role="quality" type="range" min="80" max="100" value={quality} /><output data-role="quality-value">{quality}</output></div>
+        <small>JPEG/WebP only · PNG stays lossless</small>
+      </label>
+    )}
+  </section>
+) : (
+  <section class="image-output-panel image-output-panel--standard" data-role="output-panel" aria-label="Output settings">
+    <label class="image-output-panel__format">
+      <span>Output</span><strong>Format</strong>
+      <select data-role="output-format">
+        <option value="source" selected={format === 'source'}>Same as source</option>
+        <option value="png" selected={format === 'png'}>PNG</option>
+        <option value="jpg" selected={format === 'jpg' || format === 'jpeg'}>JPG</option>
+        <option value="webp" selected={format === 'webp'}>WebP</option>
+      </select>
+    </label>
+    {showQuality && (
+      <label class="image-output-panel__quality">
+        <span>Quality</span>
+        <div><input data-role="output-quality" type="range" min="1" max="100" value={quality} /><output data-role="quality-value">{quality}</output></div>
+        <small>JPEG/WebP only · PNG stays lossless</small>
+      </label>
+    )}
+  </section>
+)}
+
+<style>
+  .image-output-panel--standard{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:0;padding:11px 12px;border:1px solid #2b3240;border-radius:13px;background:#10151e}
+  .image-output-panel--standard label{min-width:0;display:grid;gap:7px}
+  .image-output-panel--standard label>span{color:#8e95a5;font-size:10px;font-weight:700;letter-spacing:.055em;text-transform:uppercase}
+  .image-output-panel--standard label>strong{font-size:12px;font-weight:720}
+  .image-output-panel__format{padding-right:15px}
+  .image-output-panel__quality{padding-left:15px;border-left:1px solid #29303d}
+  .image-output-panel--standard select{width:100%;min-height:38px;padding:0 34px 0 11px;border:1px solid #363f50;border-radius:9px;background:#0c1118;color:#eef1f6;font:inherit;font-size:11px}
+  .image-output-panel__quality>div{display:flex;align-items:center;gap:10px}
+  .image-output-panel__quality input{min-width:0;flex:1;accent-color:var(--accent)}
+  .image-output-panel__quality output{min-width:28px;color:#d8dbe5;font-size:12px;font-weight:720;text-align:right;font-variant-numeric:tabular-nums}
+  .image-output-panel--standard label>small{color:#858d9d;font-size:9px;line-height:1.4}
+  .image-output-panel--standard label.is-quality-disabled{opacity:.58}
+  .gemini-output-panel{display:flex}
+  @media(max-width:640px){.image-output-panel--standard{grid-template-columns:1fr}.image-output-panel__format{padding-right:0;padding-bottom:12px}.image-output-panel__quality{padding:12px 0 0;border-left:0;border-top:1px solid #29303d}.gemini-output-panel{display:grid}}
+</style>

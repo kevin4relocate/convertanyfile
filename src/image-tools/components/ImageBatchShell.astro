@@ -1,0 +1,81 @@
+---
+import ImageEditScopeSwitch from './ImageEditScopeSwitch.astro';
+import ImageBatchProgress from './ImageBatchProgress.astro';
+
+interface Props {
+  mode?: 'shared' | 'individual';
+  completed?: number;
+  total?: number;
+  variant?: 'generic' | 'linear' | 'mask';
+}
+
+const { mode = 'shared', completed = 0, total = 0, variant = 'generic' } = Astro.props;
+---
+
+<section class:list={[
+  'image-batch-shell',
+  variant === 'linear' && 'image-batch-shell--linear',
+  variant === 'mask' && 'image-batch-shell--mask',
+]} data-role="image-batch-shell" data-platform-shell="batch-v1">
+  <header class="image-batch-shell__header">
+    <slot name="header" />
+  </header>
+
+  <div class="image-batch-shell__upload">
+    <slot name="upload" />
+  </div>
+
+  <div class="image-batch-shell__scope">
+    <slot name="scope"><ImageEditScopeSwitch mode={mode} /></slot>
+  </div>
+
+  <div class="image-batch-shell__workspace">
+    <aside class="image-batch-shell__queue">
+      <slot name="queue" />
+    </aside>
+    <main class="image-batch-shell__editor">
+      <slot name="workspace" />
+    </main>
+  </div>
+
+  <div class="image-batch-shell__output">
+    <slot name="output" />
+  </div>
+
+  <div class="image-batch-shell__progress">
+    <slot name="progress"><ImageBatchProgress completed={completed} total={total} /></slot>
+  </div>
+
+  <footer class="image-batch-shell__actions">
+    <slot name="actions" />
+  </footer>
+</section>
+
+<style>
+  .image-batch-shell{display:grid;gap:16px}
+  .image-batch-shell__workspace{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);gap:16px;align-items:start}
+  .image-batch-shell__queue,.image-batch-shell__editor,.image-batch-shell__output{min-width:0}
+  .image-batch-shell__actions{position:sticky;bottom:0;z-index:5}
+
+  /* Watermark-style linear flow: scope, filmstrip, editor, output and CTA stay in one visual column. */
+  .image-batch-shell--linear{gap:10px}
+  .image-batch-shell--linear>.image-batch-shell__workspace{grid-template-columns:minmax(0,1fr);gap:10px}
+  .image-batch-shell--linear>.image-batch-shell__actions{position:static}
+
+  .image-batch-shell--mask,
+  .image-batch-shell--mask>.image-batch-shell__header,
+  .image-batch-shell--mask>.image-batch-shell__upload,
+  .image-batch-shell--mask>.image-batch-shell__scope,
+  .image-batch-shell--mask>.image-batch-shell__workspace,
+  .image-batch-shell--mask>.image-batch-shell__workspace>.image-batch-shell__queue,
+  .image-batch-shell--mask>.image-batch-shell__workspace>.image-batch-shell__editor,
+  .image-batch-shell--mask>.image-batch-shell__output,
+  .image-batch-shell--mask>.image-batch-shell__progress,
+  .image-batch-shell--mask>.image-batch-shell__actions{display:contents}
+  .image-batch-shell--mask>.image-batch-shell__actions{position:static}
+
+  @media(max-width:820px){
+    .image-batch-shell__workspace{grid-template-columns:1fr}
+    .image-batch-shell__actions{bottom:0}
+  }
+</style>
