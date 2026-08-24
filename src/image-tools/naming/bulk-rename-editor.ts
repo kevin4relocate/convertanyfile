@@ -87,7 +87,8 @@ export function mountBulkRenameImages(root:HTMLElement):void{
       const row=document.createElement('div');row.className='rename-preview-row';
       const before=document.createElement('div');before.className='rename-preview-name';before.textContent=item.file.name;before.title=item.file.name;
       const arrow=document.createElement('div');arrow.className='rename-preview-arrow';arrow.textContent='→';
-      const after=document.createElement('div');after.className='rename-preview-name rename-preview-result';after.textContent=map.get(item.id)||'—';after.title=after.textContent;
+      const resultName=map.get(item.id)||'—';
+      const after=document.createElement('div');after.className='rename-preview-name rename-preview-result';after.textContent=resultName;after.title=resultName;
       row.append(before,arrow,after);previewList.append(row);
     }
   }
