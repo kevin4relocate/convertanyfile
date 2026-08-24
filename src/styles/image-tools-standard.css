@@ -18,15 +18,50 @@
   accent-color: var(--accent);
 }
 
+/* One native-control contract across every Image Tool. */
+.image-editor-card select:not([hidden]) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  padding-right: 46px !important;
+  background-color: #0c1118 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6.25 8 10l4-3.75' stroke='%23A7AEBD' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 15px center !important;
+  background-size: 16px 16px !important;
+  cursor: pointer;
+}
+
+.image-editor-card select:not([hidden]):focus,
+.image-editor-card input[type="number"]:focus {
+  outline: none;
+  border-color: #625bc2 !important;
+  box-shadow: 0 0 0 3px rgba(98, 91, 194, .14);
+}
+
 .image-editor-card input[type="number"] {
-  appearance: textfield;
-  -moz-appearance: textfield;
+  appearance: textfield !important;
+  -moz-appearance: textfield !important;
+  min-width: 0;
+  padding-right: 11px !important;
+  font-variant-numeric: tabular-nums;
 }
 
 .image-editor-card input[type="number"]::-webkit-inner-spin-button,
 .image-editor-card input[type="number"]::-webkit-outer-spin-button {
   margin: 0;
   -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Nested count spans must never inherit small uppercase label styling. */
+.image-editor-card [data-role="batch-count"] {
+  color: inherit !important;
+  font: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: inherit !important;
+  text-transform: none !important;
 }
 
 /* Match Remove Watermark's edge-to-edge topbar and immediate workspace start. */
@@ -154,25 +189,6 @@
 .image-editor-card input:disabled,
 .image-editor-card select:disabled {
   cursor: not-allowed;
-}
-
-/* Rotate / Flip: replace the cramped native select arrow with a calm, inset chevron. */
-.deterministic-tool[data-tool-id="rotate-flip-image"] select[data-setting="rotation"] {
-  appearance: none;
-  -webkit-appearance: none;
-  padding-right: 46px !important;
-  background-color: #0c1118 !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6.25 8 10l4-3.75' stroke='%23A7AEBD' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 15px center;
-  background-size: 16px 16px;
-  cursor: pointer;
-}
-
-.deterministic-tool[data-tool-id="rotate-flip-image"] select[data-setting="rotation"]:focus {
-  outline: none;
-  border-color: #625bc2;
-  box-shadow: 0 0 0 3px rgba(98, 91, 194, .14);
 }
 
 @media(max-width:720px) {
