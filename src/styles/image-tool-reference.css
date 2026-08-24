@@ -1,0 +1,88 @@
+@import './gemini-logo-batch.css';
+@import './gemini-logo-release.css';
+
+/*
+ * Canonical Image Tools UI system.
+ * The shipped Remove Watermark / Gemini editor is the reference. Generic,
+ * naming and segmentation tools keep their own runtime contracts, but share
+ * the same visual hierarchy, spacing, filmstrip, controls and action treatment.
+ */
+
+/* One vertical workflow everywhere: header -> scope -> filmstrip -> editor -> output -> actions. */
+.image-batch-shell{display:grid;gap:10px}
+.image-batch-shell__workspace{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;align-items:start}
+.image-batch-shell__queue,.image-batch-shell__editor,.image-batch-shell__output{min-width:0}
+
+/* Generic scope switch adopts the exact remover decision-bar treatment. */
+.image-edit-scope:not(.gemini-edit-mode-bar){
+  display:grid;grid-template-columns:minmax(220px,1fr) auto;align-items:center;gap:18px;
+  margin:2px 0 10px;padding:10px 11px;border:1px solid #2b3240;border-radius:13px;background:#10151e
+}
+.image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__copy{min-width:0;display:grid;gap:2px}
+.image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__label{color:#8e95a5;font-size:10.5px;font-weight:650;letter-spacing:.035em;text-transform:uppercase}
+.image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__copy>strong{font-size:13px;font-weight:690}
+.image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__copy>small{color:#939aa9;font-size:10.75px;line-height:1.4;opacity:1}
+.image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__options{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid #303746;border-radius:11px;background:#0d1219}
+.image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__options>button{min-width:148px;min-height:42px;display:grid;align-content:center;gap:1px;padding:6px 12px;border:1px solid transparent;border-radius:8px;background:transparent;color:#9ca3b2;text-align:left}
+.image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__options>button strong{font-size:11.5px;font-weight:680}
+.image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__options>button small{color:#777f8f;font-size:9.75px;opacity:1}
+.image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__options>button:hover:not(:disabled){background:#171d28;color:#eceef4}
+.image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__options>button[aria-checked="true"],
+.image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__options>button[aria-pressed="true"]{border-color:#5751a8;background:#24233e;color:#f0efff;box-shadow:0 3px 10px rgba(0,0,0,.16)}
+
+/* All batch queues are the same horizontal filmstrip as the reference removers. */
+.deterministic-queue,.rename-queue,.background-queue{display:flex!important;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#343c4d transparent;padding:0 0 8px;margin-bottom:4px}
+.deterministic-queue::-webkit-scrollbar,.rename-queue::-webkit-scrollbar,.background-queue::-webkit-scrollbar{height:8px}
+.deterministic-queue::-webkit-scrollbar-thumb,.rename-queue::-webkit-scrollbar-thumb,.background-queue::-webkit-scrollbar-thumb{border:2px solid #141923;border-radius:999px;background:#343c4d}
+.deterministic-file-card,.rename-card,.background-file-card{min-width:218px!important;flex:0 0 218px!important;scroll-snap-align:start;background:#10151e!important;border:1px solid #29313f!important;border-radius:11px!important;padding:7px!important;box-shadow:none!important}
+.deterministic-file-card.is-active,.rename-card.is-active,.background-file-card.is-active{border-color:#625bc2!important;background:#17172a!important;box-shadow:none!important}
+.deterministic-file-card img,.rename-card img,.background-file-card img{width:52px!important;height:44px!important;border-radius:8px!important;object-fit:cover}
+.deterministic-file-card__copy strong,.rename-card__copy strong,.background-file-card__copy strong{font-size:11.5px;font-weight:670}
+.deterministic-file-card__copy small,.rename-card__copy small,.background-file-card__copy small{font-size:10px;color:#838b9b!important}
+.deterministic-file-remove,.rename-remove,.background-file-remove{width:24px;height:24px;display:grid;place-items:center;padding:0!important;border:1px solid #343c4d!important;border-radius:7px!important;background:#171c27!important;color:#8f97a7!important;font-size:16px!important}
+
+/* Unique settings stay unique, but all sit on the same reference surface. */
+.deterministic-settings,.rename-settings,.background-settings{border:1px solid #2b3240!important;border-radius:13px!important;background:#10151e!important;padding:11px 12px!important;box-shadow:none!important}
+.deterministic-settings__heading span,.rename-settings span,.background-settings__heading span,.background-setting-grid label>span{color:#8e95a5!important;font-size:10.5px!important;font-weight:650!important;letter-spacing:.035em!important;text-transform:uppercase}
+.deterministic-settings__heading strong,.rename-settings strong,.background-settings__heading strong{font-weight:690}
+.setting-grid input:not([type="checkbox"]),.setting-grid select,.rename-grid input,.rename-custom input,.background-setting-grid select,.background-setting-grid input[type="color"]{border-color:#303746!important;border-radius:8px!important;background:#0c1118!important;color:#eef1f6!important}
+
+/* Generic output surface follows the remover density and border language. */
+.image-output-panel:not(.gemini-output-panel){margin-top:0;padding:11px 12px;border:1px solid #2b3240;border-radius:13px;background:#10151e}
+.image-output-panel:not(.gemini-output-panel) label>span{color:#8e95a5;font-size:10.5px!important;font-weight:650!important;letter-spacing:.035em;text-transform:uppercase}
+.image-output-panel:not(.gemini-output-panel) select{min-height:36px;border:1px solid #303746;border-radius:8px;background:#0c1118;color:#eef1f6;padding:6px 9px}
+.image-output-panel:not(.gemini-output-panel) input[type="range"]{accent-color:var(--accent)}
+
+/* Generic progress looks like the reference progress card while preserving its runtime roles. */
+.image-batch-progress:not(.gemini-batch-progress){margin-top:0;padding:10px 12px;border:1px solid #2b3240;border-radius:11px;background:#0f141d}
+.image-batch-progress:not(.gemini-batch-progress) progress{width:100%;height:5px;overflow:hidden;border:0;border-radius:999px;background:#242b37;accent-color:#746cff}
+.image-batch-progress:not(.gemini-batch-progress) button{min-height:32px;padding:5px 10px;border:1px solid #3a4353;border-radius:8px;background:#171d27;color:#c6cbd5}
+
+/* Action bar is one canonical component and remains reachable during long edits. */
+.image-batch-shell__actions{position:sticky!important;bottom:10px!important;z-index:20!important}
+.gemini-batch-action-bar,.image-batch-action-bar{position:sticky;bottom:10px;z-index:20;backdrop-filter:blur(10px)}
+.image-batch-action-bar:not(.gemini-batch-action-bar){display:flex;align-items:center;justify-content:space-between;gap:18px;padding:11px 12px;border:1px solid #2b3240;border-radius:13px;background:rgba(17,23,32,.96);box-shadow:0 8px 30px rgba(0,0,0,.24)}
+.image-batch-action-bar:not(.gemini-batch-action-bar)>[data-role="ready-count"]{font-size:12.5px;font-weight:690}
+.image-batch-action-bar:not(.gemini-batch-action-bar) [data-role="process-batch"]{min-height:40px;border:1px solid #6d64e8;border-radius:9px;background:linear-gradient(180deg,#756cff,#635bdf);color:white;font-weight:690}
+.image-batch-action-bar:not(.gemini-batch-action-bar) [data-role="download-batch"]{min-height:40px;border:1px solid #3a4353;border-radius:9px;background:#171d27;color:#d8dde7;font-weight:680}
+.image-batch-action-bar:not(.gemini-batch-action-bar) button:disabled{opacity:.42;cursor:not-allowed}
+
+/* Tool cards use the same compact inner spacing as the two reference removers. */
+.deterministic-tool,.rename-tool,.background-removal-tool{background:#141923!important;padding:0!important}
+.deterministic-tool>.image-editor-topbar,.rename-tool>.image-editor-topbar,.background-removal-tool>.image-editor-topbar{margin:0}
+.deterministic-tool>.image-batch-shell,.rename-tool>.image-batch-shell,.background-removal-tool>.image-batch-shell{padding:0 14px 14px}
+
+@media(max-width:1050px){
+  .image-edit-scope:not(.gemini-edit-mode-bar){grid-template-columns:1fr}
+  .image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__options{width:100%}
+}
+@media(max-width:760px){
+  .image-edit-scope:not(.gemini-edit-mode-bar){grid-template-columns:1fr}
+  .image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__options{grid-template-columns:1fr 1fr}
+  .deterministic-file-card,.rename-card,.background-file-card{min-width:200px!important;flex-basis:200px!important}
+  .image-batch-action-bar:not(.gemini-batch-action-bar){align-items:stretch;flex-direction:column}
+  .image-batch-action-bar__actions{width:100%;display:grid!important;grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+  .image-edit-scope:not(.gemini-edit-mode-bar) .image-edit-scope__options{grid-template-columns:1fr}
+}
