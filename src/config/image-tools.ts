@@ -118,6 +118,7 @@ export const REMOVE_OBJECT_TOOL: MaskImageToolDefinition = {
   policyNote: 'Local repair works best on small objects over smooth or repeated backgrounds. Large or complex removals can create visible artifacts, so inspect the preview before reuse.',
 };
 
+// Kept in code for later evaluation, but intentionally hidden from navigation and Image Tools listings.
 export const REMOVE_BACKGROUND_TOOL: ImageToolDefinition = {
   ...previewBase,
   id: 'remove-background', slug: 'remove-background', displayName: 'Remove Background', category: 'segmentation',
@@ -140,5 +141,4 @@ export const IMAGE_TOOL_ROADMAP = [
   { id: 'bulk-rename-images', label: 'Bulk Rename Images', status: 'preview', description: 'Rename a batch without changing image bytes or source extensions.', href: '/bulk-rename-images/' },
   { id: 'remove-image-metadata', label: 'Remove Image Metadata', status: 'preview', description: 'Strip EXIF, GPS and software metadata locally.', href: '/remove-image-metadata/' },
   { id: 'remove-object', label: 'Remove Object', status: 'preview', description: 'Mask and repair small unwanted objects locally.', href: '/remove-object/' },
-  { id: 'remove-background', label: 'Remove Background', status: 'preview', description: 'Self-hosted U²-NetP segmentation with transparent or solid-background PNG output.', href: '/remove-background/' },
 ] as const;
