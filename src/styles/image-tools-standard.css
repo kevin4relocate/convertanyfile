@@ -156,6 +156,25 @@
   cursor: not-allowed;
 }
 
+/* Rotate / Flip: replace the cramped native select arrow with a calm, inset chevron. */
+.deterministic-tool[data-tool-id="rotate-flip-image"] select[data-setting="rotation"] {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 46px !important;
+  background-color: #0c1118 !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6.25 8 10l4-3.75' stroke='%23A7AEBD' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 16px 16px;
+  cursor: pointer;
+}
+
+.deterministic-tool[data-tool-id="rotate-flip-image"] select[data-setting="rotation"]:focus {
+  outline: none;
+  border-color: #625bc2;
+  box-shadow: 0 0 0 3px rgba(98, 91, 194, .14);
+}
+
 @media(max-width:720px) {
   .image-editor-card :is(.gemini-file-card,.deterministic-file-card,.rename-card,.background-file-card) {
     min-width: 210px;
