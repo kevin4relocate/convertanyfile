@@ -16,7 +16,7 @@ export function mountAdvancedCanvasController(root:HTMLElement):void {
   const canvases=[...wrap.querySelectorAll<HTMLCanvasElement>('canvas')];
   const zoomOut=root.querySelector<HTMLButtonElement>('[data-role="zoom-out"]'),zoomIn=root.querySelector<HTMLButtonElement>('[data-role="zoom-in"]'),zoomFit=root.querySelector<HTMLButtonElement>('[data-role="zoom-fit"]'),zoomValue=root.querySelector<HTMLOutputElement>('[data-role="zoom-value"]');
   const padding=root.querySelector<HTMLInputElement>('[data-role="mask-padding"]'),paddingValue=root.querySelector<HTMLOutputElement>('[data-role="mask-padding-value"]'),feather=root.querySelector<HTMLInputElement>('[data-role="mask-feather"]'),featherValue=root.querySelector<HTMLOutputElement>('[data-role="mask-feather-value"]');
-  const maxMaskFraction=root.dataset.targetLabel==='object'?.25:.15;
+  const maxMaskFraction = root.dataset.targetLabel === 'object' ? 0.25 : 0.15;
   let zoom=1,panX=0,panY=0,space=false,panning=false,startX=0,startY=0,originX=0,originY=0;
   resetMaskProcessingOptions();
 
