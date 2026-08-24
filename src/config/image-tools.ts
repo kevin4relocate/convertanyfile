@@ -71,11 +71,11 @@ export const ROTATE_FLIP_IMAGE_TOOL: ImageToolDefinition = {
 
 export const CROP_IMAGE_TOOL: ImageToolDefinition = {
   ...liveBase, id: 'crop-image', slug: 'crop-image', displayName: 'Crop Image', category: 'geometry',
-  title: 'Crop Images Online Free — Batch Aspect Ratios | ConvertAnyFile',
-  description: 'Crop JPG, PNG and WebP images by percentage coordinates or common aspect ratios with shared or per-image settings.',
-  h1: 'Crop images in a batch.', eyebrow: 'Image Tools',
-  intro: 'Choose a free crop or common aspect ratio, adjust position and size as percentages, preview the active image, and reuse the crop across a batch or override individual images.',
-  downloadSuffix: 'cropped', policyNote: 'Crop coordinates are relative to each image. For mixed compositions, use Edit individually and inspect each preview before processing.',
+  title: 'Crop Images Online Free — Circle & Square Cropper | ConvertAnyFile',
+  description: 'Crop JPG, PNG and WebP images locally. Drag Rectangle, Square, Circle or Triangle crops, use aspect-ratio presets, preview and batch download.',
+  h1: 'Crop images online by shape or aspect ratio.', eyebrow: 'Image Tools',
+  intro: 'Choose Rectangle, Square, Circle or Triangle, then drag the crop directly on the image and resize it from a corner. Use Free, Original, 1:1, 4:3, 3:2, 16:9 or 9:16 framing, apply one crop across a batch or customize individual images.',
+  downloadSuffix: 'cropped', policyNote: 'Shared crop settings work best when subjects sit in similar relative positions. Circle and Triangle crops keep the outside area transparent, so PNG or WebP output is used for those shapes.',
 };
 
 export const BLUR_IMAGE_TOOL: ImageToolDefinition = {
@@ -113,7 +113,7 @@ export const IMAGE_TOOL_ROADMAP = [
   { id: 'resize-image', label: 'Resize Image', status: 'live', description: 'Resize by pixels, percentage, or fit-to-box with batch and individual settings.', href: '/resize-image/' },
   { id: 'compress-image', label: 'Compress Image', status: 'live', description: 'Reduce image size with output-format and quality controls.', href: '/compress-image/' },
   { id: 'rotate-flip-image', label: 'Rotate / Flip', status: 'live', description: 'Rotate or mirror one image or a batch locally.', href: '/rotate-flip-image/' },
-  { id: 'crop-image', label: 'Crop Image', status: 'live', description: 'Crop by percentage coordinates or common aspect ratios.', href: '/crop-image/' },
+  { id: 'crop-image', label: 'Crop Image', status: 'live', description: 'Drag Rectangle, Square, Circle or Triangle crops with common aspect-ratio presets.', href: '/crop-image/' },
   { id: 'blur-image', label: 'Blur Image', status: 'live', description: 'Blur an image or a selected rectangular region.', href: '/blur-image/' },
   { id: 'bulk-rename-images', label: 'Bulk Rename Images', status: 'live', description: 'Rename a batch without changing image bytes or source extensions.', href: '/bulk-rename-images/' },
   { id: 'remove-image-metadata', label: 'Remove Image Metadata', status: 'live', description: 'Strip EXIF, GPS and software metadata locally.', href: '/remove-image-metadata/' },
