@@ -9,11 +9,11 @@ const routes = [
   { path: '/blur-image/', title: /Blur Images/i, h1: /Blur images/i },
   { path: '/bulk-rename-images/', title: /Bulk Rename Images/i, h1: /Bulk rename/i },
   { path: '/remove-image-metadata/', title: /Remove Image Metadata/i, h1: /metadata/i },
-  { path: '/remove-object/', title: /Remove Objects/i, h1: /Remove small objects/i },
-  { path: '/remove-background/', title: /Remove Image Background/i, h1: /background/i },
   { path: '/remove-watermark/', title: /Watermark Remover/i, h1: /watermarks/i },
   { path: '/gemini-ai-logo-remover/', title: /Gemini Watermark Remover/i, h1: /Gemini watermark/i },
 ] as const;
+
+const hiddenExperimentalRoutes = ['/remove-object/', '/remove-background/'] as const;
 
 test.describe('Image Tools SEO', () => {
   test('all public image tool routes have unique titles and meta descriptions', async ({ page }) => {
@@ -47,7 +47,7 @@ test.describe('Image Tools SEO', () => {
   }
 
   test('core Image Tools contain useful how-to, FAQ and related internal links', async ({ page }) => {
-    for (const path of ['/resize-image/','/compress-image/','/crop-image/','/remove-image-metadata/','/remove-object/','/remove-background/']) {
+    for (const path of ['/resize-image/','/compress-image/','/crop-image/','/remove-image-metadata/']) {
       await page.goto(path);
       await expect(page.locator('.steps-grid .step-card')).toHaveCount(4);
       await expect(page.locator('.faq-list details')).toHaveCount(4);
@@ -60,5 +60,14 @@ test.describe('Image Tools SEO', () => {
     const jsonLd = await page.locator('script[type="application/ld+json"]').allTextContents();
     expect(jsonLd.some((value) => value.includes('CollectionPage'))).toBeTruthy();
     expect(jsonLd.some((value) => value.includes('ItemList'))).toBeTruthy();
+  });
+
+  test('experimental heavy tools are not linked from public Image Tools surfaces', async ({ page }) => {
+    for (const path of ['/','/image-tools/']) {
+      await page.goto(path);
+      for (const hiddenPath of hiddenExperimentalRoutes) {
+        await expect(page.locator(`a[href="${hiddenPath}"]`)).toHaveCount(0);
+      }
+    }
   });
 });
