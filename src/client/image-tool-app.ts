@@ -77,9 +77,10 @@ function initMaskResultActions(root: HTMLElement): void {
   sync();
 }
 
-function initDeterministicResultActions(root: HTMLElement): void {
-  if (!root.classList.contains('deterministic-tool')) return;
-  if (root.dataset.deterministicResultActionsReady === 'true') return;
+function initStandardResultActions(root: HTMLElement): void {
+  const supported = root.classList.contains('deterministic-tool') || root.classList.contains('background-removal-tool');
+  if (!supported) return;
+  if (root.dataset.standardResultActionsReady === 'true') return;
 
   const process = root.querySelector<HTMLButtonElement>('[data-role="process-batch"]');
   const download = root.querySelector<HTMLButtonElement>('[data-role="download-batch"]');
@@ -91,7 +92,7 @@ function initDeterministicResultActions(root: HTMLElement): void {
   const cancel = root.querySelector<HTMLButtonElement>('[data-role="cancel-batch"]');
   if (!process || !download) return;
 
-  root.dataset.deterministicResultActionsReady = 'true';
+  root.dataset.standardResultActionsReady = 'true';
   process.dataset.processLabel = process.textContent?.trim() || 'Process images';
 
   const sync = (): void => {
@@ -109,7 +110,7 @@ function initDeterministicResultActions(root: HTMLElement): void {
       if (readyCount) readyCount.textContent = `${itemCount} image${itemCount === 1 ? '' : 's'} completed`;
       if (actionDetail) actionDetail.textContent = 'Results are ready to download.';
       if (progress) progress.hidden = true;
-      root.dataset.deterministicActionState = 'results-ready';
+      root.dataset.standardActionState = 'results-ready';
       return;
     }
 
@@ -122,7 +123,7 @@ function initDeterministicResultActions(root: HTMLElement): void {
     download.removeAttribute('title');
     if (readyCount) readyCount.textContent = `${itemCount} image${itemCount === 1 ? '' : 's'} ready`;
     if (actionDetail) actionDetail.textContent = 'Process the batch to prepare downloads.';
-    root.dataset.deterministicActionState = processing ? 'processing' : 'editing';
+    root.dataset.standardActionState = processing ? 'processing' : 'editing';
   };
 
   const observer = new MutationObserver(sync);
@@ -194,7 +195,7 @@ function initStickyImageToolActions(root: HTMLElement): void {
   stickyPrimary.addEventListener('click', () => currentPrimary().click());
 
   const observer = new MutationObserver(sync);
-  observer.observe(root, { attributes: true, attributeFilter: ['data-has-items', 'data-mask-action-state', 'data-deterministic-action-state'] });
+  observer.observe(root, { attributes: true, attributeFilter: ['data-has-items', 'data-mask-action-state', 'data-standard-action-state'] });
   if (editor) observer.observe(editor, { attributes: true, attributeFilter: ['hidden'] });
   observer.observe(processPrimary, { attributes: true, attributeFilter: ['disabled', 'hidden', 'class'], childList: true, characterData: true, subtree: true });
   if (downloadAction) observer.observe(downloadAction, { attributes: true, attributeFilter: ['disabled', 'hidden', 'class'], childList: true, characterData: true, subtree: true });
@@ -233,7 +234,7 @@ async function initializeImageTool(root: HTMLElement): Promise<void> {
     syncQualityControls(root);
     mountVisualRegionController(root);
     initMaskResultActions(root);
-    initDeterministicResultActions(root);
+    initStandardResultActions(root);
     initStickyImageToolActions(root);
     root.dataset.imageToolReady = 'true';
   } catch (error) {
