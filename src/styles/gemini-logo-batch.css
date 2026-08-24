@@ -164,7 +164,7 @@
 .gemini-file-sample{
   width:52px;height:44px;overflow:hidden;padding:0;border:0;border-radius:8px;background:#0b0f15;cursor:pointer
 }
-.gemini-file-sample img{width:52px;height:44px;display:block;object-fit:cover}
+.gemini-file-sample img{width:100%;height:100%;display:block;object-fit:cover}
 .gemini-file-copy{min-width:0;display:grid;gap:2px}
 .gemini-file-copy>strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:700}
 .gemini-file-copy>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#838b9b;font-size:9px}
