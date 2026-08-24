@@ -30,13 +30,20 @@ const {
     <input data-role="file-input" type="file" accept={accept} multiple hidden disabled={disabled} />
   </section>
 ) : (
-  <label class="image-batch-dropzone" data-role="batch-dropzone">
-    <input type="file" data-role="file-input" accept={accept} multiple disabled={disabled} />
-    <strong>Drop images here or choose files</strong>
-    <small>Process up to {maxFiles} images locally in your browser.</small>
-  </label>
+  <section class="image-batch-upload-card" data-role="batch-dropzone">
+    <label class="image-batch-dropzone">
+      <input type="file" data-role="file-input" accept={accept} multiple disabled={disabled} />
+      <span class="image-batch-dropzone__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" /></svg></span>
+      <span class="image-batch-dropzone__copy">
+        <strong>Add images</strong>
+        <span>Any aspect ratios · up to {maxFiles} images · {maxFileMb} MB each · {maxTotalMb} MB total</span>
+        <small><span class="image-batch-dropzone__privacy-dot" aria-hidden="true"></span> Images stay on your device</small>
+      </span>
+      <span class="image-batch-dropzone__cta">Choose images</span>
+    </label>
+  </section>
 )}
 
 <style>
-  .image-batch-dropzone{display:grid;place-items:center;gap:6px;min-height:150px;padding:24px;border:1px dashed var(--border-color,#3b4352);border-radius:14px;text-align:center;cursor:pointer;background:rgba(127,127,127,.04)}.image-batch-dropzone:focus-within{outline:2px solid currentColor;outline-offset:2px}.image-batch-dropzone input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.image-batch-dropzone small{opacity:.68}
+  .image-batch-upload-card{padding:0}.image-batch-dropzone{position:relative;display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:18px;align-items:center;min-height:118px;padding:22px 20px;border:1px dashed #625bd3;border-radius:14px;background:linear-gradient(180deg,rgba(124,115,255,.055),rgba(124,115,255,.015));cursor:pointer;box-sizing:border-box;transition:border-color .16s ease,background .16s ease,box-shadow .16s ease}.image-batch-dropzone:hover{border-color:#827aff;background:linear-gradient(180deg,rgba(124,115,255,.095),rgba(124,115,255,.025));box-shadow:0 0 0 3px rgba(124,115,255,.07)}.image-batch-dropzone:focus-within{outline:2px solid #7c73ff;outline-offset:3px}.image-batch-dropzone input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.image-batch-dropzone__icon{width:48px;height:48px;display:grid;place-items:center;border:1px solid #3a4252;border-radius:13px;background:#171d28;color:#eef0f7}.image-batch-dropzone__icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.image-batch-dropzone__copy{display:grid;gap:7px;min-width:0}.image-batch-dropzone__copy strong{font-size:18px;color:#f4f5fa}.image-batch-dropzone__copy>span{font-size:13px;color:#a4abba}.image-batch-dropzone__copy small{display:flex;align-items:center;gap:7px;color:#8d96a6}.image-batch-dropzone__privacy-dot{width:7px;height:7px;border-radius:50%;background:#28c889;box-shadow:0 0 0 3px rgba(40,200,137,.1)}.image-batch-dropzone__cta{display:inline-flex;align-items:center;justify-content:center;min-width:145px;min-height:42px;padding:0 20px;border-radius:11px;background:linear-gradient(135deg,#7168ff,#6255ee);box-shadow:0 8px 22px rgba(92,78,238,.24);color:#fff;font-weight:800;font-size:13px}.image-batch-dropzone:hover .image-batch-dropzone__cta{filter:brightness(1.08)}@media(max-width:700px){.image-batch-dropzone{grid-template-columns:46px minmax(0,1fr);gap:13px;padding:18px}.image-batch-dropzone__icon{width:44px;height:44px}.image-batch-dropzone__cta{grid-column:1/-1;width:100%;box-sizing:border-box}.image-batch-dropzone__copy strong{font-size:16px}.image-batch-dropzone__copy>span{font-size:12px}}
 </style>
