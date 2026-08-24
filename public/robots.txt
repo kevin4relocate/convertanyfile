@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://convertanyfile.net/sitemap-index.xml
