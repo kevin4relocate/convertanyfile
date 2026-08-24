@@ -14,7 +14,7 @@ export const CONVERTERS: readonly ConverterDefinition[] = [
     slug: 'image-converter',
     title: 'Free Image Converter — Convert Images Privately | ConvertAnyFile',
     description: 'Convert JPG, PNG, WebP, HEIC, AVIF, TIFF and more directly in your browser. Batch conversion, ZIP download, no image upload required.',
-    h1: 'Convert images fast. Keep them private.',
+    h1: 'Free online image converter for JPG, PNG, WebP and more.',
     eyebrow: 'Private image converter',
     intro: 'Drop supported image files, choose an output format, and convert locally in your browser.',
   },

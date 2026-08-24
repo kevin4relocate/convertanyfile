@@ -14,7 +14,7 @@ export const ARCHIVE_CONVERTERS: readonly ConverterDefinition[] = [
     slug: 'archive-converter',
     title: 'Free Archive Converter — 7Z, RAR, ZIP, TAR & GZIP | ConvertAnyFile',
     description: 'Convert 7Z, RAR, ZIP, TAR, TAR.GZ, TGZ and GZIP files directly in your browser. Private local processing, batch conversion, safety limits, and no account required.',
-    h1: 'Convert archives locally.',
+    h1: 'Free online archive converter for 7Z, RAR, ZIP and TAR.',
     eyebrow: 'Private archive converter',
     intro: 'Open 7Z and RAR or repackage ZIP, TAR, TAR.GZ, TGZ and GZIP sources in your browser without uploading their contents to a conversion server.',
   },
