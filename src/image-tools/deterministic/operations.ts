@@ -37,7 +37,8 @@ function cropRect(width: number, height: number, settings: CropSettings): { sx: 
   let sx = clamp(settings.x, 0, 100) / 100 * width;
   let sy = clamp(settings.y, 0, 100) / 100 * height;
   const ratios: Record<Exclude<CropSettings['aspect'], 'free' | 'original'>, number> = { '1:1': 1, '4:3': 4 / 3, '3:2': 3 / 2, '16:9': 16 / 9, '9:16': 9 / 16 };
-  const target = settings.aspect === 'free' ? null : settings.aspect === 'original' ? width / Math.max(1, height) : ratios[settings.aspect];
+  const shapeRatio = settings.shape === 'square' || settings.shape === 'circle' ? 1 : null;
+  const target = shapeRatio ?? (settings.aspect === 'free' ? null : settings.aspect === 'original' ? width / Math.max(1, height) : ratios[settings.aspect]);
   if (target) {
     const current = sw / Math.max(1, sh);
     if (current > target) { const next = sh * target; sx += (sw - next) / 2; sw = next; }
@@ -80,11 +81,28 @@ function drawBlur(bitmap: ImageBitmap, settings: BlurSettings, maxDimension?: nu
     context.drawImage(bitmap, 0, 0, canvas.width, canvas.height); context.filter = 'none'; return canvas;
   }
   const x = clamp(settings.x, 0, 100) / 100 * canvas.width, y = clamp(settings.y, 0, 100) / 100 * canvas.height;
-  const width = clamp(settings.width, 1, 100) / 100 * canvas.width, height = clamp(settings.height, 1, 100) / 100 * canvas.height;
-  const right = Math.min(canvas.width, x + width), bottom = Math.min(canvas.height, y + height);
-  context.save(); context.beginPath(); context.rect(x, y, Math.max(1, right - x), Math.max(1, bottom - y)); context.clip();
-  context.filter = `blur(${Math.max(0.5, radius)}px)`; context.drawImage(bitmap, 0, 0, canvas.width, canvas.height); context.restore(); context.filter = 'none';
+  const regionWidth = clamp(settings.width, 1, 100) / 100 * canvas.width, regionHeight = clamp(settings.height, 1, 100) / 100 * canvas.height;
+  const right = Math.min(canvas.width, x + regionWidth), bottom = Math.min(canvas.height, y + regionHeight);
+  const clippedWidth = Math.max(1, right - x), clippedHeight = Math.max(1, bottom - y);
+  context.save(); context.beginPath();
+  if (settings.shape === 'circle') context.ellipse(x + clippedWidth / 2, y + clippedHeight / 2, clippedWidth / 2, clippedHeight / 2, 0, 0, Math.PI * 2);
+  else context.rect(x, y, clippedWidth, clippedHeight);
+  context.clip(); context.filter = `blur(${Math.max(0.5, radius)}px)`; context.drawImage(bitmap, 0, 0, canvas.width, canvas.height); context.restore(); context.filter = 'none';
   return canvas;
+}
+
+function drawCrop(bitmap: ImageBitmap, settings: CropSettings, maxDimension?: number): HTMLCanvasElement {
+  const crop = cropRect(bitmap.width, bitmap.height, settings), size = scaledSize(crop.sw, crop.sh, maxDimension);
+  const { canvas, context } = canvas2d(size.width, size.height);
+  if (settings.shape === 'circle' || settings.shape === 'triangle') {
+    context.save(); context.beginPath();
+    if (settings.shape === 'circle') context.ellipse(canvas.width / 2, canvas.height / 2, canvas.width / 2, canvas.height / 2, 0, 0, Math.PI * 2);
+    else { context.moveTo(canvas.width / 2, 0); context.lineTo(canvas.width, canvas.height); context.lineTo(0, canvas.height); context.closePath(); }
+    context.clip();
+    context.drawImage(bitmap, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height);
+    context.restore(); return canvas;
+  }
+  context.drawImage(bitmap, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height); return canvas;
 }
 
 export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolId, settings: DeterministicSettings, maxDimension?: number): HTMLCanvasElement {
@@ -93,10 +111,7 @@ export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolI
     const { canvas, context } = canvas2d(size.width, size.height); context.drawImage(bitmap, 0, 0, canvas.width, canvas.height); return canvas;
   }
   if (toolId === 'rotate-flip-image') return drawRotateFlip(bitmap, settings as RotateFlipSettings, maxDimension);
-  if (toolId === 'crop-image') {
-    const crop = cropRect(bitmap.width, bitmap.height, settings as CropSettings), size = scaledSize(crop.sw, crop.sh, maxDimension);
-    const { canvas, context } = canvas2d(size.width, size.height); context.drawImage(bitmap, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height); return canvas;
-  }
+  if (toolId === 'crop-image') return drawCrop(bitmap, settings as CropSettings, maxDimension);
   if (toolId === 'blur-image') return drawBlur(bitmap, settings as BlurSettings, maxDimension);
   // Compress and metadata removal both intentionally re-render decoded pixels.
   // Canvas encoding drops EXIF/GPS/software metadata while preserving visible pixels.
