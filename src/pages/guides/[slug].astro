@@ -1,0 +1,64 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import ArticleFrame from '../../components/ArticleFrame.astro';
+import { IMAGE_GROWTH_GUIDES } from '../../content/image-growth-guides';
+import { SITE } from '../../config/site';
+
+export function getStaticPaths() {
+  return IMAGE_GROWTH_GUIDES.map((guide) => ({ params: { slug: guide.slug }, props: { guide } }));
+}
+
+const { guide } = Astro.props;
+const canonical = `${SITE.origin}/guides/${guide.slug}/`;
+const toc = [
+  { id: 'quick-answer', label: 'Quick answer' },
+  ...guide.sections.map((section: { id: string; heading: string }) => ({ id: section.id, label: section.heading })),
+  { id: 'faq', label: 'Common questions' },
+];
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: guide.h1,
+    description: guide.description,
+    mainEntityOfPage: canonical,
+    author: { '@type': 'Organization', name: SITE.name, url: SITE.origin },
+    publisher: { '@type': 'Organization', name: SITE.name, url: SITE.origin },
+    articleSection: 'Image tools',
+    inLanguage: 'en',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE.origin}/` },
+      { '@type': 'ListItem', position: 2, name: 'Guides', item: `${SITE.origin}/guides/` },
+      { '@type': 'ListItem', position: 3, name: guide.h1, item: canonical },
+    ],
+  },
+];
+---
+<SiteLayout title={guide.title} description={guide.description} schema={schema}>
+  <section class="page-hero"><div class="site-container hero-inner">
+    <div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/guides/">Guides</a><span>/</span><span>{guide.h1}</span></div>
+    <span class="eyebrow">Image how-to guide</span>
+    <h1>{guide.h1}</h1>
+    <p>{guide.heroIntro}</p>
+  </div></section>
+
+  <ArticleFrame toc={toc} related={guide.related} relatedTitle="Related tools & guides" asideNote="Keep important source images until you have reviewed the final output for the workflow that will use it.">
+    <div class="quick-answer" id="quick-answer"><strong>Quick answer</strong><p>{guide.quickAnswer} <a href={guide.toolHref}>Open {guide.toolLabel}</a>.</p></div>
+
+    {guide.sections.map((section: any) => (
+      <section class="guide-section" aria-labelledby={section.id}>
+        <h2 id={section.id}>{section.heading}</h2>
+        {section.paragraphs.map((paragraph: string) => <p>{paragraph}</p>)}
+        {section.bullets?.length > 0 && <ul class="content-checklist">{section.bullets.map((item: string) => <li>{item}</li>)}</ul>}
+        {section.callout && <div class="callout"><strong>{section.callout.title}</strong><p>{section.callout.text}</p></div>}
+      </section>
+    ))}
+
+    <h2 id="faq">Common questions</h2>
+    {guide.faq.map((item: any) => <><h3>{item.question}</h3><p>{item.answer}</p></>)}
+  </ArticleFrame>
+</SiteLayout>
