@@ -15,6 +15,7 @@ const toc = [
   ...guide.sections.map((section: { id: string; heading: string }) => ({ id: section.id, label: section.heading })),
   { id: 'faq', label: 'Common questions' },
 ];
+const related = [...guide.related];
 const schema = [
   {
     '@context': 'https://schema.org',
@@ -46,7 +47,7 @@ const schema = [
     <p>{guide.heroIntro}</p>
   </div></section>
 
-  <ArticleFrame toc={toc} related={guide.related} relatedTitle="Related tools & guides" asideNote="Keep important source images until you have reviewed the final output for the workflow that will use it.">
+  <ArticleFrame toc={toc} related={related} relatedTitle="Related tools & guides" asideNote="Keep important source images until you have reviewed the final output for the workflow that will use it.">
     <div class="quick-answer" id="quick-answer"><strong>Quick answer</strong><p>{guide.quickAnswer} <a href={guide.toolHref}>Open {guide.toolLabel}</a>.</p></div>
 
     {guide.sections.map((section: any) => (
