@@ -48,7 +48,12 @@ const schemas = imageToolSchemas(tool, ['Browser-based local image processing', 
 
   {seo && <section class="content-wide-section gemini-content-section"><div class="site-container"><FaqList items={seo.faq} title={`${tool.displayName} FAQ`} intro={`Practical answers about ${tool.displayName.toLowerCase()}, local processing, batch behavior and output limitations.`} /></div></section>}
 
-  <section class="content-wide-section white gemini-content-section"><div class="site-container">
+  {seo?.guides?.length > 0 && <section class="content-wide-section white gemini-content-section"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">Practical guides</span><h2>Learn the workflow before you process a batch.</h2><p>Use these focused guides for common sizing, compression, crop, blur or metadata questions, then return to the tool with the right settings in mind.</p></div>
+    <div class="related-grid">{seo.guides.map((guide) => <a class="related-card" href={guide.href}>{guide.label} <span>→</span></a>)}</div>
+  </div></section>}
+
+  <section class="content-wide-section gemini-content-section"><div class="site-container">
     <div class="section-heading wide"><span class="section-kicker">Related Image Tools</span><h2>Continue editing without uploading your source images.</h2><p>Use a related tool for the next step instead of repeating the upload-and-download workflow on a separate service.</p></div>
     <ImageToolGrid compact ids={seo?.relatedIds} excludeId={tool.id} />
   </div></section>

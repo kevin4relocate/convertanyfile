@@ -8,6 +8,11 @@ export interface ImageToolSeoFaq {
   answer: string;
 }
 
+export interface ImageToolSeoGuide {
+  href: string;
+  label: string;
+}
+
 export interface ImageToolSeoContent {
   howToHeading: string;
   howToIntro: string;
@@ -17,6 +22,7 @@ export interface ImageToolSeoContent {
   useCases: readonly string[];
   faq: readonly ImageToolSeoFaq[];
   relatedIds: readonly string[];
+  guides?: readonly ImageToolSeoGuide[];
 }
 
 export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
@@ -44,6 +50,10 @@ export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
       { question: 'Are my images uploaded to a server?', answer: 'The resize workflow decodes, previews, processes and encodes supported images in the browser. Source images are not sent to an image-resize API.' },
     ],
     relatedIds: ['compress-image', 'crop-image', 'rotate-flip-image', 'remove-image-metadata'],
+    guides: [
+      { href: '/guides/resize-image-without-stretching/', label: 'How to resize an image without stretching it' },
+      { href: '/guides/resize-image-to-1920x1080/', label: 'How to resize an image to 1920 × 1080' },
+    ],
   },
   'compress-image': {
     howToHeading: 'How to compress images without changing their dimensions.',
@@ -69,6 +79,10 @@ export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
       { question: 'Can I use different compression settings in one batch?', answer: 'Yes. Start with shared settings, then switch to Edit individually for files that need a different format or quality.' },
     ],
     relatedIds: ['resize-image', 'remove-image-metadata', 'crop-image', 'bulk-rename-images'],
+    guides: [
+      { href: '/guides/reduce-image-file-size-without-resizing/', label: 'How to reduce image file size without resizing' },
+      { href: '/guides/compress-images-for-web/', label: 'How to compress images for the web' },
+    ],
   },
   'rotate-flip-image': {
     howToHeading: 'How to rotate or flip images online.',
@@ -121,6 +135,10 @@ export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
       { question: 'Does cropping upload the image?', answer: 'No image-processing API upload is required. Supported images are decoded, previewed, cropped and encoded locally in the browser.' },
     ],
     relatedIds: ['resize-image', 'rotate-flip-image', 'blur-image', 'compress-image'],
+    guides: [
+      { href: '/guides/crop-image-to-circle/', label: 'How to crop an image into a circle' },
+      { href: '/guides/resize-image-to-1920x1080/', label: 'How to prepare a 1920 × 1080 frame without distortion' },
+    ],
   },
   'blur-image': {
     howToHeading: 'How to blur an image or part of an image online.',
@@ -148,6 +166,9 @@ export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
       { question: 'Are source images uploaded for blurring?', answer: 'No image-processing API upload is required. Supported images are decoded, previewed, blurred and encoded locally in the browser.' },
     ],
     relatedIds: ['crop-image', 'resize-image', 'remove-image-metadata', 'compress-image'],
+    guides: [
+      { href: '/guides/blur-part-of-image/', label: 'How to blur part of an image' },
+    ],
   },
   'remove-image-metadata': {
     howToHeading: 'How to remove EXIF, GPS and software metadata from images.',
@@ -173,6 +194,10 @@ export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
       { question: 'Should I verify the result before sharing sensitive files?', answer: 'Yes. When metadata removal is security- or privacy-critical, independently inspect the downloaded result with a metadata viewer before distribution.' },
     ],
     relatedIds: ['compress-image', 'bulk-rename-images', 'resize-image', 'crop-image'],
+    guides: [
+      { href: '/guides/remove-exif-from-photo/', label: 'How to remove EXIF data from a photo' },
+      { href: '/guides/remove-gps-location-from-image/', label: 'How to remove GPS location from an image' },
+    ],
   },
   'bulk-rename-images': {
     howToHeading: 'How to bulk rename image files with a pattern.',
