@@ -1,13 +1,16 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
 import ImageToolGrid from '../components/ImageToolGrid.astro';
+import GrowthLinkHub from '../components/GrowthLinkHub.astro';
 import FaqList from '../components/FaqList.astro';
 import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
+import { POPULAR_IMAGE_GUIDES } from '../config/growth-links';
 import { SITE } from '../config/site';
 
 const everydayTools = ['resize-image','compress-image','rotate-flip-image','crop-image','blur-image'];
 const cleanupTools = ['remove-image-metadata','bulk-rename-images'];
 const repairTools = ['remove-watermark','gemini-ai-logo-remover'];
+const guideGroups = [{ title: 'Popular image editing guides', links: POPULAR_IMAGE_GUIDES }] as const;
 const faq = [
   { question: 'Do these image tools upload my source images?', answer: 'The current Image Tools are designed around browser-side processing. Supported transforms, visible-watermark repair, metadata cleanup, renaming and ZIP creation run locally instead of sending source images to an image-processing API.' },
   { question: 'Which image formats are supported?', answer: 'The current Image Tools accept JPG/JPEG, PNG and WebP. Individual tools may offer different output choices depending on whether transparency, lossless output or source-format preservation is needed.' },
@@ -45,7 +48,9 @@ const schema = [
 
 <section class="content-wide-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Visible watermark repair</span><h2>Choose a general mask workflow or a focused Gemini remover.</h2><p>Remove Watermark supports multiple manual shapes plus a movable text mask so you control the visible area being repaired. Gemini Watermark Remover keeps a smaller Circle and 4-Point Star toolset for the small visible sparkle mark it targets.</p></div><ImageToolGrid ids={repairTools} /></div></section>
 
-<section class="content-wide-section white"><div class="site-container"><div class="content-intro-grid"><div><span class="section-kicker">Shared or individual</span><h2>Apply one setup to repeated work, then customize exceptions.</h2><p>Visual tools can start with a shared batch setup and switch to individual overrides when a particular image needs different dimensions, quality, orientation, crop, blur region, output format or mask placement. Metadata cleanup deliberately uses one simple batch setup, while Bulk Rename supports shared naming rules plus exceptions.</p></div><div class="content-summary-card"><strong>Local by design</strong><p>Image decoding, previews, supported processing, ZIP creation and downloads happen in your browser. Bulk Rename does not decode or re-encode the image bytes at all.</p></div></div></div></section>
+<section class="content-wide-section white"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Image editing guides</span><h2>Start with the question, then open the matching tool.</h2><p>These guides answer common image-search questions about aspect ratio, exact dimensions, compression, circle crops, selected-area blur, EXIF and GPS metadata. Each guide links directly to the live browser tool used for the workflow.</p></div><GrowthLinkHub groups={guideGroups} compact /></div></section>
+
+<section class="content-wide-section"><div class="site-container"><div class="content-intro-grid"><div><span class="section-kicker">Shared or individual</span><h2>Apply one setup to repeated work, then customize exceptions.</h2><p>Visual tools can start with a shared batch setup and switch to individual overrides when a particular image needs different dimensions, quality, orientation, crop, blur region, output format or mask placement. Metadata cleanup deliberately uses one simple batch setup, while Bulk Rename supports shared naming rules plus exceptions.</p></div><div class="content-summary-card"><strong>Local by design</strong><p>Image decoding, previews, supported processing, ZIP creation and downloads happen in your browser. Bulk Rename does not decode or re-encode the image bytes at all.</p></div></div></div></section>
 
 <section class="content-wide-section"><div class="site-container"><FaqList items={faq} title="Image Tools FAQ" intro="Common questions about local processing, supported formats, batch editing, metadata cleanup and visible-watermark repair." /></div></section>
 </SiteLayout>

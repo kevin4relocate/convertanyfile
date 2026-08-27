@@ -37,9 +37,12 @@ export const FOOTER_GROUPS = [
     title: 'Learn',
     links: [
       { label: 'Guides', href: '/guides/' },
+      { label: 'Resize Without Stretching', href: '/guides/resize-image-without-stretching/' },
+      { label: 'Reduce Image File Size', href: '/guides/reduce-image-file-size-without-resizing/' },
+      { label: 'Remove EXIF Data', href: '/guides/remove-exif-from-photo/' },
+      { label: 'Crop Image to Circle', href: '/guides/crop-image-to-circle/' },
       { label: 'SRT to VTT', href: '/srt-to-vtt/' },
       { label: 'Remove Watermark Guide', href: '/guides/how-to-remove-watermark-from-image/' },
-      { label: 'Remove Text Watermark', href: '/guides/how-to-remove-text-watermark-from-image/' },
       { label: 'Gemini Watermark Guide', href: '/guides/how-to-remove-gemini-watermark-from-image/' },
       { label: 'Formats', href: '/formats/' },
       { label: 'FAQ', href: '/faq/' },
