@@ -95,9 +95,11 @@ export function mountMetadataCleanup(root: HTMLElement): void {
 
   function updateActions(): void {
     const done = state.items.filter((item) => item.status === 'done' && item.result).length;
+    const downloadCount = done || state.items.length;
     readyCount.textContent = done
       ? `${done} clean file${done === 1 ? '' : 's'} ready`
       : `${state.items.length} file${state.items.length === 1 ? '' : 's'} ready`;
+    downloadButton.textContent = downloadCount > 1 ? 'Download ZIP' : 'Download image';
     processButton.disabled = state.processing || !state.items.length;
     downloadButton.disabled = state.processing || !done;
     add.disabled = state.processing;
