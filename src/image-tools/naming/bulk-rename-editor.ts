@@ -96,7 +96,7 @@ export function mountBulkRenameImages(root:HTMLElement):void{
   function invalidate():void{state.items.forEach(item=>{item.status='ready';item.preparedName=undefined;});render();}
   function updateSelection():void{const item=active();customWrap.hidden=state.mode!=='individual'||!item;custom.value=item?.customName||'';}
   function render():void{
-    const map=names();syncControls();list.replaceChildren();count.textContent=String(state.items.length);root.dataset.hasItems=String(state.items.length>0);ready.textContent=`${state.items.length} image${state.items.length===1?'':'s'} ready`;process.disabled=!state.items.length;download.disabled=!state.items.some(item=>item.status==='done'&&item.preparedName);
+    const map=names();const preparedCount=state.items.filter(item=>item.status==='done'&&item.preparedName).length;const downloadCount=preparedCount||state.items.length;syncControls();list.replaceChildren();count.textContent=String(state.items.length);root.dataset.hasItems=String(state.items.length>0);ready.textContent=`${state.items.length} image${state.items.length===1?'':'s'} ready`;process.disabled=!state.items.length;download.textContent=downloadCount>1?'Download ZIP':'Download image';download.disabled=!preparedCount;
     state.items.forEach(item=>{
       const card=document.createElement('div');card.className=`rename-card${item.id===state.activeId?' is-active':''}`;card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label',`Rename ${item.file.name}`);
       const img=document.createElement('img');img.src=item.url;img.alt='';
