@@ -57,7 +57,7 @@ const modeLabel = (mode: ImageMaskMode): string => ({rect:'Rectangle',circle:'Ci
 
       <Fragment slot="output"><ImageOutputPanel variant="mask" format="source" quality={96} /></Fragment>
       <Fragment slot="progress"><ImageBatchProgress variant="mask" completed={0} total={0} /></Fragment>
-      <Fragment slot="actions"><ImageBatchActionBar variant="mask" processLabel={`${tool.removeActionLabel} from batch`} downloadLabel="Download ZIP" preparedSummary={`Draw a mask over the ${targetLabel} to prepare images.`} /></Fragment>
+      <Fragment slot="actions"><ImageBatchActionBar variant="mask" processLabel={`${tool.removeActionLabel} from batch`} preparedSummary={`Draw a mask over the ${targetLabel} to prepare images.`} /></Fragment>
     </ImageBatchShell>
     <p class="image-tool-policy-note">{tool.policyNote}</p>
     {isGemini && <p class="gemini-non-affiliation">ConvertAnyFile is not affiliated with or endorsed by Google or Gemini.</p>}

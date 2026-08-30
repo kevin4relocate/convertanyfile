@@ -142,7 +142,7 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
     }catch(error){if(generation!==state.previewGeneration)return;resultPreview.hidden=true;resultEmpty.hidden=false;resultEmpty.textContent='Preview unavailable';previewMeta.textContent=error instanceof Error?error.message:'Unable to render preview';}
   }
   function schedulePreview():void {if(state.previewTimer)window.clearTimeout(state.previewTimer);state.previewTimer=window.setTimeout(()=>void renderPreview(),80);}
-  function updateActions():void {const done=state.items.filter(item=>item.status==='done'&&item.result).length;readyCount.textContent=`${state.items.length} image${state.items.length===1?'':'s'} ready`;processButton.disabled=state.processing||!state.items.length;downloadButton.disabled=state.processing||!done;add.disabled=state.processing;clear.disabled=state.processing;scopeButtons.forEach(button=>{button.disabled=state.processing;});}
+  function updateActions():void {const done=state.items.filter(item=>item.status==='done'&&item.result).length;const downloadCount=done||state.items.length;readyCount.textContent=`${state.items.length} image${state.items.length===1?'':'s'} ready`;downloadButton.textContent=downloadCount>1?'Download ZIP':'Download image';processButton.disabled=state.processing||!state.items.length;downloadButton.disabled=state.processing||!done;add.disabled=state.processing;clear.disabled=state.processing;scopeButtons.forEach(button=>{button.disabled=state.processing;});}
 
   async function addFiles(files:readonly File[]):Promise<void> {
     if(!files.length||state.processing)return;hideNotice();let totalBytes=state.items.reduce((sum,item)=>sum+item.file.size,0),rejected=0,limited=0;
