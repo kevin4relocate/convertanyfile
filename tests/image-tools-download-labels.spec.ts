@@ -34,6 +34,25 @@ for (const [path, toolId, downloadRole] of SINGLE_IMAGE_ROUTES) {
   });
 }
 
+for (const [path, toolId, actionLabel] of [
+  ['/remove-watermark/', 'remove-watermark', 'Remove watermark'],
+  ['/gemini-ai-logo-remover/', 'gemini-ai-logo-remover', 'Remove AI logo'],
+] as const) {
+  test(`${toolId} uses a singular repair action for one image`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium-desktop', 'Run mask action-label coverage once in Chromium');
+    await page.goto(path);
+    const app = page.locator(`[data-image-tool-app][data-tool-id="${toolId}"]`);
+    await expect(app).toHaveAttribute('data-image-tool-ready', 'true');
+    await app.locator('[data-role="file-input"]').setInputFiles({
+      name: 'single.png',
+      mimeType: 'image/png',
+      buffer: PNG_2X2,
+    });
+    await expect(app.locator('[data-role="remove"]')).toHaveText(actionLabel);
+    await expect(app.locator('[data-role="remove"]')).not.toContainText('batch');
+  });
+}
+
 for (const [path, toolId] of [
   ['/resize-image/', 'resize-image'],
   ['/remove-image-metadata/', 'remove-image-metadata'],
