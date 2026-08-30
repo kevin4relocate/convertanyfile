@@ -59,6 +59,10 @@ function initStickyImageToolActions(root: HTMLElement): void {
 
   const sync = (): void => {
     const count = Number(batchCount?.textContent?.trim() || '0');
+    if (primary.matches('[data-role="remove"]') && count === 1) {
+      const label = `Remove ${root.dataset.targetLabel || 'watermark'}`;
+      if (primary.textContent?.trim() !== label) primary.textContent = label;
+    }
     const hasItems = root.dataset.hasItems === 'true' || count > 0;
     const editorVisible = editor ? !editor.hidden && hasItems : hasItems;
     const progressVisible = progress ? !progress.hidden : false;
