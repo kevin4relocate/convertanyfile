@@ -29,23 +29,6 @@ function syncQualityControls(root: HTMLElement): void {
   }
 }
 
-function initSingleMaskActionLabel(root: HTMLElement): void {
-  const primary = root.querySelector<HTMLButtonElement>('[data-role="remove"]');
-  const batchCount = root.querySelector<HTMLElement>('[data-role="batch-count"]');
-  if (!primary || !batchCount) return;
-
-  const target = root.dataset.targetLabel || 'watermark';
-  const sync = (): void => {
-    const count = Number(batchCount.textContent?.trim() || '0');
-    if (count === 1) primary.textContent = `Remove ${target}`;
-  };
-
-  const observer = new MutationObserver(sync);
-  observer.observe(batchCount, { childList: true, characterData: true, subtree: true });
-  window.addEventListener('pagehide', () => observer.disconnect(), { once: true });
-  sync();
-}
-
 function initStickyImageToolActions(root: HTMLElement): void {
   if (root.dataset.stickyActionsReady === 'true') return;
 
@@ -76,6 +59,10 @@ function initStickyImageToolActions(root: HTMLElement): void {
 
   const sync = (): void => {
     const count = Number(batchCount?.textContent?.trim() || '0');
+    if (primary.matches('[data-role="remove"]') && count === 1) {
+      const label = `Remove ${root.dataset.targetLabel || 'watermark'}`;
+      if (primary.textContent?.trim() !== label) primary.textContent = label;
+    }
     const hasItems = root.dataset.hasItems === 'true' || count > 0;
     const editorVisible = editor ? !editor.hidden && hasItems : hasItems;
     const progressVisible = progress ? !progress.hidden : false;
@@ -132,7 +119,6 @@ async function initializeImageTool(root: HTMLElement): Promise<void> {
     if (!mounted) throw new Error(`Unsupported image tool: ${toolId}`);
     syncQualityControls(root);
     mountVisualRegionController(root);
-    initSingleMaskActionLabel(root);
     initStickyImageToolActions(root);
     root.dataset.imageToolReady = 'true';
   } catch (error) {
