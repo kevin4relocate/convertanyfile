@@ -5,10 +5,9 @@ import { IMAGE_GROWTH_GUIDES } from '../../content/image-growth-guides';
 import { CONVERSION_GROWTH_GUIDES } from '../../content/conversion-growth-guides';
 import { SITE } from '../../config/site';
 
-const GROWTH_GUIDES = [...IMAGE_GROWTH_GUIDES, ...CONVERSION_GROWTH_GUIDES];
-
 export function getStaticPaths() {
-  return GROWTH_GUIDES.map((guide) => ({ params: { slug: guide.slug }, props: { guide } }));
+  const guides = [...IMAGE_GROWTH_GUIDES, ...CONVERSION_GROWTH_GUIDES];
+  return guides.map((guide) => ({ params: { slug: guide.slug }, props: { guide } }));
 }
 
 const { guide } = Astro.props;
