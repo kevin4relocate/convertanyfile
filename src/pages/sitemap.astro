@@ -1,0 +1,67 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { SITE } from '../config/site';
+import { ALL_PAIR_CONVERTERS } from '../config/converter-registry';
+import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
+import { IMAGE_GROWTH_GUIDES } from '../content/image-growth-guides';
+import { CONVERSION_GROWTH_GUIDES } from '../content/conversion-growth-guides';
+import { STATIC_GUIDES } from '../config/guide-links';
+
+const topPages = [
+  { href: '/', label: 'Home' },
+  { href: '/image-converter/', label: 'Image Converter' },
+  { href: '/data-converter/', label: 'Data Converter' },
+  { href: '/archive-converter/', label: 'Archive Converter' },
+  { href: '/subtitle-converter/', label: 'Subtitle Converter' },
+  { href: '/image-tools/', label: 'Image Tools' },
+  { href: '/formats/', label: 'Supported Formats' },
+  { href: '/guides/', label: 'Guides' },
+  { href: '/faq/', label: 'FAQ' },
+  { href: '/about/', label: 'About' },
+];
+const categoryNames = { image: 'Image conversion pages', data: 'Data conversion pages', archive: 'Archive conversion pages', subtitle: 'Subtitle conversion pages' } as const;
+const converterGroups = (['image','data','archive','subtitle'] as const).map((category) => ({
+  category,
+  title: categoryNames[category],
+  items: ALL_PAIR_CONVERTERS.filter((item) => item.category === category),
+}));
+const growthGuides = [...CONVERSION_GROWTH_GUIDES, ...IMAGE_GROWTH_GUIDES].map((guide) => ({ href: `/guides/${guide.slug}/`, label: guide.h1 }));
+const staticGuides = STATIC_GUIDES.map((guide) => ({ href: guide.href, label: guide.title }));
+const allGuideLinks = [...growthGuides, ...staticGuides];
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'ConvertAnyFile HTML Sitemap',
+  url: `${SITE.origin}/sitemap/`,
+  description: 'Browse ConvertAnyFile tools, converter pages and practical guides from one crawlable directory.',
+  isPartOf: { '@type': 'WebSite', name: SITE.name, url: SITE.origin },
+};
+---
+<SiteLayout title="HTML Sitemap — Tools, Converters & Guides | ConvertAnyFile" description="Browse ConvertAnyFile image tools, file converters, format-pair pages and practical guides from one crawlable HTML sitemap." schema={schema}>
+  <section class="page-hero"><div class="site-container hero-inner">
+    <div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Sitemap</span></div>
+    <span class="eyebrow">Site directory</span>
+    <h1>ConvertAnyFile HTML sitemap</h1>
+    <p>Use this directory to reach the main converter hubs, image tools, supported format pairs and practical guides. Search engines can also follow these normal HTML links alongside the XML sitemap.</p>
+  </div></section>
+
+  <section class="content-wide-section"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">Main pages</span><h2>Start with the platform hubs.</h2><p>These are the highest-level entry points for tools, formats, guides and company information.</p></div>
+    <div class="related-grid">{topPages.map((item) => <a class="related-card" href={item.href}>{item.label} <span>→</span></a>)}</div>
+  </div></section>
+
+  <section class="content-wide-section white"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">Image tools</span><h2>Browser-based image utility pages.</h2><p>All currently public Image Tools are linked here directly.</p></div>
+    <div class="related-grid">{IMAGE_TOOL_ROADMAP.map((item) => <a class="related-card" href={item.href}>{item.label} <span>→</span></a>)}</div>
+  </div></section>
+
+  {converterGroups.map((group, index) => <section class:list={['content-wide-section', index % 2 === 0 ? '' : 'white']}><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">Converters</span><h2>{group.title}</h2><p>Each route opens the matching converter with a format-specific preset and supporting content.</p></div>
+    <div class="related-grid">{group.items.map((item) => <a class="related-card" href={`/${item.slug}/`}>{item.eyebrow} <span>→</span></a>)}</div>
+  </div></section>)}
+
+  <section class="content-wide-section white"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">Guides</span><h2>Practical how-to and format guides.</h2><p>Use a guide when you need the decision or trade-off explained before opening the related tool.</p></div>
+    <div class="related-grid">{allGuideLinks.map((item) => <a class="related-card" href={item.href}>{item.label} <span>→</span></a>)}</div>
+  </div></section>
+</SiteLayout>

@@ -29,6 +29,15 @@ export const POPULAR_IMAGE_CONVERSIONS: readonly GrowthLink[] = [
   { href: '/heic-to-png/', label: 'HEIC to PNG', description: 'Create a broadly supported lossless PNG copy from HEIC.' },
 ];
 
+export const POPULAR_DATA_CONVERSIONS: readonly GrowthLink[] = [
+  { href: '/csv-to-json/', label: 'CSV to JSON', description: 'Turn table rows into predictable JSON records without uploading the source file.' },
+  { href: '/json-to-csv/', label: 'JSON to CSV', description: 'Flatten JSON records into a spreadsheet-friendly CSV table.' },
+  { href: '/jsonl-to-json/', label: 'JSONL to JSON', description: 'Turn one-record-per-line JSON into a standard JSON document.' },
+  { href: '/json-to-jsonl/', label: 'JSON to JSONL', description: 'Create one compact JSON value per line for line-oriented workflows.' },
+  { href: '/csv-to-jsonl/', label: 'CSV to JSONL', description: 'Convert CSV rows into one JSON object per output line.' },
+  { href: '/jsonl-to-csv/', label: 'JSONL to CSV', description: 'Create a table from newline-delimited JSON records.' },
+];
+
 export const POPULAR_IMAGE_GUIDES: readonly GrowthLink[] = [
   { href: '/guides/resize-image-without-stretching/', label: 'Resize without stretching', description: 'Keep aspect ratio intact and learn when cropping is the better choice.' },
   { href: '/guides/resize-image-to-1920x1080/', label: 'Resize to 1920 × 1080', description: 'Handle exact 16:9 output without distorting the source image.' },
@@ -40,8 +49,18 @@ export const POPULAR_IMAGE_GUIDES: readonly GrowthLink[] = [
   { href: '/guides/remove-gps-location-from-image/', label: 'Remove GPS location metadata', description: 'Remove embedded coordinates and review visible location clues.' },
 ];
 
+export const POPULAR_CONVERSION_GUIDES: readonly GrowthLink[] = [
+  { href: '/guides/how-to-convert-csv-to-json/', label: 'How to convert CSV to JSON', description: 'Understand headers, quoted fields and string preservation before creating JSON records.' },
+  { href: '/guides/how-to-convert-json-to-csv/', label: 'How to convert JSON to CSV', description: 'Flatten records into a table without hiding nested or complex values.' },
+  { href: '/guides/how-to-convert-jpg-to-webp/', label: 'How to convert JPG to WebP', description: 'Create practical WebP delivery copies and compare actual size and visual quality.' },
+  { href: '/guides/how-to-convert-webp-to-jpg/', label: 'How to convert WebP to JPG', description: 'Create a JPEG compatibility copy and understand transparency loss.' },
+  { href: '/guides/how-to-convert-png-to-jpg/', label: 'How to convert PNG to JPG', description: 'Know when JPEG suits photographic PNG files and when PNG should stay PNG.' },
+  { href: '/guides/how-to-convert-jpg-to-png/', label: 'How to convert JPG to PNG', description: 'Create a PNG workflow copy without expecting lost JPEG detail to return.' },
+];
+
 export const HOME_GROWTH_LINK_GROUPS: readonly GrowthLinkGroup[] = [
   { title: 'Popular image tools', links: POPULAR_IMAGE_TOOLS },
   { title: 'Popular image conversions', links: POPULAR_IMAGE_CONVERSIONS.slice(0, 6) },
-  { title: 'Helpful image guides', links: POPULAR_IMAGE_GUIDES.slice(0, 6) },
+  { title: 'Popular data conversions', links: POPULAR_DATA_CONVERSIONS.slice(0, 4) },
+  { title: 'Helpful guides', links: [...POPULAR_CONVERSION_GUIDES.slice(0, 3), ...POPULAR_IMAGE_GUIDES.slice(0, 3)] },
 ];

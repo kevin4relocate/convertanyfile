@@ -72,7 +72,7 @@ const breadcrumbSchema = {'@context':'https://schema.org','@type':'BreadcrumbLis
     <ul class="content-checklist">
       {seoContent.checkAfter.map((item) => <li>{item}</li>)}
     </ul>
-    {seoContent.guideHref && seoContent.guideLabel && <p><strong>Want the format trade-offs first?</strong> Read <a href={seoContent.guideHref}>{seoContent.guideLabel}</a> for practical guidance before converting.</p>}
+    {seoContent.guideHref && seoContent.guideLabel && <p><strong>Want a walkthrough before converting?</strong> Read <a href={seoContent.guideHref}>{seoContent.guideLabel}</a> for the practical workflow and trade-offs.</p>}
   </>}
 
   {source && target && <>

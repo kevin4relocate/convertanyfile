@@ -2,14 +2,22 @@
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import ArticleFrame from '../../components/ArticleFrame.astro';
 import { IMAGE_GROWTH_GUIDES } from '../../content/image-growth-guides';
+import { CONVERSION_GROWTH_GUIDES } from '../../content/conversion-growth-guides';
 import { SITE } from '../../config/site';
 
+const GROWTH_GUIDES = [...IMAGE_GROWTH_GUIDES, ...CONVERSION_GROWTH_GUIDES];
+
 export function getStaticPaths() {
-  return IMAGE_GROWTH_GUIDES.map((guide) => ({ params: { slug: guide.slug }, props: { guide } }));
+  return GROWTH_GUIDES.map((guide) => ({ params: { slug: guide.slug }, props: { guide } }));
 }
 
 const { guide } = Astro.props;
 const canonical = `${SITE.origin}/guides/${guide.slug}/`;
+const articleSection = 'section' in guide ? guide.section : 'Image tools';
+const eyebrow = articleSection === 'Data conversion' ? 'Data conversion guide' : articleSection === 'Image conversion' ? 'Image conversion guide' : 'Image how-to guide';
+const asideNote = articleSection === 'Data conversion'
+  ? 'Keep the source data until you have verified record counts, field names and the destination schema.'
+  : 'Keep important source images until you have reviewed the final output for the workflow that will use it.';
 const toc = [
   { id: 'quick-answer', label: 'Quick answer' },
   ...guide.sections.map((section: { id: string; heading: string }) => ({ id: section.id, label: section.heading })),
@@ -25,7 +33,7 @@ const schema = [
     mainEntityOfPage: canonical,
     author: { '@type': 'Organization', name: SITE.name, url: SITE.origin },
     publisher: { '@type': 'Organization', name: SITE.name, url: SITE.origin },
-    articleSection: 'Image tools',
+    articleSection,
     inLanguage: 'en',
   },
   {
@@ -42,12 +50,12 @@ const schema = [
 <SiteLayout title={guide.title} description={guide.description} schema={schema}>
   <section class="page-hero"><div class="site-container hero-inner">
     <div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/guides/">Guides</a><span>/</span><span>{guide.h1}</span></div>
-    <span class="eyebrow">Image how-to guide</span>
+    <span class="eyebrow">{eyebrow}</span>
     <h1>{guide.h1}</h1>
     <p>{guide.heroIntro}</p>
   </div></section>
 
-  <ArticleFrame toc={toc} related={related} relatedTitle="Related tools & guides" asideNote="Keep important source images until you have reviewed the final output for the workflow that will use it.">
+  <ArticleFrame toc={toc} related={related} relatedTitle="Related tools & guides" asideNote={asideNote}>
     <div class="quick-answer" id="quick-answer"><strong>Quick answer</strong><p>{guide.quickAnswer} <a href={guide.toolHref}>Open {guide.toolLabel}</a>.</p></div>
 
     {guide.sections.map((section: any) => (
