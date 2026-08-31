@@ -31,7 +31,7 @@ for (const [path, toolHref] of NEW_GUIDES) {
     await expect(page.locator('h1')).toHaveCount(1);
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /index/);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://convertanyfile.net${path}`);
-    await expect(page.locator('script[type="application/ld+json"]')).toContainText('Article');
+    await expect(page.locator('script[type="application/ld+json"]').filter({ hasText: '"Article"' }).first()).toBeAttached();
     await expect(page.locator(`a[href="${toolHref}"]`).first()).toBeVisible();
   });
 }
