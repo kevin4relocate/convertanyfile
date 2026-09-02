@@ -3,6 +3,7 @@ import type {
   CropSettings,
   DeterministicSettings,
   DeterministicToolId,
+  EdgeFadeSettings,
   ResizeSettings,
   RotateFlipSettings,
 } from './types';
@@ -105,6 +106,96 @@ function drawCrop(bitmap: ImageBitmap, settings: CropSettings, maxDimension?: nu
   context.drawImage(bitmap, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height); return canvas;
 }
 
+function edgeExtendedBlur(source: HTMLCanvasElement, radius: number): HTMLCanvasElement {
+  const safeRadius = Math.max(0.5, radius);
+  const pad = Math.max(2, Math.ceil(safeRadius * 2.2));
+  const padded = canvas2d(source.width + pad * 2, source.height + pad * 2);
+  const p = padded.context;
+  p.drawImage(source, pad, pad);
+  p.drawImage(source, 0, 0, 1, source.height, 0, pad, pad, source.height);
+  p.drawImage(source, source.width - 1, 0, 1, source.height, pad + source.width, pad, pad, source.height);
+  p.drawImage(source, 0, 0, source.width, 1, pad, 0, source.width, pad);
+  p.drawImage(source, 0, source.height - 1, source.width, 1, pad, pad + source.height, source.width, pad);
+  p.drawImage(source, 0, 0, 1, 1, 0, 0, pad, pad);
+  p.drawImage(source, source.width - 1, 0, 1, 1, pad + source.width, 0, pad, pad);
+  p.drawImage(source, 0, source.height - 1, 1, 1, 0, pad + source.height, pad, pad);
+  p.drawImage(source, source.width - 1, source.height - 1, 1, 1, pad + source.width, pad + source.height, pad, pad);
+
+  const blurred = canvas2d(padded.canvas.width, padded.canvas.height);
+  blurred.context.filter = `blur(${safeRadius}px)`;
+  blurred.context.drawImage(padded.canvas, 0, 0);
+  blurred.context.filter = 'none';
+
+  const result = canvas2d(source.width, source.height);
+  result.context.drawImage(blurred.canvas, pad, pad, source.width, source.height, 0, 0, source.width, source.height);
+  return result.canvas;
+}
+
+function organicWave(x: number, y: number): number {
+  const a = Math.sin(x * 17.3 + y * 5.1 + 0.7);
+  const b = Math.sin(x * 6.2 - y * 13.7 + 1.9);
+  const c = Math.sin(x * 31.1 + y * 19.4 + 2.6);
+  return a * 0.5 + b * 0.32 + c * 0.18;
+}
+
+function edgeDistance(direction: EdgeFadeSettings['direction'], x: number, y: number): number {
+  if (direction === 'top') return y;
+  if (direction === 'left') return x;
+  if (direction === 'right') return 1 - x;
+  if (direction === 'all') return Math.min(x, 1 - x, y, 1 - y);
+  return 1 - y;
+}
+
+function edgeFadeMask(width: number, height: number, settings: EdgeFadeSettings): HTMLCanvasElement {
+  const maskSize = scaledSize(width, height, 520);
+  const { canvas, context } = canvas2d(maskSize.width, maskSize.height);
+  const image = context.createImageData(canvas.width, canvas.height);
+  const depth = clamp(settings.depth, 5, 60) / 100;
+  const softness = clamp(settings.softness, 0, 100) / 100;
+  const texture = settings.style === 'organic' ? clamp(settings.texture, 0, 100) / 100 : 0;
+  const gamma = 0.8 + softness * 1.45;
+
+  for (let py = 0; py < canvas.height; py++) {
+    const y = canvas.height <= 1 ? 0 : py / (canvas.height - 1);
+    for (let px = 0; px < canvas.width; px++) {
+      const x = canvas.width <= 1 ? 0 : px / (canvas.width - 1);
+      const distance = edgeDistance(settings.direction, x, y);
+      const wave = texture ? organicWave(x * 4.2, y * 4.2) * texture * depth * 0.13 : 0;
+      const shiftedDistance = Math.max(0, distance - wave);
+      let t = clamp((depth - shiftedDistance) / Math.max(0.001, depth), 0, 1);
+      if (texture) t = clamp(t + organicWave(x * 8.1 + 1.4, y * 8.1 + 2.2) * texture * 0.025 * t * (1 - t), 0, 1);
+      if (distance < depth * 0.025) t = Math.max(t, 0.98);
+      const alpha = Math.round(Math.pow(t, gamma) * 255);
+      const offset = (py * canvas.width + px) * 4;
+      image.data[offset] = 255;
+      image.data[offset + 1] = 255;
+      image.data[offset + 2] = 255;
+      image.data[offset + 3] = alpha;
+    }
+  }
+  context.putImageData(image, 0, 0);
+  return canvas;
+}
+
+function drawEdgeFade(bitmap: ImageBitmap, settings: EdgeFadeSettings, maxDimension?: number): HTMLCanvasElement {
+  const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+  const original = canvas2d(size.width, size.height);
+  original.context.drawImage(bitmap, 0, 0, original.canvas.width, original.canvas.height);
+
+  const scaledRadius = Math.max(0.5, clamp(settings.radius, 1, 80) * size.scale);
+  const blurred = edgeExtendedBlur(original.canvas, scaledRadius);
+  const mask = edgeFadeMask(original.canvas.width, original.canvas.height, settings);
+  const effect = canvas2d(original.canvas.width, original.canvas.height);
+  effect.context.drawImage(blurred, 0, 0);
+  effect.context.globalCompositeOperation = 'destination-in';
+  effect.context.imageSmoothingEnabled = true;
+  effect.context.drawImage(mask, 0, 0, mask.width, mask.height, 0, 0, effect.canvas.width, effect.canvas.height);
+  effect.context.globalCompositeOperation = 'source-over';
+
+  original.context.drawImage(effect.canvas, 0, 0);
+  return original.canvas;
+}
+
 export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolId, settings: DeterministicSettings, maxDimension?: number): HTMLCanvasElement {
   if (toolId === 'resize-image') {
     const dimensions = resizeDimensions(bitmap.width, bitmap.height, settings as ResizeSettings), size = scaledSize(dimensions.width, dimensions.height, maxDimension);
@@ -113,6 +204,7 @@ export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolI
   if (toolId === 'rotate-flip-image') return drawRotateFlip(bitmap, settings as RotateFlipSettings, maxDimension);
   if (toolId === 'crop-image') return drawCrop(bitmap, settings as CropSettings, maxDimension);
   if (toolId === 'blur-image') return drawBlur(bitmap, settings as BlurSettings, maxDimension);
+  if (toolId === 'fade-image-edges') return drawEdgeFade(bitmap, settings as EdgeFadeSettings, maxDimension);
   // Compress and metadata removal both intentionally re-render decoded pixels.
   // Canvas encoding drops EXIF/GPS/software metadata while preserving visible pixels.
   const size = scaledSize(bitmap.width, bitmap.height, maxDimension), { canvas, context } = canvas2d(size.width, size.height);

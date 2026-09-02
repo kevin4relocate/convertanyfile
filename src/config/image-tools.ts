@@ -87,6 +87,18 @@ export const BLUR_IMAGE_TOOL: ImageToolDefinition = {
   downloadSuffix: 'blurred', policyNote: 'Selected-area blur is manual and supports Rectangle or Circle. It does not automatically detect faces, text, license plates, or other sensitive content, so review the exported pixels when privacy matters.',
 };
 
+export const FADE_IMAGE_EDGES_TOOL: ImageToolDefinition = {
+  ...commonLimits,
+  status: 'preview',
+  id: 'fade-image-edges', slug: 'fade-image-edges', displayName: 'Fade Image Edges', category: 'geometry',
+  title: 'Fade Image Edges — Soft Blur for Subtitles | ConvertAnyFile',
+  description: 'Preview a soft blur fade from the bottom, top, left, right or all image edges. Create smooth or organic subtitle-safe areas locally in your browser.',
+  h1: 'Fade image edges for subtitles and text.', eyebrow: 'Image Tools · Preview',
+  intro: 'Create a gradual blur from one edge or all four edges while keeping the center clear. Adjust fade depth, blur strength and softness, then switch between a clean Smooth fade and a gently irregular Organic fade for a more natural paper-wash look.',
+  downloadSuffix: 'edge-faded',
+  policyNote: 'Preview feature. The fade is a visual editing effect, not a privacy-redaction tool. Review the full-resolution export before placing subtitles or important text over the faded area.',
+};
+
 export const REMOVE_IMAGE_METADATA_TOOL: ImageToolDefinition = {
   ...liveBase, id: 'remove-image-metadata', slug: 'remove-image-metadata', displayName: 'Remove Image Metadata', category: 'metadata',
   title: 'Remove Image Metadata Online — Strip EXIF & GPS Locally | ConvertAnyFile',
@@ -115,6 +127,7 @@ export const IMAGE_TOOL_ROADMAP = [
   { id: 'rotate-flip-image', label: 'Rotate / Flip', status: 'live', description: 'Rotate or mirror one image or a batch locally.', href: '/rotate-flip-image/' },
   { id: 'crop-image', label: 'Crop Image', status: 'live', description: 'Drag Rectangle, Square, Circle or Triangle crops with common aspect-ratio presets.', href: '/crop-image/' },
   { id: 'blur-image', label: 'Blur Image', status: 'live', description: 'Blur the whole image or drag a Rectangle or Circle over a selected area.', href: '/blur-image/' },
+  { id: 'fade-image-edges', label: 'Fade Image Edges', status: 'preview', description: 'Fade blur naturally from one edge or all edges to create a subtitle-safe text area.', href: '/fade-image-edges/' },
   { id: 'bulk-rename-images', label: 'Bulk Rename Images', status: 'live', description: 'Rename a batch without changing image bytes or source extensions.', href: '/bulk-rename-images/' },
   { id: 'remove-image-metadata', label: 'Remove Image Metadata', status: 'live', description: 'Strip EXIF, GPS and software metadata locally.', href: '/remove-image-metadata/' },
 ] as const;

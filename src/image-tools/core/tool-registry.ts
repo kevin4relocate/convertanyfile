@@ -32,6 +32,7 @@ const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
   'rotate-flip-image': deterministicToolLoader,
   'crop-image': deterministicToolLoader,
   'blur-image': deterministicToolLoader,
+  'fade-image-edges': deterministicToolLoader,
   'remove-image-metadata': metadataCleanupLoader,
   'bulk-rename-images': renameToolLoader,
 };

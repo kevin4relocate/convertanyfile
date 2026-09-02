@@ -17,15 +17,16 @@ interface Props {
 const { tool, kicker, heading, copy, bullets } = Astro.props;
 const seo = IMAGE_TOOL_SEO[tool.id];
 const isMetadataCleanup = tool.id === 'remove-image-metadata';
+const isPreview = tool.status === 'preview';
 const schemas = imageToolSchemas(tool, ['Browser-based local image processing', ...bullets]);
 ---
-<SiteLayout title={tool.title} description={tool.description} schema={schemas}>
+<SiteLayout title={tool.title} description={tool.description} schema={schemas} noindex={isPreview}>
   <ImageToolPageFrame tool={tool} />
 
   <section class="content-wide-section white gemini-content-section"><div class="site-container">
     <div class="content-intro-grid">
       <div class="section-heading wide"><span class="section-kicker">{kicker}</span><h2>{heading}</h2><p>{copy}</p></div>
-      <div class="content-summary-card"><strong>Private by design</strong><p>Source images are decoded and processed locally in your browser. No image-processing API upload is required for this tool.</p></div>
+      <div class="content-summary-card"><strong>{isPreview ? 'Preview build' : 'Private by design'}</strong><p>{isPreview ? 'This tool is available for hands-on testing before it moves into the live Image Tools catalog. Source images still stay in the browser for the supported workflow.' : 'Source images are decoded and processed locally in your browser. No image-processing API upload is required for this tool.'}</p></div>
     </div>
     <ul class="content-checklist">{bullets.map((bullet) => <li>{bullet}</li>)}</ul>
   </div></section>
