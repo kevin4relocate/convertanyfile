@@ -4,6 +4,7 @@ export type DeterministicToolId =
   | 'rotate-flip-image'
   | 'crop-image'
   | 'blur-image'
+  | 'fade-image-edges'
   | 'remove-image-metadata';
 
 export type OutputChoice = 'source' | 'png' | 'jpg' | 'webp';
@@ -54,13 +55,23 @@ export type BlurSettings = {
   height: number;
 };
 
+export type EdgeFadeSettings = {
+  direction: 'bottom' | 'top' | 'left' | 'right' | 'all';
+  style: 'smooth' | 'organic';
+  depth: number;
+  radius: number;
+  softness: number;
+  texture: number;
+};
+
 export type DeterministicSettings =
   | ResizeSettings
   | CompressSettings
   | MetadataSettings
   | RotateFlipSettings
   | CropSettings
-  | BlurSettings;
+  | BlurSettings
+  | EdgeFadeSettings;
 
 export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSettings {
   switch (toolId) {
@@ -76,5 +87,7 @@ export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSe
       return { shape: 'rect', aspect: 'free', x: 0, y: 0, width: 100, height: 100 };
     case 'blur-image':
       return { scope: 'whole', shape: 'rect', radius: 12, x: 25, y: 25, width: 50, height: 50 };
+    case 'fade-image-edges':
+      return { direction: 'bottom', style: 'organic', depth: 30, radius: 20, softness: 72, texture: 28 };
   }
 }
