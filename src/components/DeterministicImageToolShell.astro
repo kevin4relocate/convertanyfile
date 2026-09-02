@@ -20,9 +20,10 @@ const isCompress = tool.id === 'compress-image';
 const isRotate = tool.id === 'rotate-flip-image';
 const isCrop = tool.id === 'crop-image';
 const isBlur = tool.id === 'blur-image';
+const isEdgeFade = tool.id === 'fade-image-edges';
 const isMetadata = tool.id === 'remove-image-metadata';
 const hasEmbeddedOutput = isCompress || isMetadata;
-const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isMetadata ? 'Remove metadata' : 'Process images';
+const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isEdgeFade ? 'Apply edge fade' : isMetadata ? 'Remove metadata' : 'Process images';
 ---
 
 <div class="image-editor-card deterministic-tool" data-image-tool-app data-tool-id={tool.id} data-download-suffix={tool.downloadSuffix} data-max-file-bytes={tool.maxFileBytes} data-max-pixels={tool.maxPixels} data-max-dimension={tool.maxDimension} data-max-files={maxFiles} data-has-items="false">
@@ -83,6 +84,18 @@ const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images'
               <div class="visual-tool-control-row"><strong>Area shape</strong><div class="visual-choice-group" role="group" aria-label="Blur selection shape"><button class="visual-choice-button is-active" type="button" data-selection-shape="rect" aria-pressed="true">Rectangle</button><button class="visual-choice-button" type="button" data-selection-shape="circle" aria-pressed="false">Circle</button></div></div>
               <p class="visual-tool-help"><strong>Drag the highlighted area on the image.</strong> Move it where you want the blur, resize from a corner, and watch the live preview.</p>
               <details class="visual-advanced-settings"><summary>Fine-tune selected area</summary><div class="visual-advanced-settings__body"><div class="setting-grid"><label><span>X %</span><input data-setting="x" type="number" min="0" max="99" value="25" /></label><label><span>Y %</span><input data-setting="y" type="number" min="0" max="99" value="25" /></label><label><span>Width %</span><input data-setting="width" type="number" min="1" max="100" value="50" /></label><label><span>Height %</span><input data-setting="height" type="number" min="1" max="100" value="50" /></label></div></div></details>
+            </div>
+          </div>}
+
+          {isEdgeFade && <div class="visual-tool-controls edge-fade-controls">
+            <div class="setting-grid">
+              <label><span>Fade edge</span><select data-setting="direction"><option value="bottom">Bottom</option><option value="top">Top</option><option value="left">Left</option><option value="right">Right</option><option value="all">All edges</option></select></label>
+              <label><span>Fade style</span><select data-setting="style"><option value="organic">Organic</option><option value="smooth">Smooth</option></select></label>
+              <label><span>Fade depth</span><div class="range-row"><input data-setting="depth" type="range" min="8" max="55" value="30" /><output data-output-for="depth">30%</output></div></label>
+              <label><span>Blur strength</span><div class="range-row"><input data-setting="radius" type="range" min="2" max="60" value="20" /><output data-output-for="radius">20 px</output></div></label>
+              <label><span>Softness</span><div class="range-row"><input data-setting="softness" type="range" min="0" max="100" value="72" /><output data-output-for="softness">72%</output></div></label>
+              <label data-setting-group="organic"><span>Organic texture</span><div class="range-row"><input data-setting="texture" type="range" min="0" max="70" value="28" /><output data-output-for="texture">28%</output></div></label>
+              <div class="setting-note setting-note--wide"><strong>Designed for subtitle-safe edges.</strong><p>Bottom is the default. Increase Fade depth to make more room for text. Organic gently breaks the straight gradient so the transition feels less synthetic; Smooth keeps a clean, even fade.</p></div>
             </div>
           </div>}
         </section>
