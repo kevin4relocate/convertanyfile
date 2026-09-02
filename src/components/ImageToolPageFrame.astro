@@ -4,12 +4,14 @@ import { SITE } from '../config/site';
 import BatchMaskEditorShell from './BatchMaskEditorShell.astro';
 import BulkRenameImageShell from './BulkRenameImageShell.astro';
 import DeterministicImageToolShell from './DeterministicImageToolShell.astro';
+import FadeImageEdgesV2Shell from './FadeImageEdgesV2Shell.astro';
 import MetadataCleanupShell from './MetadataCleanupShell.astro';
 interface Props { tool: ImageToolDefinition; }
 const { tool } = Astro.props;
 const maskTool = tool.category === 'mask' ? tool as MaskImageToolDefinition : undefined;
 const usesRenameEditor = tool.category === 'naming';
 const usesMetadataCleanup = tool.id === 'remove-image-metadata';
+const usesEdgeFadeV2 = tool.id === 'fade-image-edges';
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -31,4 +33,4 @@ const includeBreadcrumbSchema = tool.id !== 'gemini-ai-logo-remover';
     <p>{tool.intro}</p>
   </div>
 </section>
-<section class="image-tool-page-tool"><div class="site-container">{maskTool ? <BatchMaskEditorShell tool={maskTool} /> : usesRenameEditor ? <BulkRenameImageShell tool={tool} /> : usesMetadataCleanup ? <MetadataCleanupShell tool={tool} /> : <DeterministicImageToolShell tool={tool} />}</div></section>
+<section class="image-tool-page-tool"><div class="site-container">{maskTool ? <BatchMaskEditorShell tool={maskTool} /> : usesRenameEditor ? <BulkRenameImageShell tool={tool} /> : usesMetadataCleanup ? <MetadataCleanupShell tool={tool} /> : usesEdgeFadeV2 ? <FadeImageEdgesV2Shell tool={tool} /> : <DeterministicImageToolShell tool={tool} />}</div></section>
