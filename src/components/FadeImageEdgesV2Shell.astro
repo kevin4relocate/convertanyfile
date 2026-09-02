@@ -1,0 +1,135 @@
+---
+import type { ImageToolDefinition } from '../platform/image-tools/types';
+import DeterministicImageToolShell from './DeterministicImageToolShell.astro';
+interface Props { tool: ImageToolDefinition; }
+const { tool } = Astro.props;
+---
+
+<div class="fade-image-edges-v2-shell">
+  <DeterministicImageToolShell tool={tool} />
+</div>
+
+<script is:inline>
+(() => {
+  const root = document.querySelector('[data-image-tool-app][data-tool-id="fade-image-edges"]');
+  if (!(root instanceof HTMLElement) || root.dataset.edgeFadeV2 === 'true') return;
+  root.dataset.edgeFadeV2 = 'true';
+
+  const controls = root.querySelector('.edge-fade-controls');
+  if (!(controls instanceof HTMLElement)) return;
+
+  controls.innerHTML = `
+    <div class="setting-grid edge-fade-v2-grid">
+      <label><span>Effect mode</span><select data-setting="effectMode"><option value="subtitle-safe">Subtitle Safe</option><option value="natural-fade">Natural Fade</option></select></label>
+      <label><span>Preset</span><select data-setting="preset"><option value="subtitle-soft">Subtitle Soft</option><option value="subtitle-strong" selected>Subtitle Strong</option><option value="paper-wash">Paper Wash</option><option value="natural">Natural Fade</option><option value="custom">Custom</option></select></label>
+      <label><span>Fade edge</span><select data-setting="direction"><option value="bottom">Bottom</option><option value="top">Top</option><option value="left">Left</option><option value="right">Right</option><option value="all">All edges</option></select></label>
+      <label><span>Fade style</span><select data-setting="style"><option value="smooth" selected>Smooth</option><option value="organic">Organic</option></select></label>
+      <label><span>Fade depth</span><div class="range-row"><input data-setting="depth" type="range" min="5" max="100" value="55" /><output data-output-for="depth">55%</output></div></label>
+      <label><span>Blur strength</span><div class="range-row"><input data-setting="radius" type="range" min="0" max="180" value="85" /><output data-output-for="radius">85 px</output></div></label>
+      <label><span>Wash strength</span><div class="range-row"><input data-setting="wash" type="range" min="0" max="100" value="35" /><output data-edge-output="wash">35%</output></div></label>
+      <div class="setting-note"><strong>Subtitle Safe adds more than blur.</strong><p>It combines gradual blur, lower contrast and a light or dark wash so captions can sit over busy image detail without a hard rectangle.</p></div>
+      <details class="visual-advanced-settings edge-fade-advanced setting-note--wide">
+        <summary>Advanced settings</summary>
+        <div class="visual-advanced-settings__body">
+          <div class="setting-grid">
+            <label><span>Softness</span><div class="range-row"><input data-setting="softness" type="range" min="0" max="100" value="50" /><output data-output-for="softness">50%</output></div></label>
+            <label><span>Reduce contrast</span><div class="range-row"><input data-setting="contrast" type="range" min="0" max="100" value="45" /><output data-edge-output="contrast">45%</output></div></label>
+            <label><span>Wash color</span><select data-setting="washColor"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+            <label data-setting-group="organic" hidden><span>Organic texture</span><div class="range-row"><input data-setting="texture" type="range" min="0" max="60" value="0" /><output data-output-for="texture">0%</output></div></label>
+            <label class="check-setting"><input data-setting="showGuide" type="checkbox" checked /><span>Show subtitle guide</span></label>
+          </div>
+        </div>
+      </details>
+    </div>`;
+
+  const q = (key) => root.querySelector(`[data-setting="${key}"]`);
+  const preset = q('preset');
+  const effectMode = q('effectMode');
+  const settings = ['direction','style','depth','radius','wash','softness','contrast','texture','washColor','showGuide'];
+  const presets = {
+    'subtitle-soft': { effectMode:'subtitle-safe', direction:'bottom', style:'smooth', depth:40, radius:45, wash:18, softness:65, contrast:20, texture:0, washColor:'dark', showGuide:true },
+    'subtitle-strong': { effectMode:'subtitle-safe', direction:'bottom', style:'smooth', depth:55, radius:85, wash:35, softness:50, contrast:45, texture:0, washColor:'dark', showGuide:true },
+    'paper-wash': { effectMode:'subtitle-safe', direction:'bottom', style:'organic', depth:55, radius:45, wash:28, softness:65, contrast:30, texture:25, washColor:'light', showGuide:true },
+    'natural': { effectMode:'natural-fade', direction:'bottom', style:'organic', depth:35, radius:25, wash:5, softness:75, contrast:5, texture:15, washColor:'dark', showGuide:true },
+  };
+  let applying = false;
+
+  const eventFor = (control) => control instanceof HTMLInputElement && control.type === 'range' ? 'input' : 'change';
+  const setControl = (key, value, notify = true) => {
+    const control = q(key);
+    if (!(control instanceof HTMLInputElement || control instanceof HTMLSelectElement)) return;
+    if (control instanceof HTMLInputElement && control.type === 'checkbox') control.checked = Boolean(value);
+    else control.value = String(value);
+    if (notify) control.dispatchEvent(new Event(eventFor(control), { bubbles: true }));
+  };
+
+  const syncLocalOutputs = () => {
+    const wash = q('wash');
+    const contrast = q('contrast');
+    const washOutput = root.querySelector('[data-edge-output="wash"]');
+    const contrastOutput = root.querySelector('[data-edge-output="contrast"]');
+    if (wash instanceof HTMLInputElement && washOutput) washOutput.textContent = `${wash.value}%`;
+    if (contrast instanceof HTMLInputElement && contrastOutput) contrastOutput.textContent = `${contrast.value}%`;
+  };
+
+  const guideFrame = root.querySelector('[data-role="result-preview"]')?.closest('.image-preview-panel__frame');
+  const guide = document.createElement('div');
+  guide.className = 'edge-fade-subtitle-guide';
+  guide.setAttribute('aria-hidden', 'true');
+  guide.innerHTML = '<span>Subtitle safe zone</span>';
+  if (guideFrame instanceof HTMLElement) guideFrame.append(guide);
+
+  const syncGuide = () => {
+    const direction = q('direction');
+    const depth = q('depth');
+    const show = q('showGuide');
+    if (!(direction instanceof HTMLSelectElement) || !(depth instanceof HTMLInputElement) || !(show instanceof HTMLInputElement)) return;
+    guide.className = `edge-fade-subtitle-guide edge-fade-subtitle-guide--${direction.value}`;
+    guide.style.removeProperty('width'); guide.style.removeProperty('height');
+    if (direction.value === 'left' || direction.value === 'right') guide.style.width = `${depth.value}%`;
+    else if (direction.value !== 'all') guide.style.height = `${depth.value}%`;
+    guide.hidden = !show.checked || root.dataset.hasItems !== 'true';
+  };
+
+  const applyPreset = (name) => {
+    const values = presets[name];
+    if (!values) return;
+    applying = true;
+    for (const [key, value] of Object.entries(values)) setControl(key, value);
+    if (preset instanceof HTMLSelectElement) preset.value = name;
+    applying = false;
+    syncLocalOutputs();
+    syncGuide();
+  };
+
+  if (preset instanceof HTMLSelectElement) {
+    preset.addEventListener('change', () => {
+      if (preset.value !== 'custom') applyPreset(preset.value);
+    });
+  }
+  if (effectMode instanceof HTMLSelectElement) {
+    effectMode.addEventListener('change', () => {
+      if (applying) return;
+      applyPreset(effectMode.value === 'natural-fade' ? 'natural' : 'subtitle-strong');
+    });
+  }
+
+  for (const key of settings) {
+    const control = q(key);
+    if (!(control instanceof HTMLInputElement || control instanceof HTMLSelectElement)) continue;
+    control.addEventListener(eventFor(control), () => {
+      if (!applying && preset instanceof HTMLSelectElement) preset.value = 'custom';
+      syncLocalOutputs();
+      syncGuide();
+    });
+  }
+
+  new MutationObserver(syncGuide).observe(root, { attributes: true, attributeFilter: ['data-has-items'] });
+  syncLocalOutputs();
+  syncGuide();
+})();
+</script>
+
+<style is:global>
+.fade-image-edges-v2-shell .edge-fade-v2-grid>.setting-note{align-self:end}.fade-image-edges-v2-shell .edge-fade-advanced{margin:0}.fade-image-edges-v2-shell .edge-fade-advanced summary{cursor:pointer;color:#b8bfcc;font-size:10.5px;font-weight:720}.fade-image-edges-v2-shell .edge-fade-advanced[open] summary{margin-bottom:10px}.edge-fade-subtitle-guide{position:absolute;z-index:3;pointer-events:none;background:linear-gradient(180deg,rgba(124,115,255,.02),rgba(124,115,255,.10));color:#d7d3ff;font-size:9px;font-weight:750;letter-spacing:.04em;text-transform:uppercase}.edge-fade-subtitle-guide span{position:absolute;padding:4px 6px;border-radius:5px;background:rgba(12,17,24,.68);backdrop-filter:blur(4px)}.edge-fade-subtitle-guide--bottom{left:0;right:0;bottom:0;border-top:1px dashed rgba(170,164,255,.65)}.edge-fade-subtitle-guide--bottom span{left:8px;top:7px}.edge-fade-subtitle-guide--top{left:0;right:0;top:0;border-bottom:1px dashed rgba(170,164,255,.65)}.edge-fade-subtitle-guide--top span{left:8px;bottom:7px}.edge-fade-subtitle-guide--left{left:0;top:0;bottom:0;border-right:1px dashed rgba(170,164,255,.65)}.edge-fade-subtitle-guide--left span{left:7px;bottom:8px}.edge-fade-subtitle-guide--right{right:0;top:0;bottom:0;border-left:1px dashed rgba(170,164,255,.65)}.edge-fade-subtitle-guide--right span{right:7px;bottom:8px}.edge-fade-subtitle-guide--all{inset:0;background:transparent;box-shadow:inset 0 0 0 2px rgba(124,115,255,.16),inset 0 0 50px rgba(124,115,255,.11)}.edge-fade-subtitle-guide--all span{left:8px;bottom:8px}@media(max-width:720px){.fade-image-edges-v2-shell .edge-fade-v2-grid>.setting-note{align-self:stretch}}
+</style>

@@ -147,25 +147,26 @@ function edgeDistance(direction: EdgeFadeSettings['direction'], x: number, y: nu
 }
 
 function edgeFadeMask(width: number, height: number, settings: EdgeFadeSettings): HTMLCanvasElement {
-  const maskSize = scaledSize(width, height, 520);
+  const maskSize = scaledSize(width, height, 640);
   const { canvas, context } = canvas2d(maskSize.width, maskSize.height);
   const image = context.createImageData(canvas.width, canvas.height);
-  const depth = clamp(settings.depth, 5, 60) / 100;
+  const depth = clamp(settings.depth, 5, 100) / 100;
   const softness = clamp(settings.softness, 0, 100) / 100;
-  const texture = settings.style === 'organic' ? clamp(settings.texture, 0, 100) / 100 : 0;
-  const gamma = 0.8 + softness * 1.45;
+  const texture = settings.style === 'organic' ? clamp(settings.texture, 0, 60) / 100 : 0;
+  // High softness should create a longer visible transition, not make the effect disappear.
+  const exponent = 1.6 - softness * 0.9;
 
   for (let py = 0; py < canvas.height; py++) {
     const y = canvas.height <= 1 ? 0 : py / (canvas.height - 1);
     for (let px = 0; px < canvas.width; px++) {
       const x = canvas.width <= 1 ? 0 : px / (canvas.width - 1);
       const distance = edgeDistance(settings.direction, x, y);
-      const wave = texture ? organicWave(x * 4.2, y * 4.2) * texture * depth * 0.13 : 0;
+      const wave = texture ? organicWave(x * 4.2, y * 4.2) * texture * depth * 0.16 : 0;
       const shiftedDistance = Math.max(0, distance - wave);
       let t = clamp((depth - shiftedDistance) / Math.max(0.001, depth), 0, 1);
-      if (texture) t = clamp(t + organicWave(x * 8.1 + 1.4, y * 8.1 + 2.2) * texture * 0.025 * t * (1 - t), 0, 1);
-      if (distance < depth * 0.025) t = Math.max(t, 0.98);
-      const alpha = Math.round(Math.pow(t, gamma) * 255);
+      if (texture) t = clamp(t + organicWave(x * 8.1 + 1.4, y * 8.1 + 2.2) * texture * 0.04 * t * (1 - t), 0, 1);
+      if (distance < Math.min(depth * 0.035, 0.02)) t = Math.max(t, 0.995);
+      const alpha = Math.round(Math.pow(t, exponent) * 255);
       const offset = (py * canvas.width + px) * 4;
       image.data[offset] = 255;
       image.data[offset + 1] = 255;
@@ -182,11 +183,30 @@ function drawEdgeFade(bitmap: ImageBitmap, settings: EdgeFadeSettings, maxDimens
   const original = canvas2d(size.width, size.height);
   original.context.drawImage(bitmap, 0, 0, original.canvas.width, original.canvas.height);
 
-  const scaledRadius = Math.max(0.5, clamp(settings.radius, 1, 80) * size.scale);
-  const blurred = edgeExtendedBlur(original.canvas, scaledRadius);
+  const scaledRadius = Math.max(0.5, clamp(settings.radius, 0, 180) * size.scale);
+  const blurred = scaledRadius > 0.5 ? edgeExtendedBlur(original.canvas, scaledRadius) : original.canvas;
   const mask = edgeFadeMask(original.canvas.width, original.canvas.height, settings);
+  const contrast = clamp(settings.contrast, 0, 100);
+  const wash = clamp(settings.wash, 0, 100) / 100;
+
   const effect = canvas2d(original.canvas.width, original.canvas.height);
+  const contrastPercent = Math.round(100 - contrast * 0.55);
+  const saturationPercent = Math.round(100 - contrast * 0.18);
+  const brightnessPercent = settings.washColor === 'light'
+    ? Math.round(100 + contrast * 0.10)
+    : Math.round(100 - contrast * 0.05);
+  effect.context.filter = `contrast(${contrastPercent}%) saturate(${saturationPercent}%) brightness(${brightnessPercent}%)`;
   effect.context.drawImage(blurred, 0, 0);
+  effect.context.filter = 'none';
+
+  if (wash > 0) {
+    effect.context.save();
+    effect.context.globalAlpha = wash;
+    effect.context.fillStyle = settings.washColor === 'light' ? '#ffffff' : '#000000';
+    effect.context.fillRect(0, 0, effect.canvas.width, effect.canvas.height);
+    effect.context.restore();
+  }
+
   effect.context.globalCompositeOperation = 'destination-in';
   effect.context.imageSmoothingEnabled = true;
   effect.context.drawImage(mask, 0, 0, mask.width, mask.height, 0, 0, effect.canvas.width, effect.canvas.height);

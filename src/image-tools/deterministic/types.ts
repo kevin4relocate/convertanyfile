@@ -56,12 +56,18 @@ export type BlurSettings = {
 };
 
 export type EdgeFadeSettings = {
+  effectMode: 'subtitle-safe' | 'natural-fade';
+  preset: 'subtitle-soft' | 'subtitle-strong' | 'paper-wash' | 'natural' | 'custom';
   direction: 'bottom' | 'top' | 'left' | 'right' | 'all';
   style: 'smooth' | 'organic';
   depth: number;
   radius: number;
+  wash: number;
   softness: number;
+  contrast: number;
   texture: number;
+  washColor: 'dark' | 'light';
+  showGuide: boolean;
 };
 
 export type DeterministicSettings =
@@ -88,6 +94,19 @@ export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSe
     case 'blur-image':
       return { scope: 'whole', shape: 'rect', radius: 12, x: 25, y: 25, width: 50, height: 50 };
     case 'fade-image-edges':
-      return { direction: 'bottom', style: 'organic', depth: 30, radius: 20, softness: 72, texture: 28 };
+      return {
+        effectMode: 'subtitle-safe',
+        preset: 'subtitle-strong',
+        direction: 'bottom',
+        style: 'smooth',
+        depth: 55,
+        radius: 85,
+        wash: 35,
+        softness: 50,
+        contrast: 45,
+        texture: 0,
+        washColor: 'dark',
+        showGuide: true,
+      };
   }
 }
