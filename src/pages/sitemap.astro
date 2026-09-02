@@ -51,8 +51,8 @@ const schema = {
   </div></section>
 
   <section class="content-wide-section white"><div class="site-container">
-    <div class="section-heading wide"><span class="section-kicker">Image tools</span><h2>Browser-based image utility pages.</h2><p>All currently public Image Tools are linked here directly.</p></div>
-    <div class="related-grid">{IMAGE_TOOL_ROADMAP.map((item) => <a class="related-card" href={item.href}>{item.label} <span>→</span></a>)}</div>
+    <div class="section-heading wide"><span class="section-kicker">Image tools</span><h2>Browser-based image utility pages.</h2><p>All currently live Image Tools are linked here directly.</p></div>
+    <div class="related-grid">{IMAGE_TOOL_ROADMAP.filter((item) => item.status === 'live').map((item) => <a class="related-card" href={item.href}>{item.label} <span>→</span></a>)}</div>
   </div></section>
 
   {converterGroups.map((group, index) => <section class:list={['content-wide-section', index % 2 === 0 ? '' : 'white']}><div class="site-container">
