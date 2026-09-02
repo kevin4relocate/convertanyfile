@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { FADE_IMAGE_EDGES_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={FADE_IMAGE_EDGES_TOOL}
+  kicker="Subtitle-safe edge fade · Preview"
+  heading="Fade blur gradually from the edge instead of drawing a hard blur box."
+  copy="Choose Bottom for a subtitle area, use Top, Left or Right for other text layouts, or fade All edges for a soft framed look. Fade depth controls how far the effect reaches into the image; Blur strength controls the softened pixels; Softness controls how gently the blur arrives; Organic adds a subtle irregular transition so the boundary feels less perfectly digital."
+  bullets={[
+    'Fade from Bottom, Top, Left, Right or all four edges while keeping the center clearer.',
+    'Use Smooth for a clean gradient or Organic for a gently irregular paper-wash transition.',
+    'Adjust fade depth, blur strength, softness and organic texture with live preview updates.',
+    'Apply one setup to a batch or customize individual images when subtitle placement changes.',
+    'Download one processed image directly or multiple successful results as a ZIP.',
+  ]}
+/>
