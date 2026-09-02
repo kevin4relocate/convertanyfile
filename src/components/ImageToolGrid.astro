@@ -2,7 +2,7 @@
 import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
 interface Props { compact?: boolean; ids?: readonly string[]; excludeId?: string; }
 const { compact = false, ids, excludeId } = Astro.props;
-const statusLabel = (status: string): string => status === 'live' ? 'Live' : 'Planned';
+const statusLabel = (status: string): string => status === 'live' ? 'Live' : status === 'preview' ? 'Preview' : 'Planned';
 const tools = IMAGE_TOOL_ROADMAP.filter((tool) => (!ids || ids.includes(tool.id)) && tool.id !== excludeId);
 ---
 <div class:list={['image-tool-grid', compact && 'image-tool-grid--compact']}>
@@ -10,7 +10,7 @@ const tools = IMAGE_TOOL_ROADMAP.filter((tool) => (!ids || ids.includes(tool.id)
     <a class="image-tool-card-link" href={tool.href}>
       <span class="image-tool-card-icon" aria-hidden="true">{tool.label.slice(0, 1)}</span>
       <span class="image-tool-card-copy">
-        <span class:list={['image-tool-status', tool.status === 'live' && 'image-tool-status--live']}>{statusLabel(tool.status)}</span>
+        <span class:list={['image-tool-status', tool.status === 'live' && 'image-tool-status--live', tool.status === 'preview' && 'image-tool-status--preview']}>{statusLabel(tool.status)}</span>
         <strong>{tool.label}</strong>
         <small>{tool.description}</small>
       </span>
@@ -29,4 +29,5 @@ const tools = IMAGE_TOOL_ROADMAP.filter((tool) => (!ids || ids.includes(tool.id)
 </div>
 <style>
   .image-tool-status--live{border-color:rgba(67,204,148,.34);background:rgba(37,116,84,.11);color:#72d9ad}
+  .image-tool-status--preview{border-color:rgba(124,115,255,.36);background:rgba(124,115,255,.1);color:#b5afff}
 </style>
