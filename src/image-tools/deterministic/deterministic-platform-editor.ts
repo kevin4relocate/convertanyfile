@@ -14,7 +14,7 @@ type State = {
   activeId?:string; processing:boolean; cancel:boolean; previewGeneration:number; previewTimer?:number;
 };
 
-const VALID_TOOL_IDS = new Set<DeterministicToolId>(['resize-image','compress-image','rotate-flip-image','crop-image','blur-image','remove-image-metadata']);
+const VALID_TOOL_IDS = new Set<DeterministicToolId>(['resize-image','compress-image','rotate-flip-image','crop-image','blur-image','fade-image-edges','remove-image-metadata']);
 const q = <T extends Element>(root:ParentNode, selector:string):T => { const element=root.querySelector<T>(selector); if(!element)throw new Error(`Image tool is missing ${selector}`); return element; };
 const maybe = <T extends Element>(root:ParentNode, selector:string):T|undefined => root.querySelector<T>(selector) ?? undefined;
 const clone = <T>(value:T):T => structuredClone(value);
@@ -79,8 +79,11 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
   }
   function syncConditional(settings:DeterministicSettings):void {
     const record=asRecord(settings);
-    root.querySelectorAll<HTMLElement>('[data-setting-group]').forEach(group=>{const key=group.dataset.settingGroup;group.hidden=key!==record.mode&&key!==record.scope;});
-    root.querySelectorAll<HTMLOutputElement>('[data-output-for]').forEach(output=>{const key=output.dataset.outputFor;if(!key)return;const value=record[key];output.textContent=key==='percent'?`${value}%`:key==='radius'?`${value} px`:String(value??'');});
+    root.querySelectorAll<HTMLElement>('[data-setting-group]').forEach(group=>{const key=group.dataset.settingGroup;group.hidden=key!==record.mode&&key!==record.scope&&key!==record.style;});
+    root.querySelectorAll<HTMLOutputElement>('[data-output-for]').forEach(output=>{
+      const key=output.dataset.outputFor;if(!key)return;const value=record[key];
+      output.textContent=key==='percent'||key==='depth'||key==='softness'||key==='texture'?`${value}%`:key==='radius'?`${value} px`:String(value??'');
+    });
   }
   function renderSettings():void {
     const item=active(),settings=item?effective(item):state.sharedSettings,record=asRecord(settings);
