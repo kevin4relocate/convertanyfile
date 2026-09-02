@@ -4,14 +4,15 @@ import { FADE_IMAGE_EDGES_TOOL } from '../config/image-tools';
 ---
 <CoreImageToolPage
   tool={FADE_IMAGE_EDGES_TOOL}
-  kicker="Subtitle-safe edge fade · Preview"
-  heading="Fade blur gradually from the edge instead of drawing a hard blur box."
-  copy="Choose Bottom for a subtitle area, use Top, Left or Right for other text layouts, or fade All edges for a soft framed look. Fade depth controls how far the effect reaches into the image; Blur strength controls the softened pixels; Softness controls how gently the blur arrives; Organic adds a subtle irregular transition so the boundary feels less perfectly digital."
+  kicker="Subtitle-safe edge fade · Preview v2"
+  heading="Create a stronger subtitle-safe fade without drawing a hard blur box."
+  copy="Start with Subtitle Strong when a busy bottom edge needs enough separation for captions, use Subtitle Soft for a lighter treatment, or choose Paper Wash for a softer organic transition. The v2 effect can combine blur, reduced contrast and a dark or light wash while Fade depth controls how far the transition reaches into the image."
   bullets={[
+    'Choose Subtitle Soft, Subtitle Strong, Paper Wash or Natural Fade presets, then fine-tune when needed.',
     'Fade from Bottom, Top, Left, Right or all four edges while keeping the center clearer.',
-    'Use Smooth for a clean gradient or Organic for a gently irregular paper-wash transition.',
-    'Adjust fade depth, blur strength, softness and organic texture with live preview updates.',
-    'Apply one setup to a batch or customize individual images when subtitle placement changes.',
-    'Download one processed image directly or multiple successful results as a ZIP.',
+    'Increase Fade depth up to 100% and Blur strength up to 180 px for difficult, detail-heavy images.',
+    'Use Wash strength and Reduce contrast to create a cleaner text area instead of relying on blur alone.',
+    'Switch between Smooth and Organic transitions, with an optional editor-only subtitle guide.',
+    'Apply one setup to a batch or customize individual images, then download one image directly or multiple results as a ZIP.',
   ]}
 />
