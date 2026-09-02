@@ -72,24 +72,113 @@ const { tool } = Astro.props;
     if (contrast instanceof HTMLInputElement && contrastOutput) contrastOutput.textContent = `${contrast.value}%`;
   };
 
-  const guideFrame = root.querySelector('[data-role="result-preview"]')?.closest('.image-preview-panel__frame');
-  const guide = document.createElement('div');
-  guide.className = 'edge-fade-subtitle-guide';
-  guide.setAttribute('aria-hidden', 'true');
-  guide.innerHTML = '<span>Subtitle safe zone</span>';
-  if (guideFrame instanceof HTMLElement) guideFrame.append(guide);
+  const resultPreview = root.querySelector('[data-role="result-preview"]');
+  const guideFrame = resultPreview?.closest('.image-preview-panel__frame');
+  const guideHost = document.createElement('div');
+  guideHost.className = 'edge-fade-guide-host';
+  guideHost.hidden = true;
+  guideHost.innerHTML = `
+    <div class="edge-fade-subtitle-guide">
+      <span class="edge-fade-guide-label">Subtitle safe zone</span>
+      <div class="edge-fade-guide-handle edge-fade-guide-handle--top" data-guide-edge="top" role="slider" tabindex="0" aria-label="Resize subtitle safe zone from top edge"></div>
+      <div class="edge-fade-guide-handle edge-fade-guide-handle--bottom" data-guide-edge="bottom" role="slider" tabindex="0" aria-label="Resize subtitle safe zone from bottom edge"></div>
+      <div class="edge-fade-guide-handle edge-fade-guide-handle--left" data-guide-edge="left" role="slider" tabindex="0" aria-label="Resize subtitle safe zone from left edge"></div>
+      <div class="edge-fade-guide-handle edge-fade-guide-handle--right" data-guide-edge="right" role="slider" tabindex="0" aria-label="Resize subtitle safe zone from right edge"></div>
+    </div>`;
+  if (guideFrame instanceof HTMLElement) guideFrame.append(guideHost);
+  const guide = guideHost.querySelector('.edge-fade-subtitle-guide');
+  const handles = [...guideHost.querySelectorAll('[data-guide-edge]')];
+
+  const clampDepth = (value) => Math.min(100, Math.max(5, Math.round(value)));
+  const setDepth = (value) => {
+    const depth = q('depth');
+    if (!(depth instanceof HTMLInputElement)) return;
+    depth.value = String(clampDepth(value));
+    depth.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+
+  const syncGuideBounds = () => {
+    if (!(guideFrame instanceof HTMLElement) || !(resultPreview instanceof HTMLImageElement)) return;
+    if (resultPreview.hidden || !resultPreview.getAttribute('src')) return;
+    const frameRect = guideFrame.getBoundingClientRect();
+    const imageRect = resultPreview.getBoundingClientRect();
+    guideHost.style.left = `${Math.max(0, imageRect.left - frameRect.left)}px`;
+    guideHost.style.top = `${Math.max(0, imageRect.top - frameRect.top)}px`;
+    guideHost.style.width = `${imageRect.width}px`;
+    guideHost.style.height = `${imageRect.height}px`;
+  };
 
   const syncGuide = () => {
     const direction = q('direction');
     const depth = q('depth');
     const show = q('showGuide');
-    if (!(direction instanceof HTMLSelectElement) || !(depth instanceof HTMLInputElement) || !(show instanceof HTMLInputElement)) return;
+    if (!(guide instanceof HTMLElement) || !(direction instanceof HTMLSelectElement) || !(depth instanceof HTMLInputElement) || !(show instanceof HTMLInputElement)) return;
+    syncGuideBounds();
     guide.className = `edge-fade-subtitle-guide edge-fade-subtitle-guide--${direction.value}`;
-    guide.style.removeProperty('width'); guide.style.removeProperty('height');
+    guide.style.setProperty('--guide-depth', `${depth.value}%`);
+    guide.style.removeProperty('width');
+    guide.style.removeProperty('height');
     if (direction.value === 'left' || direction.value === 'right') guide.style.width = `${depth.value}%`;
     else if (direction.value !== 'all') guide.style.height = `${depth.value}%`;
-    guide.hidden = !show.checked || root.dataset.hasItems !== 'true';
+
+    for (const handle of handles) {
+      if (!(handle instanceof HTMLElement)) continue;
+      const edge = handle.dataset.guideEdge;
+      const active = direction.value === 'all' || edge === direction.value;
+      handle.hidden = !active;
+      handle.setAttribute('aria-valuemin', '5');
+      handle.setAttribute('aria-valuemax', '100');
+      handle.setAttribute('aria-valuenow', depth.value);
+      handle.setAttribute('aria-valuetext', `${depth.value}% fade depth`);
+    }
+    guideHost.hidden = !show.checked || root.dataset.hasItems !== 'true' || resultPreview?.hidden === true;
   };
+
+  const depthFromPointer = (edge, event) => {
+    const rect = guideHost.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    if (edge === 'top') return (event.clientY - rect.top) / rect.height * 100;
+    if (edge === 'bottom') return (rect.bottom - event.clientY) / rect.height * 100;
+    if (edge === 'left') return (event.clientX - rect.left) / rect.width * 100;
+    if (edge === 'right') return (rect.right - event.clientX) / rect.width * 100;
+    return null;
+  };
+
+  for (const handle of handles) {
+    if (!(handle instanceof HTMLElement)) continue;
+    const edge = handle.dataset.guideEdge;
+    if (!edge) continue;
+    handle.addEventListener('pointerdown', (event) => {
+      if (!(event instanceof PointerEvent)) return;
+      event.preventDefault();
+      handle.setPointerCapture(event.pointerId);
+      guideHost.classList.add('is-dragging');
+      const value = depthFromPointer(edge, event);
+      if (value !== null) setDepth(value);
+    });
+    handle.addEventListener('pointermove', (event) => {
+      if (!(event instanceof PointerEvent) || !handle.hasPointerCapture(event.pointerId)) return;
+      event.preventDefault();
+      const value = depthFromPointer(edge, event);
+      if (value !== null) setDepth(value);
+    });
+    const stopDrag = (event) => {
+      if (event instanceof PointerEvent && handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+      guideHost.classList.remove('is-dragging');
+    };
+    handle.addEventListener('pointerup', stopDrag);
+    handle.addEventListener('pointercancel', stopDrag);
+    handle.addEventListener('keydown', (event) => {
+      if (!(event instanceof KeyboardEvent)) return;
+      if (!['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(event.key)) return;
+      event.preventDefault();
+      const depth = q('depth');
+      if (!(depth instanceof HTMLInputElement)) return;
+      const step = event.shiftKey ? 5 : 1;
+      const increase = event.key === 'ArrowUp' || event.key === 'ArrowRight';
+      setDepth(Number(depth.value) + (increase ? step : -step));
+    });
+  }
 
   const applyPreset = (name) => {
     const values = presets[name];
@@ -125,11 +214,24 @@ const { tool } = Astro.props;
   }
 
   new MutationObserver(syncGuide).observe(root, { attributes: true, attributeFilter: ['data-has-items'] });
+  if (resultPreview instanceof HTMLImageElement) {
+    resultPreview.addEventListener('load', syncGuide);
+    new MutationObserver(syncGuide).observe(resultPreview, { attributes: true, attributeFilter: ['src', 'hidden'] });
+  }
+  if ('ResizeObserver' in window && guideFrame instanceof HTMLElement) {
+    const resizeObserver = new ResizeObserver(syncGuide);
+    resizeObserver.observe(guideFrame);
+    if (resultPreview instanceof HTMLImageElement) resizeObserver.observe(resultPreview);
+    window.addEventListener('pagehide', () => resizeObserver.disconnect(), { once: true });
+  } else {
+    window.addEventListener('resize', syncGuide);
+  }
+
   syncLocalOutputs();
   syncGuide();
 })();
 </script>
 
 <style is:global>
-.fade-image-edges-v2-shell .edge-fade-v2-grid>.setting-note{align-self:end}.fade-image-edges-v2-shell .edge-fade-advanced{margin:0}.fade-image-edges-v2-shell .edge-fade-advanced summary{cursor:pointer;color:#b8bfcc;font-size:10.5px;font-weight:720}.fade-image-edges-v2-shell .edge-fade-advanced[open] summary{margin-bottom:10px}.edge-fade-subtitle-guide{position:absolute;z-index:3;pointer-events:none;background:linear-gradient(180deg,rgba(124,115,255,.02),rgba(124,115,255,.10));color:#d7d3ff;font-size:9px;font-weight:750;letter-spacing:.04em;text-transform:uppercase}.edge-fade-subtitle-guide span{position:absolute;padding:4px 6px;border-radius:5px;background:rgba(12,17,24,.68);backdrop-filter:blur(4px)}.edge-fade-subtitle-guide--bottom{left:0;right:0;bottom:0;border-top:1px dashed rgba(170,164,255,.65)}.edge-fade-subtitle-guide--bottom span{left:8px;top:7px}.edge-fade-subtitle-guide--top{left:0;right:0;top:0;border-bottom:1px dashed rgba(170,164,255,.65)}.edge-fade-subtitle-guide--top span{left:8px;bottom:7px}.edge-fade-subtitle-guide--left{left:0;top:0;bottom:0;border-right:1px dashed rgba(170,164,255,.65)}.edge-fade-subtitle-guide--left span{left:7px;bottom:8px}.edge-fade-subtitle-guide--right{right:0;top:0;bottom:0;border-left:1px dashed rgba(170,164,255,.65)}.edge-fade-subtitle-guide--right span{right:7px;bottom:8px}.edge-fade-subtitle-guide--all{inset:0;background:transparent;box-shadow:inset 0 0 0 2px rgba(124,115,255,.16),inset 0 0 50px rgba(124,115,255,.11)}.edge-fade-subtitle-guide--all span{left:8px;bottom:8px}@media(max-width:720px){.fade-image-edges-v2-shell .edge-fade-v2-grid>.setting-note{align-self:stretch}}
+.fade-image-edges-v2-shell .edge-fade-v2-grid>.setting-note{align-self:end}.fade-image-edges-v2-shell .edge-fade-advanced{margin:0}.fade-image-edges-v2-shell .edge-fade-advanced summary{cursor:pointer;color:#b8bfcc;font-size:10.5px;font-weight:720}.fade-image-edges-v2-shell .edge-fade-advanced[open] summary{margin-bottom:10px}.edge-fade-guide-host{position:absolute;z-index:3;pointer-events:none;overflow:visible}.edge-fade-subtitle-guide{position:absolute;color:#d7d3ff;font-size:9px;font-weight:750;letter-spacing:.04em;text-transform:uppercase;background:linear-gradient(180deg,rgba(124,115,255,.02),rgba(124,115,255,.11));pointer-events:none}.edge-fade-guide-label{position:absolute;padding:4px 6px;border-radius:5px;background:rgba(12,17,24,.72);backdrop-filter:blur(4px);pointer-events:none}.edge-fade-guide-handle{position:absolute;z-index:4;display:block!important;pointer-events:auto;touch-action:none;outline:none}.edge-fade-guide-handle::after{content:'';position:absolute;border-radius:999px;background:rgba(185,180,255,.95);box-shadow:0 0 0 2px rgba(18,22,31,.72),0 0 0 3px rgba(124,115,255,.3);opacity:.72;transition:opacity .12s ease,transform .12s ease}.edge-fade-guide-handle:hover::after,.edge-fade-guide-handle:focus-visible::after,.edge-fade-guide-host.is-dragging .edge-fade-guide-handle::after{opacity:1}.edge-fade-guide-handle--top,.edge-fade-guide-handle--bottom{left:0;right:0;height:18px;cursor:ns-resize}.edge-fade-guide-handle--top::after,.edge-fade-guide-handle--bottom::after{left:50%;top:50%;width:44px;height:4px;transform:translate(-50%,-50%)}.edge-fade-guide-handle--left,.edge-fade-guide-handle--right{top:0;bottom:0;width:18px;cursor:ew-resize}.edge-fade-guide-handle--left::after,.edge-fade-guide-handle--right::after{left:50%;top:50%;width:4px;height:44px;transform:translate(-50%,-50%)}.edge-fade-subtitle-guide--bottom{left:0;right:0;bottom:0;border-top:1px dashed rgba(170,164,255,.7)}.edge-fade-subtitle-guide--bottom .edge-fade-guide-label{left:8px;top:7px}.edge-fade-subtitle-guide--bottom .edge-fade-guide-handle--bottom{top:-9px}.edge-fade-subtitle-guide--top{left:0;right:0;top:0;border-bottom:1px dashed rgba(170,164,255,.7)}.edge-fade-subtitle-guide--top .edge-fade-guide-label{left:8px;bottom:7px}.edge-fade-subtitle-guide--top .edge-fade-guide-handle--top{bottom:-9px}.edge-fade-subtitle-guide--left{left:0;top:0;bottom:0;border-right:1px dashed rgba(170,164,255,.7)}.edge-fade-subtitle-guide--left .edge-fade-guide-label{left:7px;bottom:8px}.edge-fade-subtitle-guide--left .edge-fade-guide-handle--left{right:-9px}.edge-fade-subtitle-guide--right{right:0;top:0;bottom:0;border-left:1px dashed rgba(170,164,255,.7)}.edge-fade-subtitle-guide--right .edge-fade-guide-label{right:7px;bottom:8px}.edge-fade-subtitle-guide--right .edge-fade-guide-handle--right{left:-9px}.edge-fade-subtitle-guide--all{inset:0;background:linear-gradient(to bottom,rgba(124,115,255,.10) 0,var(--guide-depth),transparent var(--guide-depth),transparent calc(100% - var(--guide-depth)),rgba(124,115,255,.10) calc(100% - var(--guide-depth))),linear-gradient(to right,rgba(124,115,255,.10) 0,var(--guide-depth),transparent var(--guide-depth),transparent calc(100% - var(--guide-depth)),rgba(124,115,255,.10) calc(100% - var(--guide-depth)))}.edge-fade-subtitle-guide--all .edge-fade-guide-label{left:8px;bottom:8px}.edge-fade-subtitle-guide--all .edge-fade-guide-handle--top{top:calc(var(--guide-depth) - 9px);border-top:1px dashed rgba(170,164,255,.7)}.edge-fade-subtitle-guide--all .edge-fade-guide-handle--bottom{bottom:calc(var(--guide-depth) - 9px);border-bottom:1px dashed rgba(170,164,255,.7)}.edge-fade-subtitle-guide--all .edge-fade-guide-handle--left{left:calc(var(--guide-depth) - 9px);border-left:1px dashed rgba(170,164,255,.7)}.edge-fade-subtitle-guide--all .edge-fade-guide-handle--right{right:calc(var(--guide-depth) - 9px);border-right:1px dashed rgba(170,164,255,.7)}@media(max-width:720px){.fade-image-edges-v2-shell .edge-fade-v2-grid>.setting-note{align-self:stretch}}
 </style>
