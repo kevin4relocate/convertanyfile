@@ -47,10 +47,10 @@ test('Fade Image Edges keeps the default settings compact and moves secondary co
   await expect(advanced.locator('summary')).toHaveText('More controls');
   await expect(advanced.locator('[data-setting="effectMode"]')).toHaveCount(1);
   await expect(advanced.locator('[data-setting="style"]')).toHaveCount(1);
-  await expect(compactGrid.locator('> .edge-fade-compact-preset [data-setting="preset"]')).toHaveCount(1);
-  await expect(compactGrid.locator('> .edge-fade-compact-edge [data-setting="direction"]')).toHaveCount(1);
-  await expect(compactGrid.locator('> .edge-fade-compact-slider')).toHaveCount(3);
-  await expect(compactGrid.locator('> .setting-note:not(details)')).toHaveCount(0);
+  await expect(compactGrid.locator(':scope > .edge-fade-compact-preset [data-setting="preset"]')).toHaveCount(1);
+  await expect(compactGrid.locator(':scope > .edge-fade-compact-edge [data-setting="direction"]')).toHaveCount(1);
+  await expect(compactGrid.locator(':scope > .edge-fade-compact-slider')).toHaveCount(3);
+  await expect(compactGrid.locator(':scope > .setting-note:not(details)')).toHaveCount(0);
 });
 
 test('subtitle safe-zone boundary can be dragged to change Fade depth', async ({ page }) => {
