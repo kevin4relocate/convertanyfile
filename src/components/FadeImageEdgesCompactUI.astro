@@ -1,0 +1,95 @@
+<script is:inline>
+(() => {
+  const applyCompactLayout = () => {
+    const root = document.querySelector('[data-image-tool-app][data-tool-id="fade-image-edges"]');
+    if (!(root instanceof HTMLElement)) return false;
+    if (root.dataset.edgeFadeCompact === 'true') return true;
+
+    const mainGrid = root.querySelector('.edge-fade-v2-grid');
+    const advanced = root.querySelector('.edge-fade-advanced');
+    const advancedGrid = advanced?.querySelector('.setting-grid');
+    if (!(mainGrid instanceof HTMLElement) || !(advanced instanceof HTMLDetailsElement) || !(advancedGrid instanceof HTMLElement)) return false;
+
+    const labelFor = (key) => root.querySelector(`[data-setting="${key}"]`)?.closest('label');
+    const effectModeLabel = labelFor('effectMode');
+    const styleLabel = labelFor('style');
+    const presetLabel = labelFor('preset');
+    const edgeLabel = labelFor('direction');
+    const depthLabel = labelFor('depth');
+    const blurLabel = labelFor('radius');
+    const washLabel = labelFor('wash');
+
+    if (effectModeLabel instanceof HTMLElement) advancedGrid.prepend(effectModeLabel);
+    if (styleLabel instanceof HTMLElement) {
+      const first = advancedGrid.firstElementChild;
+      if (first) first.after(styleLabel);
+      else advancedGrid.append(styleLabel);
+    }
+
+    for (const child of [...mainGrid.children]) {
+      if (child === advanced) continue;
+      if (child instanceof HTMLElement && child.classList.contains('setting-note')) child.remove();
+    }
+
+    mainGrid.classList.add('edge-fade-v2-grid--compact');
+    if (presetLabel instanceof HTMLElement) presetLabel.classList.add('edge-fade-compact-preset');
+    if (edgeLabel instanceof HTMLElement) edgeLabel.classList.add('edge-fade-compact-edge');
+    for (const label of [depthLabel, blurLabel, washLabel]) {
+      if (label instanceof HTMLElement) label.classList.add('edge-fade-compact-slider');
+    }
+    for (const label of [effectModeLabel, styleLabel]) {
+      if (label instanceof HTMLElement) label.classList.add('edge-fade-advanced-control');
+    }
+
+    const summary = advanced.querySelector('summary');
+    if (summary) summary.textContent = 'More controls';
+    root.dataset.edgeFadeCompact = 'true';
+    return true;
+  };
+
+  if (applyCompactLayout()) return;
+  let attempts = 0;
+  const retry = () => {
+    attempts += 1;
+    if (applyCompactLayout() || attempts >= 8) return;
+    requestAnimationFrame(retry);
+  };
+  requestAnimationFrame(retry);
+})();
+</script>
+
+<style is:global>
+.fade-image-edges-v2-shell .edge-fade-v2-grid.edge-fade-v2-grid--compact{
+  display:grid!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:9px 12px!important;
+  align-items:end;
+}
+.fade-image-edges-v2-shell .edge-fade-v2-grid--compact>.edge-fade-compact-preset,
+.fade-image-edges-v2-shell .edge-fade-v2-grid--compact>.edge-fade-compact-edge{grid-column:span 3}
+.fade-image-edges-v2-shell .edge-fade-v2-grid--compact>.edge-fade-compact-slider{grid-column:span 2}
+.fade-image-edges-v2-shell .edge-fade-v2-grid--compact>.edge-fade-advanced{grid-column:1/-1;margin-top:1px!important}
+.fade-image-edges-v2-shell .edge-fade-v2-grid--compact label>span{margin-bottom:5px}
+.fade-image-edges-v2-shell .edge-fade-v2-grid--compact .edge-fade-advanced>summary{min-height:36px;display:flex;align-items:center;padding:0 2px;font-size:10.5px}
+.fade-image-edges-v2-shell .edge-fade-v2-grid--compact .edge-fade-advanced[open]>summary{margin-bottom:8px!important}
+.fade-image-edges-v2-shell .edge-fade-v2-grid--compact .edge-fade-advanced .visual-advanced-settings__body>.setting-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:9px 12px!important;
+}
+.fade-image-edges-v2-shell .deterministic-settings{padding-top:10px;padding-bottom:10px}
+.fade-image-edges-v2-shell .edge-fade-controls{gap:8px}
+
+@media(max-width:820px){
+  .fade-image-edges-v2-shell .edge-fade-v2-grid.edge-fade-v2-grid--compact{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .fade-image-edges-v2-shell .edge-fade-v2-grid--compact>.edge-fade-compact-preset,
+  .fade-image-edges-v2-shell .edge-fade-v2-grid--compact>.edge-fade-compact-edge{grid-column:span 1}
+  .fade-image-edges-v2-shell .edge-fade-v2-grid--compact>.edge-fade-compact-slider{grid-column:1/-1}
+  .fade-image-edges-v2-shell .edge-fade-v2-grid--compact>.edge-fade-advanced{grid-column:1/-1}
+  .fade-image-edges-v2-shell .edge-fade-v2-grid--compact .edge-fade-advanced .visual-advanced-settings__body>.setting-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:520px){
+  .fade-image-edges-v2-shell .edge-fade-v2-grid.edge-fade-v2-grid--compact,
+  .fade-image-edges-v2-shell .edge-fade-v2-grid--compact .edge-fade-advanced .visual-advanced-settings__body>.setting-grid{grid-template-columns:1fr!important}
+  .fade-image-edges-v2-shell .edge-fade-v2-grid--compact>*{grid-column:1!important}
+}
+</style>

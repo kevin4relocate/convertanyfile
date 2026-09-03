@@ -36,6 +36,23 @@ test('Fade Image Edges v2 exposes subtitle-safe presets and stays noindex while 
   await expect(page.locator('[data-setting="preset"]')).toHaveValue('custom');
 });
 
+test('Fade Image Edges keeps the default settings compact and moves secondary controls under More controls', async ({ page }) => {
+  await page.goto('/fade-image-edges/');
+  const root = page.locator('[data-tool-id="fade-image-edges"]');
+  const compactGrid = root.locator('.edge-fade-v2-grid--compact');
+  const advanced = root.locator('.edge-fade-advanced');
+
+  await expect(compactGrid).toBeVisible();
+  await expect(advanced).not.toHaveAttribute('open', '');
+  await expect(advanced.locator('summary')).toHaveText('More controls');
+  await expect(advanced.locator('[data-setting="effectMode"]')).toHaveCount(1);
+  await expect(advanced.locator('[data-setting="style"]')).toHaveCount(1);
+  await expect(compactGrid.locator(':scope > .edge-fade-compact-preset [data-setting="preset"]')).toHaveCount(1);
+  await expect(compactGrid.locator(':scope > .edge-fade-compact-edge [data-setting="direction"]')).toHaveCount(1);
+  await expect(compactGrid.locator(':scope > .edge-fade-compact-slider')).toHaveCount(3);
+  await expect(compactGrid.locator(':scope > .setting-note:not(details)')).toHaveCount(0);
+});
+
 test('subtitle safe-zone boundary can be dragged to change Fade depth', async ({ page }) => {
   await page.goto('/fade-image-edges/');
   const depth = page.locator('[data-setting="depth"]');
