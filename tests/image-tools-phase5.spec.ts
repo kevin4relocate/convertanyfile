@@ -1,4 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
+
+async function readyImageTool(page: Page): Promise<Locator> {
+  const app = page.locator('[data-image-tool-app]');
+  await expect(app).toHaveAttribute('data-image-tool-ready', 'true');
+  return app;
+}
 
 test.describe('Image tools release surface', () => {
   test('Image Tools hub keeps experimental heavy tools out of the public release surface', async ({ page }) => {
@@ -10,7 +16,7 @@ test.describe('Image tools release surface', () => {
 
   test('advanced watermark controls remain available while Gemini stays simplified', async ({ page }) => {
     await page.goto('/remove-watermark/');
-    const watermark = page.locator('[data-image-tool-app]');
+    const watermark = await readyImageTool(page);
     await expect(watermark).toHaveAttribute('data-advanced-canvas', 'true');
     await expect(watermark.locator('[data-role="zoom-value"]')).toHaveText('100%');
     await expect(watermark.locator('[data-role="mask-padding"]')).toBeAttached();
@@ -20,7 +26,7 @@ test.describe('Image tools release surface', () => {
     await expect(watermark.locator('[data-role="redo"]')).toBeDisabled();
 
     await page.goto('/gemini-ai-logo-remover/');
-    const gemini = page.locator('[data-image-tool-app]');
+    const gemini = await readyImageTool(page);
     await expect(gemini).toHaveAttribute('data-advanced-canvas', 'false');
     await expect(gemini.locator('[data-role="mask-padding"]')).toHaveCount(0);
     await expect(gemini.locator('[data-role="mask-feather"]')).toHaveCount(0);
