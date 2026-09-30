@@ -1,4 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
+
+async function readyTool(page: Page, toolId: string): Promise<Locator> {
+  const app = page.locator(`[data-image-tool-app][data-tool-id="${toolId}"]`);
+  await expect(app).toHaveAttribute('data-image-tool-ready', 'true');
+  return app;
+}
 
 const PNG_2X2 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP4z8DA8J+BkYHh////DAAe9gT9Ce00PgAAAABJRU5ErkJggg==',
@@ -39,7 +45,7 @@ for (const [path, toolId] of TOOLS) {
 test('resize supports shared and per-image overrides', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run core image interaction coverage once in Chromium');
   await page.goto('/resize-image/');
-  const app = page.locator('[data-tool-id="resize-image"]');
+  const app = await readyTool(page, 'resize-image');
   await app.locator('[data-role="file-input"]').setInputFiles([
     { name: 'one.png', mimeType: 'image/png', buffer: PNG_2X2 },
     { name: 'two.png', mimeType: 'image/png', buffer: PNG_2X2 },
@@ -57,7 +63,7 @@ test('resize supports shared and per-image overrides', async ({ page }, testInfo
 test('locked shared resize preserves each image ratio in a mixed batch', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run mixed-ratio resize coverage once in Chromium');
   await page.goto('/resize-image/');
-  const app = page.locator('[data-tool-id="resize-image"]');
+  const app = await readyTool(page, 'resize-image');
   await app.locator('[data-role="file-input"]').setInputFiles([
     { name: 'wide.png', mimeType: 'image/png', buffer: PNG_4X2 },
     { name: 'tall.png', mimeType: 'image/png', buffer: PNG_2X4 },
@@ -75,7 +81,7 @@ test('locked shared resize preserves each image ratio in a mixed batch', async (
 test('resize rejects unsafe output canvas dimensions before processing', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run resize safety coverage once in Chromium');
   await page.goto('/resize-image/');
-  const app = page.locator('[data-tool-id="resize-image"]');
+  const app = await readyTool(page, 'resize-image');
   await app.locator('[data-role="file-input"]').setInputFiles({ name: 'wide.png', mimeType: 'image/png', buffer: PNG_4X2 });
   await app.locator('[data-setting="width"]').fill('12000');
   await expect(app.locator('[data-role="preview-meta"]')).toContainText('safety limit');
@@ -84,7 +90,7 @@ test('resize rejects unsafe output canvas dimensions before processing', async (
 test('compress keeps output quality as an individual override', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run core image interaction coverage once in Chromium');
   await page.goto('/compress-image/');
-  const app = page.locator('[data-tool-id="compress-image"]');
+  const app = await readyTool(page, 'compress-image');
   await app.locator('[data-role="file-input"]').setInputFiles([
     { name: 'one.png', mimeType: 'image/png', buffer: PNG_2X2 },
     { name: 'two.png', mimeType: 'image/png', buffer: PNG_2X2 },
@@ -104,7 +110,7 @@ test('explicit PNG output disables meaningless quality controls', async ({ page 
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run output control coverage once in Chromium');
 
   await page.goto('/compress-image/');
-  const compress = page.locator('[data-tool-id="compress-image"]');
+  const compress = await readyTool(page, 'compress-image');
   const embeddedFormat = compress.locator('[data-setting="format"]');
   const embeddedQuality = compress.locator('[data-setting="quality"]');
   await embeddedFormat.selectOption('png');
@@ -113,7 +119,7 @@ test('explicit PNG output disables meaningless quality controls', async ({ page 
   await expect(embeddedQuality).toBeEnabled();
 
   await page.goto('/rotate-flip-image/');
-  const rotate = page.locator('[data-tool-id="rotate-flip-image"]');
+  const rotate = await readyTool(page, 'rotate-flip-image');
   const outputFormat = rotate.locator('[data-role="output-format"]');
   const outputQuality = rotate.locator('[data-role="output-quality"]');
   await outputFormat.selectOption('png');
@@ -125,11 +131,12 @@ test('explicit PNG output disables meaningless quality controls', async ({ page 
 test('crop and blur expose geometry-specific controls', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run core geometry control coverage once in Chromium');
   await page.goto('/crop-image/');
+  await readyTool(page, 'crop-image');
   await expect(page.locator('[data-setting="aspect"]')).toContainText('16:9');
   await expect(page.locator('[data-setting="width"]')).toHaveValue('100');
 
   await page.goto('/blur-image/');
-  const blur = page.locator('[data-tool-id="blur-image"]');
+  const blur = await readyTool(page, 'blur-image');
   await blur.locator('[data-setting="scope"]').selectOption('region');
   await expect(blur.locator('[data-setting-group="region"]').first()).toBeVisible();
 });
@@ -137,7 +144,7 @@ test('crop and blur expose geometry-specific controls', async ({ page }, testInf
 test('core tool can process a local image end-to-end', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run one deterministic processing smoke in Chromium');
   await page.goto('/rotate-flip-image/');
-  const app = page.locator('[data-tool-id="rotate-flip-image"]');
+  const app = await readyTool(page, 'rotate-flip-image');
   await app.locator('[data-role="file-input"]').setInputFiles({ name: 'rotate.png', mimeType: 'image/png', buffer: PNG_2X2 });
   await app.locator('[data-setting="rotation"]').selectOption('90');
   await expect(app.locator('[data-role="process-batch"]')).toBeEnabled();
