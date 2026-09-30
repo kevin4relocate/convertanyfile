@@ -79,7 +79,7 @@ test('Archive dropzone visibly advertises 7Z and RAR', async ({ page }) => {
 
 test('truncated real 7Z fails permanently after signature admission', async ({ page }) => {
   await page.goto('/7z-to-zip/');
-  const source = await fixture('file-and-empty.7z');
+  const source = await fixture('lzma2.7z');
   const app = await addAndConvert(page, {
     name: 'truncated.7z',
     mimeType: 'application/x-7z-compressed',
@@ -109,7 +109,7 @@ test('WASM runtime load failure is temporary and exposes Retry', async ({ page }
   const app = await addAndConvert(page, {
     name: 'runtime-check.7z',
     mimeType: 'application/x-7z-compressed',
-    buffer: await fixture('file-and-empty.7z'),
+    buffer: await fixture('lzma2.7z'),
   });
   await expect(app.locator('[data-role="file-list"]')).toContainText(/decoder runtime unavailable/i);
   await expect(app.getByRole('button', { name: 'Retry' })).toBeVisible();
