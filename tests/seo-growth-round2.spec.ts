@@ -12,27 +12,28 @@ const NEW_GUIDES = [
 test('homepage promotes image and data growth entry points', async ({ page }) => {
   await page.goto('/');
   for (const href of ['/resize-image/', '/heic-to-jpg/', '/csv-to-json/', '/json-to-csv/', '/guides/how-to-convert-csv-to-json/']) {
-    await expect(page.locator(`a[href="${href}"]`).first()).toBeVisible();
+    await expect(page.locator(`main a[href="${href}"]`).first()).toBeVisible();
   }
 });
 
 test('data converter prioritizes common routes while retaining the full catalog', async ({ page }) => {
   await page.goto('/data-converter/');
   await expect(page.getByRole('heading', { name: 'Start with the data jobs people need most often.' })).toBeVisible();
-  await expect(page.locator('a[href="/csv-to-json/"]').first()).toBeVisible();
-  await expect(page.locator('a[href="/json-to-csv/"]').first()).toBeVisible();
+  await expect(page.locator('main a[href="/csv-to-json/"]').first()).toBeVisible();
+  await expect(page.locator('main a[href="/json-to-csv/"]').first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Use the exact format pair when the destination is specific.' })).toBeVisible();
 });
 
 for (const [path, toolHref] of NEW_GUIDES) {
-  test(`${path} is indexable and links back to its tool`, async ({ page }) => {
+  test(`${path} is indexable and links back to its tool`, async ({ page, request }) => {
     const response = await page.goto(path);
     expect(response?.ok()).toBeTruthy();
     await expect(page.locator('h1')).toHaveCount(1);
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /index/);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://convertanyfile.net${path}`);
-    await expect(page.locator('script[type="application/ld+json"]').filter({ hasText: '"Article"' }).first()).toBeAttached();
-    await expect(page.locator(`a[href="${toolHref}"]`).first()).toBeVisible();
+    const html = await (await request.get(path)).text();
+    expect(html).toContain('"@type":"Article"');
+    await expect(page.locator(`main a[href="${toolHref}"]`).first()).toBeVisible();
   });
 }
 
@@ -47,6 +48,6 @@ test('HTML sitemap exposes crawlable routes across categories', async ({ page })
     '/guides/how-to-convert-jpg-to-webp/',
     '/guides/how-to-remove-watermark-from-image/',
   ]) {
-    await expect(page.locator(`a[href="${href}"]`).first()).toBeVisible();
+    await expect(page.locator(`main a[href="${href}"]`).first()).toBeVisible();
   }
 });
