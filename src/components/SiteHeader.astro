@@ -43,7 +43,7 @@ const convertersActive = converterPaths.includes(currentPath);
                 <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} href={tool.href}>
                   <span class:list={['nav-tool-icon', tool.icon === '✦' && 'nav-tool-icon--spark']} aria-hidden="true">{tool.icon}</span>
                   <span class="nav-tool-copy">
-                    <span class="nav-tool-title-row"><strong>{tool.label}</strong><small class:list={['nav-tool-status', tool.live && 'is-live']}>{tool.live ? 'LIVE' : 'PREVIEW'}</small></span>
+                    <span class="nav-tool-title-row"><strong>{tool.label}</strong><small class:list={['nav-tool-status', imageToolStatus.get(tool.id) === 'live' && 'is-live']}>{imageToolStatus.get(tool.id) === 'live' ? 'LIVE' : 'PREVIEW'}</small></span>
                     <small>{tool.hint}</small>
                   </span>
                 </a>
