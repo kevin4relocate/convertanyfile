@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 async function readyImageTool(page: Page): Promise<Locator> {
-  const app = await readyImageTool(page);
+  const app = page.locator('[data-image-tool-app]');
   await expect(app).toHaveAttribute('data-image-tool-ready', 'true');
   return app;
 }
