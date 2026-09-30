@@ -1,9 +1,11 @@
 import type { OutputOption, RangeOutputControl } from '../../platform/converter/types';
+import { DEFAULT_WEBP_QUALITY } from '../../image-tools/core/output-quality';
 
-const QUALITY_CONTROL: RangeOutputControl = {
-  id: 'quality', type: 'range', label: 'Quality', min: 1, max: 100, step: 1, defaultValue: 90,
-};
-const LOSSY_CONTROLS = [QUALITY_CONTROL] as const;
+const qualityControl = (defaultValue: number): RangeOutputControl => ({
+  id: 'quality', type: 'range', label: 'Quality', min: 1, max: 100, step: 1, defaultValue,
+});
+const LOSSY_CONTROLS = [qualityControl(90)] as const;
+const WEBP_CONTROLS = [qualityControl(DEFAULT_WEBP_QUALITY)] as const;
 const POPULAR = 'Popular';
 const ADVANCED = 'Professional & advanced';
 const TECHNICAL = 'Legacy & technical';
@@ -19,7 +21,7 @@ const TECHNICAL = 'Legacy & technical';
 export const IMAGE_OUTPUTS: readonly OutputOption[] = [
   { id: 'jpg', label: 'JPG', extension: 'jpg', mime: 'image/jpeg', group: POPULAR, controls: LOSSY_CONTROLS },
   { id: 'png', label: 'PNG', extension: 'png', mime: 'image/png', group: POPULAR },
-  { id: 'webp', label: 'WebP', extension: 'webp', mime: 'image/webp', group: POPULAR, controls: LOSSY_CONTROLS },
+  { id: 'webp', label: 'WebP', extension: 'webp', mime: 'image/webp', group: POPULAR, controls: WEBP_CONTROLS },
   { id: 'avif', label: 'AVIF', extension: 'avif', mime: 'image/avif', group: POPULAR, controls: LOSSY_CONTROLS },
   { id: 'tiff', label: 'TIFF', extension: 'tiff', mime: 'image/tiff', group: POPULAR },
   { id: 'gif', label: 'GIF', extension: 'gif', mime: 'image/gif', group: POPULAR },
