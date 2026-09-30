@@ -45,7 +45,11 @@ for (const tool of tools) {
     await expect(app).toHaveAttribute('data-platform-scope', 'shared');
 
     await expect(app.locator('[data-output-value]')).toHaveCount(4);
-    await expect(app.locator('[data-role="quality"]')).toHaveValue('96');
+    await expect(app.locator('[data-role="quality"]')).toHaveValue('90');
+    await app.locator('[data-output-value="webp"]').click();
+    await expect(app.locator('[data-role="quality"]')).toHaveValue('82');
+    await app.locator('[data-output-value="jpeg"]').click();
+    await expect(app.locator('[data-role="quality"]')).toHaveValue('90');
     await expect(app.locator('[data-role="remove"]')).toBeDisabled();
     await expect(app.locator('[data-role="download"]')).toBeDisabled();
   });
