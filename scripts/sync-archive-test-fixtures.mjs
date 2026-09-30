@@ -4,12 +4,13 @@ import { dirname, join } from 'node:path';
 
 const OUTPUT_DIR = join(process.cwd(), 'tests', 'fixtures', 'archive-wasm');
 const LIBARCHIVE_COMMIT = '1d04437e404ffad8b3a490abb36234dbdff59afa';
+const ES7Z_COMMIT = '173b226e01559ecd3c4fb03595a1e8c9e9fcca87';
 
 const fixtures = [
   {
-    source: `https://raw.githubusercontent.com/ofk/libarchive-wasm/${LIBARCHIVE_COMMIT}/archives/lzma2.7z`,
-    target: join(OUTPUT_DIR, 'lzma2.7z'),
-    gitBlobSha: 'a2b5be6d98ee0de0d01079e9d745b85e4aaa995b',
+    source: `https://raw.githubusercontent.com/noderaider/es-7z/${ES7Z_COMMIT}/test/zip.7z`,
+    target: join(OUTPUT_DIR, 'simple-files.7z'),
+    gitBlobSha: 'c0db9724d8047bae83344b3c436641acce09e48c',
   },
   {
     source: `https://raw.githubusercontent.com/ofk/libarchive-wasm/${LIBARCHIVE_COMMIT}/archives/v4.rar`,
