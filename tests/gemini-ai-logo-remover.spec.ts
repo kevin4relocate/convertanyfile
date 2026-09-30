@@ -9,7 +9,9 @@ async function readyImageTool(page: Page): Promise<Locator> {
 }
 
 async function uploadSyntheticBatch(page: Page, sizes: Array<[number, number]>, prefix = 'gemini'): Promise<void> {
-  await page.locator('[data-image-tool-app]').evaluate(async (root, payload) => {
+  const root = page.locator('[data-image-tool-app]');
+  const before = await root.locator('.gemini-file-card').count();
+  await root.evaluate(async (root, payload) => {
     const input = root.querySelector<HTMLInputElement>('[data-role="file-input"]')!;
     const transfer = new DataTransfer();
     for (let index = 0; index < payload.sizes.length; index += 1) {
@@ -23,27 +25,42 @@ async function uploadSyntheticBatch(page: Page, sizes: Array<[number, number]>, 
     }
     input.files = transfer.files; input.dispatchEvent(new Event('change', { bubbles: true }));
   }, { sizes, prefix });
-  const root = page.locator('[data-image-tool-app]');
-  await expect(root.locator('.gemini-file-card')).toHaveCount(sizes.length);
-  await expect(root.locator('[data-role="mask-canvas"]')).toBeVisible();
-  await expect.poll(() => root.locator('[data-role="mask-canvas"]').evaluate((element) => (element as HTMLCanvasElement).width)).toBeGreaterThan(0);
+  await expect(root.locator('.gemini-file-card')).toHaveCount(before + sizes.length);
+  const mask = root.locator('[data-role="mask-canvas"]');
+  await expect(mask).toBeVisible();
+  await expect(root.locator('[data-role="source-name"]')).not.toHaveText('Choose an image');
+  await expect.poll(() => mask.evaluate((element) => {
+    const canvas = element as HTMLCanvasElement;
+    return canvas.width > 10 && canvas.height > 10;
+  })).toBe(true);
 }
 
 async function drawMask(page: Page, x1 = 0.86, y1 = 0.78, x2 = 0.97, y2 = 0.96): Promise<void> {
-  const mask = page.locator('[data-image-tool-app] [data-role="mask-canvas"]'); await expect(mask).toBeVisible(); await expect.poll(() => mask.evaluate((element) => (element as HTMLCanvasElement).width)).toBeGreaterThan(0); const box = await mask.boundingBox(); expect(box).not.toBeNull();
-  await page.mouse.move(box!.x + box!.width * x1, box!.y + box!.height * y1); await page.mouse.down(); await page.mouse.move(box!.x + box!.width * x2, box!.y + box!.height * y2, { steps: 5 }); await page.mouse.up();
+  const mask = page.locator('[data-image-tool-app] [data-role="mask-canvas"]');
+  await expect(mask).toBeVisible();
+  await mask.scrollIntoViewIfNeeded();
+  const box = await mask.boundingBox(); expect(box).not.toBeNull();
+  await mask.hover({ position: { x: box!.width * x1, y: box!.height * y1 } });
+  await page.mouse.down();
+  await page.mouse.move(box!.x + box!.width * x2, box!.y + box!.height * y2, { steps: 8 });
+  await page.mouse.up();
+  await expect(page.locator('[data-image-tool-app] [data-role="undo"]')).toBeEnabled();
 }
 
 async function moveSelectedMask(page: Page): Promise<void> {
-  const mask = page.locator('[data-image-tool-app] [data-role="mask-canvas"]'); const box = await mask.boundingBox(); expect(box).not.toBeNull();
-  await page.mouse.move(box!.x + box!.width * 0.915, box!.y + box!.height * 0.87); await page.mouse.down(); await page.mouse.move(box!.x + box!.width * 0.84, box!.y + box!.height * 0.80, { steps: 5 }); await page.mouse.up();
+  const mask = page.locator('[data-image-tool-app] [data-role="mask-canvas"]'); await mask.scrollIntoViewIfNeeded(); const box = await mask.boundingBox(); expect(box).not.toBeNull();
+  await mask.hover({ position: { x: box!.width * 0.915, y: box!.height * 0.87 } }); await page.mouse.down(); await page.mouse.move(box!.x + box!.width * 0.84, box!.y + box!.height * 0.80, { steps: 8 }); await page.mouse.up();
 }
 
 async function rotateDefaultStar(page: Page): Promise<void> {
-  const canvas = page.locator('[data-image-tool-app] [data-role="mask-canvas"]'); const box = await canvas.boundingBox(); expect(box).not.toBeNull();
-  const centerX = box!.x + box!.width * 0.915, centerY = box!.y + box!.height * 0.877;
-  const startY = box!.y + box!.height * 0.624;
-  await page.mouse.move(centerX, startY); await page.mouse.down(); await page.mouse.move(centerX + 50, centerY - 15, { steps: 10 }); await page.mouse.up();
+  const canvas = page.locator('[data-image-tool-app] [data-role="mask-canvas"]'); await canvas.scrollIntoViewIfNeeded(); const box = await canvas.boundingBox(); expect(box).not.toBeNull();
+  const centerX = box!.width * 0.915;
+  const centerY = box!.height * 0.878;
+  const handleY = box!.height * 0.78 - 28;
+  await canvas.hover({ position: { x: centerX, y: handleY } });
+  await page.mouse.down();
+  await page.mouse.move(box!.x + centerX + 50, box!.y + centerY - 15, { steps: 12 });
+  await page.mouse.up();
 }
 
 test('Gemini exposes only Circle and 4-Point Star and defaults to Star', async ({ page }, testInfo) => {
@@ -93,7 +110,7 @@ test('Gemini output controls and file-size guard stay enforced', async ({ page }
 
 test('Gemini SEO, guide, and navigation target visible watermark intent', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Gemini release content'); await page.goto('/gemini-ai-logo-remover/');
-  await expect(page).toHaveTitle(/Gemini Watermark Remover/); await expect(page.getByRole('heading',{level:1})).toHaveText('Remove the visible Gemini watermark from images'); await expect(page.getByText(/round handle to rotate/i).first()).toBeVisible(); await expect(page.getByText(/not affiliated with or endorsed by Google or Gemini/i)).toBeVisible(); await expect(page.getByRole('heading',{name:'Gemini Watermark Remover FAQ'})).toBeVisible(); await expect(page.locator('meta[name="description"]')).toHaveAttribute('content',/Remove the visible Gemini watermark/i);
+  await expect(page).toHaveTitle(/Gemini Watermark Remover/); await expect(page.getByRole('heading',{level:1})).toHaveText('Remove the visible Gemini watermark from images'); await expect(page.locator('.content-wide-section').getByText(/round handle to rotate/i).first()).toBeVisible(); await expect(page.getByText(/not affiliated with or endorsed by Google or Gemini/i)).toBeVisible(); await expect(page.getByRole('heading',{name:'Gemini Watermark Remover FAQ'})).toBeVisible(); await expect(page.locator('meta[name="description"]')).toHaveAttribute('content',/Remove the visible Gemini watermark/i);
   await page.goto('/guides/how-to-remove-gemini-watermark-from-image/'); await expect(page.getByRole('heading',{level:1})).toContainText('visible Gemini watermark'); await expect(page.getByRole('heading',{name:/Remove the visible watermark/})).toBeVisible();
   await page.goto('/image-tools/'); await expect(page.getByRole('link',{name:'Gemini Watermark Remover'}).first()).toBeVisible(); await expect(page.getByText('Circle, 4-Point Star',{exact:true})).toBeVisible();
 });
