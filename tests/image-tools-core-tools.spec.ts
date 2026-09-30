@@ -147,7 +147,8 @@ test('crop and blur expose geometry-specific controls', async ({ page }, testInf
   await blur.locator('[data-role="file-input"]').setInputFiles({ name: 'blur.png', mimeType: 'image/png', buffer: PNG_2X2 });
   await expect(blur).toHaveAttribute('data-has-items', 'true');
   await blur.locator('[data-blur-scope="region"]').click();
-  await expect(blur.locator('[data-setting-group="region"]').first()).toBeVisible();
+  await expect(blur.locator('[data-region-controls]')).toBeVisible();
+  await expect(blur).toHaveAttribute('data-visual-region-active', 'true');
 });
 
 test('core tool can process a local image end-to-end', async ({ page }, testInfo) => {
