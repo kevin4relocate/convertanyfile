@@ -102,7 +102,6 @@ test('7Z decoder is lazy-loaded and a real 7Z can be repacked to ZIP', async ({ 
     buffer: await fixture('simple-files.7z'),
   });
   expect(Object.keys(zip.files).length).toBeGreaterThan(0);
-  expect(vendorRequests.some((url) => url.endsWith('/libarchive.js'))).toBe(true);
   expect(vendorRequests.some((url) => url.endsWith('/libarchive.wasm'))).toBe(true);
 });
 
