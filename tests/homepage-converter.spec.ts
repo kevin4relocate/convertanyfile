@@ -7,20 +7,23 @@ async function makeZip(): Promise<Buffer> {
   return Buffer.from(await zip.generateAsync({ type: 'uint8array' }));
 }
 
-test('homepage exposes Images, Data, and Archives as first-class converter tabs', async ({ page }, testInfo) => {
+test('homepage exposes all four live converter categories as first-class tabs', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Homepage category UX regression');
   await page.goto('/');
   const imageTab = page.getByRole('tab', { name: 'Images' });
   const dataTab = page.getByRole('tab', { name: 'Data' });
   const archiveTab = page.getByRole('tab', { name: 'Archives' });
+  const subtitleTab = page.getByRole('tab', { name: 'Subtitles' });
   const imagePanel = page.locator('[data-home-panel="image"]');
   const dataPanel = page.locator('[data-home-panel="data"]');
   const archivePanel = page.locator('[data-home-panel="archive"]');
+  const subtitlePanel = page.locator('[data-home-panel="subtitle"]');
 
   await expect(imageTab).toHaveAttribute('aria-selected', 'true');
   await expect(imagePanel).toBeVisible();
   await expect(dataPanel).toBeHidden();
   await expect(archivePanel).toBeHidden();
+  await expect(subtitlePanel).toBeHidden();
 
   await archiveTab.click();
   await expect(archiveTab).toHaveAttribute('aria-selected', 'true');
@@ -34,6 +37,11 @@ test('homepage exposes Images, Data, and Archives as first-class converter tabs'
   await dataTab.click();
   await expect(dataPanel).toBeVisible();
   await expect(dataPanel.locator('.converter-topbar strong')).toHaveText('Data Converter');
+
+  await subtitleTab.click();
+  await expect(subtitleTab).toHaveAttribute('aria-selected', 'true');
+  await expect(subtitlePanel).toBeVisible();
+  await expect(subtitlePanel.locator('.converter-topbar strong')).toHaveText('Subtitle Converter');
 });
 
 test('homogeneous drops auto-route to the matching category', async ({ page }, testInfo) => {
@@ -101,12 +109,12 @@ test('homepage keeps independent queues while switching categories', async ({ pa
   await expect(dataPanel.locator('[data-role="file-list"]')).toContainText('records.json');
 });
 
-test('homepage copy reflects all three live categories', async ({ page }, testInfo) => {
+test('homepage copy reflects all four live categories', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Homepage copy regression');
   await page.goto('/');
-  await expect(page.locator('.hero-lead')).toHaveText('Convert images, archives, and structured data locally in your browser.');
-  await expect(page.locator('.proof-strip')).toContainText('3 categories');
-  await expect(page.locator('.proof-strip')).toContainText('Images, archives, and structured data are live');
+  await expect(page.locator('.hero-lead')).toHaveText('Convert files, subtitle formats, and run focused image edits locally in your browser.');
+  await expect(page.locator('.proof-strip')).toContainText('4 live converters');
+  await expect(page.locator('.proof-strip')).toContainText('Images, data, archives and subtitles are live');
 });
 
 test('homepage uses the low-glare dark product theme', async ({ page }, testInfo) => {
