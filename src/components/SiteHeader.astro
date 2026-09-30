@@ -1,18 +1,20 @@
 ---
 import { NAV_ITEMS, SITE } from '../config/site';
+import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
 
 const currentPath = Astro.url.pathname;
 const imageToolLinks = [
-  { href: '/remove-watermark/', label: 'Remove Watermark', hint: 'Shapes · text mask', icon: 'W', live: true },
-  { href: '/gemini-ai-logo-remover/', label: 'Gemini Watermark Remover', hint: 'Circle · 4-Point Star', icon: '✦', live: true },
-  { href: '/resize-image/', label: 'Resize Image', hint: 'Pixels · percentage · fit', icon: 'R' },
-  { href: '/compress-image/', label: 'Compress Image', hint: 'Format · quality', icon: 'C' },
-  { href: '/rotate-flip-image/', label: 'Rotate / Flip', hint: 'Rotate · mirror', icon: 'R' },
-  { href: '/crop-image/', label: 'Crop Image', hint: 'Free · aspect ratios', icon: 'C' },
-  { href: '/blur-image/', label: 'Blur Image', hint: 'Whole image · region', icon: 'B' },
-  { href: '/bulk-rename-images/', label: 'Bulk Rename Images', hint: 'Patterns · numbering', icon: 'B' },
-  { href: '/remove-image-metadata/', label: 'Remove Image Metadata', hint: 'EXIF · GPS · software', icon: 'M' },
+  { id: 'remove-watermark', href: '/remove-watermark/', label: 'Remove Watermark', hint: 'Shapes · text mask', icon: 'W' },
+  { id: 'gemini-ai-logo-remover', href: '/gemini-ai-logo-remover/', label: 'Gemini Watermark Remover', hint: 'Circle · 4-Point Star', icon: '✦' },
+  { id: 'resize-image', href: '/resize-image/', label: 'Resize Image', hint: 'Pixels · percentage · fit', icon: 'R' },
+  { id: 'compress-image', href: '/compress-image/', label: 'Compress Image', hint: 'Format · quality', icon: 'C' },
+  { id: 'rotate-flip-image', href: '/rotate-flip-image/', label: 'Rotate / Flip', hint: 'Rotate · mirror', icon: 'R' },
+  { id: 'crop-image', href: '/crop-image/', label: 'Crop Image', hint: 'Free · aspect ratios', icon: 'C' },
+  { id: 'blur-image', href: '/blur-image/', label: 'Blur Image', hint: 'Whole image · region', icon: 'B' },
+  { id: 'bulk-rename-images', href: '/bulk-rename-images/', label: 'Bulk Rename Images', hint: 'Patterns · numbering', icon: 'B' },
+  { id: 'remove-image-metadata', href: '/remove-image-metadata/', label: 'Remove Image Metadata', hint: 'EXIF · GPS · software', icon: 'M' },
 ] as const;
+const imageToolStatus = new Map(IMAGE_TOOL_ROADMAP.map((tool) => [tool.id, tool.status]));
 const imageToolsActive = currentPath === '/image-tools/' || imageToolLinks.some((tool) => tool.href === currentPath);
 const converterPaths = ['/image-converter/', '/data-converter/', '/archive-converter/', '/subtitle-converter/'];
 const convertersActive = converterPaths.includes(currentPath);
