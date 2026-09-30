@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 async function readyImageTool(page: Page): Promise<Locator> {
-  const root = await readyImageTool(page);
+  const root = page.locator('[data-image-tool-app]');
   await expect(root).toHaveAttribute('data-image-tool-ready', 'true');
   return root;
 }
