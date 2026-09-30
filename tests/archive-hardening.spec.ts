@@ -104,7 +104,7 @@ test('truncated real RAR fails permanently after signature admission', async ({ 
 });
 
 test('WASM runtime load failure is temporary and exposes Retry', async ({ page }) => {
-  await page.route('**/vendor/libarchive-wasm/libarchive.js', (route) => route.abort());
+  await page.route('**/vendor/libarchive-wasm/libarchive.wasm', (route) => route.abort());
   await page.goto('/7z-to-zip/');
   const app = await addAndConvert(page, {
     name: 'runtime-check.7z',
