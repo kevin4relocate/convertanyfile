@@ -52,6 +52,10 @@ test.describe('Phase 4 image tools', () => {
     await expect(app.locator('[data-role="result-preview"]')).toHaveCount(0);
 
     await app.locator('[data-setting="format"]').selectOption('webp');
+    await expect(app.locator('[data-setting="quality"]')).toHaveValue('82');
+    await app.locator('[data-setting="format"]').selectOption('jpg');
+    await expect(app.locator('[data-setting="quality"]')).toHaveValue('90');
+    await app.locator('[data-setting="format"]').selectOption('webp');
     await app.locator('[data-setting="quality"]').evaluate((element) => {
       const input = element as HTMLInputElement;
       input.value = '80';
