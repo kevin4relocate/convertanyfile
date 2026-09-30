@@ -27,6 +27,9 @@ async function uploadSyntheticBatch(page: Page, sizes: Array<[number, number]>, 
     input.files = transfer.files;
     input.dispatchEvent(new Event('change', { bubbles: true }));
   }, { sizes, prefix });
+  const root = page.locator('[data-image-tool-app]');
+  await expect(root.locator('.gemini-file-card')).toHaveCount(sizes.length, { timeout: 20_000 });
+  await expect(root.locator('[data-role="editor"]')).toBeVisible();
 }
 
 async function drawMask(page: Page, x1 = 0.72, y1 = 0.78, x2 = 0.97, y2 = 0.95): Promise<void> {
@@ -77,10 +80,10 @@ test('Remove Watermark exposes six manual masks and same-ratio batches start sha
   await expect(root).toHaveAttribute('data-max-file-bytes', String(10 * 1024 * 1024));
   await expect(root.locator('[data-role="auto-select"]')).toHaveCount(0);
   await expect(root.locator('[data-tool-mode]')).toHaveCount(6);
-  for (const name of ['Rectangle', 'Circle', 'Square', 'Diamond', '4-Point Star', 'Text']) await expect(root.getByRole('button', { name })).toBeVisible();
   await expect(root.getByRole('button', { name: 'Brush' })).toHaveCount(0);
   await expect(root.getByRole('button', { name: 'Eraser' })).toHaveCount(0);
   await uploadSyntheticBatch(page, [[360, 240], [720, 480]], 'shared');
+  for (const name of ['Rectangle', 'Circle', 'Square', 'Diamond', '4-Point Star', 'Text']) await expect(root.getByRole('button', { name })).toBeVisible();
   await expect(root).toHaveAttribute('data-edit-mode', 'shared');
   await expect(root).toHaveAttribute('data-edit-mode-preference', 'auto');
   await expect(root.locator('[data-role="batch-warning"]')).toHaveAttribute('data-tone', 'compatible');
