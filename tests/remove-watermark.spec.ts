@@ -201,7 +201,7 @@ test('Remove Watermark page, Image Tools hub, and guides expose release content'
   await expect(page.getByRole('heading', { name: 'Use the mask handles instead of redrawing every adjustment.' })).toBeVisible();
   await expect(page.locator('.content-wide-section').getByText(/solid bold text-shaped mask/i).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Remove Watermark FAQ' })).toBeVisible();
-  await page.goto('/image-tools/'); await expect(page.getByText('Rectangle, Circle, Square, Diamond, 4-Point Star, and Text masks')).toBeVisible();
+  await page.goto('/image-tools/'); await expect(page.getByRole('link', { name: /Remove Watermark/ }).first()).toBeVisible(); await expect(page.getByText(/six manual mask modes/i).first()).toBeVisible();
   await page.goto('/guides/how-to-remove-text-watermark-from-image/'); await expect(page.getByText(/not OCR or automatic text detection/i)).toBeVisible(); await expect(page.getByRole('heading', { name: /Move, resize, and rotate/ })).toBeVisible();
 });
 
