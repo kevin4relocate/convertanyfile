@@ -1,4 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
+
+async function readyImageTool(page: Page): Promise<Locator> {
+  const app = await readyImageTool(page);
+  await expect(app).toHaveAttribute('data-image-tool-ready', 'true');
+  return app;
+}
 
 const PNG_SQUARE = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==',
@@ -19,7 +25,7 @@ for (const tool of tools) {
     test.skip(testInfo.project.name !== 'chromium-desktop', 'Run the mask platform contract once in Chromium');
 
     await page.goto(tool.path);
-    const app = page.locator('[data-image-tool-app]');
+    const app = await readyImageTool(page);
     await expect(app).toHaveAttribute('data-platform-runtime', 'batch-v1');
     await expect(app.locator('[data-platform-shell="batch-v1"]')).toHaveCount(1);
     await expect(app.locator('[data-tool-mode]')).toHaveCount(tool.maskCount);
@@ -54,7 +60,7 @@ for (const tool of tools) {
     test.skip(testInfo.project.name !== 'chromium-desktop', 'Run the mask platform contract once in Chromium');
 
     await page.goto(tool.path);
-    const app = page.locator('[data-image-tool-app]');
+    const app = await readyImageTool(page);
     await expect(app).toHaveAttribute('data-platform-runtime', 'batch-v1');
 
     await app.locator('[data-role="file-input"]').setInputFiles([
