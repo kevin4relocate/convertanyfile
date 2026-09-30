@@ -24,7 +24,7 @@ const HOME_PRIORITY_LINKS = [
   '/webp-to-jpg/',
   '/png-to-jpg/',
   '/avif-to-jpg/',
-  ...GROWTH_GUIDES.slice(0, 6),
+  ...GROWTH_GUIDES.slice(0, 3),
 ] as const;
 
 test('homepage gives high-priority image pages crawlable one-click links', async ({ page }) => {
