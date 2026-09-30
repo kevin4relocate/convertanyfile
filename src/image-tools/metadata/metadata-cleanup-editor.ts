@@ -1,4 +1,5 @@
 import { createZipBlob, downloadBlob } from '../core/download';
+import { defaultQualityForImageOutput } from '../core/output-quality';
 import { encodeCanvas, extensionForOutput, type ImageOutputFormat } from '../core/output-encoder';
 import { renderToolCanvas, sourceExtension, sourceMime } from '../deterministic/operations';
 import type { MetadataSettings, OutputChoice } from '../deterministic/types';
@@ -305,7 +306,7 @@ export function mountMetadataCleanup(root: HTMLElement): void {
   input.addEventListener('change', () => void addFiles([...input.files ?? []]));
   add.addEventListener('click', () => input.click());
   clear.addEventListener('click', clearAll);
-  format.addEventListener('change', () => { syncQuality(); invalidate(); });
+  format.addEventListener('change', () => { if (format.value === 'webp' || format.value === 'jpg') quality.value = String(defaultQualityForImageOutput(format.value)); syncQuality(); invalidate(); });
   quality.addEventListener('input', () => { syncQuality(); invalidate(); });
   processButton.addEventListener('click', () => void processBatch());
   downloadButton.addEventListener('click', () => void downloadResults());
