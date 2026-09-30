@@ -55,7 +55,7 @@ const modeLabel = (mode: ImageMaskMode): string => ({rect:'Rectangle',circle:'Ci
         <div class="image-tool-preview-grid gemini-preview-grid"><article class="image-tool-preview-panel"><header><div><span data-role="source-scope">Shared sample</span><strong data-role="source-name">Choose an image</strong></div><small data-role="source-meta">Mask editing</small></header><div class:list={['image-tool-canvas-wrap', advancedCanvas && 'advanced-canvas-viewport']} data-role="canvas-wrap"><canvas data-role="original-canvas" aria-label="Image preview"></canvas><canvas class="image-tool-mask-canvas" data-role="mask-canvas" aria-label={`${tool.displayName} selection mask`}></canvas></div></article><article class="image-tool-preview-panel"><header><div><span>After</span><strong>Repair preview</strong></div><small data-role="result-label">Run repair to preview</small></header><div class="image-tool-result-wrap"><canvas data-role="result-canvas" aria-label="Repaired image preview"></canvas><div class="image-tool-result-empty" data-role="result-empty"><span>Result preview</span><small>The selected image result appears here after repair.</small></div></div></article></div>
       </Fragment>
 
-      <Fragment slot="output"><ImageOutputPanel variant="mask" format="source" quality={96} /></Fragment>
+      <Fragment slot="output"><ImageOutputPanel variant="mask" format="source" quality={90} /></Fragment>
       <Fragment slot="progress"><ImageBatchProgress variant="mask" completed={0} total={0} /></Fragment>
       <Fragment slot="actions"><ImageBatchActionBar variant="mask" processLabel={`${tool.removeActionLabel} from batch`} preparedSummary={`Draw a mask over the ${targetLabel} to prepare images.`} /></Fragment>
     </ImageBatchShell>

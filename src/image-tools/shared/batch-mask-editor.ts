@@ -1,5 +1,6 @@
 import type { PixelRect } from '../../platform/image-tools/types';
 import { createZipBlob, downloadBlob } from '../core/download';
+import { defaultQualityForImageOutput } from '../core/output-quality';
 import { RemoveWatermarkWorkerClient } from '../remove-watermark/worker-client';
 import {
   clamp, rectCopy, opsCopy, histCopy, sameOps, normalize, squareLike, squareRect, makeOp, workerOps,
@@ -247,7 +248,7 @@ export function mountBatchMaskEditor(root:HTMLElement):void {
   };
   mask.addEventListener('pointerup',finish);mask.addEventListener('pointercancel',finish);
 
-  outButtons.forEach(button=>button.addEventListener('click',()=>{const value=button.dataset.outputValue as typeof state.output;if(!['source','png','jpeg','webp'].includes(value))return;state.output=value;outButtons.forEach(candidate=>{const selected=candidate===button;candidate.classList.toggle('is-active',selected);candidate.setAttribute('aria-checked',String(selected));});invalidate();controls();}));
+  outButtons.forEach(button=>button.addEventListener('click',()=>{const value=button.dataset.outputValue as typeof state.output;if(!['source','png','jpeg','webp'].includes(value))return;state.output=value;if(value==='webp'||value==='jpeg'){quality.value=String(defaultQualityForImageOutput(value));qualityOut.textContent=quality.value;}outButtons.forEach(candidate=>{const selected=candidate===button;candidate.classList.toggle('is-active',selected);candidate.setAttribute('aria-checked',String(selected));});invalidate();controls();}));
   quality.addEventListener('input',()=>{qualityOut.textContent=quality.value;invalidate();controls();});
   cancel.addEventListener('click',()=>{if(!state.processing)return;state.cancel=true;cancel.disabled=true;progressLabel.textContent='Stopping…';worker.reset('Batch cancelled');});
   drop.addEventListener('click',()=>input.click());drop.addEventListener('dragover',event=>{event.preventDefault();drop.classList.add('is-dragging');});drop.addEventListener('dragleave',()=>drop.classList.remove('is-dragging'));drop.addEventListener('drop',event=>{event.preventDefault();drop.classList.remove('is-dragging');void addFiles([...event.dataTransfer!.files]);});

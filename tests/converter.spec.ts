@@ -91,6 +91,7 @@ test('real image engine accepts PNG, keeps settings stable, rejects disguised au
 
   await outputSelect.selectOption('webp');
   await expect(qualityField).toBeVisible();
+  await expect(app.locator('[data-role="quality"]')).toHaveValue('82');
   const popularBefore = await popularOutputs.boundingBox();
   expect(popularBefore).not.toBeNull();
 
@@ -101,6 +102,7 @@ test('real image engine accepts PNG, keeps settings stable, rejects disguised au
   expect(Math.abs(popularAfter!.y - popularBefore!.y)).toBeLessThanOrEqual(2);
 
   await outputSelect.selectOption('jpg');
+  await expect(app.locator('[data-role="quality"]')).toHaveValue('90');
   const convert = app.locator('[data-role="convert-all"]');
   await expect(convert).toBeEnabled({ timeout: 60_000 });
   await convert.click();
