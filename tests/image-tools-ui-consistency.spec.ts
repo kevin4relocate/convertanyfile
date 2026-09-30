@@ -17,7 +17,7 @@ const MASK_ROUTES = [
 ] as const;
 
 async function readyImageTool(page: Page) {
-  const app = await readyImageTool(page);
+  const app = page.locator('[data-image-tool-app]');
   await expect(app).toHaveAttribute('data-image-tool-ready', 'true');
   return app;
 }
