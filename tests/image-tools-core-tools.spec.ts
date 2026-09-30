@@ -56,7 +56,7 @@ test('resize supports shared and per-image overrides', async ({ page }, testInfo
   await expect(app).toHaveAttribute('data-platform-scope', 'individual');
   await app.locator('[data-setting="width"]').fill('4');
   await expect(app.locator('.deterministic-file-card').first()).toContainText('CUSTOM');
-  await app.locator('.deterministic-file-card').nth(1).click();
+  await app.locator('.deterministic-file-card').nth(1).locator('.deterministic-file-card__copy').click();
   await expect(app.locator('[data-setting="width"]')).toHaveValue('1920');
 });
 
@@ -73,7 +73,7 @@ test('locked shared resize preserves each image ratio in a mixed batch', async (
   await app.locator('[data-setting="width"]').fill('8');
   await expect(app.locator('[data-setting="height"]')).toHaveValue('4');
 
-  await app.locator('.deterministic-file-card').nth(1).click();
+  await app.locator('.deterministic-file-card').nth(1).locator('.deterministic-file-card__copy').click();
   await expect(app.locator('[data-setting="width"]')).toHaveValue('8');
   await expect(app.locator('[data-setting="height"]')).toHaveValue('16');
   await expect(app.locator('[data-role="preview-meta"]')).toContainText('8 × 16 preview');
@@ -146,7 +146,7 @@ test('crop and blur expose geometry-specific controls', async ({ page }, testInf
   const blur = await readyTool(page, 'blur-image');
   await blur.locator('[data-role="file-input"]').setInputFiles({ name: 'blur.png', mimeType: 'image/png', buffer: PNG_2X2 });
   await expect(blur).toHaveAttribute('data-has-items', 'true');
-  await blur.locator('[data-setting="scope"]').selectOption('region');
+  await blur.locator('[data-blur-scope="region"]').click();
   await expect(blur.locator('[data-setting-group="region"]').first()).toBeVisible();
 });
 
