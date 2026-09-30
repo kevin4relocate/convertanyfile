@@ -17,6 +17,9 @@ async function uploadSyntheticBatch(page: Page, sizes: Array<[number, number]>, 
     }
     input.files = transfer.files; input.dispatchEvent(new Event('change', { bubbles: true }));
   }, { sizes, prefix });
+  const root = page.locator('[data-image-tool-app]');
+  await expect(root.locator('.gemini-file-card')).toHaveCount(sizes.length, { timeout: 20_000 });
+  await expect(root.locator('[data-role="editor"]')).toBeVisible();
 }
 
 async function drawMask(page: Page, x1 = 0.86, y1 = 0.78, x2 = 0.97, y2 = 0.96): Promise<void> {
@@ -39,6 +42,7 @@ async function rotateDefaultStar(page: Page): Promise<void> {
 test('Gemini exposes only Circle and 4-Point Star and defaults to Star', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Gemini focused product contract'); await page.goto('/gemini-ai-logo-remover/'); const root = page.locator('[data-image-tool-app]');
   await expect(root).toHaveAttribute('data-max-files', '50'); await expect(root).toHaveAttribute('data-max-file-bytes', String(10 * 1024 * 1024)); await expect(root.locator('[data-role="auto-select"]')).toHaveCount(0); await expect(root.locator('[data-ratio]')).toHaveCount(0); await expect(root.locator('[data-tool-mode]')).toHaveCount(2);
+  await uploadSyntheticBatch(page, [[320, 180]], 'contract');
   await expect(root.getByRole('button', { name: 'Circle' })).toBeVisible(); await expect(root.getByRole('button', { name: /4-Point Star/ })).toHaveAttribute('aria-pressed', 'true');
   for (const name of ['Rectangle','Square','Diamond','Text']) await expect(root.getByRole('button', { name })).toHaveCount(0);
   await expect(page.getByText('Browser-only Preview')).toHaveCount(0);

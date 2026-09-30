@@ -1,5 +1,9 @@
 name: CI
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
@@ -61,3 +65,13 @@ jobs:
         run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: Run ${{ matrix.label }} tests
         run: npm run test:e2e -- ${{ matrix.projects }}
+      - name: Upload browser failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failure-${{ matrix.browser }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7

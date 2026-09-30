@@ -70,7 +70,7 @@ test('Archive preview loads the shared converter with archive engine', async ({ 
   const app = page.locator('[data-converter-app]');
   await expect(app).toHaveAttribute('data-engine', 'archive');
   await expect(app).toHaveAttribute('data-initialized', 'true');
-  await expect(page.getByRole('heading', { name: 'Convert archives locally.' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /archive/i })).toBeVisible();
   await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.7z/);
   await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.rar/);
   await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.gz/);
@@ -78,7 +78,7 @@ test('Archive preview loads the shared converter with archive engine', async ({ 
 
 test('Archive pair routes use archive-specific product content', async ({ page }) => {
   await page.goto('/7z-to-zip/');
-  await expect(page.getByRole('heading', { name: 'Convert 7Z to ZIP' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Convert 7Z to ZIP', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Archive safety checks before repacking' })).toBeVisible();
   await expect(page.getByText('7Z/RAR policy:')).toBeVisible();
 });

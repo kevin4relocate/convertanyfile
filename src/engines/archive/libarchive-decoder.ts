@@ -159,7 +159,13 @@ export async function decodeWithLibarchive(input: ArrayBuffer, guards: DecodeGua
         if (!Number.isFinite(declaredSize) || declaredSize < 0) throw new Error('Archive entry has an invalid extracted size');
         guards.ensureBudget(entries.length + 1, total, declaredSize);
 
-        const dataPointer = module._malloc(Math.max(declaredSize, 1));
+        if (declaredSize === 0) {
+          api.readSkip(archive);
+          entries.push({ path, kind: 'file', data: new Uint8Array(), modified });
+          continue;
+        }
+
+        const dataPointer = module._malloc(declaredSize);
         if (!dataPointer) throw browserMemoryError();
         try {
           const bytesRead = Number(api.readData(archive, dataPointer, declaredSize));

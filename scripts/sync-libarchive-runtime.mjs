@@ -6,12 +6,14 @@ const PINNED_COMMIT = '1d04437e404ffad8b3a490abb36234dbdff59afa';
 const BASE = `https://raw.githubusercontent.com/ofk/libarchive-wasm/${PINNED_COMMIT}`;
 const OUTPUT_DIR = join(process.cwd(), 'public', 'vendor', 'libarchive-wasm');
 
+const JS_EXPORT_SUFFIX = '\nexport default libarchive;\n';
+const javascriptAsset = {
+  source: `${BASE}/src/libarchive.js`,
+  target: join(OUTPUT_DIR, 'libarchive.js'),
+  gitBlobSha: '015179995297b07baa3c9e7f9f099650bd879a4d',
+};
+
 const assets = [
-  {
-    source: `${BASE}/src/libarchive.js`,
-    target: join(OUTPUT_DIR, 'libarchive.js'),
-    gitBlobSha: '015179995297b07baa3c9e7f9f099650bd879a4d',
-  },
   {
     source: `${BASE}/src/libarchive.wasm`,
     target: join(OUTPUT_DIR, 'libarchive.wasm'),
@@ -37,9 +39,7 @@ async function matchesPinnedBlob(path, expectedSha) {
   }
 }
 
-async function syncAsset(asset) {
-  if (await matchesPinnedBlob(asset.target, asset.gitBlobSha)) return;
-
+async function fetchPinnedAsset(asset) {
   const response = await fetch(asset.source, {
     headers: { 'User-Agent': 'ConvertAnyFile-build' },
     redirect: 'follow',
@@ -52,10 +52,35 @@ async function syncAsset(asset) {
     throw new Error(`Archive runtime integrity mismatch for ${asset.source}: expected ${asset.gitBlobSha}, received ${actualSha}`);
   }
 
+  return bytes;
+}
+
+async function syncAsset(asset) {
+  if (await matchesPinnedBlob(asset.target, asset.gitBlobSha)) return;
+  const bytes = await fetchPinnedAsset(asset);
   await mkdir(dirname(asset.target), { recursive: true });
   await writeFile(asset.target, bytes);
 }
 
+async function generatedJavascriptIsCurrent() {
+  try {
+    const generated = await readFile(javascriptAsset.target);
+    const text = generated.toString('utf8');
+    if (!text.endsWith(JS_EXPORT_SUFFIX)) return false;
+    const source = Buffer.from(text.slice(0, -JS_EXPORT_SUFFIX.length), 'utf8');
+    return gitBlobSha(source) === javascriptAsset.gitBlobSha;
+  } catch {
+    return false;
+  }
+}
+
+async function syncJavascriptRuntime() {
+  if (await generatedJavascriptIsCurrent()) return;
+  const source = await fetchPinnedAsset(javascriptAsset);
+  await mkdir(dirname(javascriptAsset.target), { recursive: true });
+  await writeFile(javascriptAsset.target, Buffer.concat([source, Buffer.from(JS_EXPORT_SUFFIX)]));
+}
+
 await mkdir(OUTPUT_DIR, { recursive: true });
-await Promise.all(assets.map(syncAsset));
+await Promise.all([syncJavascriptRuntime(), ...assets.map(syncAsset)]);
 console.log(`Archive WASM runtime synced from pinned commit ${PINNED_COMMIT}.`);

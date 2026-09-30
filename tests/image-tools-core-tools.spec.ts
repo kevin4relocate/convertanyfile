@@ -105,6 +105,8 @@ test('explicit PNG output disables meaningless quality controls', async ({ page 
 
   await page.goto('/compress-image/');
   const compress = page.locator('[data-tool-id="compress-image"]');
+  await compress.locator('[data-role="file-input"]').setInputFiles({ name: 'compress.png', mimeType: 'image/png', buffer: PNG_2X2 });
+  await expect(compress).toHaveAttribute('data-has-items', 'true');
   const embeddedFormat = compress.locator('[data-setting="format"]');
   const embeddedQuality = compress.locator('[data-setting="quality"]');
   await embeddedFormat.selectOption('png');
@@ -114,6 +116,8 @@ test('explicit PNG output disables meaningless quality controls', async ({ page 
 
   await page.goto('/rotate-flip-image/');
   const rotate = page.locator('[data-tool-id="rotate-flip-image"]');
+  await rotate.locator('[data-role="file-input"]').setInputFiles({ name: 'rotate-format.png', mimeType: 'image/png', buffer: PNG_2X2 });
+  await expect(rotate).toHaveAttribute('data-has-items', 'true');
   const outputFormat = rotate.locator('[data-role="output-format"]');
   const outputQuality = rotate.locator('[data-role="output-quality"]');
   await outputFormat.selectOption('png');
@@ -125,11 +129,16 @@ test('explicit PNG output disables meaningless quality controls', async ({ page 
 test('crop and blur expose geometry-specific controls', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Run core geometry control coverage once in Chromium');
   await page.goto('/crop-image/');
+  const crop = page.locator('[data-tool-id="crop-image"]');
+  await crop.locator('[data-role="file-input"]').setInputFiles({ name: 'crop.png', mimeType: 'image/png', buffer: PNG_2X2 });
+  await expect(crop).toHaveAttribute('data-has-items', 'true');
   await expect(page.locator('[data-setting="aspect"]')).toContainText('16:9');
   await expect(page.locator('[data-setting="width"]')).toHaveValue('100');
 
   await page.goto('/blur-image/');
   const blur = page.locator('[data-tool-id="blur-image"]');
+  await blur.locator('[data-role="file-input"]').setInputFiles({ name: 'blur.png', mimeType: 'image/png', buffer: PNG_2X2 });
+  await expect(blur).toHaveAttribute('data-has-items', 'true');
   await blur.locator('[data-setting="scope"]').selectOption('region');
   await expect(blur.locator('[data-setting-group="region"]').first()).toBeVisible();
 });

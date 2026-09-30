@@ -1,18 +1,25 @@
 ---
 import { NAV_ITEMS, SITE } from '../config/site';
+import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
 
 const currentPath = Astro.url.pathname;
-const imageToolLinks = [
-  { href: '/remove-watermark/', label: 'Remove Watermark', hint: 'Shapes · text mask', icon: 'W', live: true },
-  { href: '/gemini-ai-logo-remover/', label: 'Gemini Watermark Remover', hint: 'Circle · 4-Point Star', icon: '✦', live: true },
-  { href: '/resize-image/', label: 'Resize Image', hint: 'Pixels · percentage · fit', icon: 'R' },
-  { href: '/compress-image/', label: 'Compress Image', hint: 'Format · quality', icon: 'C' },
-  { href: '/rotate-flip-image/', label: 'Rotate / Flip', hint: 'Rotate · mirror', icon: 'R' },
-  { href: '/crop-image/', label: 'Crop Image', hint: 'Free · aspect ratios', icon: 'C' },
-  { href: '/blur-image/', label: 'Blur Image', hint: 'Whole image · region', icon: 'B' },
-  { href: '/bulk-rename-images/', label: 'Bulk Rename Images', hint: 'Patterns · numbering', icon: 'B' },
-  { href: '/remove-image-metadata/', label: 'Remove Image Metadata', hint: 'EXIF · GPS · software', icon: 'M' },
-] as const;
+const imageToolPresentation = {
+  'remove-watermark': { hint: 'Shapes · text mask', icon: 'W' },
+  'gemini-ai-logo-remover': { hint: 'Circle · 4-Point Star', icon: '✦' },
+  'resize-image': { hint: 'Pixels · percentage · fit', icon: 'R' },
+  'compress-image': { hint: 'Format · quality', icon: 'C' },
+  'rotate-flip-image': { hint: 'Rotate · mirror', icon: 'R' },
+  'crop-image': { hint: 'Free · aspect ratios', icon: 'C' },
+  'blur-image': { hint: 'Whole image · region', icon: 'B' },
+  'bulk-rename-images': { hint: 'Patterns · numbering', icon: 'B' },
+  'remove-image-metadata': { hint: 'EXIF · GPS · software', icon: 'M' },
+} as const;
+const imageToolIds = Object.keys(imageToolPresentation) as Array<keyof typeof imageToolPresentation>;
+const imageToolLinks = imageToolIds.map((id) => {
+  const tool = IMAGE_TOOL_ROADMAP.find((item) => item.id === id);
+  if (!tool) throw new Error(`Missing Image Tool roadmap entry: ${id}`);
+  return { ...tool, ...imageToolPresentation[id] };
+});
 const imageToolsActive = currentPath === '/image-tools/' || imageToolLinks.some((tool) => tool.href === currentPath);
 const converterPaths = ['/image-converter/', '/data-converter/', '/archive-converter/', '/subtitle-converter/'];
 const convertersActive = converterPaths.includes(currentPath);
@@ -41,7 +48,7 @@ const convertersActive = converterPaths.includes(currentPath);
                 <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} href={tool.href}>
                   <span class:list={['nav-tool-icon', tool.icon === '✦' && 'nav-tool-icon--spark']} aria-hidden="true">{tool.icon}</span>
                   <span class="nav-tool-copy">
-                    <span class="nav-tool-title-row"><strong>{tool.label}</strong><small class:list={['nav-tool-status', tool.live && 'is-live']}>{tool.live ? 'LIVE' : 'PREVIEW'}</small></span>
+                    <span class="nav-tool-title-row"><strong>{tool.label}</strong><small class:list={['nav-tool-status', tool.status === 'live' && 'is-live']}>{tool.status.toUpperCase()}</small></span>
                     <small>{tool.hint}</small>
                   </span>
                 </a>

@@ -116,7 +116,13 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
   }
 
   function setMode(mode:'shared'|'individual'):void {
-    if(state.processing||state.mode===mode)return;state.mode=mode;root.dataset.platformScope=mode;
+    if(state.processing||state.mode===mode)return;
+    if(mode==='individual'){
+      for(const item of state.items){
+        if(!item.settings)item.settings=clone(state.sharedSettings);
+      }
+    }
+    state.mode=mode;root.dataset.platformScope=mode;
     scopeButtons.forEach(button=>{const selected=button.dataset.editScope===mode;button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-checked',String(selected));button.classList.toggle('is-active',selected);});
     modeSummary.textContent=mode==='shared'?`One setup applies to all ${state.items.length} images.`:'Each image can override the shared settings.';renderSettings();renderQueue();schedulePreview();
   }

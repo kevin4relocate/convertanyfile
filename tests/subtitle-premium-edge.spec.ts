@@ -67,7 +67,8 @@ test('Premium Subtitle controls stay dark and avoid horizontal overflow on mobil
 test('premium Subtitle pair catalog exposes all 17 real cross-format routes', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Route inventory only needs one browser');
   await page.goto('/subtitle-converter/');
-  const links = page.locator('a.related-card[href*="-to-"]');
+  const catalog = page.getByText('17 real conversions', { exact: true }).locator('xpath=ancestor::section[1]');
+  const links = catalog.locator('a.related-card[href*="-to-"]');
   await expect(links).toHaveCount(17);
 
   const expected = [
