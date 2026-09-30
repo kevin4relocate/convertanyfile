@@ -24,7 +24,9 @@ test.beforeEach(async ({ context }) => {
 test('production shell, analytics, robots, sitemap and 404 are healthy', async ({ page, request }) => {
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBe(200);
+  expect(response?.headers()['strict-transport-security']).toContain('max-age=31536000');
   await expect(page).toHaveTitle(/ConvertAnyFile/i);
+  await expect(page.locator('#home-converter-subtitle-tab')).toHaveText('Subtitles');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${PROD_ORIGIN}/`);
   await expect(page.locator('script[src*="googletagmanager.com/gtag/js?id=G-LX78XZ9FH2"]')).toHaveCount(1);
   await expect.poll(() => page.evaluate(() => Array.isArray((window as Window & { dataLayer?: unknown[] }).dataLayer))).toBe(true);

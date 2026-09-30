@@ -4,13 +4,13 @@ import { dirname, join } from 'node:path';
 
 const OUTPUT_DIR = join(process.cwd(), 'tests', 'fixtures', 'archive-wasm');
 const LIBARCHIVE_COMMIT = '1d04437e404ffad8b3a490abb36234dbdff59afa';
-const SEVENZIP_COMMIT = 'dcfc72a0ee9f527c55521f44ffdf1c31b732e256';
+const ES7Z_COMMIT = '173b226e01559ecd3c4fb03595a1e8c9e9fcca87';
 
 const fixtures = [
   {
-    source: `https://raw.githubusercontent.com/bodgit/sevenzip/${SEVENZIP_COMMIT}/testdata/file_and_empty.7z`,
-    target: join(OUTPUT_DIR, 'file-and-empty.7z'),
-    gitBlobSha: 'a94a9f7e7adc5df73ea5a8506403b817251a3671',
+    source: `https://raw.githubusercontent.com/noderaider/es-7z/${ES7Z_COMMIT}/test/zip.7z`,
+    target: join(OUTPUT_DIR, 'simple-files.7z'),
+    gitBlobSha: 'c0db9724d8047bae83344b3c436641acce09e48c',
   },
   {
     source: `https://raw.githubusercontent.com/ofk/libarchive-wasm/${LIBARCHIVE_COMMIT}/archives/v4.rar`,

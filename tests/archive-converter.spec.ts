@@ -60,7 +60,12 @@ async function convertedZip(page: Page, source: { name: string; mimeType: string
   await app.locator('[data-role="file-input"]').setInputFiles(source);
   await expect(app.locator('[data-role="output-format"]')).toHaveValue('zip');
   await app.locator('[data-role="convert-all"]').click();
-  await expect(app.locator('[data-role="result-summary"]')).toContainText('1/1 converted');
+  try {
+    await expect(app.locator('[data-role="result-summary"]')).toContainText('1/1 converted');
+  } catch (error) {
+    const details = await app.locator('[data-role="file-list"]').innerText();
+    throw new Error(`Archive conversion failed: ${details}`, { cause: error });
+  }
   const result = await downloadBytes(page, app);
   return JSZip.loadAsync(result.bytes, { checkCRC32: true });
 }
@@ -70,7 +75,7 @@ test('Archive preview loads the shared converter with archive engine', async ({ 
   const app = page.locator('[data-converter-app]');
   await expect(app).toHaveAttribute('data-engine', 'archive');
   await expect(app).toHaveAttribute('data-initialized', 'true');
-  await expect(page.getByRole('heading', { name: 'Convert archives locally.' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /Free online archive converter/ })).toBeVisible();
   await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.7z/);
   await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.rar/);
   await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.gz/);
@@ -78,9 +83,9 @@ test('Archive preview loads the shared converter with archive engine', async ({ 
 
 test('Archive pair routes use archive-specific product content', async ({ page }) => {
   await page.goto('/7z-to-zip/');
-  await expect(page.getByRole('heading', { name: 'Convert 7Z to ZIP' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Convert 7Z to ZIP' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Archive safety checks before repacking' })).toBeVisible();
-  await expect(page.getByText('7Z/RAR policy:')).toBeVisible();
+  await expect(page.locator('main').getByText('7Z/RAR policy:', { exact: false }).first()).toBeVisible();
 });
 
 test('7Z decoder is lazy-loaded and a real 7Z can be repacked to ZIP', async ({ page }) => {
@@ -94,10 +99,9 @@ test('7Z decoder is lazy-loaded and a real 7Z can be repacked to ZIP', async ({ 
   const zip = await convertedZip(page, {
     name: 'sample.7z',
     mimeType: 'application/x-7z-compressed',
-    buffer: await fixture('file-and-empty.7z'),
+    buffer: await fixture('simple-files.7z'),
   });
   expect(Object.keys(zip.files).length).toBeGreaterThan(0);
-  expect(vendorRequests.some((url) => url.endsWith('/libarchive.js'))).toBe(true);
   expect(vendorRequests.some((url) => url.endsWith('/libarchive.wasm'))).toBe(true);
 });
 

@@ -16,9 +16,13 @@ async function appReady(page: Page): Promise<Locator> {
 }
 
 async function downloadText(page: Page, app: Locator): Promise<{ name: string; bytes: Buffer; text: string }> {
-  const downloadPromise = page.waitForEvent('download');
-  await app.getByRole('button', { name: 'Download', exact: true }).click();
-  const download = await downloadPromise;
+  const button = app.getByRole('button', { name: 'Download', exact: true });
+  await expect(button).toBeVisible();
+  await expect(button).toBeEnabled();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    button.click(),
+  ]);
   const path = await download.path();
   expect(path).not.toBeNull();
   const bytes = await readFile(path!);

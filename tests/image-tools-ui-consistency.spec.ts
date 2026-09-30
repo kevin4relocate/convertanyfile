@@ -16,8 +16,14 @@ const MASK_ROUTES = [
   '/gemini-ai-logo-remover/',
 ] as const;
 
+async function readyImageTool(page: Page) {
+  const app = page.locator('[data-image-tool-app]');
+  await expect(app).toHaveAttribute('data-image-tool-ready', 'true');
+  return app;
+}
+
 async function expectEdgeToEdgeTopbar(page: Page): Promise<void> {
-  const card = page.locator('[data-image-tool-app]');
+  const card = await readyImageTool(page);
   const topbar = card.locator('.image-editor-topbar');
   const cardBox = await card.boundingBox();
   const topbarBox = await topbar.boundingBox();
@@ -56,7 +62,7 @@ test.describe('Image Tools watermark visual standard', () => {
   for (const route of MASK_ROUTES) {
     test(`${route} keeps the watermark-family shell`, async ({ page }) => {
       await page.goto(route);
-      const app = page.locator('[data-image-tool-app]');
+      const app = await readyImageTool(page);
       await expectEdgeToEdgeTopbar(page);
       await app.locator('[data-role="file-input"]').setInputFiles(png('mask.png'));
       await expectWatermarkStyleHeaderActions(page);
@@ -71,7 +77,7 @@ test.describe('Image Tools watermark visual standard', () => {
   for (const route of DETERMINISTIC_ROUTES) {
     test(`${route} uses the watermark-standard linear workspace`, async ({ page }) => {
       await page.goto(route);
-      const app = page.locator('[data-image-tool-app]');
+      const app = await readyImageTool(page);
       await expectEdgeToEdgeTopbar(page);
       await uploadPair(page, 'deterministic');
       await expectWatermarkStyleHeaderActions(page);
@@ -85,7 +91,7 @@ test.describe('Image Tools watermark visual standard', () => {
 
   test('metadata cleanup keeps the shared topbar but uses a file-utility layout without previews', async ({ page }) => {
     await page.goto('/remove-image-metadata/');
-    const app = page.locator('[data-image-tool-app]');
+    const app = await readyImageTool(page);
     await expectEdgeToEdgeTopbar(page);
     await uploadPair(page, 'metadata');
     await expectWatermarkStyleHeaderActions(page);
@@ -96,7 +102,7 @@ test.describe('Image Tools watermark visual standard', () => {
 
   test('bulk rename follows the watermark filmstrip and CTA hierarchy', async ({ page }) => {
     await page.goto('/bulk-rename-images/');
-    const app = page.locator('[data-image-tool-app]');
+    const app = await readyImageTool(page);
     await expectEdgeToEdgeTopbar(page);
     await uploadPair(page, 'rename');
     await expectWatermarkStyleHeaderActions(page);

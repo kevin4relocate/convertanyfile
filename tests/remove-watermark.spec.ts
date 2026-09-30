@@ -1,9 +1,17 @@
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
+
+async function readyImageTool(page: Page): Promise<Locator> {
+  const root = page.locator('[data-image-tool-app]');
+  await expect(root).toHaveAttribute('data-image-tool-ready', 'true');
+  return root;
+}
 
 async function uploadSyntheticBatch(page: Page, sizes: Array<[number, number]>, prefix = 'watermark'): Promise<void> {
-  await page.locator('[data-image-tool-app]').evaluate(async (root, payload) => {
+  const root = page.locator('[data-image-tool-app]');
+  const before = await root.locator('.gemini-file-card').count();
+  await root.evaluate(async (root, payload) => {
     const input = root.querySelector<HTMLInputElement>('[data-role="file-input"]')!;
     const transfer = new DataTransfer();
     for (let index = 0; index < payload.sizes.length; index += 1) {
@@ -27,25 +35,37 @@ async function uploadSyntheticBatch(page: Page, sizes: Array<[number, number]>, 
     input.files = transfer.files;
     input.dispatchEvent(new Event('change', { bubbles: true }));
   }, { sizes, prefix });
+  await expect(root.locator('.gemini-file-card')).toHaveCount(before + sizes.length);
+  const mask = root.locator('[data-role="mask-canvas"]');
+  await expect(mask).toBeVisible();
+  await expect(root.locator('[data-role="source-name"]')).not.toHaveText('Choose an image');
+  await expect.poll(() => mask.evaluate((element) => {
+    const canvas = element as HTMLCanvasElement;
+    return canvas.width > 10 && canvas.height > 10;
+  })).toBe(true);
 }
 
 async function drawMask(page: Page, x1 = 0.72, y1 = 0.78, x2 = 0.97, y2 = 0.95): Promise<void> {
   const mask = page.locator('[data-image-tool-app] [data-role="mask-canvas"]');
+  await expect(mask).toBeVisible();
+  await mask.scrollIntoViewIfNeeded();
   const box = await mask.boundingBox();
   expect(box).not.toBeNull();
-  await page.mouse.move(box!.x + box!.width * x1, box!.y + box!.height * y1);
+  await mask.hover({ position: { x: box!.width * x1, y: box!.height * y1 } });
   await page.mouse.down();
-  await page.mouse.move(box!.x + box!.width * x2, box!.y + box!.height * y2, { steps: 5 });
+  await page.mouse.move(box!.x + box!.width * x2, box!.y + box!.height * y2, { steps: 8 });
   await page.mouse.up();
+  await expect(page.locator('[data-image-tool-app] [data-role="undo"]')).toBeEnabled();
 }
 
 async function dragRelative(page: Page, from: [number, number], to: [number, number]): Promise<void> {
   const mask = page.locator('[data-image-tool-app] [data-role="mask-canvas"]');
+  await mask.scrollIntoViewIfNeeded();
   const box = await mask.boundingBox();
   expect(box).not.toBeNull();
-  await page.mouse.move(box!.x + box!.width * from[0], box!.y + box!.height * from[1]);
+  await mask.hover({ position: { x: box!.width * from[0], y: box!.height * from[1] } });
   await page.mouse.down();
-  await page.mouse.move(box!.x + box!.width * to[0], box!.y + box!.height * to[1], { steps: 8 });
+  await page.mouse.move(box!.x + box!.width * to[0], box!.y + box!.height * to[1], { steps: 10 });
   await page.mouse.up();
 }
 
@@ -72,15 +92,15 @@ async function maskAlphaBounds(page: Page): Promise<{ minX:number; minY:number; 
 test('Remove Watermark exposes six manual masks and same-ratio batches start shared', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Remove Watermark product contract');
   await page.goto('/remove-watermark/');
-  const root = page.locator('[data-image-tool-app]');
+  const root = await readyImageTool(page);
   await expect(root).toHaveAttribute('data-max-files', '50');
   await expect(root).toHaveAttribute('data-max-file-bytes', String(10 * 1024 * 1024));
   await expect(root.locator('[data-role="auto-select"]')).toHaveCount(0);
+  await uploadSyntheticBatch(page, [[360, 240], [720, 480]], 'shared');
   await expect(root.locator('[data-tool-mode]')).toHaveCount(6);
-  for (const name of ['Rectangle', 'Circle', 'Square', 'Diamond', '4-Point Star', 'Text']) await expect(root.getByRole('button', { name })).toBeVisible();
+  for (const mode of ['rect', 'circle', 'square', 'diamond', 'star4', 'text']) await expect(root.locator('[data-tool-mode="' + mode + '"]')).toBeVisible();
   await expect(root.getByRole('button', { name: 'Brush' })).toHaveCount(0);
   await expect(root.getByRole('button', { name: 'Eraser' })).toHaveCount(0);
-  await uploadSyntheticBatch(page, [[360, 240], [720, 480]], 'shared');
   await expect(root).toHaveAttribute('data-edit-mode', 'shared');
   await expect(root).toHaveAttribute('data-edit-mode-preference', 'auto');
   await expect(root.locator('[data-role="batch-warning"]')).toHaveAttribute('data-tone', 'compatible');
@@ -89,7 +109,7 @@ test('Remove Watermark exposes six manual masks and same-ratio batches start sha
 test('mixed aspect ratios stay in Remove Watermark and start individual editing', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Mixed-ratio Remove Watermark batch');
   await page.goto('/remove-watermark/');
-  const root = page.locator('[data-image-tool-app]');
+  const root = await readyImageTool(page);
   await uploadSyntheticBatch(page, [[360, 240], [240, 360], [320, 320]], 'mixed');
   await expect(root.locator('.gemini-file-card')).toHaveCount(3);
   await expect(root).toHaveAttribute('data-edit-mode', 'individual');
@@ -100,7 +120,7 @@ test('mixed aspect ratios stay in Remove Watermark and start individual editing'
 test('manual shared mask can become per-image copies and whole queue cards select images', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Shared to individual and card selection');
   await page.goto('/remove-watermark/');
-  const root = page.locator('[data-image-tool-app]');
+  const root = await readyImageTool(page);
   await uploadSyntheticBatch(page, [[360, 240], [720, 480]], 'custom');
   await drawMask(page);
   await root.getByRole('radio', { name: /Edit individually/ }).click();
@@ -116,7 +136,7 @@ test('manual shared mask can become per-image copies and whole queue cards selec
 test('Rectangle repair produces a full-resolution downloadable result', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Primary Remove Watermark repair');
   const errors: string[] = []; page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/remove-watermark/'); const root = page.locator('[data-image-tool-app]');
+  await page.goto('/remove-watermark/'); const root = await readyImageTool(page);
   await uploadSyntheticBatch(page, [[360, 240]], 'single'); await drawMask(page);
   await expect(root.locator('[data-role="remove"]')).toBeEnabled(); await root.locator('[data-role="remove"]').click();
   await expect(root.locator('[data-role="result-label"]')).toContainText('pixels repaired', { timeout: 20_000 });
@@ -128,15 +148,15 @@ test('Rectangle repair produces a full-resolution downloadable result', async ({
 
 test('Square and Diamond create constrained masks with Undo', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Shape geometry regression');
-  await page.goto('/remove-watermark/'); const root = page.locator('[data-image-tool-app]'); await uploadSyntheticBatch(page, [[360, 240]], 'shape');
-  await root.getByRole('button', { name: 'Square' }).click(); await drawMask(page, 0.72, 0.66, 0.88, 0.94); await expect(root.locator('[data-role="undo"]')).toBeEnabled(); await root.locator('[data-role="undo"]').click(); await expect(root.locator('[data-role="remove"]')).toBeDisabled();
-  await root.getByRole('button', { name: 'Diamond' }).click(); await drawMask(page, 0.76, 0.66, 0.92, 0.92); await expect(root.locator('[data-role="remove"]')).toBeEnabled();
+  await page.goto('/remove-watermark/'); const root = await readyImageTool(page); await uploadSyntheticBatch(page, [[360, 240]], 'shape');
+  await root.locator('[data-tool-mode="square"]').click(); await drawMask(page, 0.72, 0.66, 0.88, 0.94); await expect(root.locator('[data-role="undo"]')).toBeEnabled(); await root.locator('[data-role="undo"]').click(); await expect(root.locator('[data-role="remove"]')).toBeDisabled();
+  await root.locator('[data-tool-mode="diamond"]').click(); await drawMask(page, 0.76, 0.66, 0.92, 0.92); await expect(root.locator('[data-role="remove"]')).toBeEnabled();
 });
 
 test('single-character Text mask auto-fits, reaches the bottom-right corner, and repairs solid glyph pixels', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Compact solid text-mask regression');
-  await page.goto('/remove-watermark/'); const root = page.locator('[data-image-tool-app]'); await uploadSyntheticBatch(page, [[480, 320]], 'text-seven');
-  await root.getByRole('button', { name: 'Text' }).click(); const input = root.locator('[data-role="text-mask-input"]'); await input.fill('7');
+  await page.goto('/remove-watermark/'); const root = await readyImageTool(page); await uploadSyntheticBatch(page, [[480, 320]], 'text-seven');
+  await root.locator('[data-tool-mode="text"]').click(); const input = root.locator('[data-role="text-mask-input"]'); await input.fill('7');
   const initial = await maskAlphaBounds(page);
   expect(initial.width).toBeLessThan(initial.canvasWidth * 0.35);
   await dragRelative(page, [0.50, 0.50], [0.92, 0.90]);
@@ -150,13 +170,14 @@ test('single-character Text mask auto-fits, reaches the bottom-right corner, and
 
 test('Text mask round handle rotates the visible footprint and worker repair accepts the rotation', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Text mask rotation regression');
-  await page.goto('/remove-watermark/'); const root = page.locator('[data-image-tool-app]'); await uploadSyntheticBatch(page, [[480, 320]], 'text-rotate');
-  await root.getByRole('button', { name: 'Text' }).click(); await root.locator('[data-role="text-mask-input"]').fill('WATERMARK');
+  await page.goto('/remove-watermark/'); const root = await readyImageTool(page); await uploadSyntheticBatch(page, [[480, 320]], 'text-rotate');
+  await root.locator('[data-tool-mode="text"]').click(); await root.locator('[data-role="text-mask-input"]').fill('WATERMARK');
   const before = await maskAlphaBounds(page);
-  const canvas = root.locator('[data-role="mask-canvas"]'); const box = await canvas.boundingBox(); expect(box).not.toBeNull();
+  const canvas = root.locator('[data-role="mask-canvas"]'); await canvas.scrollIntoViewIfNeeded(); const box = await canvas.boundingBox(); expect(box).not.toBeNull();
   const textHeight = Math.max(48, Math.min(150, box!.height * 0.16));
-  const startX = box!.x + box!.width * 0.5, startY = box!.y + box!.height * 0.5 - textHeight / 2 - 28;
-  await page.mouse.move(startX, startY); await page.mouse.down(); await page.mouse.move(box!.x + box!.width * 0.66, box!.y + box!.height * 0.50, { steps: 10 }); await page.mouse.up();
+  const handleX = box!.width * 0.5, handleY = box!.height * 0.5 - textHeight / 2 - 28;
+  await canvas.hover({ position: { x: handleX, y: handleY } });
+  await page.mouse.down(); await page.mouse.move(box!.x + box!.width * 0.66, box!.y + box!.height * 0.50, { steps: 12 }); await page.mouse.up();
   const after = await maskAlphaBounds(page);
   expect(after.height).toBeGreaterThan(before.height * 1.25);
   expect(after.width).toBeLessThan(before.width * 0.9);
@@ -166,8 +187,8 @@ test('Text mask round handle rotates the visible footprint and worker repair acc
 
 test('mixed individual batch can repair two prepared images and download ZIP', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Remove Watermark batch ZIP');
-  await page.goto('/remove-watermark/'); const root = page.locator('[data-image-tool-app]'); await uploadSyntheticBatch(page, [[360, 240], [240, 360]], 'batch');
-  await expect(root).toHaveAttribute('data-edit-mode', 'individual'); await drawMask(page); await root.locator('.gemini-file-card').nth(1).click(); await drawMask(page, 0.70, 0.79, 0.97, 0.94);
+  await page.goto('/remove-watermark/'); const root = await readyImageTool(page); await uploadSyntheticBatch(page, [[360, 240], [240, 360]], 'batch');
+  await expect(root).toHaveAttribute('data-edit-mode', 'individual'); await drawMask(page); await root.locator('.gemini-file-card').nth(1).locator('.gemini-file-copy').click(); await drawMask(page, 0.70, 0.79, 0.97, 0.94);
   await expect(root.locator('[data-role="prepared-summary"]')).toContainText('2/2 images have a mask'); await root.locator('[data-role="remove"]').click(); await expect(root.locator('[data-role="batch-result-summary"]')).toContainText('2 repaired', { timeout: 30_000 });
   const downloadPromise = page.waitForEvent('download'); await root.locator('[data-role="download"]').click(); const download = await downloadPromise; expect(download.suggestedFilename()).toBe('images-mixed-2.zip');
   const path = await download.path(); expect(path).not.toBeNull(); const zip = await JSZip.loadAsync(await readFile(path!)); expect(Object.keys(zip.files).sort()).toEqual(['batch-1.png','batch-2.png']);
@@ -177,16 +198,16 @@ test('Remove Watermark page, Image Tools hub, and guides expose release content'
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Image Tools content regression');
   await page.goto('/remove-watermark/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Remove watermarks from images.');
-  await expect(page.getByRole('heading', { name: 'Move, resize, rotate' })).toBeVisible();
-  await expect(page.getByText(/solid bold text-shaped mask/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Use the mask handles instead of redrawing every adjustment.' })).toBeVisible();
+  await expect(page.locator('.content-wide-section').getByText(/solid bold text-shaped mask/i).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Remove Watermark FAQ' })).toBeVisible();
-  await page.goto('/image-tools/'); await expect(page.getByText('Rectangle, Circle, Square, Diamond, 4-Point Star, and Text masks')).toBeVisible();
+  await page.goto('/image-tools/'); await expect(page.getByRole('link', { name: /Remove Watermark/ }).first()).toBeVisible(); await expect(page.getByText(/six manual mask modes/i).first()).toBeVisible();
   await page.goto('/guides/how-to-remove-text-watermark-from-image/'); await expect(page.getByText(/not OCR or automatic text detection/i)).toBeVisible(); await expect(page.getByRole('heading', { name: /Move, resize, and rotate/ })).toBeVisible();
 });
 
 test('Remove Watermark stays usable on mobile without horizontal page overflow', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-mobile', 'Mobile Remove Watermark regression');
-  await page.goto('/remove-watermark/'); await uploadSyntheticBatch(page, [[180, 320], [320, 180]], 'mobile'); const root = page.locator('[data-image-tool-app]');
+  await page.goto('/remove-watermark/'); await uploadSyntheticBatch(page, [[180, 320], [320, 180]], 'mobile'); const root = await readyImageTool(page);
   await expect(root.locator('[data-role="editor"]')).toBeVisible(); await expect(root).toHaveAttribute('data-edit-mode', 'individual');
   const layout = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth, touchAction: getComputedStyle(document.querySelector<HTMLElement>('[data-role="mask-canvas"]')!).touchAction, queueOverflow: getComputedStyle(document.querySelector<HTMLElement>('.gemini-file-queue')!).overflowX }));
   expect(layout.touchAction).toBe('none'); expect(layout.queueOverflow).toBe('auto'); expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth + 1);

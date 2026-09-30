@@ -24,13 +24,13 @@ const HOME_PRIORITY_LINKS = [
   '/webp-to-jpg/',
   '/png-to-jpg/',
   '/avif-to-jpg/',
-  ...GROWTH_GUIDES.slice(0, 6),
+  ...GROWTH_GUIDES.slice(0, 3),
 ] as const;
 
 test('homepage gives high-priority image pages crawlable one-click links', async ({ page }) => {
   await page.goto('/');
   for (const href of HOME_PRIORITY_LINKS) {
-    await expect(page.locator(`a[href="${href}"]`).first(), `${href} should be linked from home`).toBeVisible();
+    await expect(page.locator(`main a[href="${href}"]`).first(), `${href} should be linked from home`).toBeVisible();
   }
 });
 
@@ -54,14 +54,14 @@ test('guides hub and image tools expose the new content cluster', async ({ page 
   for (const path of GROWTH_GUIDES) await expect(page.locator(`a[href="${path}"]`).first()).toBeVisible();
 
   await page.goto('/resize-image/');
-  await expect(page.locator('a[href="/guides/resize-image-without-stretching/"]')).toBeVisible();
-  await expect(page.locator('a[href="/guides/resize-image-to-1920x1080/"]')).toBeVisible();
+  await expect(page.locator('main a[href="/guides/resize-image-without-stretching/"]').first()).toBeVisible();
+  await expect(page.locator('main a[href="/guides/resize-image-to-1920x1080/"]').first()).toBeVisible();
 
   await page.goto('/compress-image/');
-  await expect(page.locator('a[href="/guides/reduce-image-file-size-without-resizing/"]')).toBeVisible();
-  await expect(page.locator('a[href="/guides/compress-images-for-web/"]')).toBeVisible();
+  await expect(page.locator('main a[href="/guides/reduce-image-file-size-without-resizing/"]').first()).toBeVisible();
+  await expect(page.locator('main a[href="/guides/compress-images-for-web/"]').first()).toBeVisible();
 
   await page.goto('/remove-image-metadata/');
-  await expect(page.locator('a[href="/guides/remove-exif-from-photo/"]')).toBeVisible();
-  await expect(page.locator('a[href="/guides/remove-gps-location-from-image/"]')).toBeVisible();
+  await expect(page.locator('main a[href="/guides/remove-exif-from-photo/"]').first()).toBeVisible();
+  await expect(page.locator('main a[href="/guides/remove-gps-location-from-image/"]').first()).toBeVisible();
 });

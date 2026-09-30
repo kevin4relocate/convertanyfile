@@ -1,4 +1,23 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
+
+const PNG_2X2 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP4z8DA8J+BkYHh////DAAe9gT9Ce00PgAAAABJRU5ErkJggg==',
+  'base64',
+);
+
+async function readyFadeTool(page: Page, withImage = false): Promise<Locator> {
+  const root = page.locator('[data-image-tool-app][data-tool-id="fade-image-edges"]');
+  await expect(root).toHaveAttribute('data-image-tool-ready', 'true');
+  if (withImage) {
+    await root.locator('[data-role="file-input"]').setInputFiles({
+      name: 'fade-test.png',
+      mimeType: 'image/png',
+      buffer: PNG_2X2,
+    });
+    await expect(root).toHaveAttribute('data-has-items', 'true');
+  }
+  return root;
+}
 
 test('Fade Image Edges is isolated in the Preview section', async ({ page }) => {
   await page.goto('/image-tools/');
@@ -13,7 +32,7 @@ test('Fade Image Edges v2 exposes subtitle-safe presets and stays noindex while 
   expect(response?.ok()).toBeTruthy();
   await expect(page.getByRole('heading', { level: 1, name: 'Fade image edges for subtitles and text.' })).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex,nofollow');
-  await expect(page.locator('[data-tool-id="fade-image-edges"]')).toHaveAttribute('data-image-tool-ready', 'true');
+  await readyFadeTool(page, true);
 
   await expect(page.locator('[data-setting="effectMode"]')).toHaveValue('subtitle-safe');
   await expect(page.locator('[data-setting="preset"]')).toHaveValue('subtitle-strong');
@@ -38,7 +57,7 @@ test('Fade Image Edges v2 exposes subtitle-safe presets and stays noindex while 
 
 test('Fade Image Edges keeps the default settings compact and moves secondary controls under More controls', async ({ page }) => {
   await page.goto('/fade-image-edges/');
-  const root = page.locator('[data-tool-id="fade-image-edges"]');
+  const root = await readyFadeTool(page, true);
   const compactGrid = root.locator('.edge-fade-v2-grid--compact');
   const advanced = root.locator('.edge-fade-advanced');
 
@@ -53,35 +72,17 @@ test('Fade Image Edges keeps the default settings compact and moves secondary co
   await expect(compactGrid.locator(':scope > .setting-note:not(details)')).toHaveCount(0);
 });
 
-test('subtitle safe-zone boundary can be dragged to change Fade depth', async ({ page }) => {
+test('subtitle safe-zone boundary control changes Fade depth', async ({ page }) => {
   await page.goto('/fade-image-edges/');
+  await readyFadeTool(page, true);
   const depth = page.locator('[data-setting="depth"]');
-  const host = page.locator('.edge-fade-guide-host');
   const bottomHandle = page.locator('[data-guide-edge="bottom"]');
 
-  await page.evaluate(() => {
-    const host = document.querySelector<HTMLElement>('.edge-fade-guide-host');
-    const handle = document.querySelector<HTMLElement>('[data-guide-edge="bottom"]');
-    if (!host || !handle) throw new Error('Safe-zone drag controls are missing.');
-    host.hidden = false;
-    host.style.left = '100px';
-    host.style.top = '100px';
-    host.style.width = '400px';
-    host.style.height = '240px';
-    handle.hidden = false;
-    handle.style.top = '99px';
-  });
+  await expect(bottomHandle).toBeVisible();
+  await bottomHandle.focus();
+  await bottomHandle.press('ArrowUp');
 
-  const box = await bottomHandle.boundingBox();
-  expect(box).not.toBeNull();
-  if (!box) return;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2, box.y - 45, { steps: 5 });
-  await page.mouse.up();
-
-  await expect(depth).not.toHaveValue('55');
+  await expect(depth).toHaveValue('56');
   await expect(page.locator('[data-setting="preset"]')).toHaveValue('custom');
-  const value = Number(await depth.inputValue());
-  expect(value).toBeGreaterThan(55);
+  await expect(bottomHandle).toHaveAttribute('aria-valuenow', '56');
 });
