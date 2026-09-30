@@ -1,3 +1,5 @@
+import { DEFAULT_JPEG_QUALITY, DEFAULT_WEBP_QUALITY } from '../core/output-quality';
+
 export type DeterministicToolId =
   | 'resize-image'
   | 'compress-image'
@@ -84,9 +86,9 @@ export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSe
     case 'resize-image':
       return { mode: 'pixels', width: 1920, height: 1080, percent: 50, lockAspect: true, pixelAnchor: 'width', fitWidth: 1920, fitHeight: 1080 };
     case 'compress-image':
-      return { format: 'webp', quality: 82 };
+      return { format: 'webp', quality: DEFAULT_WEBP_QUALITY };
     case 'remove-image-metadata':
-      return { format: 'source', quality: 92 };
+      return { format: 'source', quality: DEFAULT_JPEG_QUALITY };
     case 'rotate-flip-image':
       return { rotation: 0, flipHorizontal: false, flipVertical: false };
     case 'crop-image':
