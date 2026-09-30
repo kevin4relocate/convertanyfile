@@ -33,10 +33,16 @@ async function uploadSyntheticBatch(page: Page, sizes: Array<[number, number]>, 
     input.files = transfer.files;
     input.dispatchEvent(new Event('change', { bubbles: true }));
   }, { sizes, prefix });
+  const root = page.locator('[data-image-tool-app]');
+  await expect(root.locator('.gemini-file-card')).toHaveCount(sizes.length);
+  await expect(root.locator('[data-role="mask-canvas"]')).toBeVisible();
+  await expect.poll(() => root.locator('[data-role="mask-canvas"]').evaluate((element) => (element as HTMLCanvasElement).width)).toBeGreaterThan(0);
 }
 
 async function drawMask(page: Page, x1 = 0.72, y1 = 0.78, x2 = 0.97, y2 = 0.95): Promise<void> {
   const mask = page.locator('[data-image-tool-app] [data-role="mask-canvas"]');
+  await expect(mask).toBeVisible();
+  await expect.poll(() => mask.evaluate((element) => (element as HTMLCanvasElement).width)).toBeGreaterThan(0);
   const box = await mask.boundingBox();
   expect(box).not.toBeNull();
   await page.mouse.move(box!.x + box!.width * x1, box!.y + box!.height * y1);
@@ -82,11 +88,11 @@ test('Remove Watermark exposes six manual masks and same-ratio batches start sha
   await expect(root).toHaveAttribute('data-max-files', '50');
   await expect(root).toHaveAttribute('data-max-file-bytes', String(10 * 1024 * 1024));
   await expect(root.locator('[data-role="auto-select"]')).toHaveCount(0);
+  await uploadSyntheticBatch(page, [[360, 240], [720, 480]], 'shared');
   await expect(root.locator('[data-tool-mode]')).toHaveCount(6);
-  for (const name of ['Rectangle', 'Circle', 'Square', 'Diamond', '4-Point Star', 'Text']) await expect(root.getByRole('button', { name })).toBeVisible();
+  for (const mode of ['rect', 'circle', 'square', 'diamond', 'star4', 'text']) await expect(root.locator('[data-tool-mode="' + mode + '"]')).toBeVisible();
   await expect(root.getByRole('button', { name: 'Brush' })).toHaveCount(0);
   await expect(root.getByRole('button', { name: 'Eraser' })).toHaveCount(0);
-  await uploadSyntheticBatch(page, [[360, 240], [720, 480]], 'shared');
   await expect(root).toHaveAttribute('data-edit-mode', 'shared');
   await expect(root).toHaveAttribute('data-edit-mode-preference', 'auto');
   await expect(root.locator('[data-role="batch-warning"]')).toHaveAttribute('data-tone', 'compatible');
@@ -135,14 +141,14 @@ test('Rectangle repair produces a full-resolution downloadable result', async ({
 test('Square and Diamond create constrained masks with Undo', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Shape geometry regression');
   await page.goto('/remove-watermark/'); const root = await readyImageTool(page); await uploadSyntheticBatch(page, [[360, 240]], 'shape');
-  await root.getByRole('button', { name: 'Square' }).click(); await drawMask(page, 0.72, 0.66, 0.88, 0.94); await expect(root.locator('[data-role="undo"]')).toBeEnabled(); await root.locator('[data-role="undo"]').click(); await expect(root.locator('[data-role="remove"]')).toBeDisabled();
-  await root.getByRole('button', { name: 'Diamond' }).click(); await drawMask(page, 0.76, 0.66, 0.92, 0.92); await expect(root.locator('[data-role="remove"]')).toBeEnabled();
+  await root.locator('[data-tool-mode="square"]').click(); await drawMask(page, 0.72, 0.66, 0.88, 0.94); await expect(root.locator('[data-role="undo"]')).toBeEnabled(); await root.locator('[data-role="undo"]').click(); await expect(root.locator('[data-role="remove"]')).toBeDisabled();
+  await root.locator('[data-tool-mode="diamond"]').click(); await drawMask(page, 0.76, 0.66, 0.92, 0.92); await expect(root.locator('[data-role="remove"]')).toBeEnabled();
 });
 
 test('single-character Text mask auto-fits, reaches the bottom-right corner, and repairs solid glyph pixels', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Compact solid text-mask regression');
   await page.goto('/remove-watermark/'); const root = await readyImageTool(page); await uploadSyntheticBatch(page, [[480, 320]], 'text-seven');
-  await root.getByRole('button', { name: 'Text' }).click(); const input = root.locator('[data-role="text-mask-input"]'); await input.fill('7');
+  await root.locator('[data-tool-mode="text"]').click(); const input = root.locator('[data-role="text-mask-input"]'); await input.fill('7');
   const initial = await maskAlphaBounds(page);
   expect(initial.width).toBeLessThan(initial.canvasWidth * 0.35);
   await dragRelative(page, [0.50, 0.50], [0.92, 0.90]);
@@ -157,7 +163,7 @@ test('single-character Text mask auto-fits, reaches the bottom-right corner, and
 test('Text mask round handle rotates the visible footprint and worker repair accepts the rotation', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Text mask rotation regression');
   await page.goto('/remove-watermark/'); const root = await readyImageTool(page); await uploadSyntheticBatch(page, [[480, 320]], 'text-rotate');
-  await root.getByRole('button', { name: 'Text' }).click(); await root.locator('[data-role="text-mask-input"]').fill('WATERMARK');
+  await root.locator('[data-tool-mode="text"]').click(); await root.locator('[data-role="text-mask-input"]').fill('WATERMARK');
   const before = await maskAlphaBounds(page);
   const canvas = root.locator('[data-role="mask-canvas"]'); const box = await canvas.boundingBox(); expect(box).not.toBeNull();
   const textHeight = Math.max(48, Math.min(150, box!.height * 0.16));
@@ -183,7 +189,7 @@ test('Remove Watermark page, Image Tools hub, and guides expose release content'
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Image Tools content regression');
   await page.goto('/remove-watermark/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Remove watermarks from images.');
-  await expect(page.getByRole('heading', { name: 'Move, resize, rotate' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Use the mask handles instead of redrawing every adjustment.' })).toBeVisible();
   await expect(page.getByText(/solid bold text-shaped mask/i)).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Remove Watermark FAQ' })).toBeVisible();
   await page.goto('/image-tools/'); await expect(page.getByText('Rectangle, Circle, Square, Diamond, 4-Point Star, and Text masks')).toBeVisible();
