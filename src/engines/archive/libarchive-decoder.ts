@@ -93,6 +93,7 @@ function unsupportedEntry(type: number): Error {
 function normalizeDecoderFailure(error: unknown): Error {
   const message = error instanceof Error ? error.message : String(error || 'Archive decoder failed');
   if (/decoder runtime unavailable/i.test(message)) return error instanceof Error ? error : new Error(message);
+  if (/archive does not contain extractable files or directories/i.test(message)) return new Error('The 7Z/RAR archive is corrupt or incomplete');
   if (/^Archive (?:contains|entry|expands|path)/i.test(message) || /75 MB browser-decoder safety limit|ran out of browser memory/i.test(message)) {
     return error instanceof Error ? error : new Error(message);
   }
