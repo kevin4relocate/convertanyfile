@@ -140,7 +140,7 @@ test('crop and blur expose geometry-specific controls', async ({ page }, testInf
   await crop.locator('[data-role="file-input"]').setInputFiles({ name: 'crop.png', mimeType: 'image/png', buffer: PNG_2X2 });
   await expect(crop).toHaveAttribute('data-has-items', 'true');
   await expect(page.locator('[data-setting="aspect"]')).toContainText('16:9');
-  await expect(page.locator('[data-setting="width"]')).toHaveValue('100');
+  expect(Number(await crop.locator('[data-setting="width"]').inputValue())).toBe(100);
 
   await page.goto('/blur-image/');
   const blur = await readyTool(page, 'blur-image');
