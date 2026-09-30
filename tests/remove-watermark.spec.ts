@@ -173,10 +173,11 @@ test('Text mask round handle rotates the visible footprint and worker repair acc
   await page.goto('/remove-watermark/'); const root = await readyImageTool(page); await uploadSyntheticBatch(page, [[480, 320]], 'text-rotate');
   await root.locator('[data-tool-mode="text"]').click(); await root.locator('[data-role="text-mask-input"]').fill('WATERMARK');
   const before = await maskAlphaBounds(page);
-  const canvas = root.locator('[data-role="mask-canvas"]'); const box = await canvas.boundingBox(); expect(box).not.toBeNull();
+  const canvas = root.locator('[data-role="mask-canvas"]'); await canvas.scrollIntoViewIfNeeded(); const box = await canvas.boundingBox(); expect(box).not.toBeNull();
   const textHeight = Math.max(48, Math.min(150, box!.height * 0.16));
-  const startX = box!.x + box!.width * 0.5, startY = box!.y + box!.height * 0.5 - textHeight / 2 - 28;
-  await page.mouse.move(startX, startY); await page.mouse.down(); await page.mouse.move(box!.x + box!.width * 0.66, box!.y + box!.height * 0.50, { steps: 10 }); await page.mouse.up();
+  const handleX = box!.width * 0.5, handleY = box!.height * 0.5 - textHeight / 2 - 28;
+  await canvas.hover({ position: { x: handleX, y: handleY } });
+  await page.mouse.down(); await page.mouse.move(box!.x + box!.width * 0.66, box!.y + box!.height * 0.50, { steps: 12 }); await page.mouse.up();
   const after = await maskAlphaBounds(page);
   expect(after.height).toBeGreaterThan(before.height * 1.25);
   expect(after.width).toBeLessThan(before.width * 0.9);
@@ -187,7 +188,7 @@ test('Text mask round handle rotates the visible footprint and worker repair acc
 test('mixed individual batch can repair two prepared images and download ZIP', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Remove Watermark batch ZIP');
   await page.goto('/remove-watermark/'); const root = await readyImageTool(page); await uploadSyntheticBatch(page, [[360, 240], [240, 360]], 'batch');
-  await expect(root).toHaveAttribute('data-edit-mode', 'individual'); await drawMask(page); await root.locator('.gemini-file-card').nth(1).click(); await drawMask(page, 0.70, 0.79, 0.97, 0.94);
+  await expect(root).toHaveAttribute('data-edit-mode', 'individual'); await drawMask(page); await root.locator('.gemini-file-card').nth(1).locator('.gemini-file-copy').click(); await drawMask(page, 0.70, 0.79, 0.97, 0.94);
   await expect(root.locator('[data-role="prepared-summary"]')).toContainText('2/2 images have a mask'); await root.locator('[data-role="remove"]').click(); await expect(root.locator('[data-role="batch-result-summary"]')).toContainText('2 repaired', { timeout: 30_000 });
   const downloadPromise = page.waitForEvent('download'); await root.locator('[data-role="download"]').click(); const download = await downloadPromise; expect(download.suggestedFilename()).toBe('images-mixed-2.zip');
   const path = await download.path(); expect(path).not.toBeNull(); const zip = await JSZip.loadAsync(await readFile(path!)); expect(Object.keys(zip.files).sort()).toEqual(['batch-1.png','batch-2.png']);
