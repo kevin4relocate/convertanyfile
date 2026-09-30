@@ -281,7 +281,7 @@ test('wide content hubs use the 1080px grid and meaningful internal navigation',
   }
   await page.goto('/formats/');
   await expect(page.locator('.comparison-table').first()).toBeVisible();
-  await expect(page.locator('main a[href="/guides/jpg-vs-png/"]').first()).toBeVisible();
+  await expect(page.locator('main a[href="/image-converter/"]').first()).toBeVisible();
   const dataFormatsSection = page
     .getByRole('heading', { name: 'CSV, TSV, JSON, JSONL, and NDJSON.' })
     .locator('xpath=ancestor::section[1]');
