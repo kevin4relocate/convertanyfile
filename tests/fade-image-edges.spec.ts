@@ -70,7 +70,8 @@ test('Fade Image Edges keeps the default settings compact and moves secondary co
   await expect(compactGrid.locator(':scope > .setting-note:not(details)')).toHaveCount(0);
 });
 
-test('subtitle safe-zone boundary can be dragged to change Fade depth', async ({ page }) => {
+test('subtitle safe-zone boundary can be dragged to change Fade depth', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Pointer-drag regression only needs one Chromium desktop run');
   await page.goto('/fade-image-edges/');
   await openEditor(page);
   const depth = page.locator('[data-setting="depth"]');

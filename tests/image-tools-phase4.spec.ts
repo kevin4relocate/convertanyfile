@@ -15,11 +15,11 @@ test.describe('Phase 4 image tools', () => {
     await app.locator('[data-edit-scope="individual"]').click();
     await expect(app).toHaveAttribute('data-platform-scope','individual');
     await app.locator('[data-role="custom-name"]').fill('hero-image');
-    await expect(app.locator('[data-role="selected-result"]')).toHaveText('hero-image.png');
+    await expect(app.locator('.rename-preview-result')).toHaveText('hero-image.png');
     await expect(app.locator('[data-role="batch-list"]')).toContainText('CUSTOM');
 
     await app.locator('[data-role="custom-name"]').fill('hero-image.jpg');
-    await expect(app.locator('[data-role="selected-result"]')).toHaveText('hero-image.png');
+    await expect(app.locator('.rename-preview-result')).toHaveText('hero-image.png');
 
     await app.locator('[data-role="process-batch"]').click();
     await expect(app.locator('[data-role="download-batch"]')).toBeEnabled();
@@ -29,7 +29,8 @@ test.describe('Phase 4 image tools', () => {
     await page.goto('/bulk-rename-images/');
     const app = page.locator('[data-image-tool-app]');
     await app.locator('[data-role="file-input"]').setInputFiles(png('this_is_a_very_long_source_filename_that_should_not_break_the_preview_layout.png'));
-    const original = app.locator('[data-role="selected-original"]');
+    await expect(app).toHaveAttribute('data-has-items','true');
+    const original = app.locator('.rename-preview-name:not(.rename-preview-result)').first();
     await expect(original).toHaveCSS('white-space','nowrap');
     await expect(original).toHaveCSS('text-overflow','ellipsis');
   });
