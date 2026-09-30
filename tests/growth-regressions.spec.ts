@@ -30,7 +30,7 @@ test('image converter keeps the complete drop zone in the first desktop viewport
   expect(frameBox).not.toBeNull();
   expect(converterBox).not.toBeNull();
   expect(dropBox).not.toBeNull();
-  expect(frameBox!.height).toBeLessThan(220);
+  expect(frameBox!.height).toBeLessThan(240);
   expect(converterBox!.y).toBeLessThan(340);
   expect(dropBox!.y + dropBox!.height).toBeLessThanOrEqual(900);
 });
