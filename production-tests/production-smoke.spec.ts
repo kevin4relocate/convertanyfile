@@ -25,6 +25,12 @@ test('production shell, analytics, robots, sitemap and 404 are healthy', async (
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBe(200);
   expect(response?.headers()['strict-transport-security']).toContain('max-age=31536000');
+  const csp = response?.headers()['content-security-policy'];
+  expect(csp).toContain("default-src 'self'");
+  expect(csp).toContain("object-src 'none'");
+  expect(csp).toContain("script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'");
+  expect(csp).toContain("worker-src 'self' blob:");
+  expect(csp).toContain('https://www.googletagmanager.com');
   await expect(page).toHaveTitle(/ConvertAnyFile/i);
   await expect(page.locator('#home-converter-subtitle-tab')).toHaveText('Subtitles');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${PROD_ORIGIN}/`);
