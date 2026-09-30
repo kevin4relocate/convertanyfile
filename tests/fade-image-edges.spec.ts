@@ -1,4 +1,19 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+const PNG_2X2 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP4z8DA8J+BkYHh////DAAe9gT9Ce00PgAAAABJRU5ErkJggg==',
+  'base64',
+);
+
+async function openEditor(page: Page): Promise<void> {
+  const root = page.locator('[data-tool-id="fade-image-edges"]');
+  await root.locator('[data-role="file-input"]').setInputFiles({
+    name: 'fade-test.png',
+    mimeType: 'image/png',
+    buffer: PNG_2X2,
+  });
+  await expect(root).toHaveAttribute('data-has-items', 'true');
+}
 
 test('Fade Image Edges is isolated in the Preview section', async ({ page }) => {
   await page.goto('/image-tools/');
@@ -14,6 +29,7 @@ test('Fade Image Edges v2 exposes subtitle-safe presets and stays noindex while 
   await expect(page.getByRole('heading', { level: 1, name: 'Fade image edges for subtitles and text.' })).toBeVisible();
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex,nofollow');
   await expect(page.locator('[data-tool-id="fade-image-edges"]')).toHaveAttribute('data-image-tool-ready', 'true');
+  await openEditor(page);
 
   await expect(page.locator('[data-setting="effectMode"]')).toHaveValue('subtitle-safe');
   await expect(page.locator('[data-setting="preset"]')).toHaveValue('subtitle-strong');
@@ -38,6 +54,7 @@ test('Fade Image Edges v2 exposes subtitle-safe presets and stays noindex while 
 
 test('Fade Image Edges keeps the default settings compact and moves secondary controls under More controls', async ({ page }) => {
   await page.goto('/fade-image-edges/');
+  await openEditor(page);
   const root = page.locator('[data-tool-id="fade-image-edges"]');
   const compactGrid = root.locator('.edge-fade-v2-grid--compact');
   const advanced = root.locator('.edge-fade-advanced');
@@ -55,6 +72,7 @@ test('Fade Image Edges keeps the default settings compact and moves secondary co
 
 test('subtitle safe-zone boundary can be dragged to change Fade depth', async ({ page }) => {
   await page.goto('/fade-image-edges/');
+  await openEditor(page);
   const depth = page.locator('[data-setting="depth"]');
   const host = page.locator('.edge-fade-guide-host');
   const bottomHandle = page.locator('[data-guide-edge="bottom"]');
