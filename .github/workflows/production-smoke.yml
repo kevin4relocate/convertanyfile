@@ -21,6 +21,10 @@ on:
       - 'package.json'
       - 'package-lock.json'
 
+concurrency:
+  group: production-smoke
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
