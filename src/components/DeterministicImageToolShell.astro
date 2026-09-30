@@ -59,7 +59,7 @@ const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images'
 
           {isMetadata && <div class="setting-grid">
             <label><span>Clean output format</span><select data-setting="format"><option value="source">Same as source</option><option value="jpg">JPG</option><option value="webp">WebP</option><option value="png">PNG</option></select></label>
-            <label><span>Quality</span><div class="range-row"><input data-setting="quality" type="range" min="1" max="100" value="92" /><output data-output-for="quality">92</output></div></label>
+            <label><span>Quality</span><div class="range-row"><input data-setting="quality" type="range" min="1" max="100" value="90" /><output data-output-for="quality">90</output></div></label>
             <div class="setting-note setting-note--wide"><strong>EXIF, GPS and software tags are not copied.</strong><p>The browser decodes visible pixels and creates a new file. Pixel-embedded text or marks remain visible.</p></div>
           </div>}
 
@@ -103,7 +103,7 @@ const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images'
         <ImagePreviewPanel beforeLabel="Original" afterLabel={isMetadata ? 'Clean pixel copy' : 'Live preview'} />
       </div>
 
-      <div slot="output" class:list={['deterministic-output', hasEmbeddedOutput && 'deterministic-output--hidden']}><ImageOutputPanel quality={92} /></div>
+      <div slot="output" class:list={['deterministic-output', hasEmbeddedOutput && 'deterministic-output--hidden']}><ImageOutputPanel quality={90} /></div>
       <ImageBatchProgress slot="progress" total={0} />
       <ImageBatchActionBar slot="actions" processLabel={processLabel} />
     </ImageBatchShell>
