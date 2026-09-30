@@ -11,10 +11,15 @@ on:
   push:
     branches: [main]
     paths:
+      - 'src/**'
+      - 'public/**'
+      - 'scripts/**'
       - '.github/workflows/production-smoke.yml'
       - 'production-tests/**'
       - 'playwright.production.config.ts'
+      - 'astro.config.mjs'
       - 'package.json'
+      - 'package-lock.json'
 
 permissions:
   contents: read
