@@ -9,7 +9,9 @@ async function readyImageTool(page: Page): Promise<Locator> {
 }
 
 async function uploadSyntheticBatch(page: Page, sizes: Array<[number, number]>, prefix = 'watermark'): Promise<void> {
-  await page.locator('[data-image-tool-app]').evaluate(async (root, payload) => {
+  const root = page.locator('[data-image-tool-app]');
+  const before = await root.locator('.gemini-file-card').count();
+  await root.evaluate(async (root, payload) => {
     const input = root.querySelector<HTMLInputElement>('[data-role="file-input"]')!;
     const transfer = new DataTransfer();
     for (let index = 0; index < payload.sizes.length; index += 1) {
@@ -33,31 +35,37 @@ async function uploadSyntheticBatch(page: Page, sizes: Array<[number, number]>, 
     input.files = transfer.files;
     input.dispatchEvent(new Event('change', { bubbles: true }));
   }, { sizes, prefix });
-  const root = page.locator('[data-image-tool-app]');
-  await expect(root.locator('.gemini-file-card')).toHaveCount(sizes.length);
-  await expect(root.locator('[data-role="mask-canvas"]')).toBeVisible();
-  await expect.poll(() => root.locator('[data-role="mask-canvas"]').evaluate((element) => (element as HTMLCanvasElement).width)).toBeGreaterThan(0);
+  await expect(root.locator('.gemini-file-card')).toHaveCount(before + sizes.length);
+  const mask = root.locator('[data-role="mask-canvas"]');
+  await expect(mask).toBeVisible();
+  await expect(root.locator('[data-role="source-name"]')).not.toHaveText('Choose an image');
+  await expect.poll(() => mask.evaluate((element) => {
+    const canvas = element as HTMLCanvasElement;
+    return canvas.width > 10 && canvas.height > 10;
+  })).toBe(true);
 }
 
 async function drawMask(page: Page, x1 = 0.72, y1 = 0.78, x2 = 0.97, y2 = 0.95): Promise<void> {
   const mask = page.locator('[data-image-tool-app] [data-role="mask-canvas"]');
   await expect(mask).toBeVisible();
-  await expect.poll(() => mask.evaluate((element) => (element as HTMLCanvasElement).width)).toBeGreaterThan(0);
+  await mask.scrollIntoViewIfNeeded();
   const box = await mask.boundingBox();
   expect(box).not.toBeNull();
-  await page.mouse.move(box!.x + box!.width * x1, box!.y + box!.height * y1);
+  await mask.hover({ position: { x: box!.width * x1, y: box!.height * y1 } });
   await page.mouse.down();
-  await page.mouse.move(box!.x + box!.width * x2, box!.y + box!.height * y2, { steps: 5 });
+  await page.mouse.move(box!.x + box!.width * x2, box!.y + box!.height * y2, { steps: 8 });
   await page.mouse.up();
+  await expect(page.locator('[data-image-tool-app] [data-role="undo"]')).toBeEnabled();
 }
 
 async function dragRelative(page: Page, from: [number, number], to: [number, number]): Promise<void> {
   const mask = page.locator('[data-image-tool-app] [data-role="mask-canvas"]');
+  await mask.scrollIntoViewIfNeeded();
   const box = await mask.boundingBox();
   expect(box).not.toBeNull();
-  await page.mouse.move(box!.x + box!.width * from[0], box!.y + box!.height * from[1]);
+  await mask.hover({ position: { x: box!.width * from[0], y: box!.height * from[1] } });
   await page.mouse.down();
-  await page.mouse.move(box!.x + box!.width * to[0], box!.y + box!.height * to[1], { steps: 8 });
+  await page.mouse.move(box!.x + box!.width * to[0], box!.y + box!.height * to[1], { steps: 10 });
   await page.mouse.up();
 }
 
@@ -190,7 +198,7 @@ test('Remove Watermark page, Image Tools hub, and guides expose release content'
   await page.goto('/remove-watermark/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Remove watermarks from images.');
   await expect(page.getByRole('heading', { name: 'Use the mask handles instead of redrawing every adjustment.' })).toBeVisible();
-  await expect(page.getByText(/solid bold text-shaped mask/i)).toBeVisible();
+  await expect(page.locator('.content-wide-section').getByText(/solid bold text-shaped mask/i).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Remove Watermark FAQ' })).toBeVisible();
   await page.goto('/image-tools/'); await expect(page.getByText('Rectangle, Circle, Square, Diamond, 4-Point Star, and Text masks')).toBeVisible();
   await page.goto('/guides/how-to-remove-text-watermark-from-image/'); await expect(page.getByText(/not OCR or automatic text detection/i)).toBeVisible(); await expect(page.getByRole('heading', { name: /Move, resize, and rotate/ })).toBeVisible();
