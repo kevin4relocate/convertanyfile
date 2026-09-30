@@ -1,4 +1,4 @@
-import { readdir, stat } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import { resolve, relative, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -81,3 +81,34 @@ if (files.length >= warningLimit) {
 } else {
   console.log(`OK: comfortably below the ${warningLimit.toLocaleString()} early-warning threshold.`);
 }
+
+
+const headersPath = resolve(outputDir, '_headers');
+let headersText;
+try {
+  headersText = await readFile(headersPath, 'utf8');
+} catch (error) {
+  if (error?.code === 'ENOENT') throw new Error('Cloudflare security headers file is missing from build output.');
+  throw error;
+}
+const cspLine = headersText.split(/\r?\n/).find((line) => line.trimStart().startsWith('Content-Security-Policy:'));
+if (!cspLine) throw new Error('Cloudflare security headers must include Content-Security-Policy.');
+if (cspLine.length > 2000) throw new Error('Cloudflare CSP header exceeds the 2,000-character _headers line limit.');
+const csp = cspLine.slice(cspLine.indexOf(':') + 1).trim();
+const requiredCspTokens = [
+  "default-src 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'self'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+  "worker-src 'self' blob:",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "connect-src 'self'",
+  'https://www.googletagmanager.com',
+  'https://*.google-analytics.com',
+  'upgrade-insecure-requests',
+];
+for (const token of requiredCspTokens) {
+  if (!csp.includes(token)) throw new Error(`Cloudflare CSP is missing required token: ${token}`);
+}
+console.log('Cloudflare CSP guard: required directives are present.');
