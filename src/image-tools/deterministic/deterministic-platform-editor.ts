@@ -190,9 +190,16 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
   }
 
   settingInputs.forEach(control=>{
-    const eventName=control instanceof HTMLInputElement&&control.type==='range'?'input':'change';
-    control.addEventListener(eventName,()=>{if(control.dataset.setting==='format'&&(control.value==='webp'||control.value==='jpg')){const embeddedQuality=maybe<HTMLInputElement>(root,'[data-setting="quality"]');if(embeddedQuality)embeddedQuality.value=String(defaultQualityForImageOutput(control.value));}maintainResizeAspect(control);changeSettings(control);});
-    if(control instanceof HTMLInputElement&&control.type==='number')control.addEventListener('input',()=>{maintainResizeAspect(control);changeSettings(control);});
+    const liveInput=control instanceof HTMLInputElement&&(control.type==='range'||control.type==='number');
+    const eventName=liveInput?'input':'change';
+    control.addEventListener(eventName,()=>{
+      if(control.dataset.setting==='format'&&(control.value==='webp'||control.value==='jpg')){
+        const embeddedQuality=maybe<HTMLInputElement>(root,'[data-setting="quality"]');
+        if(embeddedQuality)embeddedQuality.value=String(defaultQualityForImageOutput(control.value));
+      }
+      maintainResizeAspect(control);
+      changeSettings(control);
+    });
   });
   outputQuality.addEventListener('input',()=>{outputQualityValue.textContent=outputQuality.value;invalidate();});outputFormat.addEventListener('change',()=>{if(outputFormat.value==='webp'||outputFormat.value==='jpg'){outputQuality.value=String(defaultQualityForImageOutput(outputFormat.value));outputQualityValue.textContent=outputQuality.value;}invalidate();});
   scopeButtons.forEach(button=>button.addEventListener('click',()=>{const mode=button.dataset.editScope;if(mode==='shared'||mode==='individual')setMode(mode);}));
