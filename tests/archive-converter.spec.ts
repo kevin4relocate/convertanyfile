@@ -60,7 +60,12 @@ async function convertedZip(page: Page, source: { name: string; mimeType: string
   await app.locator('[data-role="file-input"]').setInputFiles(source);
   await expect(app.locator('[data-role="output-format"]')).toHaveValue('zip');
   await app.locator('[data-role="convert-all"]').click();
-  await expect(app.locator('[data-role="result-summary"]')).toContainText('1/1 converted');
+  try {
+    await expect(app.locator('[data-role="result-summary"]')).toContainText('1/1 converted');
+  } catch (error) {
+    const details = await app.locator('[data-role="file-list"]').innerText();
+    throw new Error(`Archive conversion failed: ${details}`, { cause: error });
+  }
   const result = await downloadBytes(page, app);
   return JSZip.loadAsync(result.bytes, { checkCRC32: true });
 }
