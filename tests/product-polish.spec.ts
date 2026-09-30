@@ -24,6 +24,8 @@ test('mobile header exposes real navigation without horizontal overflow', async 
   const menu = page.locator('.mobile-nav');
   await expect(menu).toBeVisible();
   await menu.locator(':scope > summary').click();
+  const converters = menu.locator('.mobile-menu-section').filter({ hasText: 'Converters' }).first();
+  await converters.locator(':scope > summary').click();
   await expect(menu.getByRole('link', { name: 'Image Converter', exact: true })).toBeVisible();
   await expect(menu.getByRole('link', { name: 'Data Converter', exact: true })).toBeVisible();
   await expect(menu.getByRole('link', { name: 'FAQ', exact: true })).toBeVisible();
