@@ -134,7 +134,7 @@ test('Rectangle repair produces a full-resolution downloadable result', async ({
   await expect(root.locator('[data-role="result-label"]')).toContainText('pixels repaired', { timeout: 20_000 });
   await expect(root.locator('[data-role="result-empty"]')).toBeHidden();
   const downloadPromise = page.waitForEvent('download'); await root.locator('[data-role="download"]').click(); const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe('single-1-watermark-removed.png'); const path = await download.path(); expect(path).not.toBeNull();
+  expect(download.suggestedFilename()).toBe('single-1.png'); const path = await download.path(); expect(path).not.toBeNull();
   expect((await readFile(path!)).byteLength).toBeGreaterThan(200); expect(errors).toEqual([]);
 });
 
@@ -181,8 +181,8 @@ test('mixed individual batch can repair two prepared images and download ZIP', a
   await page.goto('/remove-watermark/'); const root = await readyImageTool(page); await uploadSyntheticBatch(page, [[360, 240], [240, 360]], 'batch');
   await expect(root).toHaveAttribute('data-edit-mode', 'individual'); await drawMask(page); await root.locator('.gemini-file-card').nth(1).click(); await drawMask(page, 0.70, 0.79, 0.97, 0.94);
   await expect(root.locator('[data-role="prepared-summary"]')).toContainText('2/2 images have a mask'); await root.locator('[data-role="remove"]').click(); await expect(root.locator('[data-role="batch-result-summary"]')).toContainText('2 repaired', { timeout: 30_000 });
-  const downloadPromise = page.waitForEvent('download'); await root.locator('[data-role="download"]').click(); const download = await downloadPromise; expect(download.suggestedFilename()).toBe('watermark-removed-mixed-2-images.zip');
-  const path = await download.path(); expect(path).not.toBeNull(); const zip = await JSZip.loadAsync(await readFile(path!)); expect(Object.keys(zip.files).sort()).toEqual(['batch-1-watermark-removed.png','batch-2-watermark-removed.png']);
+  const downloadPromise = page.waitForEvent('download'); await root.locator('[data-role="download"]').click(); const download = await downloadPromise; expect(download.suggestedFilename()).toBe('images-mixed-2.zip');
+  const path = await download.path(); expect(path).not.toBeNull(); const zip = await JSZip.loadAsync(await readFile(path!)); expect(Object.keys(zip.files).sort()).toEqual(['batch-1.png','batch-2.png']);
 });
 
 test('Remove Watermark page, Image Tools hub, and guides expose release content', async ({ page }, testInfo) => {
