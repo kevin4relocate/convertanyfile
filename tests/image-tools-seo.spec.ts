@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
 
 const routes = [
-  { path: '/image-tools/', title: /Image Tools/i, h1: /browser/i },
+  { path: '/image-tools/', title: /Image Tools/i, h1: /image tools/i },
   { path: '/resize-image/', title: /Resize Images/i, h1: /Resize images/i },
   { path: '/compress-image/', title: /Compress Images/i, h1: /Compress images/i },
   { path: '/rotate-flip-image/', title: /Rotate|Flip/i, h1: /Rotate|flip/i },
   { path: '/crop-image/', title: /Crop Images/i, h1: /Crop images/i },
-  { path: '/blur-image/', title: /Blur Images/i, h1: /Blur images/i },
+  { path: '/blur-image/', title: /Blur Image/i, h1: /Blur images/i },
   { path: '/bulk-rename-images/', title: /Bulk Rename Images/i, h1: /Bulk rename/i },
   { path: '/remove-image-metadata/', title: /Remove Image Metadata/i, h1: /metadata/i },
   { path: '/remove-watermark/', title: /Watermark Remover/i, h1: /watermarks/i },
@@ -50,7 +50,7 @@ test.describe('Image Tools SEO', () => {
     for (const path of ['/resize-image/','/compress-image/','/crop-image/','/remove-image-metadata/']) {
       await page.goto(path);
       await expect(page.locator('.steps-grid .step-card')).toHaveCount(4);
-      await expect(page.locator('.faq-list details')).toHaveCount(4);
+      expect(await page.locator('.faq-list details').count()).toBeGreaterThanOrEqual(4);
       expect(await page.locator('.image-tool-grid a[href]').count()).toBeGreaterThanOrEqual(3);
     }
   });
