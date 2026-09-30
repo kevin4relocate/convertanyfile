@@ -70,7 +70,7 @@ test('Archive preview loads the shared converter with archive engine', async ({ 
   const app = page.locator('[data-converter-app]');
   await expect(app).toHaveAttribute('data-engine', 'archive');
   await expect(app).toHaveAttribute('data-initialized', 'true');
-  await expect(page.getByRole('heading', { level: 1, name: /Convert archive files/ })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /Free online archive converter/ })).toBeVisible();
   await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.7z/);
   await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.rar/);
   await expect(app.locator('[data-role="file-input"]')).toHaveAttribute('accept', /\.gz/);
