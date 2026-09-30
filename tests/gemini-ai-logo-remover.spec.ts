@@ -112,7 +112,7 @@ test('Gemini SEO, guide, and navigation target visible watermark intent', async 
   test.skip(testInfo.project.name !== 'chromium-desktop', 'Gemini release content'); await page.goto('/gemini-ai-logo-remover/');
   await expect(page).toHaveTitle(/Gemini Watermark Remover/); await expect(page.getByRole('heading',{level:1})).toHaveText('Remove the visible Gemini watermark from images'); await expect(page.locator('.content-wide-section').getByText(/round handle to rotate/i).first()).toBeVisible(); await expect(page.locator('.gemini-non-affiliation')).toHaveText('ConvertAnyFile is not affiliated with or endorsed by Google or Gemini.'); await expect(page.getByRole('heading',{name:'Gemini Watermark Remover FAQ'})).toBeVisible(); await expect(page.locator('meta[name="description"]')).toHaveAttribute('content',/Remove the visible Gemini watermark/i);
   await page.goto('/guides/how-to-remove-gemini-watermark-from-image/'); await expect(page.getByRole('heading',{level:1})).toContainText('visible Gemini watermark'); await expect(page.getByRole('heading',{name:/Remove the visible watermark/})).toBeVisible();
-  await page.goto('/image-tools/'); await expect(page.getByRole('link',{name:'Gemini Watermark Remover'}).first()).toBeVisible(); await expect(page.getByText('Circle, 4-Point Star',{exact:true})).toBeVisible();
+  await page.goto('/image-tools/'); await expect(page.getByRole('link',{name:'Gemini Watermark Remover'}).first()).toBeVisible(); await expect(page.getByText(/Focused local repair for a small visible sparkle mark/i).first()).toBeVisible();
 });
 
 test('Gemini editor stays usable on mobile without horizontal page overflow', async ({ page }, testInfo) => {
