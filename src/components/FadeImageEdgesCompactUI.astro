@@ -48,11 +48,27 @@
   };
 
   if (applyCompactLayout()) return;
+
+  let stopped = false;
+  const observer = new MutationObserver(() => {
+    if (!stopped && applyCompactLayout()) {
+      stopped = true;
+      observer.disconnect();
+    }
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+
   let attempts = 0;
   const retry = () => {
+    if (stopped) return;
     attempts += 1;
-    if (applyCompactLayout() || attempts >= 8) return;
-    requestAnimationFrame(retry);
+    if (applyCompactLayout()) {
+      stopped = true;
+      observer.disconnect();
+      return;
+    }
+    if (attempts < 120) requestAnimationFrame(retry);
+    else observer.disconnect();
   };
   requestAnimationFrame(retry);
 })();
