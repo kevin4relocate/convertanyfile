@@ -6,11 +6,16 @@ async function convertAndDownload(page: Page, route: string, file: { name: strin
   const app = page.locator('[data-converter-app]');
   await expect(app).toHaveAttribute('data-initialized', 'true');
   await app.locator('[data-role="file-input"]').setInputFiles(file);
-  await app.locator('[data-role="convert-all"]').click();
-  await expect(app.locator('[data-role="result-summary"]')).toContainText('1/1 converted');
-  const downloadPromise = page.waitForEvent('download');
-  await app.getByRole('button', { name: 'Download', exact: true }).click();
-  const download = await downloadPromise;
+  const convert = app.locator('[data-role="convert-all"]');
+  await expect(convert).toBeEnabled({ timeout: 30_000 });
+  await convert.click();
+  await expect(app.locator('[data-role="result-summary"]')).toContainText('1/1 converted', { timeout: 30_000 });
+  const button = app.getByRole('button', { name: 'Download', exact: true });
+  await expect(button).toBeEnabled();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    button.click(),
+  ]);
   const path = await download.path();
   expect(path).not.toBeNull();
   return { text: (await readFile(path!)).toString('utf8'), app };
