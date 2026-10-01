@@ -19,12 +19,18 @@ const metadataCleanupLoader: ImageToolLoader = async () => {
   return { mount: module.mountMetadataCleanup };
 };
 
+const addWatermarkLoader: ImageToolLoader = async () => {
+  const module = await import('../watermark/add-watermark-editor');
+  return { mount: module.mountAddWatermarkEditor };
+};
+
 const renameToolLoader: ImageToolLoader = async () => {
   const module = await import('../naming/bulk-rename-editor');
   return { mount: module.mountBulkRenameImages };
 };
 
 const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
+  'add-watermark': addWatermarkLoader,
   'remove-watermark': maskToolLoader,
   'gemini-ai-logo-remover': maskToolLoader,
   'resize-image': deterministicToolLoader,
