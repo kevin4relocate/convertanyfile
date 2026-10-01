@@ -36,6 +36,11 @@ test('production shell, analytics, robots, sitemap and 404 are healthy', async (
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${PROD_ORIGIN}/`);
   await expect(page.locator('script[src*="googletagmanager.com/gtag/js?id=G-LX78XZ9FH2"]')).toHaveCount(1);
   await expect.poll(() => page.evaluate(() => Array.isArray((window as Window & { dataLayer?: unknown[] }).dataLayer))).toBe(true);
+  const runtimeScript = await page.locator('script[src^="/_astro/"]').first().getAttribute('src');
+  expect(runtimeScript).toBeTruthy();
+  const runtimeResponse = await request.get(`${BASE_URL}${runtimeScript}`);
+  expect(runtimeResponse.status()).toBe(200);
+  expect(runtimeResponse.headers()['content-security-policy']).toBeUndefined();
 
   const robots = await request.get(`${BASE_URL}/robots.txt`);
   expect(robots.status()).toBe(200);
