@@ -25,13 +25,11 @@ async function enforceProductionCspLocally(page: Page): Promise<void> {
       return;
     }
     const response = await route.fetch();
-    await route.fulfill({
-      response,
-      headers: {
-        ...response.headers(),
-        'content-security-policy': localPolicy,
-      },
-    });
+    const headers = { ...response.headers() };
+    const runtimeAsset = url.pathname.startsWith('/_astro/') || url.pathname.startsWith('/vendor/libarchive-wasm/');
+    if (runtimeAsset) delete headers['content-security-policy'];
+    else headers['content-security-policy'] = localPolicy;
+    await route.fulfill({ response, headers });
   });
 
   await page.addInitScript(() => {
