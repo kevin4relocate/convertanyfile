@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { ADD_WATERMARK_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={ADD_WATERMARK_TOOL}
+  kicker="Text or logo watermark"
+  heading="Watermark one image or a whole batch in a few seconds."
+  copy="Type a text watermark or upload a logo, drag it directly into position, adjust size and opacity, then reuse the setup across the batch or customize individual images."
+  bullets={[
+    'Add text or a PNG, JPG or WebP logo as the watermark.',
+    'Drag the watermark directly on the active image preview.',
+    'Adjust text color, watermark size and opacity.',
+    'Apply one normalized position across a batch or edit images individually.',
+    'Download one watermarked image directly or multiple results as a ZIP.',
+  ]}
+/>
