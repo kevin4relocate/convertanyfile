@@ -99,6 +99,17 @@ export const FADE_IMAGE_EDGES_TOOL: ImageToolDefinition = {
   policyNote: 'Preview feature. The fade is a visual editing effect, not a privacy-redaction tool. Review the full-resolution export before placing subtitles or important text over the faded area.',
 };
 
+export const ADD_WATERMARK_TOOL: ImageToolDefinition = {
+  ...liveBase,
+  id: 'add-watermark', slug: 'add-watermark', displayName: 'Add Watermark', category: 'transform',
+  title: 'Add Watermark to Images Online — Text or Logo | ConvertAnyFile',
+  description: 'Add a text or logo watermark to JPG, PNG and WebP images locally. Drag the watermark into position, adjust size and opacity, then download one file or a ZIP.',
+  h1: 'Add a watermark to images.', eyebrow: 'Image Tools',
+  intro: 'Add text or upload a logo, drag it directly into position on the image, adjust size and opacity, then apply the setup to one image or a batch. Everything stays in your browser.',
+  downloadSuffix: 'watermarked',
+  policyNote: 'Watermarks are composited into new image pixels during export. Keep originals if you may need an unwatermarked copy later.',
+};
+
 export const REMOVE_IMAGE_METADATA_TOOL: ImageToolDefinition = {
   ...liveBase, id: 'remove-image-metadata', slug: 'remove-image-metadata', displayName: 'Remove Image Metadata', category: 'metadata',
   title: 'Remove Image Metadata Online — Strip EXIF & GPS Locally | ConvertAnyFile',
@@ -120,6 +131,7 @@ export const BULK_RENAME_IMAGES_TOOL: ImageToolDefinition = {
 };
 
 export const IMAGE_TOOL_ROADMAP = [
+  { id: 'add-watermark', label: 'Add Watermark', status: 'live', description: 'Add draggable text or logo watermarks to one image or a batch, then download files or ZIP.', href: '/add-watermark/' },
   { id: 'remove-watermark', label: 'Remove Watermark', status: 'live', description: 'Batch visible-watermark repair with six manual mask modes, including a movable text mask.', href: '/remove-watermark/' },
   { id: 'gemini-ai-logo-remover', label: 'Gemini AI Logo Remover', status: 'live', description: 'Focused local repair for a small visible sparkle mark.', href: '/gemini-ai-logo-remover/' },
   { id: 'resize-image', label: 'Resize Image', status: 'live', description: 'Resize by pixels, percentage, or fit-to-box with batch and individual settings.', href: '/resize-image/' },
