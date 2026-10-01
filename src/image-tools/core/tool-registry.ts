@@ -24,6 +24,11 @@ const renameToolLoader: ImageToolLoader = async () => {
   return { mount: module.mountBulkRenameImages };
 };
 
+const watermarkToolLoader: ImageToolLoader = async () => {
+  const module = await import('../watermark/add-watermark-editor');
+  return { mount: module.mountAddWatermark };
+};
+
 const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
   'remove-watermark': maskToolLoader,
   'gemini-ai-logo-remover': maskToolLoader,
@@ -35,6 +40,7 @@ const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
   'fade-image-edges': deterministicToolLoader,
   'remove-image-metadata': metadataCleanupLoader,
   'bulk-rename-images': renameToolLoader,
+  'add-watermark': watermarkToolLoader,
 };
 
 export async function mountRegisteredImageTool(toolId: string, root: HTMLElement): Promise<boolean> {

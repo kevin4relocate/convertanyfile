@@ -1,0 +1,40 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ImageToolPageFrame from '../components/ImageToolPageFrame.astro';
+import ImageToolGrid from '../components/ImageToolGrid.astro';
+import FaqList from '../components/FaqList.astro';
+import { ADD_WATERMARK_TOOL } from '../config/image-tools';
+import { imageToolSchemas } from '../seo/image-tool-schema';
+const tool = ADD_WATERMARK_TOOL;
+const faq = [
+  { question: 'Can I add a text watermark and drag it anywhere?', answer: 'Yes. Type the watermark text, then drag directly on the image preview to place it. The tool stores the position proportionally instead of as fixed pixels.' },
+  { question: 'Can I use my own logo as the watermark?', answer: 'Yes. Switch to Logo, choose a PNG, JPG or WebP logo, adjust its width and opacity, then drag it into position on the preview.' },
+  { question: 'Can I watermark several images at once?', answer: 'Yes. Add a batch and one shared watermark setup is applied to every image. Multiple completed images can be downloaded together as a ZIP.' },
+  { question: 'Are my images uploaded?', answer: 'The watermark workflow runs in your browser. Source images and the selected logo are processed locally on your device.' },
+];
+const schemas = imageToolSchemas(tool, ['Text watermark','Logo watermark','Drag-to-position preview','Opacity and size controls','Batch processing','ZIP download'], 'MultimediaApplication');
+---
+<SiteLayout title={tool.title} description={tool.description} schema={schemas}>
+  <ImageToolPageFrame tool={tool} />
+
+  <section class="content-wide-section white gemini-content-section"><div class="site-container">
+    <div class="content-intro-grid">
+      <div class="section-heading wide"><span class="section-kicker">Fast watermark workflow</span><h2>Place a watermark visually instead of guessing coordinates.</h2><p>Type text or choose a logo, drag the watermark directly on the active preview, and tune its size and opacity. The editor saves the position as a percentage of the image so one placement can be reused across a batch.</p></div>
+      <div class="content-summary-card"><strong>Browser-first</strong><p>Images are decoded, composited and re-encoded locally. One result downloads directly; multiple results can be packaged into a ZIP.</p></div>
+    </div>
+    <ul class="content-checklist"><li>Text watermark with color, bold style, size and opacity controls.</li><li>Logo watermark from PNG, JPG or WebP.</li><li>Drag anywhere on the preview to reposition instantly.</li><li>Shared relative position works across different pixel dimensions.</li><li>Batch watermark up to the image-tool file limit and download a ZIP.</li></ul>
+  </div></section>
+
+  <section class="content-wide-section gemini-content-section"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">How to use it</span><h2>Add a watermark in four steps.</h2></div>
+    <div class="steps-grid">
+      <article class="step-card"><span class="step-number">01</span><h3>Add images</h3><p>Choose one JPG, PNG or WebP image, or add a batch.</p></article>
+      <article class="step-card"><span class="step-number">02</span><h3>Choose text or logo</h3><p>Type a watermark or upload your own logo image.</p></article>
+      <article class="step-card"><span class="step-number">03</span><h3>Drag and adjust</h3><p>Move the watermark on the preview, then tune size, color and opacity.</p></article>
+      <article class="step-card"><span class="step-number">04</span><h3>Apply and download</h3><p>Process the batch locally and download one image or a ZIP.</p></article>
+    </div>
+  </div></section>
+
+  <section class="content-wide-section white gemini-content-section"><div class="site-container"><FaqList items={faq} title="Add Watermark FAQ" intro="Common questions about text watermarks, logo watermarks, batch placement and local processing." /></div></section>
+  <section class="content-wide-section gemini-content-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Related Image Tools</span><h2>Continue editing the same image batch.</h2></div><ImageToolGrid compact ids={['resize-image','compress-image','bulk-rename-images','remove-image-metadata']} excludeId={tool.id} /></div></section>
+</SiteLayout>

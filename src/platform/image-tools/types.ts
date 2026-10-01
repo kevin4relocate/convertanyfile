@@ -1,5 +1,5 @@
 export type ImageToolStatus = 'live' | 'preview' | 'planned';
-export type ImageToolCategory = 'transform' | 'encode' | 'geometry' | 'mask' | 'metadata' | 'naming';
+export type ImageToolCategory = 'transform' | 'encode' | 'geometry' | 'mask' | 'metadata' | 'naming' | 'watermark';
 export type ImageEditScope = 'shared' | 'individual';
 export type ImageMaskMode = 'rect' | 'circle' | 'square' | 'diamond' | 'star4' | 'text';
 

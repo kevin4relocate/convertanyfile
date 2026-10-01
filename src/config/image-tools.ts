@@ -119,7 +119,18 @@ export const BULK_RENAME_IMAGES_TOOL: ImageToolDefinition = {
   policyNote: 'Renaming changes filenames only. The original image extension, bytes, quality, metadata and visible pixels are left unchanged.',
 };
 
+export const ADD_WATERMARK_TOOL: ImageToolDefinition = {
+  ...liveBase, id: 'add-watermark', slug: 'add-watermark', displayName: 'Add Watermark', category: 'watermark',
+  title: 'Add Watermark to Image Online — Text or Logo, Batch & ZIP | ConvertAnyFile',
+  description: 'Add a text or logo watermark to JPG, PNG and WebP images locally. Drag the watermark into position, adjust size and opacity, process a batch, then download files or ZIP.',
+  h1: 'Add a watermark to images.', eyebrow: 'Image Tools',
+  intro: 'Add one image or a batch, type a text watermark or upload a logo, then drag it directly on the preview. Adjust size, opacity and color, apply the same placement across the batch, and download the finished image or ZIP.',
+  downloadSuffix: 'watermarked',
+  policyNote: 'Watermark placement is stored as relative coordinates so the same setup can be reused across different image sizes. Review mixed portrait and landscape batches before downloading because the same relative position can cover different content.',
+};
+
 export const IMAGE_TOOL_ROADMAP = [
+  { id: 'add-watermark', label: 'Add Watermark', status: 'live', description: 'Add draggable text or logo watermarks to one image or a batch, then download files or ZIP.', href: '/add-watermark/' },
   { id: 'remove-watermark', label: 'Remove Watermark', status: 'live', description: 'Batch visible-watermark repair with six manual mask modes, including a movable text mask.', href: '/remove-watermark/' },
   { id: 'gemini-ai-logo-remover', label: 'Gemini AI Logo Remover', status: 'live', description: 'Focused local repair for a small visible sparkle mark.', href: '/gemini-ai-logo-remover/' },
   { id: 'resize-image', label: 'Resize Image', status: 'live', description: 'Resize by pixels, percentage, or fit-to-box with batch and individual settings.', href: '/resize-image/' },
