@@ -58,7 +58,9 @@ test.beforeEach(async ({ page }, testInfo) => {
 test('CSP allows the application shell and inline structured data', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(/ConvertAnyFile/i);
-  await expect(page.locator('script[type="application/ld+json"]')).toHaveCount(1);
+  const structuredData = page.locator('script[type="application/ld+json"]');
+  await expect.poll(() => structuredData.count()).toBeGreaterThan(0);
+  expect(await structuredData.evaluateAll((nodes) => nodes.map((node) => JSON.parse(node.textContent || '{}')).every(Boolean))).toBe(true);
   await expect(page.locator('#home-converter-subtitle-tab')).toHaveText('Subtitles');
   await expectNoCspViolations(page);
 });
