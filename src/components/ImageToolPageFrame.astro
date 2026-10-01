@@ -35,4 +35,4 @@ const includeBreadcrumbSchema = tool.id !== 'gemini-ai-logo-remover';
     <p>{tool.intro}</p>
   </div>
 </section>
-<section class="image-tool-page-tool"><div class="site-container">{maskTool ? <BatchMaskEditorShell tool={maskTool} /> : usesRenameEditor ? <BulkRenameImageShell tool={tool} /> : usesRenameEditor ? <BulkRenameImageShell tool={tool} /> : usesMetadataCleanup ? <MetadataCleanupShell tool={tool} /> : usesEdgeFadeV2 ? <FadeImageEdgesV2Shell tool={tool} /> : usesWatermarkEditor ? <AddWatermarkShell tool={tool} /> : <DeterministicImageToolShell tool={tool} />}</div></section>
+<section class="image-tool-page-tool"><div class="site-container">{maskTool ? <BatchMaskEditorShell tool={maskTool} /> : usesRenameEditor ? <BulkRenameImageShell tool={tool} /> : usesMetadataCleanup ? <MetadataCleanupShell tool={tool} /> : usesEdgeFadeV2 ? <FadeImageEdgesV2Shell tool={tool} /> : usesWatermarkEditor ? <AddWatermarkShell tool={tool} /> : <DeterministicImageToolShell tool={tool} />}</div></section>
