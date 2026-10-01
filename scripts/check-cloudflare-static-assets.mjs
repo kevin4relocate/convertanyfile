@@ -112,3 +112,12 @@ for (const token of requiredCspTokens) {
   if (!csp.includes(token)) throw new Error(`Cloudflare CSP is missing required token: ${token}`);
 }
 console.log('Cloudflare CSP guard: required directives are present.');
+const cspDetachRules = [
+  '/_astro/*\n  ! Content-Security-Policy',
+  '/vendor/libarchive-wasm/*\n  ! Content-Security-Policy',
+];
+for (const rule of cspDetachRules) {
+  if (!headersText.includes(rule)) throw new Error(`Cloudflare CSP detach rule is missing: ${rule.split('\\n')[0]}`);
+}
+console.log('Cloudflare CSP guard: runtime asset detach rules are present.');
+
