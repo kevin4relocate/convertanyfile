@@ -26,6 +26,33 @@ export interface ImageToolSeoContent {
 }
 
 export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
+  'add-watermark': {
+    howToHeading: 'How to add a text or logo watermark to images.',
+    howToIntro: 'Choose a text or logo watermark, position it directly on the image, then process the batch locally in your browser.',
+    steps: [
+      { title: 'Add one image or a batch', text: 'Choose JPG, PNG or WebP images. The images stay on your device while the editor prepares the local preview.' },
+      { title: 'Choose Text or Logo', text: 'Type a text watermark and choose its color, or upload a PNG, JPG or WebP logo image.' },
+      { title: 'Drag, resize and adjust opacity', text: 'Drag the visible watermark directly on the active preview. Use the size and opacity controls to make it subtle or prominent.' },
+      { title: 'Process and download', text: 'Apply the same normalized placement to the batch or customize individual images, then download one result or a ZIP.' },
+    ],
+    useCasesHeading: 'Add branding, ownership labels and reusable batch marks.',
+    useCasesIntro: 'A relative watermark position makes the same setup practical across images with different pixel dimensions.',
+    useCases: [
+      'Add a creator or studio name to images before publishing.',
+      'Overlay a transparent brand logo in a repeated corner position.',
+      'Apply one watermark to a product-image or social-media batch.',
+      'Customize placement on individual images when the subject overlaps the shared position.',
+    ],
+    faq: [
+      { question: 'Can I add a logo watermark?', answer: 'Yes. Upload a PNG, JPG or WebP logo, adjust its size and opacity, then drag it directly into position on the image.' },
+      { question: 'Can I add text watermarks?', answer: 'Yes. Enter text, choose a color, adjust the size and opacity, and drag the text watermark on the preview.' },
+      { question: 'Can I watermark multiple images at once?', answer: 'Yes. Apply one shared watermark and normalized position to the batch, or switch to individual editing for exceptions.' },
+      { question: 'Are my images uploaded?', answer: 'No image-processing API upload is required. Supported images are decoded, watermarked and encoded locally in your browser.' },
+      { question: 'Can I download all results together?', answer: 'Yes. A single result downloads directly; multiple completed results are packaged into a ZIP.' },
+    ],
+    relatedIds: ['remove-watermark', 'resize-image', 'compress-image', 'bulk-rename-images'],
+  },
+
   'resize-image': {
     howToHeading: 'How to resize images online in a browser.',
     howToIntro: 'Choose a sizing method that matches the job, check the active preview, then process the batch locally without uploading source images to a resize API.',
