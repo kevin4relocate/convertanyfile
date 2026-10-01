@@ -1,0 +1,96 @@
+---
+import type { ImageToolDefinition } from '../platform/image-tools/types';
+import ImageBatchShell from '../image-tools/components/ImageBatchShell.astro';
+import ImageBatchDropzone from '../image-tools/components/ImageBatchDropzone.astro';
+import ImageEditScopeSwitch from '../image-tools/components/ImageEditScopeSwitch.astro';
+import ImageOutputPanel from '../image-tools/components/ImageOutputPanel.astro';
+import ImageBatchProgress from '../image-tools/components/ImageBatchProgress.astro';
+import ImageBatchActionBar from '../image-tools/components/ImageBatchActionBar.astro';
+import ImageToolHeaderActions from '../image-tools/components/ImageToolHeaderActions.astro';
+
+interface Props { tool: ImageToolDefinition; }
+const { tool } = Astro.props;
+const accept = tool.acceptedExtensions.map((extension) => `.${extension}`).join(',');
+const maxFiles = tool.maxFiles ?? 50;
+const maxFileMb = Math.max(1, Math.round(tool.maxFileBytes / (1024 * 1024)));
+---
+
+<div class="image-editor-card add-watermark-tool" data-image-tool-app data-tool-id={tool.id} data-download-suffix={tool.downloadSuffix} data-max-file-bytes={tool.maxFileBytes} data-max-pixels={tool.maxPixels} data-max-dimension={tool.maxDimension} data-max-files={maxFiles} data-has-items="false">
+  <div class="image-editor-topbar"><div><span>Local image tool</span><strong>{tool.displayName}</strong></div><div class="image-editor-local-state"><span aria-hidden="true"></span>Browser-only</div></div>
+  <div class="image-editor-notice" data-role="notice" role="status" aria-live="polite" hidden></div>
+
+  <ImageBatchShell variant="linear">
+    <div slot="header" class="watermark-header">
+      <div><span>Images</span><strong><span data-role="batch-count">0</span> images ready</strong><small>Drag the watermark directly on the active image.</small></div>
+      <ImageToolHeaderActions />
+    </div>
+
+    <div slot="upload"><ImageBatchDropzone variant="standard" accept={accept} maxFiles={maxFiles} maxFileMb={maxFileMb} /></div>
+
+    <ImageEditScopeSwitch
+      slot="scope"
+      variant="standard"
+      mode="shared"
+      label="Watermark behavior"
+      title="Use one watermark setup or adjust exceptions"
+      sharedLabel="Apply to all"
+      sharedHint="Same watermark + position"
+      individualLabel="Edit individually"
+      individualHint="Per-image position/settings"
+    />
+
+    <div slot="queue" class="watermark-filmstrip" data-role="batch-list" aria-label="Batch images"></div>
+
+    <div slot="workspace" class="watermark-workspace" data-role="editor">
+      <section class="watermark-settings" aria-label="Watermark settings">
+        <div class="watermark-settings__heading"><div><span>Watermark</span><strong>Choose text or logo</strong></div><small data-role="active-file-name">No image selected</small></div>
+
+        <div class="watermark-mode-switch" role="radiogroup" aria-label="Watermark type">
+          <button type="button" data-watermark-mode="text" class="is-active" role="radio" aria-checked="true"><strong>Text</strong><small>Type a name or label</small></button>
+          <button type="button" data-watermark-mode="logo" role="radio" aria-checked="false"><strong>Logo</strong><small>PNG, JPG or WebP</small></button>
+        </div>
+
+        <div class="watermark-control-grid" data-watermark-group="text">
+          <label class="watermark-control watermark-control--wide"><span>Text</span><input data-setting="watermarkText" type="text" maxlength="120" value="Your watermark" placeholder="Your watermark" /></label>
+          <label class="watermark-control"><span>Color</span><input data-setting="watermarkColor" type="color" value="#ffffff" /></label>
+          <label class="watermark-control"><span>Text size</span><div class="watermark-range"><input data-setting="watermarkSize" type="range" min="2" max="20" step="0.5" value="6" /><output data-output-for="watermarkSize">6%</output></div></label>
+        </div>
+
+        <div class="watermark-logo-panel" data-watermark-group="logo" hidden>
+          <label class="watermark-logo-picker"><span>Logo image</span><strong data-role="logo-name">No logo selected</strong><input data-role="logo-input" type="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" hidden /><span class="watermark-logo-picker__button">Choose logo</span></label>
+          <button type="button" class="watermark-remove-logo" data-role="remove-logo" hidden>Remove logo</button>
+          <label class="watermark-control"><span>Logo size</span><div class="watermark-range"><input data-setting="watermarkLogoSize" type="range" min="5" max="60" step="1" value="22" /><output data-output-for="watermarkLogoSize">22%</output></div></label>
+        </div>
+
+        <label class="watermark-control watermark-control--opacity"><span>Opacity</span><div class="watermark-range"><input data-setting="watermarkOpacity" type="range" min="10" max="100" step="1" value="65" /><output data-output-for="watermarkOpacity">65%</output></div></label>
+        <div class="watermark-tip"><strong>Position</strong><span>Drag the visible watermark on the preview. Placement is stored as a relative position, so shared mode also works across different image sizes.</span></div>
+      </section>
+
+      <section class="watermark-preview-card" aria-label="Watermark preview">
+        <header><div><span>Preview</span><strong>Drag watermark to position</strong></div><small data-role="preview-meta"></small></header>
+        <div class="watermark-preview-stage" data-role="preview-stage">
+          <canvas data-role="watermark-canvas" hidden></canvas>
+          <div class="watermark-preview-empty" data-role="preview-empty">Add an image to start</div>
+        </div>
+      </section>
+    </div>
+
+    <div slot="output"><ImageOutputPanel format="source" quality={90} showQuality={true} variant="generic" /></div>
+    <ImageBatchProgress slot="progress" completed={0} total={0} label="Adding watermark…" />
+    <ImageBatchActionBar slot="actions" processLabel="Add watermark" downloadLabel="Download image" preparedSummary="Preview the watermark, then process the batch." />
+  </ImageBatchShell>
+</div>
+
+<style>
+.add-watermark-tool{display:grid;gap:12px}
+.watermark-header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:2px 2px 0}.watermark-header>div:first-child{display:grid;gap:2px}.watermark-header span{color:#8e95a5;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.watermark-header strong{font-size:13px}.watermark-header small{color:#858d9d;font-size:10px}
+.watermark-filmstrip{display:flex;gap:8px;overflow:auto;padding:2px 1px 5px;scrollbar-width:thin}.watermark-filmstrip:empty{display:none}.watermark-file-card{position:relative;flex:0 0 150px;display:grid;grid-template-columns:42px minmax(0,1fr);gap:8px;align-items:center;padding:7px 27px 7px 7px;border:1px solid #2b3240;border-radius:10px;background:#0e141c;color:#d9dde5;cursor:pointer;text-align:left;font:inherit}.watermark-file-card.is-active{border-color:#6f68df;background:#19192b}.watermark-file-card img{width:42px;height:42px;object-fit:cover;border-radius:7px;background:#090d12}.watermark-file-card strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}.watermark-file-card small{display:block;margin-top:2px;color:#818999;font-size:9px}.watermark-file-card__remove{position:absolute;right:5px;top:5px;width:20px;height:20px;border:0;border-radius:6px;background:transparent;color:#788190;cursor:pointer}.watermark-file-card__remove:hover{background:#242b36;color:#fff}
+.watermark-workspace{display:grid;grid-template-columns:minmax(270px,340px) minmax(0,1fr);gap:10px;align-items:stretch}.watermark-settings,.watermark-preview-card{border:1px solid #2b3240;border-radius:13px;background:#10151e}.watermark-settings{display:grid;align-content:start;gap:12px;padding:12px}.watermark-settings__heading,.watermark-preview-card>header{display:flex;justify-content:space-between;gap:12px;align-items:start}.watermark-settings__heading>div,.watermark-preview-card>header>div{display:grid;gap:2px}.watermark-settings__heading span,.watermark-preview-card>header span,.watermark-control>span,.watermark-logo-picker>span{color:#8e95a5;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.watermark-settings__heading strong,.watermark-preview-card>header strong{font-size:12px}.watermark-settings__heading small,.watermark-preview-card>header small{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#858d9d;font-size:9px;text-align:right}
+.watermark-mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:4px;border:1px solid #303746;border-radius:11px;background:#0d1219}.watermark-mode-switch button{display:grid;gap:1px;min-height:46px;padding:7px 10px;border:1px solid transparent;border-radius:8px;background:transparent;color:#9ca3b2;cursor:pointer;text-align:left;font:inherit}.watermark-mode-switch button strong{font-size:11px}.watermark-mode-switch button small{color:#777f8f;font-size:9px}.watermark-mode-switch button.is-active{border-color:#5751a8;background:#24233e;color:#f0efff}.watermark-mode-switch button.is-active small{color:#aaa5dd}
+.watermark-control-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.watermark-control{display:grid;gap:6px;min-width:0}.watermark-control--wide{grid-column:1/-1}.watermark-control input[type="text"]{width:100%;min-height:38px;padding:0 10px;border:1px solid #363f50;border-radius:9px;background:#0c1118;color:#eef1f6;font:inherit;font-size:11px}.watermark-control input[type="color"]{width:100%;height:38px;padding:3px;border:1px solid #363f50;border-radius:9px;background:#0c1118;cursor:pointer}.watermark-range{display:flex;align-items:center;gap:9px;min-height:38px}.watermark-range input{min-width:0;flex:1;accent-color:#716aff}.watermark-range output{min-width:38px;color:#d8dbe5;font-size:10px;font-weight:720;text-align:right}.watermark-control--opacity{padding-top:3px;border-top:1px solid #252c37}
+.watermark-logo-panel{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:end}.watermark-logo-picker{position:relative;display:grid;gap:5px}.watermark-logo-picker strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:650}.watermark-logo-picker__button{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 10px;border:1px solid #3a4353;border-radius:8px;background:#151b24;color:#d5dae4;font-size:10px;font-weight:700;cursor:pointer}.watermark-remove-logo{height:36px;padding:0 9px;border:1px solid #3a4353;border-radius:8px;background:#151b24;color:#c2c8d2;cursor:pointer;font:inherit;font-size:9px}.watermark-logo-panel .watermark-control{grid-column:1/-1}
+.watermark-tip{display:grid;gap:3px;padding:9px 10px;border:1px solid #292f3b;border-radius:9px;background:#0c1118}.watermark-tip strong{font-size:10px}.watermark-tip span{color:#878f9f;font-size:9px;line-height:1.45}
+.watermark-preview-card{min-width:0;display:grid;grid-template-rows:auto 1fr;gap:10px;padding:12px}.watermark-preview-stage{min-height:420px;display:grid;place-items:center;overflow:hidden;border:1px solid #262e3a;border-radius:10px;background:repeating-conic-gradient(#0d1218 0 25%,#121923 0 50%) 50%/18px 18px}.watermark-preview-stage canvas{display:block;max-width:100%;max-height:620px;touch-action:none;cursor:grab}.watermark-preview-stage canvas.is-dragging{cursor:grabbing}.watermark-preview-empty{color:#798191;font-size:11px}
+@media(max-width:900px){.watermark-workspace{grid-template-columns:1fr}.watermark-preview-stage{min-height:320px}}
+@media(max-width:560px){.watermark-control-grid{grid-template-columns:1fr}.watermark-control--wide{grid-column:auto}.watermark-preview-stage{min-height:260px}.watermark-file-card{flex-basis:132px}}
+</style>

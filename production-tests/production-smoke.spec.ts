@@ -59,7 +59,7 @@ test('production shell, analytics, robots, sitemap and 404 are healthy', async (
   expect(sitemap.status()).toBe(200);
   const sitemapXml = await sitemap.text();
   expect((sitemapXml.match(/<loc>/g) ?? []).length).toBeGreaterThanOrEqual(40);
-  for (const path of ['/', '/image-converter/', '/data-converter/', '/csv-to-json/', '/json-to-csv/', '/heic-to-jpg/', '/image-tools/', '/resize-image/', '/remove-image-metadata/', '/remove-watermark/']) {
+  for (const path of ['/', '/image-converter/', '/data-converter/', '/csv-to-json/', '/json-to-csv/', '/heic-to-jpg/', '/image-tools/', '/add-watermark/', '/resize-image/', '/remove-image-metadata/', '/remove-watermark/']) {
     expect(sitemapXml).toContain(`<loc>${PROD_ORIGIN}${path}</loc>`);
   }
   expect(sitemapXml).not.toContain(`<loc>${PROD_ORIGIN}/remove-object/</loc>`);
@@ -71,7 +71,7 @@ test('production shell, analytics, robots, sitemap and 404 are healthy', async (
 });
 
 test('public Image Tools routes are healthy and retired experimental routes stay unavailable', async ({ page, request }) => {
-  for (const path of ['/image-tools/','/resize-image/','/compress-image/','/rotate-flip-image/','/crop-image/','/blur-image/','/bulk-rename-images/','/remove-image-metadata/','/remove-watermark/','/gemini-ai-logo-remover/']) {
+  for (const path of ['/image-tools/','/add-watermark/','/resize-image/','/compress-image/','/rotate-flip-image/','/crop-image/','/blur-image/','/bulk-rename-images/','/remove-image-metadata/','/remove-watermark/','/gemini-ai-logo-remover/']) {
     const response = await request.get(`${BASE_URL}${path}`);
     expect(response.status(), `${path} should return 200`).toBe(200);
   }
