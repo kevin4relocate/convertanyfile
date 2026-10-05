@@ -4,6 +4,7 @@ import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
 
 const currentPath = Astro.url.pathname;
 const imageToolLinks = [
+  { id: 'add-watermark', href: '/add-watermark/', label: 'Add Watermark', hint: 'Text · logo · batch', icon: 'A' },
   { id: 'remove-watermark', href: '/remove-watermark/', label: 'Remove Watermark', hint: 'Shapes · text mask', icon: 'W' },
   { id: 'gemini-ai-logo-remover', href: '/gemini-ai-logo-remover/', label: 'Gemini Watermark Remover', hint: 'Circle · 4-Point Star', icon: '✦' },
   { id: 'resize-image', href: '/resize-image/', label: 'Resize Image', hint: 'Pixels · percentage · fit', icon: 'R' },

@@ -7,7 +7,7 @@ import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
 import { POPULAR_IMAGE_GUIDES } from '../config/growth-links';
 import { SITE } from '../config/site';
 
-const everydayTools = ['resize-image','compress-image','rotate-flip-image','crop-image','blur-image'];
+const everydayTools = ['add-watermark','resize-image','compress-image','rotate-flip-image','crop-image','blur-image'];
 const previewTools = ['fade-image-edges'];
 const cleanupTools = ['remove-image-metadata','bulk-rename-images'];
 const repairTools = ['remove-watermark','gemini-ai-logo-remover'];
@@ -25,7 +25,7 @@ const schema = [
     '@type': 'CollectionPage',
     name: 'ConvertAnyFile Image Tools',
     url: `${SITE.origin}/image-tools/`,
-    description: 'Browser-based image tools for resizing, compression, rotation, cropping, blur, renaming, metadata cleanup and visible-watermark repair.',
+    description: 'Browser-based image tools for adding watermarks, resizing, compression, rotation, cropping, blur, renaming, metadata cleanup and visible-watermark repair.',
     isPartOf: { '@type': 'WebSite', name: SITE.name, url: SITE.origin },
   },
   {
@@ -41,8 +41,8 @@ const schema = [
   },
 ];
 ---
-<SiteLayout title="Online Image Tools — Resize, Compress, Crop & Remove Watermarks | ConvertAnyFile" description="Browser-based image tools for resizing, compressing, rotating, cropping, blurring, renaming, stripping metadata and removing visible watermarks locally." schema={schema}>
-<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Image Tools</span></div><span class="eyebrow">Online Image Tools</span><h1>Free online image tools for resize, compress, crop and more.</h1><p>Resize, compress, rotate, crop, blur, rename, strip metadata or repair visible watermarks with focused tools that run locally where the browser supports the required processing.</p></div></section>
+<SiteLayout title="Online Image Tools — Resize, Compress, Crop & Remove Watermarks | ConvertAnyFile" description="Browser-based image tools for adding watermarks, resizing, compressing, rotating, cropping, blurring, renaming, stripping metadata and removing visible watermarks locally." schema={schema}>
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Image Tools</span></div><span class="eyebrow">Online Image Tools</span><h1>Free online image tools for watermark, resize, compress, crop and more.</h1><p>Add watermarks, resize, compress, rotate, crop, blur, rename, strip metadata or repair visible watermarks with focused tools that run locally where the browser supports the required processing.</p></div></section>
 
 <section class="content-wide-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Resize, compress and compose</span><h2>Everyday image edits with one familiar batch workflow.</h2><p>Use these tools when the goal is to change dimensions, encoding, orientation, framing or blur. Start with one setup for the batch, then override individual images when compositions or output needs differ.</p></div><ImageToolGrid ids={everydayTools} /></div></section>
 
