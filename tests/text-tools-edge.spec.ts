@@ -52,6 +52,7 @@ test('text case and count handle Unicode and empty/whitespace input',()=>{
  expect(run('word-character-counter','   ')).toContain('Words: 0');
  expect(run('word-character-counter','👩‍💻')).toContain('Characters (graphemes): 1');
  expect(run('word-character-counter','a\nb')).toContain('Lines: 2');
+ expect(run('word-character-counter','a'.repeat(100_000))).toContain('Characters (graphemes): 100000');
 });
 
 test('colors validate bounds and convert HSL ↔ RGB ↔ HEX',()=>{

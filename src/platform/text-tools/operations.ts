@@ -101,14 +101,21 @@ function countText(input: string): string {
   const graphemes = new Intl.Segmenter(undefined, { granularity:'grapheme' });
   const words = new Intl.Segmenter(undefined, { granularity:'word' });
   let characterCount = 0;
+  let nonWhitespaceCount = 0;
+  let codepointCount = 0;
   let wordCount = 0;
-  for (const _ of graphemes.segment(input)) characterCount++;
+  // Stream segment iteration instead of allocating arrays of up to a million objects.
+  for (const part of graphemes.segment(input)) {
+    characterCount++;
+    if (!/^\s+$/u.test(part.segment)) nonWhitespaceCount++;
+  }
+  for (const _ of input) codepointCount++;
   for (const segment of words.segment(input)) if (segment.isWordLike) wordCount++;
   return [
     'Words: ' + wordCount,
     'Characters (graphemes): ' + characterCount,
-    'Unicode code points: ' + Array.from(input).length,
-    'Characters without whitespace: ' + Array.from(graphemes.segment(input)).filter((part) => !/^\s+$/u.test(part.segment)).length,
+    'Unicode code points: ' + codepointCount,
+    'Characters without whitespace: ' + nonWhitespaceCount,
     'Lines: ' + (input.length ? input.split(/\r\n|\r|\n/).length : 0),
     'UTF-8 bytes: ' + new TextEncoder().encode(input).length,
   ].join('\n');
