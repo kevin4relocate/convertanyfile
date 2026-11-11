@@ -59,16 +59,14 @@ for (const toolId of effects) {
       return red < 12 && green > 245 && blue > 245;
     }, { timeout: 20_000 }).toBeTruthy();
 
-    await strength.fill('0');
-    await strength.dispatchEvent('input');
+    await strength.evaluate((input: HTMLInputElement) => { input.value = '0'; input.dispatchEvent(new Event('input', { bubbles: true })); });
     await expect(app.locator('[data-output-for="intensity"]')).toHaveText('0%');
     await expect.poll(async () => {
       const [red = 0, green = 0, blue = 0] = await previewPixel(page);
       return red > 245 && green < 12 && blue < 12;
     }, { timeout: 20_000 }).toBeTruthy();
 
-    await strength.fill('100');
-    await strength.dispatchEvent('input');
+    await strength.evaluate((input: HTMLInputElement) => { input.value = '100'; input.dispatchEvent(new Event('input', { bubbles: true })); });
     await app.locator('[data-role="process-batch"]').click();
     await expect(app.locator('[data-role="batch-list"]')).toContainText('Done', { timeout: 30_000 });
 
