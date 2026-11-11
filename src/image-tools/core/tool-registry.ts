@@ -47,7 +47,7 @@ const RUNTIME_LOADERS = {
 
 export async function mountRegisteredImageTool(toolId: string, root: HTMLElement): Promise<boolean> {
   const entry = getImageToolManifest(toolId);
-  if (!entry || entry.tool.status === 'planned') return false;
+  if (!entry) return false;
   const module = await RUNTIME_LOADERS[entry.runtime]();
   await module.mount(root);
   return true;
