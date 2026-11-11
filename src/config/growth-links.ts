@@ -65,10 +65,18 @@ export const POPULAR_TEXT_TOOLS: readonly GrowthLink[] = [
   { href: '/text/color-code-converter/', label: 'HEX, RGB & HSL Converter', description: 'Convert between common web color formats.' },
 ];
 
+export const POPULAR_DATA_TOOLS: readonly GrowthLink[] = [
+ {href:'/data/json-schema-validator/',label:'JSON Schema Validator',description:'Check data shape and required fields against a local JSON Schema.'},
+ {href:'/data/csv-duplicate-remover/',label:'CSV Duplicate Remover',description:'Deduplicate CSV rows by all or selected columns.'},
+ {href:'/data/csv-file-merger/',label:'CSV File Merger',description:'Merge CSV tables while aligning columns by header name.'},
+ {href:'/data/csv-data-profiler/',label:'CSV Data Profiler',description:'Inspect column completeness and unique values locally.'},
+];
+
 export const HOME_GROWTH_LINK_GROUPS: readonly GrowthLinkGroup[] = [
   { title: 'Popular image tools', links: POPULAR_IMAGE_TOOLS },
   { title: 'Popular image conversions', links: POPULAR_IMAGE_CONVERSIONS.slice(0, 6) },
   { title: 'Popular data conversions', links: POPULAR_DATA_CONVERSIONS.slice(0, 4) },
   { title: 'Popular text tools', links: POPULAR_TEXT_TOOLS },
+  { title: 'Popular data tools', links: POPULAR_DATA_TOOLS },
   { title: 'Helpful guides', links: [...POPULAR_CONVERSION_GUIDES.slice(0, 3), ...POPULAR_IMAGE_GUIDES.slice(0, 3)] },
 ];
