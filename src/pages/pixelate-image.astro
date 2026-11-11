@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { PIXELATE_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={PIXELATE_IMAGE_TOOL}
+  kicker="Pixel-art effect · mosaic blocks"
+  heading="Make creative pixelated versions of your photos."
+  copy="Choose a mosaic block size between 2 and 64 pixels. The browser downsamples the image and enlarges it with sharp nearest-neighbor blocks while keeping the original export dimensions."
+  bullets={[
+    "Set pixel blocks from 2 px for fine mosaic to 64 px for chunky pixel art.",
+    "Preserve original output width and height.",
+    "Preview the effect on one image before processing the batch.",
+    "Run entirely in your browser with no image-processing server.",
+    "Download one pixelated photo or ZIP of a completed batch."
+]}
+/>
