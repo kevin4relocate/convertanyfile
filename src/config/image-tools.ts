@@ -87,6 +87,39 @@ export const BLUR_IMAGE_TOOL = {
   downloadSuffix: 'blurred', policyNote: 'Selected-area blur is manual and supports Rectangle or Circle. It does not automatically detect faces, text, license plates, or other sensitive content, so review the exported pixels when privacy matters.',
 } satisfies ImageToolDefinition;
 
+export const GRAYSCALE_IMAGE_TOOL = {
+  ...liveBase, id: 'grayscale-image' as const, slug: 'grayscale-image', displayName: 'Grayscale Image', category: 'transform',
+  title: 'Grayscale Image Online — Convert Photo to Black and White | ConvertAnyFile',
+  description: 'Convert JPG, PNG and WebP photos to black and white in your browser. Adjust grayscale strength, preview the result and process multiple images locally.',
+  h1: 'Turn a color image into grayscale.',
+  eyebrow: 'Image Tools',
+  intro: 'Create a grayscale or black-and-white-style copy of an image without uploading it. Move the strength slider from the original colors to full grayscale, compare the preview, and export one file or a batch ZIP.',
+  downloadSuffix: 'grayscale',
+  policyNote: 'Grayscale removes color saturation, not photo content. Brightness and contrast are inherited from the source; output re-encoding may change metadata or file size. Keep the original for future color adjustments.',
+} satisfies ImageToolDefinition;
+
+export const SEPIA_IMAGE_TOOL = {
+  ...liveBase, id: 'sepia-image' as const, slug: 'sepia-image', displayName: 'Sepia Image', category: 'transform',
+  title: 'Sepia Image Filter Online — Vintage Photo Effect | ConvertAnyFile',
+  description: 'Apply a warm sepia filter to JPG, PNG or WebP images directly in your browser. Adjust intensity, inspect the live preview and download a batch ZIP.',
+  h1: 'Give your photo a warm sepia tone.',
+  eyebrow: 'Image Tools',
+  intro: 'Apply a vintage-style brown sepia treatment with a simple strength slider. See the effect on a live preview, optionally fine-tune each image in a batch, and save the results locally.',
+  downloadSuffix: 'sepia',
+  policyNote: 'Sepia changes the visible color balance; it does not repair aged photos, recover missing details or reproduce a historical printing process. Source metadata may change when you export a newly encoded copy.',
+} satisfies ImageToolDefinition;
+
+export const INVERT_IMAGE_TOOL = {
+  ...liveBase, id: 'invert-image' as const, slug: 'invert-image', displayName: 'Invert Image Colors', category: 'transform',
+  title: 'Invert Image Colors Online — Negative Photo Effect | ConvertAnyFile',
+  description: 'Invert JPG, PNG and WebP photo colors with a strength slider. Preview color negatives and download one or multiple processed files without uploads.',
+  h1: 'Invert image colors with one slider.',
+  eyebrow: 'Image Tools',
+  intro: 'Turn light pixels dark and invert colors to create a negative-style image. Control the amount of inversion from 0% to 100%, compare the result, then download an image or a ZIP of your processed batch.',
+  downloadSuffix: 'inverted',
+  policyNote: 'Inverting pixels changes color values, not the original capture data. The effect is not a replacement for film-negative color correction or restoration. Re-encoding may remove source metadata.',
+} satisfies ImageToolDefinition;
+
 export const FADE_IMAGE_EDGES_TOOL = {
   ...commonLimits,
   status: 'preview',
@@ -143,6 +176,9 @@ export const IMAGE_TOOL_MANIFEST = [
   { tool: ROTATE_FLIP_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Rotate · mirror', navigationLabel: 'Rotate / Flip', summary: 'Rotate or mirror one image or a batch locally.' },
   { tool: CROP_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Free · aspect ratios', summary: 'Drag Rectangle, Square, Circle or Triangle crops with common aspect-ratio presets.' },
   { tool: BLUR_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Whole image · region', summary: 'Blur the whole image or drag a Rectangle or Circle over a selected area.' },
+  { tool: GRAYSCALE_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Black & white · strength', summary: 'Turn images black and white with adjustable grayscale intensity and batch export.' },
+  { tool: SEPIA_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Vintage · warm tone', summary: 'Create warm vintage sepia photos with adjustable color strength and live preview.' },
+  { tool: INVERT_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Negative · invert colors', summary: 'Reverse image colors for a negative-style look, with a strength slider and batch export.' },
   { tool: FADE_IMAGE_EDGES_TOOL, runtime: 'edge-fade', directoryGroup: 'preview', navigationHint: 'Subtitle-safe soft fades', summary: 'Fade blur naturally from one edge or all edges to create a subtitle-safe text area.' },
   { tool: BULK_RENAME_IMAGES_TOOL, runtime: 'rename', directoryGroup: 'cleanup', navigationHint: 'Patterns · numbering', summary: 'Rename a batch without changing image bytes or source extensions.' },
   { tool: REMOVE_IMAGE_METADATA_TOOL, runtime: 'metadata', directoryGroup: 'cleanup', navigationHint: 'EXIF · GPS · software', summary: 'Strip EXIF, GPS and software metadata locally.' },
