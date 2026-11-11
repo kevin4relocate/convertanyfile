@@ -1,4 +1,5 @@
-import { IMAGE_TOOL_ROADMAP } from '../../config/image-tools';
+import { getImageToolManifest } from '../../config/image-tools';
+import type { ImageToolRuntimeFamily } from '../../platform/image-tools/types';
 
 export interface MountableImageToolModule {
   mount: (root: HTMLElement) => void | Promise<void>;
@@ -31,28 +32,23 @@ const watermarkToolLoader: ImageToolLoader = async () => {
   return { mount: module.mountAddWatermark };
 };
 
-const IMAGE_TOOL_LOADERS = {
-  'remove-watermark': maskToolLoader,
-  'gemini-ai-logo-remover': maskToolLoader,
-  'resize-image': deterministicToolLoader,
-  'compress-image': deterministicToolLoader,
-  'rotate-flip-image': deterministicToolLoader,
-  'crop-image': deterministicToolLoader,
-  'blur-image': deterministicToolLoader,
-  'fade-image-edges': deterministicToolLoader,
-  'remove-image-metadata': metadataCleanupLoader,
-  'bulk-rename-images': renameToolLoader,
-  'add-watermark': watermarkToolLoader,
-} satisfies Record<(typeof IMAGE_TOOL_ROADMAP)[number]['id'], ImageToolLoader>;
-
-type RegisteredImageToolId = keyof typeof IMAGE_TOOL_LOADERS;
-const allToolIds = new Set<string>(Object.keys(IMAGE_TOOL_LOADERS));
+/**
+ * Loader selection is by runtime family, not by each tool ID.
+ * Adding a tool using an existing editor no longer requires editing this file.
+ */
+const RUNTIME_LOADERS = {
+  mask: maskToolLoader,
+  deterministic: deterministicToolLoader,
+  'edge-fade': deterministicToolLoader,
+  metadata: metadataCleanupLoader,
+  rename: renameToolLoader,
+  watermark: watermarkToolLoader,
+} satisfies Record<ImageToolRuntimeFamily, ImageToolLoader>;
 
 export async function mountRegisteredImageTool(toolId: string, root: HTMLElement): Promise<boolean> {
-  if (!allToolIds.has(toolId)) return false;
-  const loader = IMAGE_TOOL_LOADERS[toolId as RegisteredImageToolId];
-  if (!loader) return false;
-  const module = await loader();
+  const entry = getImageToolManifest(toolId);
+  if (!entry || entry.tool.status === 'planned') return false;
+  const module = await RUNTIME_LOADERS[entry.runtime]();
   await module.mount(root);
   return true;
 }
