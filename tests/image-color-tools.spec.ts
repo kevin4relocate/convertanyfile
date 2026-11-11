@@ -21,18 +21,33 @@ async function solidRedPng(page: Page): Promise<Buffer> {
   return Buffer.from(bytes);
 }
 
-async function previewPixel(page: Page): Promise<number[]> {
+async function previewPixel(page: Page): Promise<number[] | null> {
   const preview = page.locator('[data-image-tool-app] [data-role="result-preview"]');
-  await expect(preview).toBeVisible();
+
+  // The editor replaces a data-URI preview asynchronously when its slider
+  // changes. Decoding the live <img> can reject if its src is replaced mid-read.
+  // Take a snapshot of the exact frame and retry until the new frame is ready.
   return preview.evaluate(async (node) => {
-    const image = node as HTMLImageElement;
-    await image.decode();
+    const src = (node as HTMLImageElement).getAttribute('src');
+    if (!src?.startsWith('data:image/png;base64,')) return null;
+
+    const frame = new Image();
+    frame.src = src;
+    try {
+      await frame.decode();
+    } catch {
+      // A frame may be replaced while the editor rerenders; expect.poll will
+      // retry, and permanently invalid previews still fail the test timeout.
+      return null;
+    }
+    if (!frame.naturalWidth || !frame.naturalHeight) return null;
+
     const canvas = document.createElement('canvas');
-    canvas.width = image.naturalWidth;
-    canvas.height = image.naturalHeight;
+    canvas.width = frame.naturalWidth;
+    canvas.height = frame.naturalHeight;
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Cannot inspect preview');
-    context.drawImage(image, 0, 0);
+    context.drawImage(frame, 0, 0);
     return Array.from(context.getImageData(0, 0, 1, 1).data);
   });
 }
@@ -53,7 +68,9 @@ for (const toolId of effects) {
     await expect(strength).toHaveValue('100');
 
     await expect.poll(async () => {
-      const [red = 0, green = 0, blue = 0] = await previewPixel(page);
+      const pixel = await previewPixel(page);
+      if (!pixel) return false;
+      const [red = 0, green = 0, blue = 0] = pixel;
       if (toolId === 'grayscale-image') return Math.abs(red - green) <= 3 && Math.abs(green - blue) <= 3;
       if (toolId === 'sepia-image') return red > green && green > blue && blue > 15;
       return red < 12 && green > 245 && blue > 245;
@@ -62,7 +79,9 @@ for (const toolId of effects) {
     await strength.evaluate((input: HTMLInputElement) => { input.value = '0'; input.dispatchEvent(new Event('input', { bubbles: true })); });
     await expect(app.locator('[data-output-for="intensity"]')).toHaveText('0%');
     await expect.poll(async () => {
-      const [red = 0, green = 0, blue = 0] = await previewPixel(page);
+      const pixel = await previewPixel(page);
+      if (!pixel) return false;
+      const [red = 0, green = 0, blue = 0] = pixel;
       return red > 245 && green < 12 && blue < 12;
     }, { timeout: 20_000 }).toBeTruthy();
 
