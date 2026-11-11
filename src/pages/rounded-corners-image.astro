@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { ROUNDED_CORNERS_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={ROUNDED_CORNERS_IMAGE_TOOL}
+  kicker="Transparent corners · PNG output"
+  heading="Round image corners while preserving true transparency."
+  copy="Create softly rounded or strongly rounded corners with a radius measured relative to the shorter side. The image dimensions stay unchanged and PNG output preserves corner transparency."
+  bullets={[
+    "Adjust the corner radius from 0% square to 50% of the shorter edge.",
+    "Preview the rounded shape without changing source image dimensions.",
+    "Export true transparent corners in PNG, including when the source is JPEG.",
+    "Use shared or individual settings for batches with different shapes.",
+    "Download a single rounded PNG or a ZIP of several edited PNG files."
+]}
+/>
