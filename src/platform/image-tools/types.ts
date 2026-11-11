@@ -1,5 +1,23 @@
 export type ImageToolStatus = 'live' | 'preview' | 'planned';
 export type ImageToolCategory = 'transform' | 'encode' | 'geometry' | 'mask' | 'metadata' | 'naming' | 'watermark';
+
+/**
+ * Catalog metadata for published image tools. A tool's identity, URL, status,
+ * accepted file formats and safety limits come from its implementation definition.
+ * Only the runtime family, discoverability and short navigation copy live here.
+ */
+export type ImageToolRuntimeFamily = 'deterministic' | 'edge-fade' | 'mask' | 'metadata' | 'rename' | 'watermark';
+export type ImageToolDirectoryGroup = 'everyday' | 'preview' | 'cleanup' | 'watermarks';
+
+export interface ImageToolManifestEntry<T extends ImageToolDefinition = ImageToolDefinition> {
+  tool: T;
+  runtime: ImageToolRuntimeFamily;
+  directoryGroup: ImageToolDirectoryGroup;
+  summary: string;
+  navigationHint: string;
+  navigationLabel?: string;
+}
+
 export type ImageEditScope = 'shared' | 'individual';
 export type ImageMaskMode = 'rect' | 'circle' | 'square' | 'diamond' | 'star4' | 'text';
 
