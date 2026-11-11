@@ -1,4 +1,4 @@
-import { createZipBlob, downloadBlob } from '../core/download';
+import { downloadResultBatch } from '../core/download';
 
 type RenameStyle = 'new' | 'keep';
 type NumberPosition = 'before' | 'after';
@@ -112,7 +112,7 @@ export function mountBulkRenameImages(root:HTMLElement):void{
   function clearAll():void{state.items.forEach(item=>URL.revokeObjectURL(item.url));state.items=[];state.activeId=undefined;hideNotice();render();}
   function setMode(mode:'shared'|'individual'):void{state.mode=mode;root.dataset.platformScope=mode;scope.forEach(button=>{const selected=button.dataset.editScope===mode;button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-checked',String(selected));button.classList.toggle('is-active',selected);});summary.textContent=mode==='shared'?'One naming setup applies to the batch.':'Select an image to override only its filename.';invalidate();}
   function prepare():void{const map=names();state.items.forEach(item=>{item.preparedName=map.get(item.id);item.status='done';});render();}
-  async function downloadFiles():Promise<void>{const files=state.items.filter(item=>item.preparedName).map(item=>({filename:item.preparedName!,blob:item.file as Blob}));if(!files.length)return;if(files.length===1){downloadBlob(files[0]!.blob,files[0]!.filename);return;}downloadBlob(await createZipBlob(files),'renamed-images.zip');}
+  async function downloadFiles():Promise<void>{const files=state.items.filter(item=>item.preparedName).map(item=>({filename:item.preparedName!,blob:item.file as Blob}));await downloadResultBatch(files,'renamed-images.zip');}
 
   styleButtons.forEach(button=>button.addEventListener('click',()=>{const style=button.dataset.renameStyle;if(style!=='new'&&style!=='keep')return;state.renameStyle=style;invalidate();}));
   newName.addEventListener('input',()=>{state.newName=newName.value;invalidate();});
