@@ -6,6 +6,10 @@ import type {
   SharpenSettings,
   ImageBorderSettings,
   RoundedCornersSettings,
+  HueRotateSettings,
+  PosterizeSettings,
+  ThresholdSettings,
+  OpacitySettings,
   CropSettings,
   DeterministicSettings,
   DeterministicToolId,
@@ -320,6 +324,73 @@ function drawRoundedCorners(bitmap: ImageBitmap, settings: RoundedCornersSetting
   return canvas;
 }
 
+/**
+ * Quantize pixels in bounded 384px tiles; this avoids multiple full-sized
+ * ImageData buffers while keeping both transforms deterministic and local.
+ * RGB processing never replaces the original alpha channel.
+ */
+function drawToneReduction(
+  bitmap: ImageBitmap,
+  settings: PosterizeSettings | ThresholdSettings,
+  mode: 'posterize' | 'threshold',
+  maxDimension?: number,
+): HTMLCanvasElement {
+  const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+  const source = canvas2d(size.width, size.height);
+  source.context.drawImage(bitmap, 0, 0, size.width, size.height);
+  const result = canvas2d(size.width, size.height);
+  const levels = mode === 'posterize'
+    ? Math.round(clamp(Number.isFinite((settings as PosterizeSettings).levels) ? (settings as PosterizeSettings).levels : 6, 2, 16))
+    : 2;
+  const step = 255 / (levels - 1);
+  const cutoff = Math.round(clamp(Number.isFinite((settings as ThresholdSettings).cutoff) ? (settings as ThresholdSettings).cutoff : 128, 0, 255));
+
+  for (let top = 0; top < size.height; top += 384) {
+    for (let left = 0; left < size.width; left += 384) {
+      const width = Math.min(384, size.width - left);
+      const height = Math.min(384, size.height - top);
+      const pixels = source.context.getImageData(left, top, width, height);
+      for (let i = 0; i < pixels.data.length; i += 4) {
+        const r = pixels.data[i] ?? 0;
+        const g = pixels.data[i + 1] ?? 0;
+        const b = pixels.data[i + 2] ?? 0;
+        if (mode === 'posterize') {
+          pixels.data[i] = Math.round(r / step) * step;
+          pixels.data[i + 1] = Math.round(g / step) * step;
+          pixels.data[i + 2] = Math.round(b / step) * step;
+        } else {
+          const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          const value = luminance >= cutoff ? 255 : 0;
+          pixels.data[i] = value;
+          pixels.data[i + 1] = value;
+          pixels.data[i + 2] = value;
+        }
+      }
+      result.context.putImageData(pixels, left, top);
+    }
+  }
+  return result.canvas;
+}
+
+function drawHueRotation(bitmap: ImageBitmap, settings: HueRotateSettings, maxDimension?: number): HTMLCanvasElement {
+  const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+  const { canvas, context } = canvas2d(size.width, size.height);
+  const degrees = Math.round(clamp(Number.isFinite(settings.degrees) ? settings.degrees : 0, 0, 360));
+  context.filter = `hue-rotate(${degrees}deg)`;
+  context.drawImage(bitmap, 0, 0, size.width, size.height);
+  context.filter = 'none';
+  return canvas;
+}
+
+function drawOpacity(bitmap: ImageBitmap, settings: OpacitySettings, maxDimension?: number): HTMLCanvasElement {
+  const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+  const { canvas, context } = canvas2d(size.width, size.height);
+  context.globalAlpha = clamp(Number.isFinite(settings.opacityPercent) ? settings.opacityPercent : 100, 0, 100) / 100;
+  context.drawImage(bitmap, 0, 0, size.width, size.height);
+  context.globalAlpha = 1;
+  return canvas;
+}
+
 export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolId, settings: DeterministicSettings, maxDimension?: number): HTMLCanvasElement {
   if (toolId === 'resize-image') {
     const dimensions = resizeDimensions(bitmap.width, bitmap.height, settings as ResizeSettings), size = scaledSize(dimensions.width, dimensions.height, maxDimension);
@@ -332,6 +403,10 @@ export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolI
   if (toolId === 'sharpen-image') return drawSharpen(bitmap, settings as SharpenSettings, maxDimension);
   if (toolId === 'add-image-border') return drawImageBorder(bitmap, settings as ImageBorderSettings, maxDimension);
   if (toolId === 'rounded-corners-image') return drawRoundedCorners(bitmap, settings as RoundedCornersSettings, maxDimension);
+  if (toolId === 'hue-rotate-image') return drawHueRotation(bitmap, settings as HueRotateSettings, maxDimension);
+  if (toolId === 'posterize-image') return drawToneReduction(bitmap, settings as PosterizeSettings, 'posterize', maxDimension);
+  if (toolId === 'threshold-image') return drawToneReduction(bitmap, settings as ThresholdSettings, 'threshold', maxDimension);
+  if (toolId === 'adjust-image-opacity') return drawOpacity(bitmap, settings as OpacitySettings, maxDimension);
   if (toolId === 'brightness-image' || toolId === 'contrast-image' || toolId === 'adjust-image-saturation') {
     const filter = toolId === 'brightness-image' ? 'brightness' : toolId === 'contrast-image' ? 'contrast' : 'saturate';
     const level = clamp((settings as ColorAdjustmentSettings).level, 0, 200);
