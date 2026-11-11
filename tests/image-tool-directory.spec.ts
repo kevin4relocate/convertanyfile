@@ -77,7 +77,7 @@ test('mobile layout exposes search and category filters without horizontal overf
   test.skip(testInfo.project.name !== 'chromium-mobile', 'Mobile layout regression');
   await page.goto('/image-tools/');
   const directory = page.locator('[data-image-tools-directory]');
-  await expect(directory.locator('[data-directory-search]')).toBeVisible();
+  await expect(directory.locator('[data-directory-search-input]')).toBeVisible();
   await expect(directory.getByRole('button', { name: /Cleanup/ })).toBeVisible();
   const viewport = await page.evaluate(() => ({ width: window.innerWidth, scrollWidth: document.documentElement.scrollWidth }));
   expect(viewport.scrollWidth).toBeLessThanOrEqual(viewport.width + 1);
