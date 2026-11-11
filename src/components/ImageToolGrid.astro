@@ -1,13 +1,22 @@
 ---
-import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
-interface Props { compact?: boolean; ids?: readonly string[]; excludeId?: string; }
-const { compact = false, ids, excludeId } = Astro.props;
+import { IMAGE_TOOL_ROADMAP, getImageToolManifest } from '../config/image-tools';
+interface Props { compact?: boolean; ids?: readonly string[]; excludeId?: string; directory?: boolean; }
+const { compact = false, ids, excludeId, directory = false } = Astro.props;
 const statusLabel = (status: string): string => status === 'live' ? 'Live' : status === 'preview' ? 'Preview' : 'Planned';
 const tools = IMAGE_TOOL_ROADMAP.filter((tool) => (!ids || ids.includes(tool.id)) && tool.id !== excludeId);
 ---
 <div class:list={['image-tool-grid', compact && 'image-tool-grid--compact']}>
   {tools.map((tool) => tool.href ? (
-    <a class="image-tool-card-link" href={tool.href}>
+    <a class="image-tool-card-link" href={tool.href}
+      data-directory-tool={directory ? tool.id : undefined}
+      data-directory-search={directory ? [
+        tool.id.replaceAll('-', ' '),
+        tool.label,
+        tool.description,
+        getImageToolManifest(tool.id)?.tool.title ?? '',
+        getImageToolManifest(tool.id)?.tool.description ?? '',
+        getImageToolManifest(tool.id)?.navigationHint ?? '',
+      ].join(' ').toLocaleLowerCase('en-US') : undefined}>
       <span class="image-tool-card-icon" aria-hidden="true">{tool.label.slice(0, 1)}</span>
       <span class="image-tool-card-copy">
         <span class:list={['image-tool-status', tool.status === 'live' && 'image-tool-status--live', tool.status === 'preview' && 'image-tool-status--preview']}>{statusLabel(tool.status)}</span>
