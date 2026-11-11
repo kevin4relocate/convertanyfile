@@ -287,7 +287,7 @@ export function mountMetadataCleanup(root: HTMLElement): void {
       .map((item) => ({ filename: item.outputName, blob: item.result }));
     if (!files.length) return;
     if (files.length === 1) {
-      downloadBlob(files[0].blob, files[0].filename);
+      downloadBlob(files[0]!.blob, files[0]!.filename);
       return;
     }
     downloadBlob(await createZipBlob(files), `metadata-clean-${files.length}-images.zip`);
