@@ -25,9 +25,12 @@ const isMetadata = tool.id === 'remove-image-metadata';
 const isColorEffect = tool.id === 'grayscale-image' || tool.id === 'sepia-image' || tool.id === 'invert-image';
 const isColorAdjustment = ['brightness-image', 'contrast-image', 'adjust-image-saturation'].includes(tool.id);
 const isPixelate = tool.id === 'pixelate-image';
+const isSharpen = tool.id === 'sharpen-image';
+const isBorder = tool.id === 'add-image-border';
+const isRoundedCorners = tool.id === 'rounded-corners-image';
 const adjustmentLabel = tool.id === 'brightness-image' ? 'Brightness' : tool.id === 'contrast-image' ? 'Contrast' : 'Saturation';
 const hasEmbeddedOutput = isCompress || isMetadata;
-const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isEdgeFade ? 'Apply edge fade' : isMetadata ? 'Remove metadata' : isColorEffect ? 'Apply color effect' : isColorAdjustment ? 'Adjust image colors' : isPixelate ? 'Pixelate images' : 'Process images';
+const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isEdgeFade ? 'Apply edge fade' : isMetadata ? 'Remove metadata' : isColorEffect ? 'Apply color effect' : isColorAdjustment ? 'Adjust image colors' : isPixelate ? 'Pixelate images' : isSharpen ? 'Sharpen images' : isBorder ? 'Add borders' : isRoundedCorners ? 'Round corners' : 'Process images';
 ---
 
 <div class="image-editor-card deterministic-tool" data-image-tool-app data-tool-id={tool.id} data-download-suffix={tool.downloadSuffix} data-max-file-bytes={tool.maxFileBytes} data-max-pixels={tool.maxPixels} data-max-dimension={tool.maxDimension} data-max-files={maxFiles} data-has-items="false">
@@ -104,6 +107,22 @@ const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images'
           {isPixelate && <div class="setting-grid">
             <label><span>Pixel block size</span><div class="range-row"><input data-setting="blockSize" type="range" min="2" max="64" step="1" value="12" /><output data-output-for="blockSize">12 px</output></div></label>
             <div class="setting-note setting-note--wide"><strong>Create a pixel-art effect without resizing the output.</strong><p>Larger blocks produce more visible squares. This is a creative effect and must not be treated as a guaranteed privacy redaction method.</p></div>
+          </div>}
+
+          {isSharpen && <div class="setting-grid">
+            <label><span>Sharpen amount</span><div class="range-row"><input data-setting="amount" type="range" min="0" max="1.2" step="0.1" value="0.6" /><output data-output-for="amount">0.6×</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Enhance edge contrast.</strong><p>0× keeps the original image; higher amounts emphasize edges and fine details. Very strong sharpening may create bright or dark outlines and does not recover missing resolution.</p></div>
+          </div>}
+
+          {isBorder && <div class="setting-grid">
+            <label><span>Border thickness</span><div class="range-row"><input data-setting="thickness" type="range" min="1" max="80" step="1" value="12" /><output data-output-for="thickness">12 px</output></div></label>
+            <label><span>Border color</span><input data-setting="color" type="color" value="#ffffff" aria-label="Border color" /></label>
+            <div class="setting-note setting-note--wide"><strong>Add an outer border without covering image pixels.</strong><p>Each side grows by the chosen thickness. The tool checks the new dimensions before processing to prevent oversized output. Use the color picker to change the border.</p></div>
+          </div>}
+
+          {isRoundedCorners && <div class="setting-grid">
+            <label><span>Corner radius</span><div class="range-row"><input data-setting="radiusPercent" type="range" min="0" max="50" step="1" value="15" /><output data-output-for="radiusPercent">15%</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Transparent PNG output.</strong><p>Corner radius is a percentage of the shorter image side; 0% keeps square corners. PNG output is locked so the rounded transparent corners are not flattened to an opaque background.</p></div>
           </div>}
 
           {isEdgeFade && <div class="visual-tool-controls edge-fade-controls">
