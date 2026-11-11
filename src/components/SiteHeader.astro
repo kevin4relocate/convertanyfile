@@ -3,19 +3,29 @@ import { NAV_ITEMS, SITE } from '../config/site';
 import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
 
 const currentPath = Astro.url.pathname;
-const imageToolLinks = [
-  { id: 'remove-watermark', href: '/remove-watermark/', label: 'Remove Watermark', hint: 'Shapes · text mask', icon: 'W' },
-  { id: 'gemini-ai-logo-remover', href: '/gemini-ai-logo-remover/', label: 'Gemini Watermark Remover', hint: 'Circle · 4-Point Star', icon: '✦' },
-  { id: 'resize-image', href: '/resize-image/', label: 'Resize Image', hint: 'Pixels · percentage · fit', icon: 'R' },
-  { id: 'compress-image', href: '/compress-image/', label: 'Compress Image', hint: 'Format · quality', icon: 'C' },
-  { id: 'rotate-flip-image', href: '/rotate-flip-image/', label: 'Rotate / Flip', hint: 'Rotate · mirror', icon: 'R' },
-  { id: 'crop-image', href: '/crop-image/', label: 'Crop Image', hint: 'Free · aspect ratios', icon: 'C' },
-  { id: 'blur-image', href: '/blur-image/', label: 'Blur Image', hint: 'Whole image · region', icon: 'B' },
-  { id: 'bulk-rename-images', href: '/bulk-rename-images/', label: 'Bulk Rename Images', hint: 'Patterns · numbering', icon: 'B' },
-  { id: 'remove-image-metadata', href: '/remove-image-metadata/', label: 'Remove Image Metadata', hint: 'EXIF · GPS · software', icon: 'M' },
-] as const;
-const imageToolStatus = new Map(IMAGE_TOOL_ROADMAP.map((tool) => [tool.id, tool.status]));
-const imageToolsActive = currentPath === '/image-tools/' || imageToolLinks.some((tool) => tool.href === currentPath);
+const NAV_TOOL_HINTS: Record<string, string> = {
+  'remove-watermark': 'Shapes · text mask',
+  'gemini-ai-logo-remover': 'Circle · 4-Point Star',
+  'resize-image': 'Pixels · percentage · fit',
+  'compress-image': 'Format · quality',
+  'rotate-flip-image': 'Rotate · mirror',
+  'crop-image': 'Free · aspect ratios',
+  'blur-image': 'Whole image · region',
+  'bulk-rename-images': 'Patterns · numbering',
+  'remove-image-metadata': 'EXIF · GPS · software',
+  'add-watermark': 'Text · logo · batch',
+};
+const imageToolLinks = IMAGE_TOOL_ROADMAP
+  .filter((tool) => tool.status === 'live')
+  .map((tool) => ({
+    id: tool.id,
+    href: tool.href,
+    label: tool.label,
+    hint: NAV_TOOL_HINTS[tool.id] ?? tool.description,
+    icon: tool.label.charAt(0).toUpperCase(),
+    status: tool.status,
+  }));
+const imageToolsActive = currentPath === '/image-tools/' || IMAGE_TOOL_ROADMAP.some((tool) => tool.href === currentPath);
 const converterPaths = ['/image-converter/', '/data-converter/', '/archive-converter/', '/subtitle-converter/'];
 const convertersActive = converterPaths.includes(currentPath);
 ---
@@ -41,9 +51,9 @@ const convertersActive = converterPaths.includes(currentPath);
             <div class="nav-tool-grid">
               {imageToolLinks.map((tool) => (
                 <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} href={tool.href}>
-                  <span class:list={['nav-tool-icon', tool.icon === '✦' && 'nav-tool-icon--spark']} aria-hidden="true">{tool.icon}</span>
+                  <span class:list={['nav-tool-icon', tool.id === 'gemini-ai-logo-remover' && 'nav-tool-icon--spark']} aria-hidden="true">{tool.icon}</span>
                   <span class="nav-tool-copy">
-                    <span class="nav-tool-title-row"><strong>{tool.label}</strong><small class:list={['nav-tool-status', imageToolStatus.get(tool.id) === 'live' && 'is-live']}>{imageToolStatus.get(tool.id) === 'live' ? 'LIVE' : 'PREVIEW'}</small></span>
+                    <span class="nav-tool-title-row"><strong>{tool.label}</strong><small class:list={['nav-tool-status', tool.status === 'live' && 'is-live']}>{tool.status === 'live' ? 'LIVE' : 'PREVIEW'}</small></span>
                     <small>{tool.hint}</small>
                   </span>
                 </a>
