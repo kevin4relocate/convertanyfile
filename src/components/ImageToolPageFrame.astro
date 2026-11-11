@@ -1,6 +1,7 @@
 ---
 import type { ImageToolDefinition, MaskImageToolDefinition } from '../platform/image-tools/types';
 import { SITE } from '../config/site';
+import { getImageToolManifest } from '../config/image-tools';
 import BatchMaskEditorShell from './BatchMaskEditorShell.astro';
 import BulkRenameImageShell from './BulkRenameImageShell.astro';
 import DeterministicImageToolShell from './DeterministicImageToolShell.astro';
@@ -9,11 +10,13 @@ import MetadataCleanupShell from './MetadataCleanupShell.astro';
 import AddWatermarkShell from './AddWatermarkShell.astro';
 interface Props { tool: ImageToolDefinition; }
 const { tool } = Astro.props;
-const maskTool = tool.category === 'mask' ? tool as MaskImageToolDefinition : undefined;
-const usesRenameEditor = tool.category === 'naming';
-const usesMetadataCleanup = tool.id === 'remove-image-metadata';
-const usesEdgeFadeV2 = tool.id === 'fade-image-edges';
-const usesWatermarkEditor = tool.id === 'add-watermark';
+const entry = getImageToolManifest(tool.id);
+if (!entry) throw new Error(`Image tool is missing from the catalog: ${tool.id}`);
+const maskTool = entry.runtime === 'mask' ? tool as MaskImageToolDefinition : undefined;
+const usesRenameEditor = entry.runtime === 'rename';
+const usesMetadataCleanup = entry.runtime === 'metadata';
+const usesEdgeFadeV2 = entry.runtime === 'edge-fade';
+const usesWatermarkEditor = entry.runtime === 'watermark';
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
