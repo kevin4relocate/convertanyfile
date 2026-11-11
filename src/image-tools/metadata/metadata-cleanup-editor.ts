@@ -1,4 +1,6 @@
 import { downloadResultBatch } from '../core/download';
+import { createImageFileAdmission, imageDimensionsWithinLimits } from '../core/file-admission';
+import { runSequentialBatch } from '../core/batch-execution';
 import { defaultQualityForImageOutput } from '../core/output-quality';
 import { encodeCanvas, extensionForOutput, type ImageOutputFormat } from '../core/output-encoder';
 import { renderToolCanvas, sourceExtension, sourceMime } from '../deterministic/operations';
@@ -157,17 +159,18 @@ export function mountMetadataCleanup(root: HTMLElement): void {
   async function addFiles(files: readonly File[]): Promise<void> {
     if (!files.length || state.processing) return;
     hideNotice();
-    let totalBytes = state.items.reduce((sum, item) => sum + item.file.size, 0);
+
+    const admission = createImageFileAdmission(state.items, {
+      maxFiles, maxFileBytes, maxTotalBytes, acceptedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
+    });
     let rejected = 0;
     let limited = 0;
 
     for (const file of files) {
-      if (state.items.length >= maxFiles || totalBytes + file.size > maxTotalBytes) {
-        limited++;
-        continue;
-      }
-      if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext(file.name)) || file.size > maxFileBytes) {
-        rejected++;
+      const reason = admission.check(file);
+      if (reason) {
+        if (reason === 'file-count' || reason === 'total-size') limited++;
+        else rejected++;
         continue;
       }
       try {
@@ -175,12 +178,12 @@ export function mountMetadataCleanup(root: HTMLElement): void {
         const width = bitmap.width;
         const height = bitmap.height;
         bitmap.close();
-        if (width > maxDimension || height > maxDimension || width * height > maxPixels) {
+        if (!imageDimensionsWithinLimits(width, height, { maxDimension, maxPixels })) {
           rejected++;
           continue;
         }
+        admission.accept(file);
         state.items.push({ id: crypto.randomUUID(), file, width, height, status: 'ready' });
-        totalBytes += file.size;
       } catch {
         rejected++;
       }
@@ -233,41 +236,38 @@ export function mountMetadataCleanup(root: HTMLElement): void {
     progressBar.value = 0;
     cancel.disabled = false;
     updateActions();
-
-    let completed = 0;
-    let failed = 0;
     const currentSettings = settings();
 
-    for (const item of state.items) {
-      if (state.cancel) break;
-      item.status = 'processing';
-      item.error = undefined;
-      renderList();
-
-      try {
+    const { completed, failed } = await runSequentialBatch(state.items, {
+      cancelled: () => state.cancel,
+      process: async (item) => {
+        item.status = 'processing';
+        item.error = undefined;
+        renderList();
         const bitmap = await createImageBitmap(item.file);
         try {
           const canvas = renderToolCanvas(bitmap, 'remove-image-metadata', currentSettings);
           const mime = mimeFor(item.file, currentSettings.format);
-          item.result = await encodeCanvas(canvas, { type: mime, quality: mime === 'image/png' ? undefined : currentSettings.quality / 100 });
+          item.result = await encodeCanvas(canvas, {
+            type: mime, quality: mime === 'image/png' ? undefined : currentSettings.quality / 100,
+          });
           const extension = currentSettings.format === 'source' ? sourceExtension(item.file) : extensionForOutput(mime);
           item.outputName = `${base(item.file.name)}-${suffix}.${extension}`;
           item.status = 'done';
-          completed++;
         } finally {
           bitmap.close();
         }
-      } catch (error) {
+      },
+      failed: (item, error) => {
         item.status = 'error';
         item.error = error instanceof Error ? error.message : 'Unable to create a clean copy.';
-        failed++;
-      }
-
-      const finished = completed + failed;
-      progressCount.textContent = `${finished} / ${state.items.length}`;
-      progressBar.value = Math.round(finished / state.items.length * 100);
-      renderList();
-    }
+      },
+      progress: ({ finished, total }) => {
+        progressCount.textContent = `${finished} / ${total}`;
+        progressBar.value = Math.round(finished / total * 100);
+        renderList();
+      },
+    });
 
     state.processing = false;
     cancel.disabled = true;
