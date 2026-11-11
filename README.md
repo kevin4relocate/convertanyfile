@@ -161,6 +161,19 @@ Before merging to `main`, keep these gates green:
 
 CI is defined in `.github/workflows/ci.yml`. Production smoke coverage is defined in `.github/workflows/production-smoke.yml` and `production-tests/production-smoke.spec.ts`.
 
+### Test a Cloudflare Pages Preview before merging
+
+Cloudflare Pages branch Preview and the production hostname deliberately behave differently: analytics only runs on `convertanyfile.net` / `www.convertanyfile.net`. The smoke test validates this distinction without creating GA4 sessions from previews.
+
+1. Open the Cloudflare Pages project and locate the exact deployment URL of the PR branch under **Deployments**. Never guess a `pages.dev` URL; confirm the branch and commit SHA.
+2. In GitHub, open **Actions → Production Smoke → Run workflow**. Select the PR branch from the branch selector.
+3. Paste the verified Preview URL into the **base_url** input and start the workflow. Alternatively, run `PLAYWRIGHT_BASE_URL=https://YOUR_ACTUAL_PREVIEW_HOST npm run test:production` locally.
+4. Check CSP/security headers, static routes, no Analytics bootstrap on previews, image/data output downloads and sitemap consistency.
+5. After merging and confirming the production deployment finished, rerun **Production Smoke** for `https://convertanyfile.net`, which expects the Analytics bootstrap and checks canonical redirect behavior.
+
+The smoke test does not provision Cloudflare Preview deployments. It requires a real, accessible Preview URL for the exact branch. Do not merge if preview or cross-browser checks are failing.
+
+
 See the category release checklists for additional product-specific verification.
 
 ## Expansion rule
