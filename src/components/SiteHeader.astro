@@ -1,29 +1,17 @@
 ---
 import { NAV_ITEMS, SITE } from '../config/site';
-import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
+import { IMAGE_TOOL_MANIFEST, IMAGE_TOOL_ROADMAP } from '../config/image-tools';
 
 const currentPath = Astro.url.pathname;
-const NAV_TOOL_HINTS: Record<string, string> = {
-  'remove-watermark': 'Shapes · text mask',
-  'gemini-ai-logo-remover': 'Circle · 4-Point Star',
-  'resize-image': 'Pixels · percentage · fit',
-  'compress-image': 'Format · quality',
-  'rotate-flip-image': 'Rotate · mirror',
-  'crop-image': 'Free · aspect ratios',
-  'blur-image': 'Whole image · region',
-  'bulk-rename-images': 'Patterns · numbering',
-  'remove-image-metadata': 'EXIF · GPS · software',
-  'add-watermark': 'Text · logo · batch',
-};
-const imageToolLinks = IMAGE_TOOL_ROADMAP
-  .filter((tool) => tool.status === 'live')
-  .map((tool) => ({
-    id: tool.id,
-    href: tool.href,
-    label: tool.label,
-    hint: NAV_TOOL_HINTS[tool.id] ?? tool.description,
-    icon: tool.label.charAt(0).toUpperCase(),
-    status: tool.status,
+const imageToolLinks = IMAGE_TOOL_MANIFEST
+  .filter((entry) => entry.tool.status === 'live')
+  .map((entry) => ({
+    id: entry.tool.id,
+    href: `/${entry.tool.slug}/`,
+    label: entry.navigationLabel ?? entry.tool.displayName,
+    hint: entry.navigationHint,
+    icon: entry.tool.displayName.charAt(0).toUpperCase(),
+    status: entry.tool.status,
   }));
 const imageToolsActive = currentPath === '/image-tools/' || IMAGE_TOOL_ROADMAP.some((tool) => tool.href === currentPath);
 const converterPaths = ['/image-converter/', '/data-converter/', '/archive-converter/', '/subtitle-converter/'];
