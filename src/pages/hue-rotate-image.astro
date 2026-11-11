@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { HUE_ROTATE_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={HUE_ROTATE_IMAGE_TOOL}
+  kicker="Hue rotation · photo colors"
+  heading="Explore new image colors using a hue rotation slider."
+  copy="Shift the overall hue of the source image through 0–360 degrees. Watch the color change in the browser preview, then apply the result to one photo or a batch without uploading your files."
+  bullets={[
+    "Rotate colors from 0° unchanged through a full 360° color cycle.",
+    "Preview the effect live for each JPG, PNG or WebP photo.",
+    "Keep pixel dimensions and existing alpha when the output format supports transparency.",
+    "Apply a shared hue rotation to the batch or customize individual images.",
+    "Save edited images one by one or package completed results into a ZIP."
+]}
+/>
