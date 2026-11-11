@@ -1,0 +1,133 @@
+---
+import type { ImageToolDefinition } from '../platform/image-tools/types';
+import ImageBatchDropzone from '../image-tools/components/ImageBatchDropzone.astro';
+
+interface Props { tool: ImageToolDefinition; }
+const { tool } = Astro.props;
+const isDecoder = tool.id === 'base64-to-image';
+const isContact = tool.id === 'contact-sheet-maker';
+const maxFiles = tool.maxFiles ?? 1;
+const maxFileMb = Math.round(tool.maxFileBytes / (1024 * 1024));
+const accept = tool.acceptedExtensions.map((ext) => '.' + ext).join(',');
+const processLabel: Record<string,string> = {
+  'image-to-base64':'Encode image as Base64',
+  'base64-to-image':'Decode Base64 to image',
+  'image-color-picker':'Sample center pixel',
+  'color-palette-extractor':'Extract color palette',
+  'image-dimension-inspector':'Inspect dimensions',
+  'exif-metadata-viewer':'Read EXIF metadata',
+  'image-to-favicon':'Create favicon.ico',
+  'app-icon-generator':'Generate app icons ZIP',
+  'contact-sheet-maker':'Create contact sheet',
+  'merge-images-horizontally':'Merge images horizontally',
+  'merge-images-vertically':'Merge images vertically',
+  'trim-transparent-borders':'Trim transparent edges',
+};
+---
+<div class="image-editor-card image-utility-card" data-image-tool-app data-tool-id={tool.id} data-max-files={maxFiles} data-max-file-bytes={tool.maxFileBytes} data-max-pixels={tool.maxPixels} data-max-dimension={tool.maxDimension} data-has-items="false">
+  <div class="image-editor-topbar">
+    <div><span>Private image utility</span><strong>{tool.displayName}</strong></div>
+    <div class="image-editor-local-state"><span aria-hidden="true"></span>Browser-only</div>
+  </div>
+  <div class="image-editor-notice" data-role="notice" role="status" aria-live="polite" hidden></div>
+  <div class="image-utility-body">
+    {isDecoder ?
+      <label class="image-utility-base64-label">Base64 image text
+        <textarea data-role="base64-input" rows="7" spellcheck="false" autocomplete="off" placeholder="Paste data:image/png;base64,... or raw Base64 for PNG/JPG/WebP"></textarea>
+      </label>
+      :
+      <div class="image-utility-upload">
+        <ImageBatchDropzone variant="standard" accept={accept} maxFiles={maxFiles} maxFileMb={maxFileMb} maxTotalMb={maxFiles === 1 ? maxFileMb : 50} />
+      </div>
+    }
+    <div class="image-utility-queue" data-role="file-list" hidden>
+      <div class="image-utility-queue-head"><strong>Selected images</strong><div><button type="button" data-role="utility-add" hidden>Add images</button><button type="button" data-role="utility-clear">Clear</button></div></div>
+      <div class="image-utility-file-items" data-role="file-items" aria-label="Selected images"></div>
+    </div>
+    <div class="image-utility-workspace">
+      <section class="image-utility-controls">
+        <h2>Tool settings</h2>
+        <p>{tool.intro}</p>
+        {isContact && <label>Columns
+          <select data-role="contact-columns">
+            <option value="2">2 columns</option><option value="3" selected>3 columns</option>
+            <option value="4">4 columns</option><option value="5">5 columns</option>
+          </select>
+        </label>}
+        {tool.id === 'image-color-picker' && <p class="image-utility-tip">Click the image preview to inspect the original source pixel at that point. The action button samples its center.</p>}
+        {['merge-images-horizontally','merge-images-vertically'].includes(tool.id) && <p class="image-utility-tip">Images are arranged in the order shown in the queue. Remove and re-add a file to change its position.</p>}
+        <div class="image-utility-buttons">
+          <button type="button" class="image-utility-primary" data-role="process-batch">{processLabel[tool.id] ?? 'Process image'}</button>
+          <button type="button" data-role="download-batch" disabled>Download result</button>
+          <button type="button" data-role="copy-output" disabled>Copy text</button>
+        </div>
+        <div class="image-utility-progress" data-role="utility-progress" hidden><span data-role="progress-text">Processing images…</span><progress data-role="progress-bar" value="0" max="1"></progress></div>
+        <p class="image-utility-status" data-role="status" role="status" aria-live="polite">Select image files to begin.</p>
+      </section>
+      <section class="image-utility-preview">
+        <div class="image-utility-preview-head"><h2>Image preview</h2><span data-role="image-info">No image selected</span></div>
+        <div class="image-utility-canvas-wrap" data-role="source-preview">
+          <p data-role="empty-image">Image preview appears here after choosing a file.</p>
+          <canvas data-role="source-canvas" aria-label="Image preview; click to sample color" hidden></canvas>
+        </div>
+        <div class="image-utility-result" data-role="result-view" hidden>
+          <h3>Generated image</h3>
+          <img data-role="result-image" alt="Output preview" hidden />
+          <p data-role="result-image-info"></p>
+        </div>
+      </section>
+    </div>
+    <section class="image-utility-results" aria-label="Tool result">
+      <div class="image-utility-results-head"><h2>Output details</h2><small>Local processing only</small></div>
+      <textarea data-role="text-result" rows="5" readonly spellcheck="false" aria-label="Output text" placeholder="Your result appears here..."></textarea>
+      <div class="image-utility-swatches" data-role="palette" hidden></div>
+    </section>
+    <p class="image-tool-policy-note">{tool.policyNote}</p>
+  </div>
+</div>
+<script src="../client/image-tool-app.ts"></script>
+<style is:global>
+  .image-utility-card{padding:0}
+  .image-utility-body{display:grid;gap:14px;padding:14px 16px 18px}
+  .image-utility-base64-label{display:grid;gap:10px;font-size:13px;font-weight:750}
+  .image-utility-base64-label textarea,.image-utility-results textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:104px;padding:12px;border:1px solid #37435a;background:#0c121d;border-radius:11px;color:#f2f3fa;font:12px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace}
+  .image-utility-queue{display:grid;gap:10px;padding:12px 14px;background:#101722;border:1px solid #313a4c;border-radius:11px}
+  .image-utility-queue-head,.image-utility-results-head,.image-utility-preview-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .image-utility-queue-head strong{font-size:13px}.image-utility-queue-head>div{display:flex;gap:8px}
+  .image-utility-queue-head button,.image-utility-file-items button,.image-utility-buttons button{padding:9px 13px;background:#232e42;color:#eef0f6;border:1px solid #43516b;border-radius:8px;cursor:pointer;font-weight:740;font-size:12px}
+  .image-utility-file-items{display:flex;flex-wrap:wrap;gap:8px}
+  .image-utility-file-item{display:flex;align-items:center;gap:9px;min-width:0;max-width:100%;padding:6px 8px;background:#192333;border:1px solid #364158;border-radius:9px}
+  .image-utility-file-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+  .image-utility-file-item button{padding:4px 8px}
+  .image-utility-workspace{display:grid;grid-template-columns:minmax(235px,340px) minmax(0,1fr);gap:14px}
+  .image-utility-controls,.image-utility-preview,.image-utility-results{padding:14px;background:#101722;border:1px solid #303a4d;border-radius:12px;min-width:0}
+  .image-utility-controls h2,.image-utility-preview h2,.image-utility-results h2{font-size:14px;line-height:1.3;margin:0 0 11px}
+  .image-utility-controls>p{color:#aeb8c9;font-size:12px;line-height:1.6;margin:0 0 14px}
+  .image-utility-controls>label{display:grid;gap:8px;font-size:12px;margin-bottom:14px}
+  .image-utility-controls select{height:38px;padding:4px 9px;background:#0b131e;color:#fff;border:1px solid #45516a;border-radius:9px}
+  .image-utility-controls .image-utility-tip{font-size:11px;border:1px solid #37415b;padding:10px;border-radius:9px}
+  .image-utility-buttons{display:flex;flex-wrap:wrap;gap:8px}
+  .image-utility-buttons .image-utility-primary{background:#655aee;border-color:#655aee}
+  .image-utility-buttons button:disabled{opacity:.4;cursor:not-allowed}
+  .image-utility-status{font-size:11px;color:#a5b7c8;min-height:18px;margin:12px 0 0}
+  .image-utility-progress{display:grid;gap:8px;margin-top:12px}
+  .image-utility-progress progress{width:100%}
+  .image-utility-preview-head{margin-bottom:10px}
+  .image-utility-preview-head h2{margin:0}
+  .image-utility-preview-head span{color:#92a2b5;font-size:11px;text-align:right}
+  .image-utility-canvas-wrap{min-height:235px;display:grid;place-items:center;background:#0a111b;border-radius:11px;border:1px solid #2c3548;overflow:hidden;padding:8px}
+  .image-utility-canvas-wrap p{font-size:12px;color:#8996a7;text-align:center}
+  .image-utility-canvas-wrap canvas{max-width:100%;height:auto;display:block;cursor:crosshair}
+  .image-utility-result{margin-top:14px;padding-top:12px;border-top:1px solid #303a4d}
+  .image-utility-result h3{font-size:12px;margin:0 0 9px}
+  .image-utility-result img{display:block;max-width:100%;max-height:250px;object-fit:contain;border-radius:9px}
+  .image-utility-result p{font-size:11px;color:#a1b5c8}
+  .image-utility-results textarea{min-height:120px}
+  .image-utility-results-head h2{margin:0}
+  .image-utility-results-head small{font-size:10px;color:#a9b4c5}
+  .image-utility-swatches{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+  .image-utility-swatches button{display:grid;gap:4px;justify-items:center;border:1px solid #3b465b;border-radius:8px;background:#1c2431;color:#fff;padding:7px;font-size:11px;cursor:pointer}
+  .image-utility-swatches button span{display:block;width:66px;height:37px;border-radius:6px}
+  .image-utility-body>.image-tool-policy-note{font-size:11px;line-height:1.5;color:#9aa6b8}
+  @media(max-width:760px){.image-utility-workspace{grid-template-columns:1fr}.image-utility-body{padding:10px}.image-utility-queue-head{align-items:start;flex-direction:column}.image-utility-buttons button{flex:1 1 130px}}
+</style>

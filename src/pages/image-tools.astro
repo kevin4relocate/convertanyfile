@@ -10,7 +10,7 @@ import { SITE } from '../config/site';
 const guideGroups = [{ title: 'Popular image editing guides', links: POPULAR_IMAGE_GUIDES }] as const;
 const faq = [
   { question: 'Do these image tools upload my source images?', answer: 'The current Image Tools are designed around browser-side processing. Supported transforms, visible-watermark repair, metadata cleanup, renaming, edge-fade preview processing and ZIP creation run locally instead of sending source images to an image-processing API.' },
-  { question: 'Which image formats are supported?', answer: 'The current Image Tools accept JPG/JPEG, PNG and WebP. Individual tools may offer different output choices depending on whether transparency, lossless output or source-format preservation is needed.' },
+  { question: 'Which image formats are supported?', answer: 'Image Tools accept JPG/JPEG, PNG and WebP for the published browser utilities. Individual tools may offer different output choices depending on whether transparency, lossless output or source-format preservation is needed.' },
   { question: 'Can I edit multiple images at once?', answer: 'Yes. The current Image Tools support batch workflows within documented per-file, pixel and total-input limits. Tools with visual settings can reuse one setup across a batch or customize individual images when needed.' },
   { question: 'What does Preview mean?', answer: 'Preview tools are functional builds available for hands-on testing before they are promoted into the live catalog. Their controls, defaults or visual effect may still be tuned based on real use.' },
   { question: 'What is the difference between the two watermark removers?', answer: 'Remove Watermark provides Rectangle, Circle, Square, Diamond, 4-Point Star and Text masks for general visible marks. Gemini Watermark Remover uses a smaller Circle and 4-Point Star workflow focused on a small visible Gemini-style sparkle mark.' },
@@ -38,7 +38,7 @@ const schema = [
 ];
 ---
 <SiteLayout title="Online Image Tools — Resize, Compress, Crop & Remove Watermarks | ConvertAnyFile" description="Browser-based image tools for resizing, compressing, rotating, cropping, blurring, renaming, stripping metadata and removing visible watermarks locally." schema={schema}>
-<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Image Tools</span></div><span class="eyebrow">Online Image Tools</span><h1>Free online image tools for resize, compress, crop and more.</h1><p>Resize, compress, rotate, crop, blur, rename, strip metadata or repair visible watermarks with focused tools that run locally where the browser supports the required processing.</p></div></section>
+<section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Image Tools</span></div><span class="eyebrow">Online Image Tools</span><h1>Free online image tools for editing and file utilities.</h1><p>Resize, compress, rotate, crop, inspect EXIF, create favicons, merge images, and more with focused tools that run locally where the browser supports the required processing.</p></div></section>
 
 <ImageToolsDirectory />
 

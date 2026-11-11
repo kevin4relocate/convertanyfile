@@ -1,0 +1,112 @@
+import type { ImageToolDefinition, ImageToolManifestEntry } from '../platform/image-tools/types';
+
+const common = {
+  acceptedExtensions: ['jpg','jpeg','png','webp'] as const,
+  acceptedMimeTypes: ['image/jpeg','image/png','image/webp'] as const,
+  maxFileBytes: 10 * 1024 * 1024,
+  maxPixels: 20_000_000,
+  maxDimension: 12_000,
+  status: 'live' as const,
+  eyebrow: 'Free Image Utilities',
+};
+export const IMAGE_UTILITY_DETAILS = [
+  { slug:'image-to-base64', displayName:'Image to Base64', category:'encode',
+    description:'Encode a JPG, PNG or WebP file to a Base64 data URL entirely in your browser. Copy the result or download it as text.',
+    h1:'Convert an image into Base64.', intro:'Choose one JPG, PNG or WebP image to create its Base64 data URL without uploading the file to a server.',
+    summary:'Encode image bytes to a copyable Base64 data URL.', navigationHint:'Image → data URL',
+    info:'Base64 is a text representation of the original image bytes. It is not compression or encryption. The output may be about one third larger; use smaller files for fast copy and paste.',
+    hints:['Choose a JPG, PNG or WebP image (up to 5 MB).','Select Convert to generate a full data URL.','Copy the text or download it as a .txt file.'],
+    maxFiles:1, maxFileBytes:5*1024*1024 },
+  { slug:'base64-to-image', displayName:'Base64 to Image', category:'encode',
+    description:'Decode a Base64 data URL or raw Base64 into a downloadable PNG, JPG or WebP image in the browser. Format is verified from the file bytes.',
+    h1:'Decode Base64 back into an image.', intro:'Paste a supported Base64 data URL or raw Base64 bytes. The tool checks the file signature and creates a real image for download.',
+    summary:'Decode Base64 text to a verified JPG, PNG or WebP.', navigationHint:'Data URL → image',
+    info:'Only PNG, JPEG and WebP image signatures are accepted. SVG and HTML are never interpreted or downloaded as active content. Maximum decoded size is 10 MB.',
+    hints:['Paste Base64 text or a data:image/...;base64, URL.','Convert to inspect and preview the decoded image.','Download the original decoded image bytes.'],maxFiles:1 },
+  { slug:'image-color-picker', displayName:'Image Color Picker', category:'transform',
+    description:'Click any pixel on an uploaded image to inspect its exact HEX and RGB color. Local image sampling, no signup or upload.',
+    h1:'Pick an exact color from an image.',intro:'Upload a photo or graphic and click the preview to sample its underlying source pixel color.',
+    summary:'Click the image to sample exact source RGB colors.',navigationHint:'Click pixel · HEX · RGB',
+    info:'The preview fits your screen, but sampling uses the source pixel at the selected location. Transparent pixels report their alpha value.',
+    hints:['Upload a JPG, PNG or WebP image.','Click anywhere in the preview to select a pixel.','Copy the HEX or RGBA value.'],maxFiles:1 },
+  { slug:'color-palette-extractor',displayName:'Color Palette Extractor',category:'transform',
+    description:'Extract up to six dominant colors from JPG, PNG or WebP images locally. Inspect and copy a palette of HEX values.',
+    h1:'Extract a useful palette from your image.',intro:'Sample an image to discover its dominant colors with editable-friendly HEX values, without a remote image-analysis service.',
+    summary:'Find dominant image colors and copy their HEX codes.',navigationHint:'Six colors · HEX',
+    info:'Colors are approximate, based on a scaled-down RGB histogram. Fully transparent pixels are ignored. This is not a perceptually calibrated color-matching system.',
+    hints:['Choose an image.','Run Extract palette.','Copy one color or the full HEX list.'],maxFiles:1 },
+  { slug:'image-dimension-inspector',displayName:'Image Dimension Inspector',category:'metadata',
+    description:'Inspect image pixel width, height, ratio, file size and detected image format locally, without uploading the file.',
+    h1:'Inspect image dimensions and file details.',intro:'Check the true decoded dimensions, aspect ratio, byte size and detected type of a JPG, PNG or WebP file.',
+    summary:'Read image dimensions, aspect ratio, format and size.',navigationHint:'Width × height · bytes',
+    info:'Dimensions are decoded from the image rather than inferred from filenames. Device pixel density and print DPI are not the same thing as pixel dimensions.',
+    hints:['Upload an image.','Inspect dimensions and aspect ratio.','Copy the result for specifications or design handoff.'],maxFiles:1 },
+  { slug:'exif-metadata-viewer',displayName:'EXIF Metadata Viewer',category:'metadata',
+    description:'Read supported JPEG, PNG eXIf and WebP EXIF metadata tags locally, including orientation and camera details when available.',
+    h1:'View image EXIF metadata privately.',intro:'See camera, software, date, orientation and embedded GPS metadata when present. Image bytes remain in your browser.',
+    summary:'Inspect embedded EXIF tags without uploading images.',navigationHint:'Camera · GPS · orientation',
+    info:'The viewer reads TIFF-style EXIF blocks embedded in JPEG APP1, PNG eXIf and WebP EXIF chunks. It does not decode full XMP, IPTC or every vendor MakerNote. A missing EXIF result does not guarantee the file has no other metadata.',
+    hints:['Choose a supported image.','Select Read EXIF metadata.','Review the extracted tags; use Remove Image Metadata to export a cleaned copy.'],maxFiles:1 },
+  { slug:'image-to-favicon',displayName:'Image to Favicon',category:'encode',
+    description:'Generate a real multi-resolution .ico favicon with 16, 32 and 48 pixel PNG icon entries from an uploaded image.',
+    h1:'Make a multi-size ICO favicon.',intro:'Upload an image and export a browser-ready .ico containing 16, 32 and 48 pixel icon sizes in one file.',
+    summary:'Create one favicon.ico containing 16/32/48px icons.',navigationHint:'ICO · three sizes',
+    info:'The output is an ICO container with PNG-compressed entries, supported by modern browsers. Source images are fitted inside transparent square icon canvases. Retain the original for high-resolution branding.',
+    hints:['Choose a logo or image.','Select Create favicon.','Download favicon.ico and reference it from your HTML head.'],maxFiles:1 },
+  { slug:'app-icon-generator',displayName:'App Icon Generator',category:'encode',
+    description:'Generate common square PNG app-icon sizes and a web app manifest snippet in a ZIP, entirely inside your browser.',
+    h1:'Generate app icon sizes for the web.',intro:'Start from one high-resolution logo and build a downloadable ZIP of common web, Android and Apple touch icon sizes.',
+    summary:'Download multi-size PNG app icons as a ZIP.',navigationHint:'PWA · Apple · Android',
+    info:'The ZIP includes transparent PNGs at sizes 48–512px, apple-touch-icon.png and a sample manifest.webmanifest. This is a web/PWA icon generator, not a complete Android or iOS native application asset catalog.',
+    hints:['Upload a square or nearly square high-resolution logo.','Generate scaled PNG icons.','Download and unpack the ZIP into your website assets folder.'],maxFiles:1 },
+  { slug:'contact-sheet-maker',displayName:'Contact Sheet Maker',category:'geometry',
+    description:'Arrange up to 20 images in a labeled contact sheet grid as one downloadable PNG, without uploading image files.',
+    h1:'Make an image contact sheet.',intro:'Create a grid of thumbnails and filenames for reviewing photo batches and design iterations in one image.',
+    summary:'Build a labeled grid of up to 20 images.',navigationHint:'Thumbnails · labels · grid',
+    info:'Each tile keeps the source aspect ratio and adds a filename label. The output is a flattened PNG, not a project file or original-resolution collage.',
+    hints:['Add 1–20 images.','Choose the number of columns.','Generate and download the contact-sheet PNG.'],maxFiles:20 },
+  { slug:'merge-images-horizontally',displayName:'Merge Images Horizontally',category:'geometry',
+    description:'Join JPG, PNG or WebP images side by side into one transparent PNG in your browser. No file upload.',
+    h1:'Merge multiple images side by side.',intro:'Arrange up to 20 images in their upload order across one PNG canvas, with vertical centering for different heights.',
+    summary:'Join images left to right, preserving source dimensions.',navigationHint:'Side by side · PNG',
+    info:'The output width is the sum of input widths and height is the tallest image. Export stops if it would exceed 12,000px on a side or 20 million pixels.',
+    hints:['Upload at least two images.','Check their order in the file list.','Generate and download the merged PNG.'],maxFiles:20 },
+  { slug:'merge-images-vertically',displayName:'Merge Images Vertically',category:'geometry',
+    description:'Stack JPG, PNG or WebP files top to bottom into one transparent PNG locally. Preserve original sizes and center widths.',
+    h1:'Stack images vertically into one PNG.',intro:'Upload 2–20 images to combine them in their selected order, centered horizontally while keeping the original pixel sizes.',
+    summary:'Stack images top to bottom, preserving source dimensions.',navigationHint:'Top to bottom · PNG',
+    info:'Output width is the widest source and height is the sum of input heights. The same 12,000px dimension and 20-million-pixel export limits apply.',
+    hints:['Upload at least two images.','Check their order in the file list.','Generate and download the stacked PNG.'],maxFiles:20 },
+  { slug:'trim-transparent-borders',displayName:'Trim Transparent Borders',category:'geometry',
+    description:'Trim fully transparent outer pixels from PNG or WebP images and export a tightly cropped transparent PNG locally.',
+    h1:'Trim transparent edges from an image.',intro:'Remove unused transparent padding around logos, icons, stickers or illustrations while keeping the visible pixels intact.',
+    summary:'Crop away fully transparent outer borders.',navigationHint:'Alpha bounds · crop',
+    info:'Only pixels with alpha=0 are removed; anti-aliased semi-transparent pixels are preserved. Solid-background JPG files have no transparent borders to trim. The image is re-encoded as PNG.',
+    hints:['Upload a PNG or WebP with transparent outer padding.','Select Trim transparent borders.','Download the cropped PNG.'],maxFiles:1,maxPixels:8_000_000 },
+] as const;
+
+export const IMAGE_UTILITY_TOOLS = IMAGE_UTILITY_DETAILS.map((detail) => ({
+  ...common,
+  ...detail,
+  id: detail.slug,
+  title: detail.displayName + ' Online Free | ConvertAnyFile',
+  downloadSuffix: detail.slug.replace(/^image-/, ''),
+  policyNote: detail.info,
+})) satisfies ImageToolDefinition[];
+
+export const IMAGE_UTILITY_MANIFEST = IMAGE_UTILITY_TOOLS.map((tool) => {
+  const detail = IMAGE_UTILITY_DETAILS.find((item) => item.slug === tool.slug)!;
+  return {
+    tool,
+    runtime:'utility' as const,
+    directoryGroup:'utilities' as const,
+    navigationHint: detail.navigationHint,
+    summary:detail.summary,
+  };
+}) satisfies ImageToolManifestEntry[];
+
+export function getImageUtilityTool(id:string): ImageToolDefinition {
+  const tool = IMAGE_UTILITY_TOOLS.find((value)=>value.id===id);
+  if(!tool)throw new Error('Unknown image utility: '+id);
+  return tool;
+}

@@ -1,3 +1,4 @@
+import { IMAGE_UTILITY_MANIFEST } from './image-utility-tools';
 import type { ImageToolDefinition, MaskImageToolDefinition, ImageToolManifestEntry, ImageToolDirectoryGroup } from '../platform/image-tools/types';
 
 const MIB = 1024 * 1024;
@@ -306,6 +307,7 @@ export const IMAGE_TOOL_MANIFEST = [
   { tool: FADE_IMAGE_EDGES_TOOL, runtime: 'edge-fade', directoryGroup: 'preview', navigationHint: 'Subtitle-safe soft fades', summary: 'Fade blur naturally from one edge or all edges to create a subtitle-safe text area.' },
   { tool: BULK_RENAME_IMAGES_TOOL, runtime: 'rename', directoryGroup: 'cleanup', navigationHint: 'Patterns · numbering', summary: 'Rename a batch without changing image bytes or source extensions.' },
   { tool: REMOVE_IMAGE_METADATA_TOOL, runtime: 'metadata', directoryGroup: 'cleanup', navigationHint: 'EXIF · GPS · software', summary: 'Strip EXIF, GPS and software metadata locally.' },
+  ...IMAGE_UTILITY_MANIFEST,
 ] as const satisfies readonly ImageToolManifestEntry[];
 
 export type RegisteredImageTool = (typeof IMAGE_TOOL_MANIFEST)[number];
@@ -326,6 +328,7 @@ export const IMAGE_TOOL_ROADMAP = IMAGE_TOOL_MANIFEST.map((entry) => ({
 
 export const IMAGE_TOOL_DIRECTORY_SECTIONS = [
   { id: 'everyday', filterLabel: 'Everyday', kicker: 'Resize, compress and compose', heading: 'Everyday image edits with one familiar batch workflow.', description: 'Use these tools to change dimensions, encoding, orientation, framing or blur. Start with a shared setup, then customize individual images.', white: false },
+  { id: 'utilities', filterLabel: 'Utilities', kicker: 'Inspect, convert and compose', heading: 'Everyday image utilities for design and development.', description: 'Read colors and EXIF, create icons and contact sheets, merge images or trim transparency locally.', white: true },
   { id: 'preview', filterLabel: 'Preview', kicker: 'Preview lab', heading: 'Try new image workflows before they move to Live.', description: 'Experimental image tools remain available for hands-on testing without being promoted into the main navigation.', white: true },
   { id: 'cleanup', filterLabel: 'Cleanup', kicker: 'File cleanup and organization', heading: 'Clean metadata or rename files without another upload step.', description: 'Remove image metadata by re-encoding locally, or rename source files without modifying the image bytes.', white: false },
   { id: 'watermarks', filterLabel: 'Watermarks', kicker: 'Watermarking and visible-pixel repair', heading: 'Add a watermark or repair a small visible mark.', description: 'Use a draggable text or logo watermark for branding, or choose a manual mask workflow for visible-pixel reconstruction.', white: true },

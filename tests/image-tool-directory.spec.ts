@@ -28,9 +28,10 @@ test('search filters SSR cards by tool name, description, and keywords without n
   await expect(cards.filter({ visible: true })).toHaveCount(IMAGE_TOOL_MANIFEST.length);
 
   await search.fill('EXIF');
-  await expect(cards.filter({ visible: true })).toHaveCount(1);
-  await expect(directory.locator('[data-directory-tool]:visible')).toHaveAttribute('href', '/remove-image-metadata/');
-  await expect(directory.locator('[data-directory-count]')).toHaveText(`Showing 1 of ${IMAGE_TOOL_MANIFEST.length} tools`);
+  await expect(cards.filter({ visible: true })).toHaveCount(2);
+  await expect(directory.locator('[data-directory-tool]:visible[href="/remove-image-metadata/"]')).toHaveCount(1);
+  await expect(directory.locator('[data-directory-tool]:visible[href="/exif-metadata-viewer/"]')).toHaveCount(1);
+  await expect(directory.locator('[data-directory-count]')).toHaveText(`Showing 2 of ${IMAGE_TOOL_MANIFEST.length} tools`);
   await expect(directory.locator('[data-directory-section="everyday"]')).toBeHidden();
 
   await search.fill('watermark');

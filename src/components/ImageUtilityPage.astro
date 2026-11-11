@@ -1,0 +1,28 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ImageToolPageFrame from './ImageToolPageFrame.astro';
+import ImageToolGrid from './ImageToolGrid.astro';
+import { imageToolSchemas } from '../seo/image-tool-schema';
+import { IMAGE_UTILITY_DETAILS } from '../config/image-utility-tools';
+import type { ImageToolDefinition } from '../platform/image-tools/types';
+
+interface Props { tool: ImageToolDefinition; }
+const {tool} = Astro.props;
+const detail = IMAGE_UTILITY_DETAILS.find((item) => item.slug === tool.slug);
+if(!detail)throw new Error('Missing image utility details: '+tool.slug);
+const schemas=imageToolSchemas(tool,[...detail.hints,'Browser-only file processing'],'UtilitiesApplication');
+---
+<SiteLayout title={tool.title} description={tool.description} schema={schemas}>
+  <ImageToolPageFrame tool={tool} />
+  <section class="content-wide-section white"><div class="site-container">
+    <div class="content-intro-grid">
+      <div><span class="section-kicker">How to use {tool.displayName}</span><h2>Useful results, handled on your device.</h2><p>{detail.info}</p></div>
+      <div class="content-summary-card"><strong>Private by design</strong><p>Image bytes are decoded, inspected or transformed by your browser. No image-processing API upload is required. Your original files are not modified.</p></div>
+    </div>
+    <ol class="content-checklist">{detail.hints.map((step)=><li>{step}</li>)}</ol>
+  </div></section>
+  <section class="content-wide-section"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">Related Image Tools</span><h2>Explore more image utilities.</h2><p>Continue with another focused tool using the same privacy-first local workflow.</p></div>
+    <ImageToolGrid compact ids={IMAGE_UTILITY_DETAILS.filter((item)=>item.slug!==tool.id).slice(0,6).map((item)=>item.slug)} excludeId={tool.id} />
+  </div></section>
+</SiteLayout>

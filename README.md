@@ -31,6 +31,18 @@ ConvertAnyFile.net is a browser-first file conversion and image-tools platform b
 
 All converter categories reuse the generic queue, progress, cancel, retry, per-file download, ZIP packaging, SEO shell and responsive page frame. Category behavior stays behind `EngineAdapter` implementations.
 
+## Image Utilities (Batch B)
+
+Twelve new browser-only image utilities are registered in the unified Image Tools manifest and reuse the existing file-admission and download/ZIP helpers:
+
+- Image to Base64 and Base64 to Image (PNG, JPEG and WebP only, signature validated)
+- Image Color Picker and Color Palette Extractor
+- Image Dimension Inspector and EXIF Metadata Viewer (JPEG APP1, PNG eXIf, WebP EXIF; supported TIFF tags)
+- Image to Favicon (real three-resolution PNG-in-ICO) and App Icon Generator (PNG + manifest ZIP)
+- Contact Sheet Maker, Merge Images Horizontally, Merge Images Vertically and Trim Transparent Borders
+
+Image decoding is capped at the tool-defined pixel, side and file size limits; exports are capped at 20 million pixels and 12,000 pixels per side, with tighter per-tool limits where appropriate. No audio/video processing or external image upload is required. Output is PNG for merges, contact sheets and transparent trimming, ICO for favicons and ZIP for app icons. Metadata viewing does not remove data; use Remove Image Metadata for that operation.
+
 ## Text & Developer Tools (Batch A)
 
 14 independent text and developer utilities share a typed catalog, a reusable browser-only workspace, and a pure TypeScript processing module. Routes live under `/text/<tool-slug>/` with the searchable collection at `/text-tools/`.
