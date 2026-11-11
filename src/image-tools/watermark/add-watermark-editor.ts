@@ -1,4 +1,5 @@
 import { downloadResultBatch } from '../core/download';
+import { createImageFileAdmission, imageDimensionsWithinLimits } from '../core/file-admission';
 
 type Kind = 'text' | 'logo';
 type Item = { id:string; file:File; url:string; width:number; height:number; output?:Blob };
@@ -78,12 +79,29 @@ export function mountAddWatermark(root:HTMLElement):void{
   }
 
   async function addFiles(files:readonly File[]):Promise<void>{
-    if(!files.length)return;hideNotice();let bytes=items.reduce((sum,item)=>sum+item.file.size,0),skipped=0;
-    for(const file of files){if(items.length>=maxFiles||bytes+file.size>maxTotal||file.size>maxFile||!supported.has(ext(file.name))){skipped++;continue;}
+    if(!files.length)return;
+    hideNotice();
+    const admission=createImageFileAdmission(items.map(item=>({file:item.file})),{
+      maxFiles,maxFileBytes:maxFile,maxTotalBytes:maxTotal,acceptedExtensions:['jpg','jpeg','png','webp'],
+    });
+    let skipped=0;
+    for(const file of files){
+      if(admission.check(file)){skipped++;continue;}
       const url=URL.createObjectURL(file);
-      try{const image=await loadImage(url);const width=image.naturalWidth,height=image.naturalHeight;if(width>maxDimension||height>maxDimension||width*height>maxPixels)throw new Error('limit');items.push({id:crypto.randomUUID(),file,url,width,height});bytes+=file.size;}catch{URL.revokeObjectURL(url);skipped++;}
+      try{
+        const image=await loadImage(url);
+        const width=image.naturalWidth,height=image.naturalHeight;
+        if(!imageDimensionsWithinLimits(width,height,{maxDimension,maxPixels}))throw new Error('limit');
+        admission.accept(file);
+        items.push({id:crypto.randomUUID(),file,url,width,height});
+      }catch{
+        URL.revokeObjectURL(url);skipped++;
+      }
     }
-    input.value='';if(!activeId&&items[0])activeId=items[0].id;invalidate();renderList();await renderPreview();if(skipped)showNotice(`${skipped} file${skipped===1?'':'s'} skipped by format, size, dimension, or batch limits.`);
+    input.value='';
+    if(!activeId&&items[0])activeId=items[0].id;
+    invalidate();renderList();await renderPreview();
+    if(skipped)showNotice(`${skipped} file${skipped===1?'':'s'} skipped by format, size, dimension, or batch limits.`);
   }
 
   function removeItem(id:string):void{const index=items.findIndex(item=>item.id===id);if(index<0)return;const [item]=items.splice(index,1);if(item)URL.revokeObjectURL(item.url);if(activeId===id)activeId=items[Math.min(index,items.length-1)]?.id;invalidate();renderList();void renderPreview();}
