@@ -12,7 +12,7 @@ function normalizeSearch(value: string): string {
 function initializeImageToolsDirectory(root: HTMLElement): void {
   if (root.dataset.directoryReady === 'true') return;
 
-  const input = root.querySelector<HTMLInputElement>('[data-directory-search]');
+  const input = root.querySelector<HTMLInputElement>('[data-directory-search-input]');
   const clear = root.querySelector<HTMLButtonElement>('[data-directory-clear]');
   const reset = root.querySelector<HTMLButtonElement>('[data-directory-reset]');
   const count = root.querySelector<HTMLElement>('[data-directory-count]');
