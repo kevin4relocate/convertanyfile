@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { CONTRAST_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={CONTRAST_IMAGE_TOOL}
+  kicker="Contrast · highlights · shadows"
+  heading="Increase or reduce the separation between light and dark."
+  copy="Use the contrast slider to add punch to flat photos or create a softer image. See the change in the live preview before you export your batch."
+  bullets={[
+    "Adjust contrast between 0% (flat midtone) and 200% (strong contrast).",
+    "Use 100% to preserve the source contrast.",
+    "Keep output pixel dimensions unchanged.",
+    "Process JPG, PNG or WebP files locally in the browser.",
+    "Download individual outputs or a ZIP for completed batch results."
+]}
+/>
