@@ -76,7 +76,7 @@ for (const toolId of toolIds) {
       });
       await app.locator('[data-setting="color"]').evaluate((element: HTMLInputElement) => {
         element.value = '#0000ff';
-        element.dispatchEvent(new Event('input', { bubbles: true }));
+        element.dispatchEvent(new Event('change', { bubbles: true }));
       });
       await expect(app.locator('[data-output-for="thickness"]')).toHaveText('6 px');
     }
