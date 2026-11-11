@@ -23,8 +23,11 @@ const isBlur = tool.id === 'blur-image';
 const isEdgeFade = tool.id === 'fade-image-edges';
 const isMetadata = tool.id === 'remove-image-metadata';
 const isColorEffect = tool.id === 'grayscale-image' || tool.id === 'sepia-image' || tool.id === 'invert-image';
+const isColorAdjustment = ['brightness-image', 'contrast-image', 'adjust-image-saturation'].includes(tool.id);
+const isPixelate = tool.id === 'pixelate-image';
+const adjustmentLabel = tool.id === 'brightness-image' ? 'Brightness' : tool.id === 'contrast-image' ? 'Contrast' : 'Saturation';
 const hasEmbeddedOutput = isCompress || isMetadata;
-const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isEdgeFade ? 'Apply edge fade' : isMetadata ? 'Remove metadata' : isColorEffect ? 'Apply color effect' : 'Process images';
+const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isEdgeFade ? 'Apply edge fade' : isMetadata ? 'Remove metadata' : isColorEffect ? 'Apply color effect' : isColorAdjustment ? 'Adjust image colors' : isPixelate ? 'Pixelate images' : 'Process images';
 ---
 
 <div class="image-editor-card deterministic-tool" data-image-tool-app data-tool-id={tool.id} data-download-suffix={tool.downloadSuffix} data-max-file-bytes={tool.maxFileBytes} data-max-pixels={tool.maxPixels} data-max-dimension={tool.maxDimension} data-max-files={maxFiles} data-has-items="false">
@@ -91,6 +94,16 @@ const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images'
           {isColorEffect && <div class="setting-grid">
             <label><span>Effect strength</span><div class="range-row"><input data-setting="intensity" type="range" min="0" max="100" step="1" value="100" /><output data-output-for="intensity">100%</output></div></label>
             <div class="setting-note setting-note--wide"><strong>Adjust from original to full effect.</strong><p>0% preserves the source colors; 100% applies the full effect. The image dimensions stay unchanged. Choose an output format below and inspect the live preview before downloading.</p></div>
+          </div>}
+
+          {isColorAdjustment && <div class="setting-grid">
+            <label><span>{adjustmentLabel} (%)</span><div class="range-row"><input data-setting="level" type="range" min="0" max="200" step="1" value="100" /><output data-output-for="level">100%</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>100% preserves the original.</strong><p>Lower values reduce {adjustmentLabel.toLowerCase()} and higher values increase it. Preview the result before applying it to a batch; large adjustments can clip details or colors.</p></div>
+          </div>}
+
+          {isPixelate && <div class="setting-grid">
+            <label><span>Pixel block size</span><div class="range-row"><input data-setting="blockSize" type="range" min="2" max="64" step="1" value="12" /><output data-output-for="blockSize">12 px</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Create a pixel-art effect without resizing the output.</strong><p>Larger blocks produce more visible squares. This is a creative effect and must not be treated as a guaranteed privacy redaction method.</p></div>
           </div>}
 
           {isEdgeFade && <div class="visual-tool-controls edge-fade-controls">
