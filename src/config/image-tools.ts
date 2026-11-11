@@ -156,12 +156,12 @@ export function getImageToolManifest(id: string): RegisteredImageTool | undefine
 }
 
 /** Kept as a compatibility view for cards, navigation and existing SEO pages. */
-export const IMAGE_TOOL_ROADMAP = IMAGE_TOOL_MANIFEST.map(({ tool, summary, navigationLabel }) => ({
-  id: tool.id,
-  label: navigationLabel ?? tool.displayName,
-  status: tool.status,
-  description: summary,
-  href: `/${tool.slug}/`,
+export const IMAGE_TOOL_ROADMAP = IMAGE_TOOL_MANIFEST.map((entry) => ({
+  id: entry.tool.id,
+  label: ('navigationLabel' in entry ? entry.navigationLabel : undefined) ?? entry.tool.displayName,
+  status: entry.tool.status,
+  description: entry.summary,
+  href: `/${entry.tool.slug}/`,
 }));
 
 export const IMAGE_TOOL_DIRECTORY_SECTIONS = [
