@@ -16,16 +16,7 @@ const tools = IMAGE_TOOL_ROADMAP.filter((tool) => (!ids || ids.includes(tool.id)
       </span>
       <span class="image-tool-card-arrow" aria-hidden="true">→</span>
     </a>
-  ) : (
-    <div class="image-tool-card-link is-planned" aria-label={`${tool.label}, planned`}>
-      <span class="image-tool-card-icon" aria-hidden="true">{tool.label.slice(0, 1)}</span>
-      <span class="image-tool-card-copy">
-        <span class="image-tool-status">Planned</span>
-        <strong>{tool.label}</strong>
-        <small>{tool.description}</small>
-      </span>
-    </div>
-  ))}
+  ) : null)}
 </div>
 <style>
   .image-tool-status--live{border-color:rgba(67,204,148,.34);background:rgba(37,116,84,.11);color:#72d9ad}
