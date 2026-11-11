@@ -52,6 +52,14 @@ test('JSON Schema detects valid, invalid and malicious external refs',async({pag
  await page.locator('[data-data-secondary]').fill('{"$ref":"https://example.com/schema"}');
  await page.locator('[data-data-run]').click();
  await expect(page.locator('[data-data-error]')).toContainText('Only local JSON Schema references');
+ await page.locator('[data-data-secondary]').fill('{"enum":[{"a":1,"b":2}]}');
+ await page.locator('[data-data-input]').fill('{"b":2,"a":1}');
+ await execute(page);
+ await expect(text(page)).toHaveValue(/Valid: JSON matches/);
+ await page.locator('[data-data-secondary]').fill('{"type":"array","uniqueItems":true}');
+ await page.locator('[data-data-input]').fill('[{"a":1,"b":2},{"b":2,"a":1}]');
+ await execute(page);
+ await expect(text(page)).toHaveValue(/unique/);
 });
 test('JSONPath returns matched values and rejects code execution',async({page},info)=>{
  test.skip(info.project.name!=='chromium-desktop','JSONPath engine');

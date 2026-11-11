@@ -2,7 +2,18 @@ type JSONSchema = boolean | Record<string, unknown>;
 type Issue = string;
 const own = (obj:object,key:string):boolean => Object.prototype.hasOwnProperty.call(obj,key);
 const isObject=(v:unknown):v is Record<string,unknown> => typeof v==='object'&&v!==null&&!Array.isArray(v);
-const same=(a:unknown,b:unknown):boolean => JSON.stringify(a)===JSON.stringify(b);
+function same(a:unknown,b:unknown):boolean {
+ if(a===b)return true;
+ if(Array.isArray(a)||Array.isArray(b)){
+  return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((x,i)=>same(x,b[i]));
+ }
+ if(isObject(a)||isObject(b)){
+  if(!isObject(a)||!isObject(b))return false;
+  const keys=Object.keys(a);
+  return keys.length===Object.keys(b).length&&keys.every(k=>own(b,k)&&same(a[k],b[k]));
+ }
+ return false;
+}
 const showPath=(p:string,k:string)=>p+'['+JSON.stringify(k)+']';
 const NUMERIC_KEYS=['minimum','maximum','exclusiveMinimum','exclusiveMaximum','multipleOf','minLength','maxLength','minItems','maxItems','minProperties','maxProperties'] as const;
 const VALID_TYPES=new Set(['string','number','integer','object','array','boolean','null']);
@@ -27,6 +38,11 @@ function assertSchema(value:unknown,level=0):void{
  }
  const required=value.required;
  if(required!==undefined&&(!Array.isArray(required)||!required.every(x=>typeof x==='string')))throw new Error('JSON Schema required must be an array of property names.');
+ if(value.enum!==undefined&&(!Array.isArray(value.enum)||value.enum.length>1000))throw new Error('JSON Schema enum must be an array of up to 1000 values.');
+ if(value.multipleOf!==undefined&&Number(value.multipleOf)<=0)throw new Error('JSON Schema multipleOf must be positive.');
+ for(const k of ['minLength','maxLength','minItems','maxItems','minProperties','maxProperties']){
+  if(typeof value[k]==='number'&&!Number.isInteger(value[k]))throw new Error('JSON Schema '+k+' must be an integer.');
+ }
  for(const k of ['$ref']){
   if(value[k]!==undefined&&(typeof value[k]!=='string'||!(value[k] as string).startsWith('#/')))
    throw new Error('Only local JSON Schema references (#/...) are supported.');
@@ -96,7 +112,7 @@ export function validateCommonJsonSchema(data:unknown,schema:unknown):{valid:boo
    if(refs.has(s.$ref)){add(path+': recursive $ref detected');return;}
    const next=new Set(refs);next.add(s.$ref);
    walk(value,resolveRef(root,s.$ref),path,depth+1,next);
-   return;
+   // A referenced schema does not suppress sibling constraints.
   }
   if(s.type!==undefined){
    const all=Array.isArray(s.type)?s.type:[s.type];
@@ -125,7 +141,10 @@ export function validateCommonJsonSchema(data:unknown,schema:unknown):{valid:boo
   if(Array.isArray(value)){
    if(typeof s.minItems==='number'&&value.length<s.minItems)add(path+': fewer than minItems');
    if(typeof s.maxItems==='number'&&value.length>s.maxItems)add(path+': more than maxItems');
-   if(s.uniqueItems===true&&value.some((v,i)=>value.slice(0,i).some(u=>same(u,v))))add(path+': array items must be unique');
+   if(s.uniqueItems===true){
+    if(value.length>2000)throw new Error('uniqueItems check supports at most 2000 array entries.');
+    if(value.some((v,i)=>value.slice(0,i).some(u=>same(u,v))))add(path+': array items must be unique');
+   }
    if(Array.isArray(s.prefixItems))s.prefixItems.forEach((sub,i)=>{if(i<value.length)walk(value[i],sub,path+'['+i+']',depth+1,refs)});
    if(s.items!==undefined){
     const start=Array.isArray(s.prefixItems)?s.prefixItems.length:0;
