@@ -26,6 +26,206 @@ export interface ImageToolSeoContent {
 }
 
 export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
+  'brightness-image': {
+    howToHeading: "How to adjust image brightness without uploading a photo.",
+    howToIntro: "Brightness controls how light or dark all image colors appear. Work locally, inspect the original, and avoid losing detail in very bright or very dark areas.",
+    steps: [
+      {
+        "title": "Choose your images",
+        "text": "Add JPG, PNG or WebP images to the local processing queue."
+      },
+      {
+        "title": "Set brightness",
+        "text": "Choose 100% for the original, lower values to darken, or values above 100% to brighten."
+      },
+      {
+        "title": "Inspect preview",
+        "text": "Compare the result with the source, especially in highlights and shadows."
+      },
+      {
+        "title": "Process and export",
+        "text": "Apply your settings to one image or the batch, then download a file or ZIP."
+      }
+    ],
+    useCasesHeading: "When a brightness tool is useful.",
+    useCasesIntro: "Simple brightness adjustment helps with presentation graphics and lightening mildly dark images; it does not perform advanced HDR recovery.",
+    useCases: [
+      "Lighten images that are a little dark.",
+      "Darken backgrounds to make overlay text more readable.",
+      "Bring a group of product photos closer to a similar brightness level.",
+      "Create alternate light and dark visual versions for a layout."
+    ],
+    faq: [
+      {
+        "question": "What does 100% brightness mean?",
+        "answer": "It preserves the source brightness. Below 100% the image becomes darker; above 100% it becomes lighter."
+      },
+      {
+        "question": "Can this fix severely overexposed photos?",
+        "answer": "No. Once highlights are clipped in the original image, increasing or decreasing brightness cannot recover missing detail."
+      },
+      {
+        "question": "Does the brightness tool upload my photo?",
+        "answer": "No. The supported canvas adjustment and downloads happen locally in your browser."
+      }
+    ],
+    relatedIds: [
+      "contrast-image",
+      "adjust-image-saturation",
+      "grayscale-image",
+      "compress-image"
+    ],
+  },
+  'contrast-image': {
+    howToHeading: "How to increase or decrease photo contrast.",
+    howToIntro: "Contrast changes the separation between shadows, middle tones and highlights. Watch the live preview before you commit an adjustment to a batch.",
+    steps: [
+      {
+        "title": "Add JPG, PNG or WebP files",
+        "text": "Choose one photo or load multiple images for local processing."
+      },
+      {
+        "title": "Choose contrast strength",
+        "text": "Keep 100% to leave contrast unchanged; move lower for flatter tones or above 100% for stronger separation."
+      },
+      {
+        "title": "Compare the preview",
+        "text": "Look at shadow and highlight detail. Back off if bright or dark regions become featureless."
+      },
+      {
+        "title": "Apply and download",
+        "text": "Export in your preferred supported format, as a single image or batch ZIP."
+      }
+    ],
+    useCasesHeading: "Use contrast to improve visual separation.",
+    useCasesIntro: "Basic contrast controls are useful for everyday photos and graphics that need a punchier or softer appearance.",
+    useCases: [
+      "Add contrast to flat product images and screenshots.",
+      "Reduce contrast for a soft, low-key photographic mood.",
+      "Preview how illustrations change with stronger dark and light regions.",
+      "Apply a consistent contrast adjustment across a small image batch."
+    ],
+    faq: [
+      {
+        "question": "Does contrast change brightness?",
+        "answer": "Contrast can make highlights brighter and shadows darker even when the overall source brightness stays similar."
+      },
+      {
+        "question": "What does 0% contrast do?",
+        "answer": "It flattens visible RGB tones toward a middle gray. Use 100% for the unchanged source contrast."
+      },
+      {
+        "question": "Can too much contrast damage the output?",
+        "answer": "High contrast can clip detail, but it does not alter your source file; the tool creates a separate downloaded copy."
+      }
+    ],
+    relatedIds: [
+      "brightness-image",
+      "adjust-image-saturation",
+      "grayscale-image",
+      "sepia-image"
+    ],
+  },
+  'adjust-image-saturation': {
+    howToHeading: "How to increase or decrease image saturation.",
+    howToIntro: "Saturation controls how vivid existing colors are. Turn it down for muted imagery, or raise it to emphasize color, while watching for unnatural results.",
+    steps: [
+      {
+        "title": "Select photos",
+        "text": "Load supported JPG, PNG or WebP images into the browser."
+      },
+      {
+        "title": "Move the saturation slider",
+        "text": "0% gives grayscale, 100% preserves the current saturation, and 200% creates a stronger color look."
+      },
+      {
+        "title": "Review skin tones and graphics",
+        "text": "Inspect the preview for oversaturated faces, product colors, or loss of natural appearance."
+      },
+      {
+        "title": "Export results",
+        "text": "Process one file or several and download completed results locally."
+      }
+    ],
+    useCasesHeading: "Where saturation controls can help.",
+    useCasesIntro: "Small changes in saturation can improve visual balance, while strong changes are better reserved for stylized imagery.",
+    useCases: [
+      "Make colorful travel photos more vivid.",
+      "Create a muted color palette for editorial graphics.",
+      "Reduce distracting saturation in screenshots or illustrations.",
+      "Maintain similar color intensity across a set of related visual assets."
+    ],
+    faq: [
+      {
+        "question": "Is 0% saturation the same as grayscale?",
+        "answer": "Yes. The saturation filter removes color at 0%, leaving luminance differences visible as shades of gray."
+      },
+      {
+        "question": "Can I recover color from a black-and-white photo?",
+        "answer": "No. Increasing saturation cannot invent color values that are absent from the source image."
+      },
+      {
+        "question": "Does saturation change image dimensions?",
+        "answer": "No. The output keeps the same pixel width and height; the encoded file size may still change."
+      }
+    ],
+    relatedIds: [
+      "brightness-image",
+      "contrast-image",
+      "sepia-image",
+      "grayscale-image"
+    ],
+  },
+  'pixelate-image': {
+    howToHeading: "How to pixelate a photo into visible square blocks.",
+    howToIntro: "Pixelation downsamples a source image and scales it up using nearest-neighbor interpolation to create sharp mosaic-like squares.",
+    steps: [
+      {
+        "title": "Add the image",
+        "text": "Choose a JPG, PNG or WebP photo from your device. No upload to a conversion server is required."
+      },
+      {
+        "title": "Choose block size",
+        "text": "Use small blocks for a subtle mosaic or larger 32–64 px blocks for chunky pixel-art styling."
+      },
+      {
+        "title": "Preview the mosaic",
+        "text": "Inspect the full image, especially edges and any areas containing important details."
+      },
+      {
+        "title": "Export the full-size image",
+        "text": "Download the processed image or use a ZIP for multiple files. Pixel dimensions are preserved."
+      }
+    ],
+    useCasesHeading: "Use pixelation for playful design effects.",
+    useCasesIntro: "Pixelation is an artistic mosaic treatment, not dependable redaction of private details.",
+    useCases: [
+      "Create pixel-art-style versions of photos and illustrations.",
+      "Make stylized backgrounds for social posts or thumbnails.",
+      "Build retro-game-inspired visual assets.",
+      "Create a deliberately low-detail mosaic effect while keeping the canvas dimensions."
+    ],
+    faq: [
+      {
+        "question": "Does pixelating reduce the output image dimensions?",
+        "answer": "No. The tool downsamples internally to create blocks, then enlarges back to the original pixel width and height."
+      },
+      {
+        "question": "Can I use pixelation to securely hide private information?",
+        "answer": "No. Pixelation is not a guaranteed secure redaction technique. Crop or permanently remove sensitive content instead."
+      },
+      {
+        "question": "What happens when I increase block size?",
+        "answer": "Each visible square covers a larger region, making the image look more abstract and less detailed."
+      }
+    ],
+    relatedIds: [
+      "blur-image",
+      "crop-image",
+      "resize-image",
+      "contrast-image"
+    ],
+  },
   'grayscale-image': {
     howToHeading: 'Convert an image to grayscale in four steps.',
     howToIntro: 'Make a neutral black-and-white-style copy locally while retaining control over the original color strength and export format.',
