@@ -36,6 +36,11 @@ const watermarkToolLoader: ImageToolLoader = async () => {
  * Loader selection is by runtime family, not by each tool ID.
  * Adding a tool using an existing editor no longer requires editing this file.
  */
+const utilityLoader: ImageToolLoader = async () => {
+  const module = await import('../utilities/editor');
+  return { mount: module.mountImageUtility };
+};
+
 const RUNTIME_LOADERS = {
   mask: maskToolLoader,
   deterministic: deterministicToolLoader,
@@ -43,6 +48,7 @@ const RUNTIME_LOADERS = {
   metadata: metadataCleanupLoader,
   rename: renameToolLoader,
   watermark: watermarkToolLoader,
+  utility: utilityLoader,
 } satisfies Record<ImageToolRuntimeFamily, ImageToolLoader>;
 
 export async function mountRegisteredImageTool(toolId: string, root: HTMLElement): Promise<boolean> {
