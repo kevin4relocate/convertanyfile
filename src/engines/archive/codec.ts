@@ -62,36 +62,102 @@ function permissionMode(value: unknown, fallback: number): number {
   return fallback;
 }
 
+
+const CRC32_TABLE = Uint32Array.from({ length: 256 }, (_, index) => {
+  let value = index;
+  for (let bit = 0; bit < 8; bit += 1) {
+    value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+  }
+  return value >>> 0;
+});
+
+/**
+ * Read a ZIP entry with bounded decompression and CRC verification.
+ * Do not use JSZip.loadAsync({ checkCRC32: true }): that eagerly inflates
+ * every entry before our archive expansion budgets can be enforced.
+ */
+function extractZipEntryBounded(file: JSZip.JSZipObject, remainingBytes: number): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    let crc = 0xffffffff;
+    let settled = false;
+    const stream = file.internalStream('uint8array');
+    const fail = (error: Error) => {
+      if (settled) return;
+      settled = true;
+      stream.pause();
+      reject(error);
+    };
+    stream.on('data', (chunk: Uint8Array) => {
+      if (settled) return;
+      total += chunk.byteLength;
+      if (total > MAX_ENTRY_BYTES || total > remainingBytes) {
+        fail(archiveError('Archive expands beyond its extracted-size safety limit'));
+        return;
+      }
+      for (const byte of chunk) crc = CRC32_TABLE[(crc ^ byte) & 0xff]! ^ (crc >>> 8);
+      chunks.push(chunk);
+    });
+    stream.on('error', (error: Error) => fail(error));
+    stream.on('end', () => {
+      if (settled) return;
+      const expected = (file as unknown as { _data?: { crc32?: number; uncompressedSize?: number } })._data;
+      if (expected && Number.isFinite(expected.uncompressedSize) && expected.uncompressedSize !== total) {
+        fail(archiveError('ZIP entry extracted size does not match its header'));
+        return;
+      }
+      if (typeof expected?.crc32 === 'number' && ((crc ^ 0xffffffff) >>> 0) !== (expected.crc32 >>> 0)) {
+        fail(archiveError('ZIP entry CRC32 mismatch'));
+        return;
+      }
+      const result = new Uint8Array(total);
+      let offset = 0;
+      for (const chunk of chunks) {
+        result.set(chunk, offset);
+        offset += chunk.byteLength;
+      }
+      settled = true;
+      resolve(result);
+    });
+    stream.resume();
+  });
+}
+
 async function unzip(bytes: ArrayBuffer): Promise<ArchiveEntry[]> {
   let zip: JSZip;
-  try { zip = await JSZip.loadAsync(bytes, { checkCRC32: true, createFolders: true }); }
+  try { zip = await JSZip.loadAsync(bytes, { checkCRC32: false, createFolders: true }); }
   catch { throw archiveError('Invalid, corrupt, encrypted, or unsupported ZIP archive'); }
 
   const files = Object.values(zip.files);
   if (files.length > MAX_ENTRIES) throw archiveError(`Archive contains more than ${MAX_ENTRIES} entries`);
 
+  // Reject oversized declared entries before decompressing anything.
+  let declaredTotal = 0;
+  for (const file of files) {
+    const unsafeOriginal = (file as unknown as { unsafeOriginalName?: string }).unsafeOriginalName;
+    requireSafePath(unsafeOriginal ?? file.name);
+    if (file.dir) continue;
+    const declared = Number((file as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0);
+    if (!Number.isSafeInteger(declared) || declared < 0) throw archiveError('Archive entry has an invalid extracted size');
+    ensureBudget(files.length, declaredTotal, declared);
+    declaredTotal += declared;
+  }
+
   const entries: ArchiveEntry[] = [];
   let total = 0;
   for (const file of files) {
     const unsafeOriginal = (file as unknown as { unsafeOriginalName?: string }).unsafeOriginalName;
-    const originalName = unsafeOriginal ?? file.name;
-    const path = requireSafePath(originalName);
+    const path = requireSafePath(unsafeOriginal ?? file.name);
     if (file.dir) {
-      ensureBudget(entries.length + 1, total, 0);
       entries.push({ path, kind: 'directory', data: new Uint8Array(), modified: file.date, mode: permissionMode((file as unknown as { unixPermissions?: unknown }).unixPermissions, 0o755) });
       continue;
     }
-
-    const declared = Number((file as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0);
-    if (declared) ensureBudget(entries.length + 1, total, declared);
-    const data = await file.async('uint8array');
+    const data = await extractZipEntryBounded(file, MAX_EXTRACTED_BYTES - total);
     ensureBudget(entries.length + 1, total, data.byteLength);
     total += data.byteLength;
     entries.push({
-      path,
-      kind: 'file',
-      data,
-      modified: file.date,
+      path, kind: 'file', data, modified: file.date,
       mode: permissionMode((file as unknown as { unixPermissions?: unknown }).unixPermissions, 0o644),
     });
   }
