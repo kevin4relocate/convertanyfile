@@ -5,7 +5,7 @@ import { IMAGE_TOOL_MANIFEST } from '../../config/image-tools';
 import { defaultQualityForImageOutput } from '../core/output-quality';
 import { encodeCanvas, extensionForOutput, type ImageOutputFormat } from '../core/output-encoder';
 import { renderToolCanvas, resizeDimensions, sourceExtension, sourceMime } from './operations';
-import { defaultSettingsFor, type DeterministicSettings, type DeterministicToolId, type OutputChoice, type ResizeSettings } from './types';
+import { defaultSettingsFor, type DeterministicSettings, type DeterministicToolId, type OutputChoice, type ResizeSettings, type ImageBorderSettings } from './types';
 
 type Status = 'ready' | 'processing' | 'done' | 'error';
 type Item = {
@@ -49,6 +49,14 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
   const settingInputs=[...root.querySelectorAll<HTMLInputElement|HTMLSelectElement>('[data-setting]')];
   const suffix=root.dataset.downloadSuffix||toolId, maxFiles=Number(root.dataset.maxFiles||50), maxFileBytes=Number(root.dataset.maxFileBytes||10*1024*1024), maxPixels=Number(root.dataset.maxPixels||20_000_000), maxDimension=Number(root.dataset.maxDimension||12_000), maxTotalBytes=200*1024*1024;
 
+  // Transparent cut corners require an alpha-capable format. Keep the export
+  // control visibly locked to PNG rather than silently writing opaque JPEGs.
+  if(toolId==='rounded-corners-image'){
+    outputFormat.value='png';
+    outputFormat.disabled=true;
+    outputQuality.disabled=true;
+  }
+
   const state:State={mode:'shared',sharedSettings:defaultSettingsFor(toolId),items:[],processing:false,cancel:false,previewGeneration:0};
   const active=():Item|undefined=>state.items.find(item=>item.id===state.activeId);
   const effective=(item:Item):DeterministicSettings=>state.mode==='individual'&&item.settings?item.settings:state.sharedSettings;
@@ -56,10 +64,17 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
   const showNotice=(text:string,type:'info'|'error'='info'):void=>{notice.hidden=false;notice.textContent=text;notice.dataset.type=type;};
 
   function validateSettingsForItem(item:Item,settings:DeterministicSettings):void {
-    if(toolId!=='resize-image')return;
-    const dimensions=resizeDimensions(item.width,item.height,settings as ResizeSettings);
-    if(dimensions.width>maxDimension||dimensions.height>maxDimension||dimensions.width*dimensions.height>maxPixels){
-      throw new Error(`Resize output ${dimensions.width.toLocaleString()} × ${dimensions.height.toLocaleString()} exceeds the ${maxDimension.toLocaleString()} px / ${maxPixels.toLocaleString()} pixel safety limit.`);
+    if(toolId!=='resize-image'&&toolId!=='add-image-border')return;
+    const dimensions=toolId==='resize-image'
+      ?resizeDimensions(item.width,item.height,settings as ResizeSettings)
+      :(()=>{
+        const thickness=Math.round(clamp((settings as ImageBorderSettings).thickness,1,80));
+        return {width:item.width+2*thickness,height:item.height+2*thickness};
+      })();
+    if(!Number.isSafeInteger(dimensions.width)||!Number.isSafeInteger(dimensions.height)||
+      dimensions.width>maxDimension||dimensions.height>maxDimension||
+      dimensions.width*dimensions.height>maxPixels){
+      throw new Error(`Output ${dimensions.width.toLocaleString()} × ${dimensions.height.toLocaleString()} exceeds the ${maxDimension.toLocaleString()} px / ${maxPixels.toLocaleString()} pixel safety limit.`);
     }
   }
 
@@ -86,7 +101,7 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
     root.querySelectorAll<HTMLElement>('[data-setting-group]').forEach(group=>{const key=group.dataset.settingGroup;group.hidden=key!==record.mode&&key!==record.scope&&key!==record.style;});
     root.querySelectorAll<HTMLOutputElement>('[data-output-for]').forEach(output=>{
       const key=output.dataset.outputFor;if(!key)return;const value=record[key];
-      output.textContent=key==='percent'||key==='depth'||key==='softness'||key==='texture'||key==='intensity'||key==='level'?`${value}%`:key==='radius'||key==='blockSize'?`${value} px`:String(value??'');
+      output.textContent=key==='percent'||key==='depth'||key==='softness'||key==='texture'||key==='intensity'||key==='level'||key==='radiusPercent'?`${value}%`:key==='radius'||key==='blockSize'||key==='thickness'?`${value} px`:key==='amount'?`${value}×`:String(value??'');
     });
   }
   function renderSettings():void {
@@ -184,6 +199,7 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
 
   function outputFor(item:Item):{format:OutputChoice;quality:number} {
     const record=asRecord(effective(item));if(typeof record.format==='string'&&typeof record.quality==='number')return{format:record.format as OutputChoice,quality:clamp(record.quality,1,100)};
+    if(toolId==='rounded-corners-image')return{format:'png',quality:100};
     return{format:outputFormat.value as OutputChoice,quality:clamp(Number(outputQuality.value),1,100)};
   }
   async function processBatch():Promise<void> {
