@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { POSTERIZE_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={POSTERIZE_IMAGE_TOOL}
+  kicker="Poster effect · color reduction"
+  heading="Turn detailed photos into bold, simplified poster colors."
+  copy="Reduce the number of levels available per RGB channel, creating flat color bands instead of smooth gradients. Adjust from 2 to 16 levels, then preview and download the generated image or a processed batch."
+  bullets={[
+    "Choose 2–16 color levels per red, green and blue channel.",
+    "Preserve alpha transparency in PNG output when present.",
+    "See banding and color changes in the browser before processing.",
+    "Process images locally with limits on decoded image size.",
+    "Export one image or ZIP together multiple successful results."
+]}
+/>
