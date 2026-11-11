@@ -68,6 +68,10 @@ jobs:
       # Official Playwright image has browsers and OS libraries preinstalled.
       # Keep this image version aligned with @playwright/test in package-lock.json.
       - name: Run ${{ matrix.label }} tests
+        # GitHub sets /github/home owned by pwuser, while the Playwright image
+        # executes as root. Firefox refuses to launch with a mismatched HOME.
+        env:
+          HOME: /root
         run: npm run test:e2e -- ${{ matrix.projects }}
       - name: Upload browser failure diagnostics
         if: failure()
