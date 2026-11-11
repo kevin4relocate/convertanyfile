@@ -85,8 +85,10 @@ export function parseExifBytes(bytes:Uint8Array):string {
   const records:string[]=[];
   const visited=new Set<number>();
   const getValue=(position:number,type:number,count:number):string|undefined=>{
-    const size=TYPE_SIZES[type],width=size*count;
-    if(!size||!Number.isSafeInteger(width)||count<1||count>4096||width>16384)return;
+    const size=TYPE_SIZES[type];
+    if(!size)return;
+    const width=size*count;
+    if(!Number.isSafeInteger(width)||count<1||count>4096||width>16384)return;
     const at=width<=4?position+8:u32(position+8);
     if(at===undefined||!has(at,width))return;
     if(type===2||type===7&&count>=4) {

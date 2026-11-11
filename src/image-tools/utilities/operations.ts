@@ -123,12 +123,12 @@ export function decodeBase64Image(input:string,maxBytes=10*1024*1024):{bytes:Uin
 }
 export async function makeFavicon(bitmap:ImageBitmap):Promise<Blob> {
   const sizes=[16,32,48];
-  const pngs:Uint8Array[]=[];
+  const pngs:ArrayBuffer[]=[];
   for(const size of sizes) {
     const canvas=outputCanvas(size,size),ctx=canvasContext(canvas);
     ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
     fitBitmap(ctx,bitmap,0,0,size,size);
-    pngs.push(new Uint8Array(await (await pngBlob(canvas)).arrayBuffer()));
+    pngs.push(await (await pngBlob(canvas)).arrayBuffer());
   }
   const directory=new Uint8Array(6+16*sizes.length);
   const view=new DataView(directory.buffer);
@@ -141,7 +141,7 @@ export async function makeFavicon(bitmap:ImageBitmap):Promise<Blob> {
     view.setUint32(p+8,png.byteLength,true);view.setUint32(p+12,offset,true);
     offset+=png.byteLength;
   });
-  return new Blob([directory,...pngs],{type:'image/x-icon'});
+  return new Blob([directory.buffer,...pngs],{type:'image/x-icon'});
 }
 export async function createAppIcons(bitmap:ImageBitmap):Promise<{filename:string;blob:Blob}[]> {
   const sizes=[48,72,96,120,144,152,180,192,256,384,512];

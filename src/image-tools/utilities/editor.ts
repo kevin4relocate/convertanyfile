@@ -1,7 +1,7 @@
 import { downloadBlob, createZipBlob } from '../core/download';
 import { createImageFileAdmission, imageDimensionsWithinLimits } from '../core/file-admission';
 import {
-  sniffFileMime, imageMimeFromHeader, makePreviewCanvas, outputCanvas, pngBlob,
+  sniffFileMime, makePreviewCanvas, pngBlob,
   sampleColor, extractPalette, formatImageDetails, encodeBase64, decodeBase64Image,
   makeFavicon, createAppIcons, makeContactSheet, mergeImages, trimTransparentBorders,
   type LoadedImage,
