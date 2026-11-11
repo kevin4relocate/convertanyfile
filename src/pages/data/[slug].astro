@@ -1,0 +1,45 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import DataProcessingWorkbench from '../../components/DataProcessingWorkbench.astro';
+import {DATA_PROCESSING_TOOLS,type DataProcessingTool} from '../../config/data-processing-tools';
+import {SITE} from '../../config/site';
+export function getStaticPaths(){
+ return DATA_PROCESSING_TOOLS.map(tool=>({params:{slug:tool.id},props:{tool}}));
+}
+const {tool}=Astro.props as {tool:DataProcessingTool};
+const url=SITE.origin+'/data/'+tool.id+'/';
+const related=DATA_PROCESSING_TOOLS.filter(x=>x.id!==tool.id&&x.category===tool.category).slice(0,5);
+const schema=[
+ {'@context':'https://schema.org','@type':'WebApplication',name:tool.name,description:tool.description,url,applicationCategory:'UtilitiesApplication',operatingSystem:'Any',isAccessibleForFree:true,offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}},
+ {'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[
+  {'@type':'ListItem',position:1,name:'Home',item:SITE.origin+'/'},
+  {'@type':'ListItem',position:2,name:'Data Tools',item:SITE.origin+'/data-tools/'},
+  {'@type':'ListItem',position:3,name:tool.name,item:url},
+ ]},
+];
+---
+<SiteLayout title={tool.name+' Online Free | ConvertAnyFile'} description={tool.description} schema={schema}>
+ <section class="converter-page-hero"><div class="site-container converter-page-hero-inner">
+  <div class="breadcrumbs converter-page-breadcrumbs"><a href="/">Home</a><span>/</span><a href="/data-tools/">Data Tools</a><span>/</span><span>{tool.name}</span></div>
+  <span class="eyebrow converter-page-eyebrow">Data Processing · {tool.category}</span>
+  <h1>{tool.name} — process data locally.</h1><p>{tool.intro}</p>
+ </div></section>
+ <section class="converter-page-tool"><div class="site-container"><DataProcessingWorkbench tool={tool}/></div></section>
+ <section class="content-wide-section"><div class="site-container"><div class="data-info">
+  <article><span class="section-kicker">How to use this tool</span><h2>Process data in your browser</h2>
+   <p>Paste your data or select a local UTF-8 file. Adjust the settings if available, then choose <strong>{tool.button}</strong>. Copy the result or download the generated file. The input stays in your browser.</p>
+   <h3>Supported behavior and limitations</h3><p>{tool.notes}</p>
+   <p>Input is limited to 2 million characters per editor. If your file is larger, use a dedicated desktop data tool. This utility does not execute SQL or scripts embedded in your input.</p>
+  </article>
+  <aside><h2>Related data utilities</h2>{related.map(item=><a href={'/data/'+item.id+'/'}>{item.name} →</a>)}
+   <a href="/data-tools/">All 15 Data Tools →</a><a href="/data-converter/">CSV / JSON file converter →</a>
+  </aside>
+ </div></div></section>
+</SiteLayout>
+<style>
+ .data-info{display:grid;grid-template-columns:minmax(0,2fr) minmax(220px,1fr);gap:24px}
+ .data-info article{font-size:14px;line-height:1.8}.data-info h2{font-size:23px;margin:8px 0 12px}.data-info h3{font-size:18px;margin:20px 0 8px}
+ .data-info aside{display:grid;gap:11px;align-content:start;background:#161e2b;border:1px solid #303a4d;padding:18px;border-radius:12px}
+ .data-info aside h2{font-size:17px;color:#f3f5fb;margin:0 0 4px}.data-info aside a{font-size:12px;color:#bfb6ff}
+ @media(max-width:750px){.data-info{grid-template-columns:1fr}}
+</style>

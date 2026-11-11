@@ -17,7 +17,7 @@ export function decodeUtf8(bytes: ArrayBuffer | Uint8Array): string {
   return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
 
-function parseDelimited(text: string, delimiter: ',' | '\t'): string[][] {
+export function parseDelimited(text: string, delimiter: ',' | '\t'): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = '';
@@ -110,7 +110,7 @@ function canonicalJsonNumber(raw: string): string | null {
   return `${match[1] === '-' ? '-' : ''}${digits}e${exponent}`;
 }
 
-function assertSafeJsonNumbers(text: string): void {
+export function assertSafeJsonNumbers(text: string): void {
   let inString = false;
   let escaped = false;
   for (let index = 0; index < text.length; index += 1) {
@@ -229,7 +229,7 @@ function columnsForRows(rows: Row[]): string[] {
   return columns;
 }
 
-function quoteCell(value: string, delimiter: ',' | '\t'): string {
+export function quoteCell(value: string, delimiter: ',' | '\t'): string {
   if (!value.includes(delimiter) && !/["\r\n]/.test(value)) return value;
   return `"${value.replaceAll('"', '""')}"`;
 }

@@ -31,6 +31,17 @@ ConvertAnyFile.net is a browser-first file conversion and image-tools platform b
 
 All converter categories reuse the generic queue, progress, cancel, retry, per-file download, ZIP packaging, SEO shell and responsive page frame. Category behavior stays behind `EngineAdapter` implementations.
 
+## Data Processing Tools (Batch C)
+
+Fifteen focused browser-only utilities are available under `/data-tools/` and `/data/<tool-name>/`.
+
+- JSON Schema Validator (documented common-keyword subset; local `$ref` only), JSONPath Tester (safe property, index, wildcard and recursive search; no evaluation filters)
+- JSON to XML and XML to JSON (reversible typed XML format plus generic XML element mapping; DTD/custom entities rejected)
+- CSV Row Sorter, CSV Row Filter, CSV Duplicate Remover, CSV File Merger, CSV File Splitter, CSV Column Selector, CSV Column Reorderer, CSV Find & Replace
+- CSV to SQL INSERT, SQL INSERT to CSV (literal INSERT grammar only; never evaluates SQL), CSV Data Profiler
+
+The CSV utilities reuse the existing RFC-style CSV parser and quoting functions from `src/engines/data/codec.ts`. Input is limited to 2 million characters per editor, 20,000 rows and 200 columns per table. Splitting exports a ZIP with a header in every part. File imports require UTF-8 and are capped at 8 MB. No server upload, audio/video conversion or new runtime dependencies. The limited JSON Schema/JSONPath features and SQL grammar are documented on each tool page.
+
 ## Image Utilities (Batch B)
 
 Twelve new browser-only image utilities are registered in the unified Image Tools manifest and reuse the existing file-admission and download/ZIP helpers:

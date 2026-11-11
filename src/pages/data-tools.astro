@@ -1,0 +1,55 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import {DATA_PROCESSING_TOOLS} from '../config/data-processing-tools';
+import {SITE} from '../config/site';
+const groups=['JSON & XML','CSV transformations','CSV interoperability'] as const;
+const schema=[{'@context':'https://schema.org','@type':'CollectionPage',name:'Data Processing Tools',url:SITE.origin+'/data-tools/',description:'Fifteen free browser-based JSON, XML, CSV and SQL data utilities.'},
+ {'@context':'https://schema.org','@type':'ItemList',itemListElement:DATA_PROCESSING_TOOLS.map((tool,i)=>({'@type':'ListItem',position:i+1,name:tool.name,url:SITE.origin+'/data/'+tool.id+'/'}))}];
+---
+<SiteLayout title="Free JSON, XML & CSV Data Processing Tools | ConvertAnyFile" description="15 free local JSON Schema, JSONPath, XML, CSV sorting, cleaning, splitting, merging and SQL tools. No file upload or signup." schema={schema}>
+ <section class="page-hero"><div class="site-container hero-inner">
+  <div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Data Tools</span></div>
+  <span class="eyebrow">Data Processing · 15 utilities</span>
+  <h1>Transform and inspect structured data, privately.</h1>
+  <p>Work with JSON Schema, JSONPath, XML, CSV and SQL INSERT data using focused browser-only tools. Use the existing <a href="/data-converter/">Data Converter</a> for file format pairs.</p>
+ </div></section>
+ <section class="content-wide-section"><div class="site-container"><div class="data-directory" data-data-directory>
+  <label for="data-tool-search">Find a tool</label><input id="data-tool-search" data-data-search type="search" placeholder="Search CSV, JSON, XML, SQL..." autocomplete="off" />
+  {groups.map(group=><section data-data-group class="data-directory-section">
+   <h2>{group}</h2><div class="data-directory-grid">
+   {DATA_PROCESSING_TOOLS.filter(x=>x.category===group).map(tool=><a data-data-card data-keywords={(tool.name+' '+tool.description+' '+tool.intro).toLowerCase()} href={'/data/'+tool.id+'/'}>
+    <strong>{tool.name}</strong><span>{tool.intro}</span><small>Open tool →</small>
+   </a>)}
+   </div>
+  </section>)}
+  <p data-data-empty hidden>No matching tools. Try another term.</p>
+ </div></div></section>
+</SiteLayout>
+<script>
+ const root=document.querySelector<HTMLElement>('[data-data-directory]');
+ const search=root?.querySelector<HTMLInputElement>('[data-data-search]');
+ const empty=root?.querySelector<HTMLElement>('[data-data-empty]');
+ const cards=root?.querySelectorAll<HTMLElement>('[data-data-card]');
+ const groups=root?.querySelectorAll<HTMLElement>('[data-data-group]');
+ search?.addEventListener('input',()=>{
+  const q=search.value.trim().toLowerCase();
+  let hits=0;
+  cards?.forEach(card=>{const match=(card.dataset.keywords||'').includes(q);card.hidden=!match;if(match)hits++;});
+  groups?.forEach(group=>group.hidden=!group.querySelector('[data-data-card]:not([hidden])'));
+  if(empty)empty.hidden=hits>0;
+ });
+</script>
+<style>
+ .data-directory{display:grid;gap:17px}
+ .data-directory>label{font-size:13px;font-weight:800}
+ .data-directory>input{width:100%;max-width:490px;padding:12px 14px;border:1px solid #455168;background:#101722;color:#fff;border-radius:9px}
+ .data-directory-section{display:grid;gap:12px}.data-directory-section h2{font-size:21px;margin:14px 0 0}
+ .data-directory-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+ .data-directory-grid a{display:grid;align-content:start;gap:9px;min-width:0;padding:18px;background:#151d2a;color:#f1f3f9;border:1px solid #354156;border-radius:12px}
+ .data-directory-grid a:hover{border-color:#8178f6}
+ .data-directory-grid strong{font-size:16px}.data-directory-grid span{font-size:12px;line-height:1.5;color:#b8c2cf}
+ .data-directory-grid small{font-size:11px;color:#bcb3ff;font-weight:730}
+ .data-directory [hidden]{display:none!important}
+ @media(max-width:850px){.data-directory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+ @media(max-width:550px){.data-directory-grid{grid-template-columns:1fr}}
+</style>

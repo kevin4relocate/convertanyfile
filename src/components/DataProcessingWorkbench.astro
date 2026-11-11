@@ -1,0 +1,142 @@
+---
+import type {DataProcessingTool} from '../config/data-processing-tools';
+const {tool}=Astro.props as {tool:DataProcessingTool};
+const accept=tool.outputExt==='sql'||tool.id==='sql-insert-to-csv'?'.sql,.txt':tool.category==='JSON & XML' ? '.json,.xml,.txt' : '.csv,.txt';
+---
+<div class="data-workbench" data-data-workbench data-tool-id={tool.id}>
+  <div class="data-workbench-top"><strong>Private data workspace</strong><small>Processes locally · up to 2 million characters per input</small></div>
+  <div class="data-workbench-editors">
+    <section class="data-editor">
+      <label for="data-primary">Input data</label>
+      <textarea id="data-primary" data-data-input spellcheck="false" rows="11" autocomplete="off">{tool.example}</textarea>
+      <label class="data-upload-label">Or open a local file <input type="file" accept={accept} data-data-upload /></label>
+    </section>
+    {tool.secondary&&<section class="data-editor">
+      <label for="data-secondary">{tool.secondary.label}</label>
+      <textarea id="data-secondary" data-data-secondary spellcheck="false" rows="11">{tool.secondary.example}</textarea>
+      <label class="data-upload-label">Or open a local file <input type="file" accept={tool.secondary.accept} data-data-secondary-upload /></label>
+    </section>}
+    <section class="data-editor data-output">
+      <label for="data-output">Result</label>
+      <textarea id="data-output" data-data-output spellcheck="false" rows="11" readonly placeholder="Your result appears here after processing."></textarea>
+      <small data-data-summary>Ready</small>
+    </section>
+  </div>
+  {tool.controls&&<div class="data-settings" aria-label="Processing settings">
+    {tool.controls.map(control=><label>{control.label}
+      {control.type==='select'?
+        <select data-data-option={control.key}>{control.options?.map(option=><option value={option.value} selected={option.value===(control.value??control.options?.[0]?.value)}>{option.label}</option>)}</select>
+        :<input data-data-option={control.key} type={control.type==='number'?'number':'text'} value={control.value??''} placeholder={control.placeholder??''} min={control.type==='number'?'1':undefined} spellcheck="false" />}
+    </label>)}
+  </div>}
+  <div class="data-workbench-actions">
+    <button class="data-run" data-data-run type="button">{tool.button}</button>
+    <button type="button" data-data-copy disabled>Copy result</button>
+    <button type="button" data-data-download disabled>Download result</button>
+    <button type="button" data-data-clear>Clear inputs</button>
+  </div>
+  <p data-data-error class="data-error" role="alert" hidden></p>
+  <p class="data-policy"><strong>Note:</strong> {tool.notes}</p>
+</div>
+<script>
+  import {runDataProcessing,type DataRunResult,MAX_DATA_CHARS} from '../platform/data-processing/operations';
+  import {downloadBlob} from '../platform/converter/download';
+  for(const root of document.querySelectorAll<HTMLElement>('[data-data-workbench]')){
+    const id=root.dataset.toolId??'';
+    const input=root.querySelector<HTMLTextAreaElement>('[data-data-input]')!;
+    const secondary=root.querySelector<HTMLTextAreaElement>('[data-data-secondary]');
+    const output=root.querySelector<HTMLTextAreaElement>('[data-data-output]')!;
+    const run=root.querySelector<HTMLButtonElement>('[data-data-run]')!;
+    const copy=root.querySelector<HTMLButtonElement>('[data-data-copy]')!;
+    const download=root.querySelector<HTMLButtonElement>('[data-data-download]')!;
+    const clear=root.querySelector<HTMLButtonElement>('[data-data-clear]')!;
+    const status=root.querySelector<HTMLElement>('[data-data-summary]')!;
+    const error=root.querySelector<HTMLElement>('[data-data-error]')!;
+    const options=root.querySelectorAll<HTMLInputElement|HTMLSelectElement>('[data-data-option]');
+    let result:DataRunResult|undefined;
+    const reset=()=>{
+      result=undefined;output.value='';copy.disabled=true;download.disabled=true;
+      error.textContent='';error.hidden=true;status.textContent='Ready';
+    };
+    for(const node of [input,secondary,...options]){
+      node?.addEventListener(node instanceof HTMLSelectElement?'change':'input',reset);
+    }
+    const bindUpload=(selector:string,target:HTMLTextAreaElement|undefined)=>{
+      const fileInput=root.querySelector<HTMLInputElement>(selector);
+      if(!fileInput||!target)return;
+      fileInput.addEventListener('change',async()=>{
+        const file=fileInput.files?.[0];fileInput.value='';
+        if(!file)return;
+        reset();
+        try{
+          if(file.size>MAX_DATA_CHARS*4)throw new Error('File exceeds the 8 MB local upload limit.');
+          const bytes=await file.arrayBuffer();
+          const text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+          if(text.length>MAX_DATA_CHARS)throw new Error('Text file is over 2,000,000 characters.');
+          target.value=text;
+          status.textContent='Opened '+file.name+' locally.';
+        }catch(e){error.hidden=false;error.textContent=e instanceof Error?e.message:'Could not read file.';}
+      });
+    };
+    bindUpload('[data-data-upload]',input);
+    bindUpload('[data-data-secondary-upload]',secondary??undefined);
+    clear.addEventListener('click',()=>{input.value='';if(secondary)secondary.value='';reset();input.focus();});
+    run.addEventListener('click',()=>{
+      reset();
+      try{
+        const values:Record<string,string>={};
+        options.forEach(o=>values[o.dataset.dataOption??'']=o.value);
+        result=runDataProcessing(id,input.value,values,secondary?.value??'');
+        output.value=result.text;
+        status.textContent=result.files?result.files.length+' CSV part(s) ready as ZIP.':'Processed locally. Ready to copy or download.';
+        copy.disabled=false;download.disabled=false;
+      }catch(e){status.textContent='Check your input';error.hidden=false;error.textContent=e instanceof Error?e.message:'Data processing failed.';}
+    });
+    copy.addEventListener('click',async()=>{
+      if(!result)return;
+      try{await navigator.clipboard.writeText(result.text);status.textContent='Copied to clipboard.';}
+      catch{status.textContent='Copy unavailable; select output text manually.';}
+    });
+    download.addEventListener('click',async()=>{
+      if(!result)return;
+      download.disabled=true;
+      try{
+        let blob:Blob;
+        if(result.files){
+          const {default:JSZip}=await import('jszip');
+          const zip=new JSZip();
+          for(const part of result.files)zip.file(part.name,part.content);
+          blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
+        }else{
+          const type=result.filename.endsWith('.csv')?'text/csv':result.filename.endsWith('.xml')?'application/xml':result.filename.endsWith('.json')?'application/json':'text/plain';
+          blob=new Blob([result.text],{type:type+';charset=utf-8'});
+        }
+        downloadBlob(blob,result.filename);status.textContent='Result downloaded.';
+      }catch(e){status.textContent=e instanceof Error?e.message:'Download failed.';}
+      finally{download.disabled=false;}
+    });
+  }
+</script>
+<style>
+.data-workbench{padding:20px;background:#111722;color:#f2f4fb;border:1px solid #344057;border-radius:18px}
+.data-workbench-top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}
+.data-workbench-top strong{font-size:16px}.data-workbench-top small{color:#9faec2;font-size:11px}
+.data-workbench-editors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.data-editor{min-width:0;display:grid;align-content:start;gap:8px}
+.data-editor>label:first-child{font-size:12px;font-weight:800}
+.data-editor textarea{width:100%;box-sizing:border-box;min-height:235px;padding:12px;background:#0b121e;color:#f4f5fa;border:1px solid #3f4a5e;border-radius:10px;font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical}
+.data-output textarea{background:#17202e}.data-editor textarea:focus{outline:2px solid #8578f9}
+.data-editor small{color:#a9b4c4}
+.data-upload-label{font-size:11px;color:#bac4d2;display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.data-upload-label input{font-size:10px;max-width:240px;min-width:0;color:#abb8c9}
+.data-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:11px;margin-top:15px}
+.data-settings label{font-size:11px;font-weight:720;display:grid;gap:7px}
+.data-settings input,.data-settings select{width:100%;box-sizing:border-box;border:1px solid #465470;background:#0b1320;color:#f8f9fe;border-radius:9px;padding:10px 11px;font-size:12px}
+.data-workbench-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.data-workbench-actions button{background:#263449;border:1px solid #43516d;color:#edf0f8;padding:11px 15px;border-radius:9px;font-weight:750;font-size:12px;cursor:pointer}
+.data-workbench-actions .data-run{background:#6659eb;border-color:#6659eb}
+.data-workbench-actions button:disabled{opacity:.42;cursor:not-allowed}
+.data-error{color:#ffb3a8;font-size:13px;margin:13px 0 0}
+.data-policy{margin:16px 0 0;padding-top:12px;border-top:1px solid #364153;color:#a7b3c4;font-size:11px;line-height:1.65}
+@media(max-width:760px){.data-workbench-editors{grid-template-columns:1fr}.data-workbench{padding:12px}.data-workbench-top{align-items:start;flex-direction:column}.data-editor textarea{min-height:160px}.data-workbench-actions button{flex:1 1 140px}}
+</style>
