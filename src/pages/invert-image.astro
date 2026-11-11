@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { INVERT_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={INVERT_IMAGE_TOOL}
+  kicker="Color negative · invert strength"
+  heading="Reverse image colors to create a negative-style photo."
+  copy="A full inversion swaps bright and dark color values and changes red toward cyan, green toward magenta and blue toward yellow. Adjust intensity to blend the result, see the preview and save one or more images locally."
+  bullets={[
+    'Invert RGB colors from 0% to 100% using a simple strength slider.',
+    'Create negative-like effects without changing the source dimensions.',
+    'Preserve transparent regions when exporting to an alpha-capable image format.',
+    'Preview each image and choose shared or individual settings for batch work.',
+    'Download a single inverted image or a ZIP of all successful results.',
+  ]}
+/>
