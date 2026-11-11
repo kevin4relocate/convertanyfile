@@ -10,9 +10,15 @@ export type DeterministicToolId =
   | 'remove-image-metadata'
   | 'grayscale-image'
   | 'sepia-image'
-  | 'invert-image';
+  | 'invert-image'
+  | 'brightness-image'
+  | 'contrast-image'
+  | 'adjust-image-saturation'
+  | 'pixelate-image';
 
 export type ColorEffectSettings = { intensity: number };
+export type ColorAdjustmentSettings = { level: number };
+export type PixelateSettings = { blockSize: number };
 
 export type OutputChoice = 'source' | 'png' | 'jpg' | 'webp';
 
@@ -85,7 +91,9 @@ export type DeterministicSettings =
   | CropSettings
   | BlurSettings
   | EdgeFadeSettings
-  | ColorEffectSettings;
+  | ColorEffectSettings
+  | ColorAdjustmentSettings
+  | PixelateSettings;
 
 export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSettings {
   switch (toolId) {
@@ -101,6 +109,12 @@ export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSe
       return { shape: 'rect', aspect: 'free', x: 0, y: 0, width: 100, height: 100 };
     case 'blur-image':
       return { scope: 'whole', shape: 'rect', radius: 12, x: 25, y: 25, width: 50, height: 50 };
+    case 'brightness-image':
+    case 'contrast-image':
+    case 'adjust-image-saturation':
+      return { level: 100 };
+    case 'pixelate-image':
+      return { blockSize: 12 };
     case 'grayscale-image':
     case 'sepia-image':
     case 'invert-image':
