@@ -14,11 +14,17 @@ export type DeterministicToolId =
   | 'brightness-image'
   | 'contrast-image'
   | 'adjust-image-saturation'
-  | 'pixelate-image';
+  | 'pixelate-image'
+  | 'sharpen-image'
+  | 'add-image-border'
+  | 'rounded-corners-image';
 
 export type ColorEffectSettings = { intensity: number };
 export type ColorAdjustmentSettings = { level: number };
 export type PixelateSettings = { blockSize: number };
+export type SharpenSettings = { amount: number };
+export type ImageBorderSettings = { thickness: number; color: string };
+export type RoundedCornersSettings = { radiusPercent: number };
 
 export type OutputChoice = 'source' | 'png' | 'jpg' | 'webp';
 
@@ -93,7 +99,10 @@ export type DeterministicSettings =
   | EdgeFadeSettings
   | ColorEffectSettings
   | ColorAdjustmentSettings
-  | PixelateSettings;
+  | PixelateSettings
+  | SharpenSettings
+  | ImageBorderSettings
+  | RoundedCornersSettings;
 
 export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSettings {
   switch (toolId) {
@@ -115,6 +124,12 @@ export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSe
       return { level: 100 };
     case 'pixelate-image':
       return { blockSize: 12 };
+    case 'sharpen-image':
+      return { amount: 0.6 };
+    case 'add-image-border':
+      return { thickness: 12, color: '#ffffff' };
+    case 'rounded-corners-image':
+      return { radiusPercent: 15 };
     case 'grayscale-image':
     case 'sepia-image':
     case 'invert-image':
