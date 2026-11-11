@@ -49,7 +49,7 @@ test('URL, HTML, case and word utilities',async({page})=>{
  await expect(page.locator('[data-tool-output]')).toHaveValue('Hello World. This Is An Example!');
  await page.goto('/text/word-character-counter/');
  await page.locator('[data-tool-run]').click();
- await expect(page.locator('[data-tool-output]')).toContainText('Lines: 2');
+ await expect(page.locator('[data-tool-output]')).toHaveValue(/Lines: 2/);
 });
 test('UUID, RGB/HSL and epoch conversion',async({page})=>{
  await page.goto('/text/uuid-generator/');
@@ -61,11 +61,11 @@ test('UUID, RGB/HSL and epoch conversion',async({page})=>{
  await page.goto('/text/color-code-converter/');
  await page.locator('[data-tool-input]').fill('#ff0000');
  await page.locator('[data-tool-run]').click();
- await expect(page.locator('[data-tool-output]')).toContainText('HSL: hsl(0, 100%, 50%)');
+ await expect(page.locator('[data-tool-output]')).toHaveValue(/HSL: hsl\(0, 100%, 50%\)/);
  await page.goto('/text/unix-timestamp-converter/');
  await page.locator('[data-tool-input]').fill('0');
  await page.locator('[data-tool-run]').click();
- await expect(page.locator('[data-tool-output]')).toContainText('1970-01-01T00:00:00.000Z');
+ await expect(page.locator('[data-tool-output]')).toHaveValue(/1970-01-01T00:00:00\.000Z/);
 });
 test('search filters text directory',async({page})=>{
  await page.goto('/text-tools/');
