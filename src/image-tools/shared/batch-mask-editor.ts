@@ -213,6 +213,7 @@ export function mountBatchMaskEditor(root:HTMLElement):void {
     const selectedIndex=state.selected,operation=selectedIndex===undefined?undefined:state.ops[selectedIndex];if(!operation)return;
     const before=opsCopy(state.ops);
     if(command.type==='delete'){
+      if(selectedIndex===undefined)return;
       state.ops.splice(selectedIndex,1);state.selected=state.ops.length?Math.min(selectedIndex,state.ops.length-1):undefined;commitKeyboardChange(before);return;
     }
     if(command.type==='duplicate'){
