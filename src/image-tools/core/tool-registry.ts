@@ -1,3 +1,5 @@
+import { IMAGE_TOOL_ROADMAP } from '../../config/image-tools';
+
 export interface MountableImageToolModule {
   mount: (root: HTMLElement) => void | Promise<void>;
 }
@@ -29,7 +31,7 @@ const watermarkToolLoader: ImageToolLoader = async () => {
   return { mount: module.mountAddWatermark };
 };
 
-const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
+const IMAGE_TOOL_LOADERS = {
   'remove-watermark': maskToolLoader,
   'gemini-ai-logo-remover': maskToolLoader,
   'resize-image': deterministicToolLoader,
@@ -41,10 +43,14 @@ const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
   'remove-image-metadata': metadataCleanupLoader,
   'bulk-rename-images': renameToolLoader,
   'add-watermark': watermarkToolLoader,
-};
+} satisfies Record<(typeof IMAGE_TOOL_ROADMAP)[number]['id'], ImageToolLoader>;
+
+type RegisteredImageToolId = keyof typeof IMAGE_TOOL_LOADERS;
+const allToolIds = new Set<string>(Object.keys(IMAGE_TOOL_LOADERS));
 
 export async function mountRegisteredImageTool(toolId: string, root: HTMLElement): Promise<boolean> {
-  const loader = IMAGE_TOOL_LOADERS[toolId];
+  if (!allToolIds.has(toolId)) return false;
+  const loader = IMAGE_TOOL_LOADERS[toolId as RegisteredImageToolId];
   if (!loader) return false;
   const module = await loader();
   await module.mount(root);
