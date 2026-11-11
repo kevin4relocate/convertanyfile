@@ -22,8 +22,9 @@ const isCrop = tool.id === 'crop-image';
 const isBlur = tool.id === 'blur-image';
 const isEdgeFade = tool.id === 'fade-image-edges';
 const isMetadata = tool.id === 'remove-image-metadata';
+const isColorEffect = tool.id === 'grayscale-image' || tool.id === 'sepia-image' || tool.id === 'invert-image';
 const hasEmbeddedOutput = isCompress || isMetadata;
-const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isEdgeFade ? 'Apply edge fade' : isMetadata ? 'Remove metadata' : 'Process images';
+const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isEdgeFade ? 'Apply edge fade' : isMetadata ? 'Remove metadata' : isColorEffect ? 'Apply color effect' : 'Process images';
 ---
 
 <div class="image-editor-card deterministic-tool" data-image-tool-app data-tool-id={tool.id} data-download-suffix={tool.downloadSuffix} data-max-file-bytes={tool.maxFileBytes} data-max-pixels={tool.maxPixels} data-max-dimension={tool.maxDimension} data-max-files={maxFiles} data-has-items="false">
@@ -85,6 +86,11 @@ const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images'
               <p class="visual-tool-help"><strong>Drag the highlighted area on the image.</strong> Move it where you want the blur, resize from a corner, and watch the live preview.</p>
               <details class="visual-advanced-settings"><summary>Fine-tune selected area</summary><div class="visual-advanced-settings__body"><div class="setting-grid"><label><span>X %</span><input data-setting="x" type="number" min="0" max="99" value="25" /></label><label><span>Y %</span><input data-setting="y" type="number" min="0" max="99" value="25" /></label><label><span>Width %</span><input data-setting="width" type="number" min="1" max="100" value="50" /></label><label><span>Height %</span><input data-setting="height" type="number" min="1" max="100" value="50" /></label></div></div></details>
             </div>
+          </div>}
+
+          {isColorEffect && <div class="setting-grid">
+            <label><span>Effect strength</span><div class="range-row"><input data-setting="intensity" type="range" min="0" max="100" step="1" value="100" /><output data-output-for="intensity">100%</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Adjust from original to full effect.</strong><p>0% preserves the source colors; 100% applies the full effect. The image dimensions stay unchanged. Choose an output format below and inspect the live preview before downloading.</p></div>
           </div>}
 
           {isEdgeFade && <div class="visual-tool-controls edge-fade-controls">
