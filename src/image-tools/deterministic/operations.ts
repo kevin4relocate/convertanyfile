@@ -3,6 +3,9 @@ import type {
   ColorEffectSettings,
   ColorAdjustmentSettings,
   PixelateSettings,
+  SharpenSettings,
+  ImageBorderSettings,
+  RoundedCornersSettings,
   CropSettings,
   DeterministicSettings,
   DeterministicToolId,
@@ -219,6 +222,104 @@ function drawEdgeFade(bitmap: ImageBitmap, settings: EdgeFadeSettings, maxDimens
   return original.canvas;
 }
 
+/**
+ * Tile the 4-neighbour sharpening convolution instead of allocating a second
+ * full-resolution ImageData buffer. A one-pixel halo preserves tile seams.
+ * Preserve source alpha; ignore invisible neighbour RGB to avoid color fringes
+ * around transparent illustrations.
+ */
+function drawSharpen(bitmap: ImageBitmap, settings: SharpenSettings, maxDimension?: number): HTMLCanvasElement {
+  const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+  const source = canvas2d(size.width, size.height);
+  source.context.drawImage(bitmap, 0, 0, size.width, size.height);
+  const amount = clamp(Number.isFinite(settings.amount) ? settings.amount : 0, 0, 1.2);
+  if (amount === 0) return source.canvas;
+
+  const target = canvas2d(size.width, size.height);
+  const tileSize = 384;
+  for (let top = 0; top < size.height; top += tileSize) {
+    for (let left = 0; left < size.width; left += tileSize) {
+      const width = Math.min(tileSize, size.width - left);
+      const height = Math.min(tileSize, size.height - top);
+      const haloX = Math.max(0, left - 1);
+      const haloY = Math.max(0, top - 1);
+      const haloRight = Math.min(size.width, left + width + 1);
+      const haloBottom = Math.min(size.height, top + height + 1);
+      const input = source.context.getImageData(haloX, haloY, haloRight - haloX, haloBottom - haloY);
+      const output = target.context.createImageData(width, height);
+      const inPixels = input.data;
+      const rowWidth = input.width;
+      const offsetX = left - haloX;
+      const offsetY = top - haloY;
+      for (let y = 0; y < height; y += 1) {
+        const cy = y + offsetY;
+        for (let x = 0; x < width; x += 1) {
+          const cx = x + offsetX;
+          const center = (cy * rowWidth + cx) * 4;
+          const dest = (y * width + x) * 4;
+          const centerAlpha = inPixels[center + 3] ?? 0;
+          if (!centerAlpha) {
+            for (let channel = 0; channel < 4; channel += 1) output.data[dest + channel] = inPixels[center + channel] ?? 0;
+            continue;
+          }
+          const leftIndex = (cy * rowWidth + Math.max(0, cx - 1)) * 4;
+          const rightIndex = (cy * rowWidth + Math.min(rowWidth - 1, cx + 1)) * 4;
+          const topIndex = (Math.max(0, cy - 1) * rowWidth + cx) * 4;
+          const bottomIndex = (Math.min(input.height - 1, cy + 1) * rowWidth + cx) * 4;
+          for (let channel = 0; channel < 3; channel += 1) {
+            const middle = inPixels[center + channel] ?? 0;
+            const neighbor = (index: number): number => {
+              const alpha = (inPixels[index + 3] ?? 0) / 255;
+              return middle * (1 - alpha) + (inPixels[index + channel] ?? 0) * alpha;
+            };
+            const value = (1 + 4 * amount) * middle
+              - amount * (neighbor(leftIndex) + neighbor(rightIndex) + neighbor(topIndex) + neighbor(bottomIndex));
+            output.data[dest + channel] = Math.max(0, Math.min(255, Math.round(value)));
+          }
+          output.data[dest + 3] = centerAlpha;
+        }
+      }
+      target.context.putImageData(output, left, top);
+    }
+  }
+  return target.canvas;
+}
+
+function drawImageBorder(bitmap: ImageBitmap, settings: ImageBorderSettings, maxDimension?: number): HTMLCanvasElement {
+  const thickness = Math.round(clamp(Number.isFinite(settings.thickness) ? settings.thickness : 12, 1, 80));
+  const safeColor = /^#[0-9a-f]{6}$/i.test(settings.color) ? settings.color : '#ffffff';
+  const size = scaledSize(bitmap.width + 2 * thickness, bitmap.height + 2 * thickness, maxDimension);
+  const { canvas, context } = canvas2d(size.width, size.height);
+  const inset = thickness * size.scale;
+  context.fillStyle = safeColor;
+  context.fillRect(0, 0, size.width, size.height);
+  context.drawImage(bitmap, inset, inset, size.width - 2 * inset, size.height - 2 * inset);
+  return canvas;
+}
+
+function drawRoundedCorners(bitmap: ImageBitmap, settings: RoundedCornersSettings, maxDimension?: number): HTMLCanvasElement {
+  const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+  const { canvas, context } = canvas2d(size.width, size.height);
+  const radius = Math.min(size.width, size.height) * clamp(
+    Number.isFinite(settings.radiusPercent) ? settings.radiusPercent : 15, 0, 50,
+  ) / 100;
+  const w = canvas.width, h = canvas.height;
+  context.beginPath();
+  context.moveTo(radius, 0);
+  context.lineTo(w - radius, 0);
+  context.quadraticCurveTo(w, 0, w, radius);
+  context.lineTo(w, h - radius);
+  context.quadraticCurveTo(w, h, w - radius, h);
+  context.lineTo(radius, h);
+  context.quadraticCurveTo(0, h, 0, h - radius);
+  context.lineTo(0, radius);
+  context.quadraticCurveTo(0, 0, radius, 0);
+  context.closePath();
+  context.clip();
+  context.drawImage(bitmap, 0, 0, w, h);
+  return canvas;
+}
+
 export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolId, settings: DeterministicSettings, maxDimension?: number): HTMLCanvasElement {
   if (toolId === 'resize-image') {
     const dimensions = resizeDimensions(bitmap.width, bitmap.height, settings as ResizeSettings), size = scaledSize(dimensions.width, dimensions.height, maxDimension);
@@ -228,6 +329,9 @@ export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolI
   if (toolId === 'crop-image') return drawCrop(bitmap, settings as CropSettings, maxDimension);
   if (toolId === 'blur-image') return drawBlur(bitmap, settings as BlurSettings, maxDimension);
   if (toolId === 'fade-image-edges') return drawEdgeFade(bitmap, settings as EdgeFadeSettings, maxDimension);
+  if (toolId === 'sharpen-image') return drawSharpen(bitmap, settings as SharpenSettings, maxDimension);
+  if (toolId === 'add-image-border') return drawImageBorder(bitmap, settings as ImageBorderSettings, maxDimension);
+  if (toolId === 'rounded-corners-image') return drawRoundedCorners(bitmap, settings as RoundedCornersSettings, maxDimension);
   if (toolId === 'brightness-image' || toolId === 'contrast-image' || toolId === 'adjust-image-saturation') {
     const filter = toolId === 'brightness-image' ? 'brightness' : toolId === 'contrast-image' ? 'contrast' : 'saturate';
     const level = clamp((settings as ColorAdjustmentSettings).level, 0, 200);
