@@ -1,0 +1,43 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { TEXT_TOOLS } from '../config/text-tools';
+import { SITE } from '../config/site';
+const schema={'@context':'https://schema.org','@type':'CollectionPage',name:'Text & Developer Tools',url:SITE.origin+'/text-tools/'};
+---
+<SiteLayout title="Free Online Text & Developer Tools | ConvertAnyFile" description="Format JSON, encode Base64, escape HTML, count text, generate UUIDs and convert colors or dates privately in your browser." schema={schema}>
+ <section class="page-hero"><div class="site-container hero-inner">
+  <div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Text Tools</span></div>
+  <span class="eyebrow">Text & Developer</span>
+  <h1>Free, private online text and developer tools.</h1>
+  <p>Fourteen focused utilities for JSON, Unicode text, URLs, HTML entities, UUIDs, colors and timestamps. No account or text upload needed.</p>
+ </div></section>
+ <section class="content-wide-section"><div class="site-container">
+  <div class="section-heading wide"><h2>Find the right text utility.</h2><p>Each tool has its own interface and practical usage notes.</p></div>
+  <div class="text-directory" data-text-directory>
+   <label for="text-search">Search text tools</label><input id="text-search" type="search" data-text-search placeholder="Search JSON, Base64, color..." />
+   <div class="text-directory-grid">
+   {TEXT_TOOLS.map((tool)=><a href={'/text/'+tool.slug+'/'} data-text-card data-search-key={(tool.name+' '+tool.intro).toLowerCase()}><strong>{tool.name}</strong><span>{tool.intro}</span><small>Open tool →</small></a>)}
+   </div>
+   <p data-text-empty hidden>No matching tools.</p>
+  </div>
+ </div></section>
+</SiteLayout>
+<script>
+ const root=document.querySelector<HTMLElement>('[data-text-directory]');
+ const input=root?.querySelector<HTMLInputElement>('[data-text-search]');
+ const cards=root?.querySelectorAll<HTMLElement>('[data-text-card]');
+ const empty=root?.querySelector<HTMLElement>('[data-text-empty]');
+ input?.addEventListener('input',()=>{
+  let count=0;
+  cards?.forEach((card)=>{const hit=(card.dataset.searchKey||'').includes(input.value.trim().toLowerCase());card.hidden=!hit;if(hit)count++;});
+  if(empty)empty.hidden=count!==0;
+ });
+</script>
+<style>
+ .text-directory{display:grid;gap:12px}.text-directory>label{font-weight:750}
+ .text-directory>input{padding:12px 14px;border:1px solid #4a5670;background:#141c29;color:#fff;border-radius:10px;max-width:480px}
+ .text-directory-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+ .text-directory-grid a{background:#151c29;color:#e9edf5;border:1px solid #3a4558;border-radius:12px;display:grid;align-content:start;gap:9px;padding:18px;min-width:0}
+ .text-directory-grid a:hover{border-color:#8d80ff}.text-directory-grid strong{font-size:17px}.text-directory-grid span{font-size:13px;line-height:1.6;color:#bdc6d5}.text-directory-grid small{color:#b8acff}
+ @media(max-width:820px){.text-directory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.text-directory-grid{grid-template-columns:1fr}}
+</style>

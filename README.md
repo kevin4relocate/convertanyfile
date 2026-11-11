@@ -31,6 +31,16 @@ ConvertAnyFile.net is a browser-first file conversion and image-tools platform b
 
 All converter categories reuse the generic queue, progress, cancel, retry, per-file download, ZIP packaging, SEO shell and responsive page frame. Category behavior stays behind `EngineAdapter` implementations.
 
+## Text & Developer Tools (Batch A)
+
+14 independent text and developer utilities share a typed catalog, a reusable browser-only workspace, and a pure TypeScript processing module. Routes live under `/text/<tool-slug>/` with the searchable collection at `/text-tools/`.
+
+- JSON: formatter, validator, minifier.
+- Unicode text: UTF-8 Base64 encode/decode, percent-encode/decode URL components, HTML entity encode/decode, case conversion, word/character counting.
+- Developer: secure UUID v4 generation, HEX/RGB/HSL color conversion, Unix/ISO timestamp conversion.
+
+Text input has a 1,000,000-character safety cap. Some transformations may normalize representation (e.g. JSON number formatting); docs explain limitations. All work is performed client-side and no external dependencies were added.
+
 ## Public Image Tools
 
 Image Tools use focused browser-side workflows rather than the converter `EngineAdapter` pipeline.

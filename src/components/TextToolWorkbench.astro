@@ -1,0 +1,82 @@
+---
+import type { TextToolDefinition } from '../config/text-tools';
+const {tool} = Astro.props as {tool:TextToolDefinition};
+---
+<div class="text-workbench" data-text-workbench data-tool-id={tool.id}>
+ <p><strong>Private browser workspace</strong> — input is processed on your device.</p>
+ <div class="text-workbench-grid">
+  <label>Input
+   {tool.kind === 'generator' ? <p>UUIDs use secure random generation in your browser.</p> : <textarea data-tool-input aria-label="Input text" rows="11" spellcheck="false">{tool.example}</textarea>}
+  </label>
+  <label>Result<textarea data-tool-output aria-label="Result text" rows="11" readonly placeholder="Your result appears here"></textarea></label>
+ </div>
+ <div class="text-tool-controls">
+  {tool.options && <label>Option<select data-tool-option>{tool.options.map((item)=><option value={item.value}>{item.label}</option>)}</select></label>}
+  {tool.kind === 'generator' && <label>Count<select data-tool-option>{[1,5,10,25,50].map((n)=><option value={n}>{n}</option>)}</select></label>}
+  <button type="button" data-tool-clear>Clear</button>
+  <button type="button" data-tool-run>{tool.buttonLabel}</button>
+  <button type="button" data-tool-copy disabled>Copy</button>
+  <button type="button" data-tool-download disabled>Download</button>
+ </div>
+ <p data-tool-status role="status" aria-live="polite">Ready</p>
+ <p data-tool-error role="alert" hidden></p>
+</div>
+<script>
+ import { runTextTool } from '../platform/text-tools/operations';
+ for (const root of document.querySelectorAll<HTMLElement>('[data-text-workbench]')) {
+  const input=root.querySelector<HTMLTextAreaElement>('[data-tool-input]');
+  const output=root.querySelector<HTMLTextAreaElement>('[data-tool-output]')!;
+  const option=root.querySelector<HTMLSelectElement>('[data-tool-option]');
+  const run=root.querySelector<HTMLButtonElement>('[data-tool-run]')!;
+  const copy=root.querySelector<HTMLButtonElement>('[data-tool-copy]')!;
+  const download=root.querySelector<HTMLButtonElement>('[data-tool-download]')!;
+  const clear=root.querySelector<HTMLButtonElement>('[data-tool-clear]')!;
+  const status=root.querySelector<HTMLElement>('[data-tool-status]')!;
+  const error=root.querySelector<HTMLElement>('[data-tool-error]')!;
+  const reset=()=>{
+   output.value='';copy.disabled=true;download.disabled=true;
+   status.textContent='Ready';error.textContent='';error.hidden=true;
+  };
+  input?.addEventListener('input',reset);
+  option?.addEventListener('change',reset);
+  clear.addEventListener('click',()=>{if(input)input.value='';reset();input?.focus();});
+  run.addEventListener('click',()=>{
+   reset();
+   try {
+    const result=runTextTool(root.dataset.toolId||'',input?.value||'',option?.value);
+    output.value=result.output;status.textContent=result.message;copy.disabled=false;download.disabled=false;
+   } catch(e) {
+    error.hidden=false;error.textContent=e instanceof Error?e.message:'Unable to process input';
+    status.textContent='Check your input';
+   }
+  });
+  copy.addEventListener('click',async()=>{
+   try {await navigator.clipboard.writeText(output.value);status.textContent='Copied';}
+   catch {status.textContent='Select the result to copy manually';}
+  });
+  download.addEventListener('click',()=>{
+   const json=(root.dataset.toolId||'').startsWith('json-');
+   const blob=new Blob([output.value],{type:json?'application/json':'text/plain'});
+   const url=URL.createObjectURL(blob);
+   const link=document.createElement('a');link.href=url;link.download=(root.dataset.toolId||'result')+(json?'.json':'.txt');
+   document.body.appendChild(link);link.click();link.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),1000);
+   status.textContent='Result downloaded';
+  });
+ }
+</script>
+<style>
+ .text-workbench{background:#111722;border:1px solid #374258;border-radius:17px;padding:20px;color:#eef1f9}
+ .text-workbench>p{color:#bbc4d3;font-size:13px}
+ .text-workbench-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+ .text-workbench-grid>label{display:grid;gap:9px;font-weight:750;font-size:13px;min-width:0}
+ .text-workbench-grid textarea{box-sizing:border-box;width:100%;min-height:240px;resize:vertical;border:1px solid #3c4861;background:#0a101a;color:#f7f7fc;border-radius:10px;padding:12px;font:13px/1.6 monospace}
+ .text-workbench-grid textarea[readonly]{background:#182232}
+ .text-tool-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:15px}
+ .text-tool-controls label{display:flex;align-items:center;gap:8px;font-size:12px}
+ .text-tool-controls button,.text-tool-controls select{background:#29354b;color:#fff;border:1px solid #465674;border-radius:8px;padding:10px 13px;cursor:pointer}
+ .text-tool-controls [data-tool-run]{background:#6956ea;border-color:#6956ea;font-weight:800}
+ .text-tool-controls button:disabled{opacity:.45;cursor:not-allowed}
+ .text-workbench [data-tool-error]{color:#ffb4ab}
+ @media(max-width:680px){.text-workbench-grid{grid-template-columns:1fr}.text-workbench-grid textarea{min-height:150px}.text-workbench{padding:14px}}
+</style>

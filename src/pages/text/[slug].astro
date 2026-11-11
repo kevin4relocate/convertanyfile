@@ -1,0 +1,29 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import TextToolWorkbench from '../../components/TextToolWorkbench.astro';
+import { TEXT_TOOLS } from '../../config/text-tools';
+import { SITE } from '../../config/site';
+export function getStaticPaths(){return TEXT_TOOLS.map((tool)=>({params:{slug:tool.slug},props:{tool}}));}
+const {tool}=Astro.props;
+const url=SITE.origin+'/text/'+tool.slug+'/';
+const schema=[{'@context':'https://schema.org','@type':'WebApplication',name:tool.name,url,applicationCategory:'UtilitiesApplication',operatingSystem:'Any',offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}},{'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Home',item:SITE.origin+'/'},{'@type':'ListItem',position:2,name:'Text Tools',item:SITE.origin+'/text-tools/'},{'@type':'ListItem',position:3,name:tool.name,item:url}]}];
+const related=TEXT_TOOLS.filter((item)=>item.id!==tool.id).slice(0,5);
+---
+<SiteLayout title={tool.title} description={tool.description} schema={schema}>
+ <section class="converter-page-hero"><div class="site-container converter-page-hero-inner">
+  <div class="breadcrumbs converter-page-breadcrumbs"><a href="/">Home</a><span>/</span><a href="/text-tools/">Text Tools</a><span>/</span><span>{tool.name}</span></div>
+  <span class="eyebrow converter-page-eyebrow">Browser-only utility</span>
+  <h1>{tool.heading}</h1><p>{tool.intro}</p>
+ </div></section>
+ <section class="converter-page-tool"><div class="site-container"><TextToolWorkbench tool={tool}/></div></section>
+ <section class="content-wide-section"><div class="site-container"><div class="text-tool-details">
+  <article><span class="section-kicker">How it works</span><h2>Use {tool.name} locally</h2><p>{tool.usage}</p><h3>Important limitations</h3><p>{tool.note}</p><p>Processing runs on your device. Keep source content when exact formatting or compatibility matters.</p></article>
+  <aside><h2>Related utilities</h2>{related.map((item)=><a href={'/text/'+item.slug+'/'}>{item.name} →</a>)}<a href="/text-tools/">Browse all text tools →</a></aside>
+ </div></div></section>
+</SiteLayout>
+<style>
+ .text-tool-details{display:grid;grid-template-columns:minmax(0,2fr) minmax(220px,1fr);gap:28px}
+ .text-tool-details article{line-height:1.8}.text-tool-details aside{display:grid;align-content:start;gap:11px;background:#161e2b;color:#f2f2f9;padding:19px;border-radius:12px}
+ .text-tool-details aside a{color:#c0b5ff;font-size:13px}.text-tool-details h2{font-size:24px}.text-tool-details aside h2{font-size:18px}
+ @media(max-width:700px){.text-tool-details{grid-template-columns:1fr}}
+</style>
