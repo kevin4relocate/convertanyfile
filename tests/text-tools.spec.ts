@@ -30,7 +30,7 @@ test('Unicode Base64 round trip',async({page})=>{
  await page.goto('/text/base64-text-encoder/');
  await page.locator('[data-tool-run]').click();
  const encoded=await page.locator('[data-tool-output]').inputValue();
- expect(encoded).toBe('SGVsbG8g8J+MjSDigJQIGNhZw6k=');
+ expect(encoded).toBe('SGVsbG8g8J+MjiDigJQgY2Fmw6k=');
  await page.goto('/text/base64-text-decoder/');
  await page.locator('[data-tool-input]').fill(encoded);
  await page.locator('[data-tool-run]').click();

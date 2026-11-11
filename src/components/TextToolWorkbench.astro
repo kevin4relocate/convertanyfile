@@ -3,7 +3,7 @@ import type { TextToolDefinition } from '../config/text-tools';
 const {tool} = Astro.props as {tool:TextToolDefinition};
 ---
 <div class="text-workbench" data-text-workbench data-tool-id={tool.id}>
- <p><strong>Private browser workspace</strong> — input is processed on your device.</p>
+ <p><strong>Private browser workspace</strong> — input is processed on your device. Maximum input: 1,000,000 characters.</p>
  <div class="text-workbench-grid">
   <label>Input
    {tool.kind === 'generator' ? <p>UUIDs use secure random generation in your browser.</p> : <textarea data-tool-input aria-label="Input text" rows="11" spellcheck="false">{tool.example}</textarea>}
@@ -11,7 +11,7 @@ const {tool} = Astro.props as {tool:TextToolDefinition};
   <label>Result<textarea data-tool-output aria-label="Result text" rows="11" readonly placeholder="Your result appears here"></textarea></label>
  </div>
  <div class="text-tool-controls">
-  {tool.options && <label>Option<select data-tool-option>{tool.options.map((item)=><option value={item.value}>{item.label}</option>)}</select></label>}
+  {tool.options && <label>{tool.id === 'unix-timestamp-converter' ? 'Input unit' : tool.id === 'json-formatter' ? 'Indentation' : 'Letter case'}<select data-tool-option>{tool.options.map((item)=><option value={item.value}>{item.label}</option>)}</select></label>}
   {tool.kind === 'generator' && <label>Count<select data-tool-option>{[1,5,10,25,50].map((n)=><option value={n}>{n}</option>)}</select></label>}
   <button type="button" data-tool-clear>Clear</button>
   <button type="button" data-tool-run>{tool.buttonLabel}</button>
@@ -55,7 +55,7 @@ const {tool} = Astro.props as {tool:TextToolDefinition};
    catch {status.textContent='Select the result to copy manually';}
   });
   download.addEventListener('click',()=>{
-   const json=(root.dataset.toolId||'').startsWith('json-');
+   const json=['json-formatter','json-minifier'].includes(root.dataset.toolId||'');
    const blob=new Blob([output.value],{type:json?'application/json':'text/plain'});
    const url=URL.createObjectURL(blob);
    const link=document.createElement('a');link.href=url;link.download=(root.dataset.toolId||'result')+(json?'.json':'.txt');

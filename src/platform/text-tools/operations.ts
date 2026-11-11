@@ -3,14 +3,48 @@ export const MAX_TEXT_CHARS = 1_000_000;
 
 export interface TextToolResult { output: string; message: string; }
 
-function requireInput(input: string): void {
-  if (!input.trim()) throw new Error('Enter some text to continue.');
+function requireInput(input: string, toolId: string): void {
   if (input.length > MAX_TEXT_CHARS) throw new Error('Input exceeds the 1,000,000-character safety limit.');
+  // Whitespace is valid data for encoders and the text counter; an empty counter is useful.
+  const acceptsWhitespace = new Set(['base64-text-encoder', 'url-encoder', 'url-decoder', 'html-entity-encoder',
+    'html-entity-decoder', 'text-case-converter', 'word-character-counter']);
+  if (input.length === 0 && toolId !== 'word-character-counter') throw new Error('Enter some text to continue.');
+  if (input.trim().length === 0 && !acceptsWhitespace.has(toolId)) throw new Error('Enter some text to continue.');
 }
 
 function parseJson(input: string): unknown {
   try { return JSON.parse(input) as unknown; }
   catch (error) { throw new Error('Invalid JSON: ' + (error instanceof Error ? error.message : 'could not parse the document.')); }
+}
+
+/** Protect JSON integer literals from silent IEEE-754 precision loss on parse/stringify.
+ * This scanner ignores quoted JSON strings and only examines unquoted integer tokens.
+ */
+function assertSafeJsonIntegers(input: string): void {
+  let quoted = false;
+  let escaped = false;
+  const numberPattern = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/y;
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i]!;
+    if (quoted) {
+      if (escaped) { escaped = false; continue; }
+      if (char === '\\') { escaped = true; continue; }
+      if (char === '"') quoted = false;
+      continue;
+    }
+    if (char === '"') { quoted = true; continue; }
+    if (char !== '-' && (char < '0' || char > '9')) continue;
+    numberPattern.lastIndex = i;
+    const number = numberPattern.exec(input)?.[0];
+    if (!number) continue;
+    i += number.length - 1;
+    if (/[.eE]/.test(number)) continue;
+    const digits = number.startsWith('-') ? number.slice(1) : number;
+    if (digits.length >= 16 && (digits.length > 16 || BigInt(number) > BigInt(Number.MAX_SAFE_INTEGER) ||
+      BigInt(number) < -BigInt(Number.MAX_SAFE_INTEGER))) {
+      throw new Error('Unsafe JSON integer literal: this value exceeds JavaScript’s exact integer range. Use a string to preserve it.');
+    }
+  }
 }
 
 function utf8ToBase64(input: string): string {
@@ -126,12 +160,25 @@ function convertColor(input:string): string {
   return 'HEX: ' + hex + '\nRGB: rgb(' + [r,g,b].join(', ') + ')\nHSL: hsl(' + round(hue) + ', ' + round(sat*100) + '%, ' + round(light*100) + '%)';
 }
 
-function convertTimestamp(input:string): string {
+function validateCalendarDate(input: string): void {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})/.exec(input);
+  if (!parts) return;
+  const year = Number(parts[1]), month = Number(parts[2]), day = Number(parts[3]);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > days[month - 1]!) {
+    throw new Error('Invalid calendar date: check the month, day, and leap year.');
+  }
+}
+
+function convertTimestamp(input:string, unit='auto'): string {
   const value = input.trim();
   let milliseconds:number;
   if (/^-?\d{1,16}$/.test(value)) {
-    milliseconds = Number(value) * (value.replace('-','').length >= 12 ? 1 : 1000);
+    const isMilliseconds = unit === 'milliseconds' || (unit !== 'seconds' && value.replace('-','').length >= 12);
+    milliseconds = Number(value) * (isMilliseconds ? 1 : 1000);
   } else if (/^\d{4}-\d{2}-\d{2}$/.test(value) || /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/i.test(value)) {
+    validateCalendarDate(value);
     milliseconds = Date.parse(value);
   } else throw new Error('Enter Unix seconds, Unix milliseconds, or ISO 8601 with a timezone (or YYYY-MM-DD).');
   const date = new Date(milliseconds);
@@ -151,12 +198,14 @@ export function runTextTool(id:string, input:string, option=''): TextToolResult 
     if (!globalThis.crypto?.randomUUID) throw new Error('UUID generation requires a secure browser context (HTTPS).');
     return { output:Array.from({length:count},()=>crypto.randomUUID()).join('\n'), message:count + ' UUID v4 value(s) generated locally.' };
   }
-  requireInput(input);
+  requireInput(input, id);
   let output:string;
   switch(id) {
     case 'json-formatter': {
       const spaces = option === '4' ? 4 : 2;
-      output = JSON.stringify(parseJson(input), null, spaces);
+      const value = parseJson(input);
+      assertSafeJsonIntegers(input);
+      output = JSON.stringify(value, null, spaces);
       break;
     }
     case 'json-validator': {
@@ -165,10 +214,13 @@ export function runTextTool(id:string, input:string, option=''): TextToolResult 
       output = 'Valid JSON\nRoot value type: ' + type;
       break;
     }
-    case 'json-minifier': output = JSON.stringify(parseJson(input)); break;
+    case 'json-minifier': { const value = parseJson(input); assertSafeJsonIntegers(input); output = JSON.stringify(value); break; }
     case 'base64-text-encoder': output = utf8ToBase64(input); break;
     case 'base64-text-decoder': output = base64ToUtf8(input); break;
-    case 'url-encoder': output = encodeURIComponent(input); break;
+    case 'url-encoder':
+      try {output = encodeURIComponent(input);}
+      catch {throw new Error('The input contains an invalid Unicode sequence that cannot be URL-encoded.');}
+      break;
     case 'url-decoder':
       try {output=decodeURIComponent(input);}
       catch {throw new Error('Invalid percent escapes or invalid UTF-8 in URL component.');}
@@ -180,7 +232,7 @@ export function runTextTool(id:string, input:string, option=''): TextToolResult 
       break;
     case 'word-character-counter': output = countText(input); break;
     case 'color-code-converter': output = convertColor(input); break;
-    case 'unix-timestamp-converter': output = convertTimestamp(input); break;
+    case 'unix-timestamp-converter': output = convertTimestamp(input, option); break;
     default: throw new Error('Unrecognized text tool.');
   }
   return { output, message: 'Processed locally. Source text was not uploaded.' };
