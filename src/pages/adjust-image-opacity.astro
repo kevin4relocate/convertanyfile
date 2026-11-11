@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { IMAGE_OPACITY_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={IMAGE_OPACITY_TOOL}
+  kicker="Transparency · PNG output"
+  heading="Make an image partially transparent without a server upload."
+  copy="Reduce the opacity of the whole image, from fully visible to invisible. The editor locks export to PNG so transparency is retained in the downloaded file rather than flattened against a white background."
+  bullets={[
+    "Choose an opacity value from 0% invisible to 100% unchanged.",
+    "Keep image width and height while changing the alpha channel.",
+    "Preview the result locally on JPG, PNG and WebP inputs.",
+    "Use shared or per-image settings across a small batch.",
+    "Save real transparent PNG results individually or inside a ZIP."
+]}
+/>
