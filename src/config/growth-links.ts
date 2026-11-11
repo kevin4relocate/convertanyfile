@@ -58,9 +58,17 @@ export const POPULAR_CONVERSION_GUIDES: readonly GrowthLink[] = [
   { href: '/guides/how-to-convert-jpg-to-png/', label: 'How to convert JPG to PNG', description: 'Create a PNG workflow copy without expecting lost JPEG detail to return.' },
 ];
 
+export const POPULAR_TEXT_TOOLS: readonly GrowthLink[] = [
+  { href: '/text/json-formatter/', label: 'JSON Formatter', description: 'Pretty-print and validate JSON without uploading code.' },
+  { href: '/text/base64-text-encoder/', label: 'Base64 Text Encoder', description: 'Encode UTF-8 text and emoji as Base64 in your browser.' },
+  { href: '/text/word-character-counter/', label: 'Word & Character Counter', description: 'Check word, grapheme, line and byte counts.' },
+  { href: '/text/color-code-converter/', label: 'HEX, RGB & HSL Converter', description: 'Convert between common web color formats.' },
+];
+
 export const HOME_GROWTH_LINK_GROUPS: readonly GrowthLinkGroup[] = [
   { title: 'Popular image tools', links: POPULAR_IMAGE_TOOLS },
   { title: 'Popular image conversions', links: POPULAR_IMAGE_CONVERSIONS.slice(0, 6) },
   { title: 'Popular data conversions', links: POPULAR_DATA_CONVERSIONS.slice(0, 4) },
+  { title: 'Popular text tools', links: POPULAR_TEXT_TOOLS },
   { title: 'Helpful guides', links: [...POPULAR_CONVERSION_GUIDES.slice(0, 3), ...POPULAR_IMAGE_GUIDES.slice(0, 3)] },
 ];

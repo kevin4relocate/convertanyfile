@@ -10,6 +10,7 @@ export const SITE = {
 export const NAV_ITEMS = [
   { label: 'Converters', href: '/#converters' },
   { label: 'Image Tools', href: '/image-tools/' },
+  { label: 'Text Tools', href: '/text-tools/' },
   { label: 'Formats', href: '/formats/' },
   { label: 'Guides', href: '/guides/' },
   { label: 'FAQ', href: '/faq/' },
@@ -25,6 +26,9 @@ export const FOOTER_GROUPS = [
       { label: 'Archive Converter', href: '/archive-converter/' },
       { label: 'Subtitle Converter', href: '/subtitle-converter/' },
       { label: 'Image Tools', href: '/image-tools/' },
+      { label: 'Text Tools', href: '/text-tools/' },
+      { label: 'JSON Formatter', href: '/text/json-formatter/' },
+      { label: 'Base64 Text Encoder', href: '/text/base64-text-encoder/' },
       { label: 'Resize Image', href: '/resize-image/' },
       { label: 'Compress Image', href: '/compress-image/' },
       { label: 'Remove Metadata', href: '/remove-image-metadata/' },

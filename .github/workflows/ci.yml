@@ -12,7 +12,7 @@ concurrency:
 jobs:
   validate:
     name: Check and build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
@@ -22,6 +22,7 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run build
+      - run: npm run test:text-tools
       - name: Upload production build
         uses: actions/upload-artifact@v4
         with:
@@ -33,7 +34,10 @@ jobs:
   browser-smoke:
     name: Browser smoke (${{ matrix.label }})
     needs: validate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      options: --ipc=host
     timeout-minutes: 25
     strategy:
       fail-fast: false
@@ -61,9 +65,13 @@ jobs:
         with:
           name: production-dist
           path: dist/
-      - name: Install ${{ matrix.browser }}
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+      # Official Playwright image has browsers and OS libraries preinstalled.
+      # Keep this image version aligned with @playwright/test in package-lock.json.
       - name: Run ${{ matrix.label }} tests
+        # GitHub sets /github/home owned by pwuser, while the Playwright image
+        # executes as root. Firefox refuses to launch with a mismatched HOME.
+        env:
+          HOME: /root
         run: npm run test:e2e -- ${{ matrix.projects }}
       - name: Upload browser failure diagnostics
         if: failure()
