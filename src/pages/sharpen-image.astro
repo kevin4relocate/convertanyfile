@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { SHARPEN_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={SHARPEN_IMAGE_TOOL}
+  kicker="Edge sharpening · local batch"
+  heading="Make existing image edges more pronounced without uploading your files."
+  copy="The sharpening effect emphasizes local contrast around visible details. Adjust its strength, review the live preview and export one image or a batch of processed images."
+  bullets={[
+    "Adjust sharpening strength from 0× unchanged to 1.2× enhanced edge contrast.",
+    "Process decoded pixels locally without sending images to a server.",
+    "Use batch settings for related photos or individual adjustments for exceptions.",
+    "Preserve source pixel dimensions in the exported image.",
+    "Download JPG, PNG or WebP outputs individually or together in a ZIP."
+]}
+/>
