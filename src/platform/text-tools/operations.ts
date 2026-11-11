@@ -38,6 +38,10 @@ function assertSafeJsonIntegers(input: string): void {
     const number = numberPattern.exec(input)?.[0];
     if (!number) continue;
     i += number.length - 1;
+    // Avoid silently turning valid JSON numbers such as 1e400 into null on stringify.
+    if (!Number.isFinite(Number(number))) {
+      throw new Error('JSON number outside JavaScript numeric range. Use a string for values requiring exact preservation.');
+    }
     if (/[.eE]/.test(number)) continue;
     const digits = number.startsWith('-') ? number.slice(1) : number;
     if (digits.length >= 16 && (digits.length > 16 || BigInt(number) > BigInt(Number.MAX_SAFE_INTEGER) ||

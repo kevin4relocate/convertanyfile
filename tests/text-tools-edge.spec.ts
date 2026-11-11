@@ -11,6 +11,7 @@ test('JSON formatter/minifier validate and reject unsafe integer precision loss'
  expect(run('json-validator','[1,2]')).toBe('Valid JSON\nRoot value type: array');
  expect(()=>run('json-formatter','{"id":9007199254740993}')).toThrow('Unsafe JSON integer');
  expect(()=>run('json-minifier','{"id":-9007199254740993}')).toThrow('Unsafe JSON integer');
+ expect(()=>run('json-minifier','{"overflow":1e400}')).toThrow('numeric range');
  expect(run('json-minifier','{"id":"9007199254740993"}')).toBe('{"id":"9007199254740993"}');
  expect(run('json-minifier','{"id":9007199254740991}')).toBe('{"id":9007199254740991}');
  expect(()=>run('json-formatter','{')).toThrow('Invalid JSON');
