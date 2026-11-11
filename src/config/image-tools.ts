@@ -160,6 +160,39 @@ export const PIXELATE_IMAGE_TOOL = {
   policyNote: 'Pixelation is a creative image effect, not reliable privacy protection. Do not assume pixelation irreversibly hides faces, text, addresses, or other sensitive information.',
 } satisfies ImageToolDefinition;
 
+export const SHARPEN_IMAGE_TOOL = {
+  ...liveBase, id: 'sharpen-image' as const, slug: 'sharpen-image', displayName: 'Sharpen Image', category: 'transform',
+  title: 'Sharpen Image Online — Enhance Photo Edges | ConvertAnyFile',
+  description: 'Sharpen JPG, PNG and WebP photos locally with an adjustable edge-strength slider. Preview the result and download one image or a batch ZIP.',
+  h1: 'Sharpen an image without uploading it.',
+  eyebrow: 'Image Tools',
+  intro: 'Enhance the contrast around existing image edges with a strength control from 0 to 1.2×. Compare the original with the preview, apply shared or individual settings, and save processed copies locally.',
+  downloadSuffix: 'sharpened',
+  policyNote: 'Sharpening emphasizes visible edges, which can also amplify noise or produce halos at extreme strengths. It cannot reconstruct missing image detail or reliably fix an out-of-focus photograph.',
+} satisfies ImageToolDefinition;
+
+export const ADD_IMAGE_BORDER_TOOL = {
+  ...liveBase, id: 'add-image-border' as const, slug: 'add-image-border', displayName: 'Add Image Border', category: 'transform',
+  title: 'Add Border to Image Online — Color & Thickness | ConvertAnyFile',
+  description: 'Add a solid-color border outside a JPG, PNG or WebP image. Choose a color and 1–80 px thickness, preview locally, and process image batches.',
+  h1: 'Add a solid border around your image.',
+  eyebrow: 'Image Tools',
+  intro: 'Frame your photos, artwork or product images with a customizable colored border. The border goes outside the original pixels, growing the exported canvas equally on all sides.',
+  downloadSuffix: 'bordered',
+  policyNote: 'An outer border increases the exported width and height by twice its thickness. Files close to the maximum pixel or dimension limits may be rejected. Borders are solid color, not decorative picture frames.',
+} satisfies ImageToolDefinition;
+
+export const ROUNDED_CORNERS_IMAGE_TOOL = {
+  ...liveBase, id: 'rounded-corners-image' as const, slug: 'rounded-corners-image', displayName: 'Rounded Image Corners', category: 'transform',
+  title: 'Round Image Corners Online — Transparent PNG | ConvertAnyFile',
+  description: 'Round the corners of JPG, PNG or WebP images with an adjustable radius. Keep transparent corners and download PNG files locally, individually or in ZIP.',
+  h1: 'Make rounded-corner images with a transparent background.',
+  eyebrow: 'Image Tools',
+  intro: 'Trim the corner shape without shrinking the photo or covering its content with a background color. Adjust the radius between 0% and 50% of the shorter side, preview and export a transparent PNG.',
+  downloadSuffix: 'rounded',
+  policyNote: 'All outputs are PNG to preserve transparent corners, even when you upload JPEG or WebP. Choose another format only after flattening transparency over a deliberate background in a separate editor.',
+} satisfies ImageToolDefinition;
+
 export const FADE_IMAGE_EDGES_TOOL = {
   ...commonLimits,
   status: 'preview',
@@ -223,6 +256,9 @@ export const IMAGE_TOOL_MANIFEST = [
   { tool: CONTRAST_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Shadows · highlights · 0–200%', summary: 'Increase or reduce image contrast while preserving original pixel dimensions.' },
   { tool: SATURATION_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Vivid · muted · grayscale', summary: 'Boost color vividness or desaturate photos locally with a 0–200% slider.' },
   { tool: PIXELATE_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Mosaic · block size · pixel art', summary: 'Apply an adjustable nearest-neighbor pixel-art effect to one or many images.' },
+  { tool: SHARPEN_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Edge clarity · strength', summary: 'Enhance photo edges with adjustable strength and local batch processing.' },
+  { tool: ADD_IMAGE_BORDER_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Color · outer width', summary: 'Frame photos with a customizable solid-color outer border.' },
+  { tool: ROUNDED_CORNERS_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Radius · transparent PNG', summary: 'Create rounded-corner images while keeping transparent PNG corners.' },
   { tool: FADE_IMAGE_EDGES_TOOL, runtime: 'edge-fade', directoryGroup: 'preview', navigationHint: 'Subtitle-safe soft fades', summary: 'Fade blur naturally from one edge or all edges to create a subtitle-safe text area.' },
   { tool: BULK_RENAME_IMAGES_TOOL, runtime: 'rename', directoryGroup: 'cleanup', navigationHint: 'Patterns · numbering', summary: 'Rename a batch without changing image bytes or source extensions.' },
   { tool: REMOVE_IMAGE_METADATA_TOOL, runtime: 'metadata', directoryGroup: 'cleanup', navigationHint: 'EXIF · GPS · software', summary: 'Strip EXIF, GPS and software metadata locally.' },
