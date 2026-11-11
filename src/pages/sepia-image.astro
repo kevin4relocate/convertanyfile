@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { SEPIA_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={SEPIA_IMAGE_TOOL}
+  kicker="Vintage warmth · sepia tone"
+  heading="Warm up ordinary photos with a controllable sepia effect."
+  copy="A sepia filter shifts your photo toward a warm, brown-toned look rather than merely reducing all color. Choose a subtle tint or the full vintage effect, inspect the preview and save the result in a supported image format."
+  bullets={[
+    'Choose a subtle sepia tint or 100% warm sepia treatment.',
+    'Keep the source width and height when applying the effect.',
+    'Preview the change on JPG, PNG and WebP before processing the whole batch.',
+    'Use shared or per-image intensity when the photos have different original colors.',
+    'Download one sepia image or combine multiple finished copies into a ZIP.',
+  ]}
+/>
