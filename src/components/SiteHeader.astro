@@ -8,7 +8,7 @@ const imageToolLinks = IMAGE_TOOL_MANIFEST
   .map((entry) => ({
     id: entry.tool.id,
     href: `/${entry.tool.slug}/`,
-    label: entry.navigationLabel ?? entry.tool.displayName,
+    label: ('navigationLabel' in entry ? entry.navigationLabel : undefined) ?? entry.tool.displayName,
     hint: entry.navigationHint,
     icon: entry.tool.displayName.charAt(0).toUpperCase(),
     status: entry.tool.status,
