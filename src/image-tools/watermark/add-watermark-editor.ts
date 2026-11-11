@@ -1,4 +1,4 @@
-import { createZipBlob, downloadBlob } from '../core/download';
+import { downloadResultBatch } from '../core/download';
 
 type Kind = 'text' | 'logo';
 type Item = { id:string; file:File; url:string; width:number; height:number; output?:Blob };
@@ -105,7 +105,7 @@ export function mountAddWatermark(root:HTMLElement):void{
     cancel.hidden=true;progress.hidden=true;process.disabled=false;const success=items.filter(item=>item.output).length;download.disabled=!success;download.textContent=success>1?'Download ZIP':'Download image';resultSummary.textContent=success===items.length?`${success} watermarked image${success===1?'':'s'} ready to download.`:`${success} of ${items.length} images completed.`;syncControls();
   }
 
-  async function downloadBatch():Promise<void>{const files=items.filter(item=>item.output).map(item=>({filename:`${stem(item.file.name)}-watermarked.${outputExt(item.file)}`,blob:item.output!}));if(!files.length)return;if(files.length===1){downloadBlob(files[0]!.blob,files[0]!.filename);return;}downloadBlob(await createZipBlob(files),'watermarked-images.zip');}
+  async function downloadBatch():Promise<void>{const files=items.filter(item=>item.output).map(item=>({filename:`${stem(item.file.name)}-watermarked.${outputExt(item.file)}`,blob:item.output!}));await downloadResultBatch(files,'watermarked-images.zip');}
 
   function updatePosition(event:PointerEvent):void{const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;state.x=Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width));state.y=Math.max(0,Math.min(1,(event.clientY-rect.top)/rect.height));invalidate();void renderPreview();}
   canvas.addEventListener('pointerdown',event=>{if(!items.length)return;dragging=true;canvas.classList.add('is-dragging');canvas.setPointerCapture(event.pointerId);updatePosition(event);});
