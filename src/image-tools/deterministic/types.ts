@@ -7,7 +7,12 @@ export type DeterministicToolId =
   | 'crop-image'
   | 'blur-image'
   | 'fade-image-edges'
-  | 'remove-image-metadata';
+  | 'remove-image-metadata'
+  | 'grayscale-image'
+  | 'sepia-image'
+  | 'invert-image';
+
+export type ColorEffectSettings = { intensity: number };
 
 export type OutputChoice = 'source' | 'png' | 'jpg' | 'webp';
 
@@ -79,7 +84,8 @@ export type DeterministicSettings =
   | RotateFlipSettings
   | CropSettings
   | BlurSettings
-  | EdgeFadeSettings;
+  | EdgeFadeSettings
+  | ColorEffectSettings;
 
 export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSettings {
   switch (toolId) {
@@ -95,6 +101,10 @@ export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSe
       return { shape: 'rect', aspect: 'free', x: 0, y: 0, width: 100, height: 100 };
     case 'blur-image':
       return { scope: 'whole', shape: 'rect', radius: 12, x: 25, y: 25, width: 50, height: 50 };
+    case 'grayscale-image':
+    case 'sepia-image':
+    case 'invert-image':
+      return { intensity: 100 };
     case 'fade-image-edges':
       return {
         effectMode: 'subtitle-safe',
