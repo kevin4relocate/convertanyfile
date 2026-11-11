@@ -140,7 +140,7 @@ test('border processing rejects output dimensions over the configured limit', as
     element.dispatchEvent(new Event('input', { bubbles: true }));
   });
   await app.locator('[data-role="process-batch"]').click();
-  await expect(app.locator('[data-role="batch-list"]')).toContainText('Error', { timeout: 30_000 });
+  await expect(app.locator('[data-role="batch-list"]')).toContainText('exceeds', { timeout: 30_000 });
   await expect(app.locator('[data-role="notice"]')).toContainText('failed');
 });
 
