@@ -1,5 +1,6 @@
 import type {
   BlurSettings,
+  ColorEffectSettings,
   CropSettings,
   DeterministicSettings,
   DeterministicToolId,
@@ -225,6 +226,16 @@ export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolI
   if (toolId === 'crop-image') return drawCrop(bitmap, settings as CropSettings, maxDimension);
   if (toolId === 'blur-image') return drawBlur(bitmap, settings as BlurSettings, maxDimension);
   if (toolId === 'fade-image-edges') return drawEdgeFade(bitmap, settings as EdgeFadeSettings, maxDimension);
+  if (toolId === 'grayscale-image' || toolId === 'sepia-image' || toolId === 'invert-image') {
+    const name = toolId === 'grayscale-image' ? 'grayscale' : toolId === 'sepia-image' ? 'sepia' : 'invert';
+    const intensity = clamp((settings as ColorEffectSettings).intensity, 0, 100);
+    const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+    const { canvas, context } = canvas2d(size.width, size.height);
+    context.filter = `${name}(${intensity}%)`;
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    context.filter = 'none';
+    return canvas;
+  }
   // Compress and metadata removal both intentionally re-render decoded pixels.
   // Canvas encoding drops EXIF/GPS/software metadata while preserving visible pixels.
   const size = scaledSize(bitmap.width, bitmap.height, maxDimension), { canvas, context } = canvas2d(size.width, size.height);
