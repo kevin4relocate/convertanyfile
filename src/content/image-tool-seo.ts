@@ -26,6 +26,78 @@ export interface ImageToolSeoContent {
 }
 
 export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
+  'grayscale-image': {
+    howToHeading: 'Convert an image to grayscale in four steps.',
+    howToIntro: 'Make a neutral black-and-white-style copy locally while retaining control over the original color strength and export format.',
+    steps: [
+      { title: 'Choose your photos', text: 'Add one JPG, PNG or WebP or prepare several in a batch. Original images stay on your device.' },
+      { title: 'Set grayscale intensity', text: 'Move Effect strength toward 100% to remove visible color, or use a lower percentage for partial desaturation.' },
+      { title: 'Check the live preview', text: 'Compare the current image with its grayscale output and adjust individual images if lighting and colors vary.' },
+      { title: 'Process and download', text: 'Apply the effect to the batch, then download a single image or package finished results into a ZIP.' },
+    ],
+    useCasesHeading: 'Where grayscale images are useful.',
+    useCasesIntro: 'Grayscale emphasizes shape, luminance and texture without competing hue information; it does not convert an image into strictly two colors.',
+    useCases: [
+      'Create understated black-and-white versions of product or portrait photos.',
+      'Check whether a design still reads when its colors are removed.',
+      'Prepare a monochrome reference for a printed layout or document.',
+      'Apply the same desaturation strength across a set of pictures.',
+    ],
+    faq: [
+      { question: 'Does grayscale mean only black and white pixels?', answer: 'No. Grayscale uses a range of gray values between dark and light. It is not a two-color threshold or pure black-and-white bitmap operation.' },
+      { question: 'Can I keep some original color?', answer: 'Yes. Set Effect strength below 100% to blend part of the original color into the output.' },
+      { question: 'Will grayscale change image size or dimensions?', answer: 'Pixel dimensions stay the same, but re-encoding can alter file size and metadata depending on the selected output format.' },
+    ],
+    relatedIds: ['sepia-image', 'invert-image', 'compress-image', 'resize-image'],
+  },
+  'sepia-image': {
+    howToHeading: 'Apply a sepia effect without uploading your photo.',
+    howToIntro: 'A sepia filter shifts tones toward warm browns for a vintage-style image; control how strong that color treatment becomes.',
+    steps: [
+      { title: 'Add the image or batch', text: 'Choose JPG, PNG or WebP files to work on locally in your browser.' },
+      { title: 'Adjust the sepia amount', text: 'Move the slider between 0% original color and 100% sepia to choose the amount of warmth.' },
+      { title: 'Inspect the preview', text: 'Check how skin tones, highlights and dark areas change. Different originals can need different strengths.' },
+      { title: 'Save your sepia results', text: 'Process the selected files and download one output or a ZIP for the batch.' },
+    ],
+    useCasesHeading: 'When a sepia tint works well.',
+    useCasesIntro: 'Sepia is a creative color effect, not an archival restoration process. The resulting appearance depends on the original photo.',
+    useCases: [
+      'Create vintage-style portraits and social media graphics.',
+      'Give a group of photos a consistent warm color treatment.',
+      'Build nostalgic mood boards without using external photo-upload services.',
+      'Combine sepia output with other crops or compression workflows afterward.',
+    ],
+    faq: [
+      { question: 'Is sepia the same as grayscale?', answer: 'No. Grayscale removes color saturation, while sepia adds warm brown toning to the visible colors.' },
+      { question: 'Can I reduce the vintage look?', answer: 'Yes. The Effect strength slider lets you keep part of the original colors instead of using full sepia.' },
+      { question: 'Does sepia restore a damaged photograph?', answer: 'No. It changes visible color values and does not repair scratches, improve missing detail or recover a faded original.' },
+    ],
+    relatedIds: ['grayscale-image', 'invert-image', 'crop-image', 'compress-image'],
+  },
+  'invert-image': {
+    howToHeading: 'Create an inverted-color image using your browser.',
+    howToIntro: 'Reverse visible RGB values for a negative-style effect and control the amount of inversion with a strength slider.',
+    steps: [
+      { title: 'Upload locally', text: 'Choose an image from your device. Supported processing happens in the browser.' },
+      { title: 'Choose inversion strength', text: 'At 100%, the visible RGB colors are inverted. At 0%, the source colors are preserved.' },
+      { title: 'Preview before exporting', text: 'Inspect the resulting colors and adjust per image when using a mixed batch.' },
+      { title: 'Download the negative-style copy', text: 'Export one image in a supported format or collect several results into a ZIP.' },
+    ],
+    useCasesHeading: 'Use color inversion for design experiments and visual effects.',
+    useCasesIntro: 'Full inversion maps each RGB channel to its opposite value. It does not automatically correct the orange mask of photographic film negatives.',
+    useCases: [
+      'Try negative-color versions of logos, posters and illustrations.',
+      'Explore unusual color combinations for a thumbnail or graphic.',
+      'Turn bright illustrations into darker color inversions for creative experiments.',
+      'Apply the same inversion amount to multiple related images.',
+    ],
+    faq: [
+      { question: 'What does invert colors do?', answer: 'It reverses red, green and blue channel values. For example, strong red can become cyan after full inversion.' },
+      { question: 'Can this convert scanned film negatives into accurate photos?', answer: 'No. Film negatives can require white balance, orange-mask correction and channel-specific adjustments beyond simple RGB inversion.' },
+      { question: 'Does inversion change transparent areas?', answer: 'The color filter affects visible RGB values and preserves alpha while processing. Choose PNG or WebP when you need to keep transparency in the exported file.' },
+    ],
+    relatedIds: ['grayscale-image', 'sepia-image', 'blur-image', 'resize-image'],
+  },
   'resize-image': {
     howToHeading: 'How to resize images online in a browser.',
     howToIntro: 'Choose a sizing method that matches the job, check the active preview, then process the batch locally without uploading source images to a resize API.',
