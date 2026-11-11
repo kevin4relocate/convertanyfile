@@ -1,6 +1,8 @@
 import type {
   BlurSettings,
   ColorEffectSettings,
+  ColorAdjustmentSettings,
+  PixelateSettings,
   CropSettings,
   DeterministicSettings,
   DeterministicToolId,
@@ -226,6 +228,32 @@ export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolI
   if (toolId === 'crop-image') return drawCrop(bitmap, settings as CropSettings, maxDimension);
   if (toolId === 'blur-image') return drawBlur(bitmap, settings as BlurSettings, maxDimension);
   if (toolId === 'fade-image-edges') return drawEdgeFade(bitmap, settings as EdgeFadeSettings, maxDimension);
+  if (toolId === 'brightness-image' || toolId === 'contrast-image' || toolId === 'adjust-image-saturation') {
+    const filter = toolId === 'brightness-image' ? 'brightness' : toolId === 'contrast-image' ? 'contrast' : 'saturate';
+    const level = clamp((settings as ColorAdjustmentSettings).level, 0, 200);
+    const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+    const { canvas, context } = canvas2d(size.width, size.height);
+    context.filter = `${filter}(${level}%)`;
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    context.filter = 'none';
+    return canvas;
+  }
+
+  if (toolId === 'pixelate-image') {
+    const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+    // Downsample first, then upscale with nearest-neighbor interpolation.
+    // Keep the output dimensions unchanged and bound the temporary canvas.
+    const blockSize = Math.round(clamp((settings as PixelateSettings).blockSize, 2, 64));
+    const smallWidth = Math.max(1, Math.ceil(size.width / blockSize));
+    const smallHeight = Math.max(1, Math.ceil(size.height / blockSize));
+    const tiny = canvas2d(smallWidth, smallHeight);
+    tiny.context.drawImage(bitmap, 0, 0, smallWidth, smallHeight);
+    const result = canvas2d(size.width, size.height);
+    result.context.imageSmoothingEnabled = false;
+    result.context.drawImage(tiny.canvas, 0, 0, size.width, size.height);
+    return result.canvas;
+  }
+
   if (toolId === 'grayscale-image' || toolId === 'sepia-image' || toolId === 'invert-image') {
     const name = toolId === 'grayscale-image' ? 'grayscale' : toolId === 'sepia-image' ? 'sepia' : 'invert';
     const intensity = clamp((settings as ColorEffectSettings).intensity, 0, 100);
