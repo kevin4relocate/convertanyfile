@@ -24,7 +24,7 @@ function tarHeaderLooksValid(sample: Uint8Array): boolean {
   const expected = Number.parseInt(rawChecksum, 8);
   if (!Number.isFinite(expected)) return false;
   let actual = 0;
-  for (let index = 0; index < 512; index += 1) actual += index >= 148 && index < 156 ? 32 : sample[index];
+  for (let index = 0; index < 512; index += 1) actual += index >= 148 && index < 156 ? 32 : sample[index]!;
   return expected === actual;
 }
 
@@ -34,7 +34,7 @@ function startsWith(sample: Uint8Array, signature: readonly number[]): boolean {
 
 function archiveSignatureMatches(extension: string, sample: Uint8Array): boolean {
   if (extension === 'zip') {
-    return sample.length >= 4 && sample[0] === 0x50 && sample[1] === 0x4b && [0x03, 0x05, 0x07].includes(sample[2]) && [0x04, 0x06, 0x08].includes(sample[3]);
+    return sample.length >= 4 && sample[0] === 0x50 && sample[1] === 0x4b && [0x03, 0x05, 0x07].includes(sample[2]!) && [0x04, 0x06, 0x08].includes(sample[3]!);
   }
   if (extension === '7z') return startsWith(sample, [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c]);
   if (extension === 'rar') {

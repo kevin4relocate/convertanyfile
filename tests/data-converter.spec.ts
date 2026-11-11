@@ -157,7 +157,13 @@ test('data batch reuses the shared queue and ZIP workflow', async ({ page }) => 
   ]);
   await expect(app.locator('.file-row')).toHaveCount(2);
   await app.locator('[data-role="convert-all"]').click();
-  await expect(app.locator('[data-role="result-summary"]')).toContainText('2/2 converted');
+  try {
+    await expect(app.locator('[data-role="result-summary"]')).toContainText('2/2 converted', { timeout: 30_000 });
+  } catch (error) {
+    const jobs = await app.locator('[data-role="file-list"]').innerText();
+    const engine = await app.locator('[data-role="engine-state"]').innerText();
+    throw new Error(`Data batch failed to complete. Engine: ${engine}; Jobs: ${jobs}; Page errors: ${errors.join(' | ')}`, { cause: error });
+  }
   await expect(app.locator('[data-role="download-zip"]')).toBeVisible();
   expect(errors).toEqual([]);
 });

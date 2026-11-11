@@ -156,7 +156,7 @@ export const SUBTITLE_CONVERTERS: readonly ConverterDefinition[] = [
   },
 ] as const;
 
-export const SUBTITLE_CONVERTER = SUBTITLE_CONVERTERS[0];
+export const SUBTITLE_CONVERTER = SUBTITLE_CONVERTERS[0]!;
 export const SUBTITLE_PAIR_CONVERTERS = SUBTITLE_CONVERTERS.filter((converter) => converter.input && converter.output);
 
 export function getSubtitleConverter(slug: string): ConverterDefinition | undefined {

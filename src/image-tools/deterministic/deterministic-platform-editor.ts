@@ -1,8 +1,11 @@
-import { createZipBlob, downloadBlob } from '../core/download';
+import { downloadResultBatch } from '../core/download';
+import { createImageFileAdmission, imageDimensionsWithinLimits } from '../core/file-admission';
+import { runSequentialBatch } from '../core/batch-execution';
+import { IMAGE_TOOL_MANIFEST } from '../../config/image-tools';
 import { defaultQualityForImageOutput } from '../core/output-quality';
 import { encodeCanvas, extensionForOutput, type ImageOutputFormat } from '../core/output-encoder';
 import { renderToolCanvas, resizeDimensions, sourceExtension, sourceMime } from './operations';
-import { defaultSettingsFor, type DeterministicSettings, type DeterministicToolId, type OutputChoice, type ResizeSettings } from './types';
+import { defaultSettingsFor, type DeterministicSettings, type DeterministicToolId, type OutputChoice, type ResizeSettings, type ImageBorderSettings } from './types';
 
 type Status = 'ready' | 'processing' | 'done' | 'error';
 type Item = {
@@ -15,7 +18,7 @@ type State = {
   activeId?:string; processing:boolean; cancel:boolean; previewGeneration:number; previewTimer?:number;
 };
 
-const VALID_TOOL_IDS = new Set<DeterministicToolId>(['resize-image','compress-image','rotate-flip-image','crop-image','blur-image','fade-image-edges','remove-image-metadata']);
+const VALID_TOOL_IDS = new Set<string>(IMAGE_TOOL_MANIFEST.filter((entry) => entry.runtime === 'deterministic' || entry.runtime === 'edge-fade').map((entry) => entry.tool.id));
 const q = <T extends Element>(root:ParentNode, selector:string):T => { const element=root.querySelector<T>(selector); if(!element)throw new Error(`Image tool is missing ${selector}`); return element; };
 const maybe = <T extends Element>(root:ParentNode, selector:string):T|undefined => root.querySelector<T>(selector) ?? undefined;
 const clone = <T>(value:T):T => structuredClone(value);
@@ -46,6 +49,14 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
   const settingInputs=[...root.querySelectorAll<HTMLInputElement|HTMLSelectElement>('[data-setting]')];
   const suffix=root.dataset.downloadSuffix||toolId, maxFiles=Number(root.dataset.maxFiles||50), maxFileBytes=Number(root.dataset.maxFileBytes||10*1024*1024), maxPixels=Number(root.dataset.maxPixels||20_000_000), maxDimension=Number(root.dataset.maxDimension||12_000), maxTotalBytes=200*1024*1024;
 
+  // Transparent cut corners require an alpha-capable format. Keep the export
+  // control visibly locked to PNG rather than silently writing opaque JPEGs.
+  if(toolId==='rounded-corners-image'||toolId==='adjust-image-opacity'){
+    outputFormat.value='png';
+    outputFormat.disabled=true;
+    outputQuality.disabled=true;
+  }
+
   const state:State={mode:'shared',sharedSettings:defaultSettingsFor(toolId),items:[],processing:false,cancel:false,previewGeneration:0};
   const active=():Item|undefined=>state.items.find(item=>item.id===state.activeId);
   const effective=(item:Item):DeterministicSettings=>state.mode==='individual'&&item.settings?item.settings:state.sharedSettings;
@@ -53,10 +64,17 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
   const showNotice=(text:string,type:'info'|'error'='info'):void=>{notice.hidden=false;notice.textContent=text;notice.dataset.type=type;};
 
   function validateSettingsForItem(item:Item,settings:DeterministicSettings):void {
-    if(toolId!=='resize-image')return;
-    const dimensions=resizeDimensions(item.width,item.height,settings as ResizeSettings);
-    if(dimensions.width>maxDimension||dimensions.height>maxDimension||dimensions.width*dimensions.height>maxPixels){
-      throw new Error(`Resize output ${dimensions.width.toLocaleString()} × ${dimensions.height.toLocaleString()} exceeds the ${maxDimension.toLocaleString()} px / ${maxPixels.toLocaleString()} pixel safety limit.`);
+    if(toolId!=='resize-image'&&toolId!=='add-image-border')return;
+    const dimensions=toolId==='resize-image'
+      ?resizeDimensions(item.width,item.height,settings as ResizeSettings)
+      :(()=>{
+        const thickness=Math.round(clamp((settings as ImageBorderSettings).thickness,1,80));
+        return {width:item.width+2*thickness,height:item.height+2*thickness};
+      })();
+    if(!Number.isSafeInteger(dimensions.width)||!Number.isSafeInteger(dimensions.height)||
+      dimensions.width>maxDimension||dimensions.height>maxDimension||
+      dimensions.width*dimensions.height>maxPixels){
+      throw new Error(`Output ${dimensions.width.toLocaleString()} × ${dimensions.height.toLocaleString()} exceeds the ${maxDimension.toLocaleString()} px / ${maxPixels.toLocaleString()} pixel safety limit.`);
     }
   }
 
@@ -83,7 +101,7 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
     root.querySelectorAll<HTMLElement>('[data-setting-group]').forEach(group=>{const key=group.dataset.settingGroup;group.hidden=key!==record.mode&&key!==record.scope&&key!==record.style;});
     root.querySelectorAll<HTMLOutputElement>('[data-output-for]').forEach(output=>{
       const key=output.dataset.outputFor;if(!key)return;const value=record[key];
-      output.textContent=key==='percent'||key==='depth'||key==='softness'||key==='texture'?`${value}%`:key==='radius'?`${value} px`:String(value??'');
+      output.textContent=key==='percent'||key==='depth'||key==='softness'||key==='texture'||key==='intensity'||key==='level'||key==='radiusPercent'||key==='opacityPercent'?`${value}%`:key==='radius'||key==='blockSize'||key==='thickness'?`${value} px`:key==='degrees'?`${value}°`:key==='levels'?`${value} levels`:key==='amount'?`${value}×`:String(value??'');
     });
   }
   function renderSettings():void {
@@ -155,13 +173,25 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
   function updateActions():void {const done=state.items.filter(item=>item.status==='done'&&item.result).length;const downloadCount=done||state.items.length;readyCount.textContent=`${state.items.length} image${state.items.length===1?'':'s'} ready`;downloadButton.textContent=downloadCount>1?'Download ZIP':'Download image';processButton.disabled=state.processing||!state.items.length;downloadButton.disabled=state.processing||!done;add.disabled=state.processing;clear.disabled=state.processing;scopeButtons.forEach(button=>{button.disabled=state.processing;});}
 
   async function addFiles(files:readonly File[]):Promise<void> {
-    if(!files.length||state.processing)return;hideNotice();let totalBytes=state.items.reduce((sum,item)=>sum+item.file.size,0),rejected=0,limited=0;
+    if(!files.length||state.processing)return;
+    hideNotice();
+    const admission=createImageFileAdmission(state.items,{maxFiles,maxFileBytes,maxTotalBytes,acceptedExtensions:['jpg','jpeg','png','webp']});
+    let rejected=0,limited=0;
     for(const file of files){
-      if(state.items.length>=maxFiles||totalBytes+file.size>maxTotalBytes){limited++;continue;}
-      if(!['jpg','jpeg','png','webp'].includes(ext(file.name))||file.size>maxFileBytes){rejected++;continue;}
-      try{const bitmap=await createImageBitmap(file),width=bitmap.width,height=bitmap.height;bitmap.close();if(width>maxDimension||height>maxDimension||width*height>maxPixels){rejected++;continue;}state.items.push({id:crypto.randomUUID(),file,width,height,url:URL.createObjectURL(file),settingsOrigin:'shared',status:'ready'});totalBytes+=file.size;}catch{rejected++;}
+      const reason=admission.check(file);
+      if(reason){if(reason==='file-count'||reason==='total-size')limited++;else rejected++;continue;}
+      try {
+        const bitmap=await createImageBitmap(file);
+        const width=bitmap.width,height=bitmap.height;
+        bitmap.close();
+        if(!imageDimensionsWithinLimits(width,height,{maxDimension,maxPixels})){rejected++;continue;}
+        admission.accept(file);
+        state.items.push({id:crypto.randomUUID(),file,width,height,url:URL.createObjectURL(file),settingsOrigin:'shared',status:'ready'});
+      } catch {rejected++;}
     }
-    input.value='';if(!state.activeId&&state.items[0])state.activeId=state.items[0].id;renderSettings();renderQueue();schedulePreview();
+    input.value='';
+    if(!state.activeId&&state.items[0])state.activeId=state.items[0].id;
+    renderSettings();renderQueue();schedulePreview();
     if(rejected||limited)showNotice(`${rejected?`${rejected} skipped by format or size limits`:''}${rejected&&limited?' · ':''}${limited?`${limited} skipped by batch limits`:''}`);
   }
   function removeItem(id:string):void {if(state.processing)return;const index=state.items.findIndex(item=>item.id===id);if(index<0)return;const [removed]=state.items.splice(index,1);if(removed)URL.revokeObjectURL(removed.url);if(state.activeId===id)state.activeId=state.items[Math.min(index,state.items.length-1)]?.id;renderSettings();renderQueue();schedulePreview();}
@@ -169,24 +199,48 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
 
   function outputFor(item:Item):{format:OutputChoice;quality:number} {
     const record=asRecord(effective(item));if(typeof record.format==='string'&&typeof record.quality==='number')return{format:record.format as OutputChoice,quality:clamp(record.quality,1,100)};
+    if(toolId==='rounded-corners-image'||toolId==='adjust-image-opacity')return{format:'png',quality:100};
     return{format:outputFormat.value as OutputChoice,quality:clamp(Number(outputQuality.value),1,100)};
   }
   async function processBatch():Promise<void> {
-    if(state.processing||!state.items.length)return;state.processing=true;state.cancel=false;hideNotice();progress.hidden=false;progressLabel.textContent='Processing images…';progressBar.max=100;progressBar.value=0;cancel.disabled=false;updateActions();let completed=0,failed=0;
-    for(const item of state.items){
-      if(state.cancel)break;item.status='processing';item.error=undefined;renderQueue();
-      try{
+    if(state.processing||!state.items.length)return;
+    state.processing=true;state.cancel=false;hideNotice();
+    progress.hidden=false;progressLabel.textContent='Processing images…';
+    progressBar.max=100;progressBar.value=0;cancel.disabled=false;updateActions();
+
+    const {completed,failed}=await runSequentialBatch(state.items,{
+      cancelled:()=>state.cancel,
+      process:async(item)=>{
+        item.status='processing';item.error=undefined;renderQueue();
         const settings=effective(item);validateSettingsForItem(item,settings);
         const bitmap=await createImageBitmap(item.file);
-        try{const canvas=renderToolCanvas(bitmap,toolId,settings),output=outputFor(item),mime=mimeFor(item.file,output.format);item.result=await encodeCanvas(canvas,{type:mime,quality:mime==='image/png'?undefined:output.quality/100});const extension=output.format==='source'?sourceExtension(item.file):extensionForOutput(mime);item.outputName=`${base(item.file.name)}-${suffix}.${extension}`;item.status='done';completed++;}finally{bitmap.close();}
-      }catch(error){item.status='error';item.error=error instanceof Error?error.message:'Unable to process image.';failed++;}
-      const finished=completed+failed;progressCount.textContent=`${finished} / ${state.items.length}`;progressBar.value=Math.round(finished/state.items.length*100);renderQueue();
-    }
-    state.processing=false;cancel.disabled=true;progressLabel.textContent=state.cancel?`Stopped · ${completed} completed`:failed?`${completed} completed · ${failed} failed`:`${completed} completed`;updateActions();if(failed)showNotice(`${failed} image${failed===1?'':'s'} failed. Successful results remain available.`);
+        try {
+          const canvas=renderToolCanvas(bitmap,toolId,settings);
+          const output=outputFor(item),mime=mimeFor(item.file,output.format);
+          item.result=await encodeCanvas(canvas,{type:mime,quality:mime==='image/png'?undefined:output.quality/100});
+          const extension=output.format==='source'?sourceExtension(item.file):extensionForOutput(mime);
+          item.outputName=`${base(item.file.name)}-${suffix}.${extension}`;
+          item.status='done';
+        } finally {bitmap.close();}
+      },
+      failed:(item,error)=>{
+        item.status='error';
+        item.error=error instanceof Error?error.message:'Unable to process image.';
+      },
+      progress:({finished,total})=>{
+        progressCount.textContent=`${finished} / ${total}`;
+        progressBar.value=Math.round(finished/total*100);
+        renderQueue();
+      },
+    });
+    state.processing=false;cancel.disabled=true;
+    progressLabel.textContent=state.cancel?`Stopped · ${completed} completed`:failed?`${completed} completed · ${failed} failed`:`${completed} completed`;
+    updateActions();
+    if(failed)showNotice(`${failed} image${failed===1?'':'s'} failed. Successful results remain available.`);
   }
   async function downloadResults():Promise<void> {
     const files=state.items.filter((item):item is Item&{result:Blob;outputName:string}=>Boolean(item.result&&item.outputName&&item.status==='done')).map(item=>({filename:item.outputName,blob:item.result}));
-    if(!files.length)return;if(files.length===1){downloadBlob(files[0].blob,files[0].filename);return;}downloadBlob(await createZipBlob(files),`${toolId}-results.zip`);
+    await downloadResultBatch(files,`${toolId}-results.zip`);
   }
 
   settingInputs.forEach(control=>{

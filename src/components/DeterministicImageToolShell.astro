@@ -22,8 +22,19 @@ const isCrop = tool.id === 'crop-image';
 const isBlur = tool.id === 'blur-image';
 const isEdgeFade = tool.id === 'fade-image-edges';
 const isMetadata = tool.id === 'remove-image-metadata';
+const isColorEffect = tool.id === 'grayscale-image' || tool.id === 'sepia-image' || tool.id === 'invert-image';
+const isColorAdjustment = ['brightness-image', 'contrast-image', 'adjust-image-saturation'].includes(tool.id);
+const isPixelate = tool.id === 'pixelate-image';
+const isSharpen = tool.id === 'sharpen-image';
+const isBorder = tool.id === 'add-image-border';
+const isRoundedCorners = tool.id === 'rounded-corners-image';
+const isHueRotate = tool.id === 'hue-rotate-image';
+const isPosterize = tool.id === 'posterize-image';
+const isThreshold = tool.id === 'threshold-image';
+const isOpacity = tool.id === 'adjust-image-opacity';
+const adjustmentLabel = tool.id === 'brightness-image' ? 'Brightness' : tool.id === 'contrast-image' ? 'Contrast' : 'Saturation';
 const hasEmbeddedOutput = isCompress || isMetadata;
-const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isEdgeFade ? 'Apply edge fade' : isMetadata ? 'Remove metadata' : 'Process images';
+const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isEdgeFade ? 'Apply edge fade' : isMetadata ? 'Remove metadata' : isColorEffect ? 'Apply color effect' : isColorAdjustment ? 'Adjust image colors' : isPixelate ? 'Pixelate images' : isSharpen ? 'Sharpen images' : isBorder ? 'Add borders' : isRoundedCorners ? 'Round corners' : isHueRotate ? 'Rotate hue' : isPosterize ? 'Posterize images' : isThreshold ? 'Threshold images' : isOpacity ? 'Adjust transparency' : 'Process images';
 ---
 
 <div class="image-editor-card deterministic-tool" data-image-tool-app data-tool-id={tool.id} data-download-suffix={tool.downloadSuffix} data-max-file-bytes={tool.maxFileBytes} data-max-pixels={tool.maxPixels} data-max-dimension={tool.maxDimension} data-max-files={maxFiles} data-has-items="false">
@@ -85,6 +96,57 @@ const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images'
               <p class="visual-tool-help"><strong>Drag the highlighted area on the image.</strong> Move it where you want the blur, resize from a corner, and watch the live preview.</p>
               <details class="visual-advanced-settings"><summary>Fine-tune selected area</summary><div class="visual-advanced-settings__body"><div class="setting-grid"><label><span>X %</span><input data-setting="x" type="number" min="0" max="99" value="25" /></label><label><span>Y %</span><input data-setting="y" type="number" min="0" max="99" value="25" /></label><label><span>Width %</span><input data-setting="width" type="number" min="1" max="100" value="50" /></label><label><span>Height %</span><input data-setting="height" type="number" min="1" max="100" value="50" /></label></div></div></details>
             </div>
+          </div>}
+
+          {isColorEffect && <div class="setting-grid">
+            <label><span>Effect strength</span><div class="range-row"><input data-setting="intensity" type="range" min="0" max="100" step="1" value="100" /><output data-output-for="intensity">100%</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Adjust from original to full effect.</strong><p>0% preserves the source colors; 100% applies the full effect. The image dimensions stay unchanged. Choose an output format below and inspect the live preview before downloading.</p></div>
+          </div>}
+
+          {isColorAdjustment && <div class="setting-grid">
+            <label><span>{adjustmentLabel} (%)</span><div class="range-row"><input data-setting="level" type="range" min="0" max="200" step="1" value="100" /><output data-output-for="level">100%</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>100% preserves the original.</strong><p>Lower values reduce {adjustmentLabel.toLowerCase()} and higher values increase it. Preview the result before applying it to a batch; large adjustments can clip details or colors.</p></div>
+          </div>}
+
+          {isPixelate && <div class="setting-grid">
+            <label><span>Pixel block size</span><div class="range-row"><input data-setting="blockSize" type="range" min="2" max="64" step="1" value="12" /><output data-output-for="blockSize">12 px</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Create a pixel-art effect without resizing the output.</strong><p>Larger blocks produce more visible squares. This is a creative effect and must not be treated as a guaranteed privacy redaction method.</p></div>
+          </div>}
+
+          {isSharpen && <div class="setting-grid">
+            <label><span>Sharpen amount</span><div class="range-row"><input data-setting="amount" type="range" min="0" max="1.2" step="0.1" value="0.6" /><output data-output-for="amount">0.6×</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Enhance edge contrast.</strong><p>0× keeps the original image; higher amounts emphasize edges and fine details. Very strong sharpening may create bright or dark outlines and does not recover missing resolution.</p></div>
+          </div>}
+
+          {isBorder && <div class="setting-grid">
+            <label><span>Border thickness</span><div class="range-row"><input data-setting="thickness" type="range" min="1" max="80" step="1" value="12" /><output data-output-for="thickness">12 px</output></div></label>
+            <label><span>Border color</span><input data-setting="color" type="color" value="#ffffff" aria-label="Border color" /></label>
+            <div class="setting-note setting-note--wide"><strong>Add an outer border without covering image pixels.</strong><p>Each side grows by the chosen thickness. The tool checks the new dimensions before processing to prevent oversized output. Use the color picker to change the border.</p></div>
+          </div>}
+
+          {isRoundedCorners && <div class="setting-grid">
+            <label><span>Corner radius</span><div class="range-row"><input data-setting="radiusPercent" type="range" min="0" max="50" step="1" value="15" /><output data-output-for="radiusPercent">15%</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Transparent PNG output.</strong><p>Corner radius is a percentage of the shorter image side; 0% keeps square corners. PNG output is locked so the rounded transparent corners are not flattened to an opaque background.</p></div>
+          </div>}
+
+          {isHueRotate && <div class="setting-grid">
+            <label><span>Hue rotation</span><div class="range-row"><input data-setting="degrees" type="range" min="0" max="360" step="1" value="90" /><output data-output-for="degrees">90°</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Recolor without changing the image dimensions.</strong><p>Rotate hues through the color wheel. 0° and 360° leave hues unchanged; intermediate values create alternative palettes. Output colors depend on the original photo.</p></div>
+          </div>}
+
+          {isPosterize && <div class="setting-grid">
+            <label><span>Color levels per channel</span><div class="range-row"><input data-setting="levels" type="range" min="2" max="16" step="1" value="6" /><output data-output-for="levels">6 levels</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Create bold blocks of color.</strong><p>Two levels produce fewer RGB shades; sixteen retain more gradations. The tool preserves each pixel's alpha channel. Adjust for illustrations, print-like graphics and creative effects.</p></div>
+          </div>}
+
+          {isThreshold && <div class="setting-grid">
+            <label><span>Black / white cutoff</span><div class="range-row"><input data-setting="cutoff" type="range" min="0" max="255" step="1" value="128" /><output data-output-for="cutoff">128</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Turn a photo into only black and white tones.</strong><p>Pixel brightness below the cutoff becomes black; brightness at or above it becomes white. Unlike grayscale, this produces no middle gray values.</p></div>
+          </div>}
+
+          {isOpacity && <div class="setting-grid">
+            <label><span>Image opacity</span><div class="range-row"><input data-setting="opacityPercent" type="range" min="0" max="100" step="1" value="70" /><output data-output-for="opacityPercent">70%</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Export real PNG transparency.</strong><p>100% keeps the image fully visible, 0% makes it transparent, and lower values reduce the alpha of each visible pixel. PNG output is locked to preserve alpha.</p></div>
           </div>}
 
           {isEdgeFade && <div class="visual-tool-controls edge-fade-controls">

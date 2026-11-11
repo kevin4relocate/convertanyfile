@@ -1,0 +1,96 @@
+---
+import ImageToolGrid from './ImageToolGrid.astro';
+import { IMAGE_TOOL_MANIFEST, IMAGE_TOOL_DIRECTORY_SECTIONS, imageToolIdsForGroup } from '../config/image-tools';
+
+const sections = IMAGE_TOOL_DIRECTORY_SECTIONS.filter((section) => imageToolIdsForGroup(section.id).length > 0);
+const toolCount = IMAGE_TOOL_MANIFEST.length;
+---
+<div class="image-tools-directory" data-image-tools-directory>
+  <section class="content-wide-section directory-discovery" aria-label="Find an image tool">
+    <div class="site-container">
+      <div class="directory-discovery-panel">
+        <div class="directory-discovery-heading">
+          <div>
+            <span class="section-kicker">Tool finder</span>
+            <h2>Find the right image tool.</h2>
+            <p>Search tools by task, format or feature, or browse by category. All tools are linked below even without JavaScript.</p>
+          </div>
+          <span class="directory-total" aria-label={`${toolCount} image tools available`}>{toolCount} tools</span>
+        </div>
+        <div class="directory-search-row">
+          <label for="image-tool-search">Search image tools</label>
+          <div class="directory-search-control">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
+            <input id="image-tool-search" type="search" data-directory-search-input placeholder="Try resize, watermark, EXIF, crop…" autocomplete="off" aria-controls="image-tool-results" />
+            <button type="button" data-directory-clear hidden>Clear</button>
+          </div>
+        </div>
+        <div class="directory-filter-row" role="group" aria-label="Filter image tools by category">
+          <button type="button" data-directory-filter="all" class="is-active" aria-pressed="true">All tools <span>{toolCount}</span></button>
+          {sections.map((section) => (
+            <button type="button" data-directory-filter={section.id} aria-pressed="false">
+              {section.filterLabel} <span>{imageToolIdsForGroup(section.id).length}</span>
+            </button>
+          ))}
+        </div>
+        <p class="directory-result-count" data-directory-count role="status" aria-live="polite">Showing {toolCount} of {toolCount} tools</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="image-tool-results" data-directory-results>
+    {sections.map((section) => (
+      <section class:list={['content-wide-section', section.white && 'white']} data-directory-section={section.id}>
+        <div class="site-container">
+          <div class="section-heading wide">
+            <span class="section-kicker">{section.kicker}</span>
+            <h2>{section.heading}</h2>
+            <p>{section.description}</p>
+          </div>
+          <ImageToolGrid ids={imageToolIdsForGroup(section.id)} directory />
+        </div>
+      </section>
+    ))}
+  </div>
+  <section class="directory-empty content-wide-section" data-directory-empty hidden>
+    <div class="site-container">
+      <div class="directory-empty-inner">
+        <h2>No matching image tools</h2>
+        <p>Try a shorter search, a different keyword, or clear the category filter.</p>
+        <button type="button" data-directory-reset>Show all image tools</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  import '../client/image-tools-directory';
+</script>
+
+<style>
+  .directory-discovery{padding-top:30px;padding-bottom:18px}
+  .directory-discovery-panel{border:1px solid #e1e3ef;background:#fff;border-radius:20px;padding:clamp(18px,3vw,28px);box-shadow:0 8px 26px rgba(32,37,70,.045)}
+  .directory-discovery-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
+  .directory-discovery-heading h2{margin:6px 0 9px;font-size:clamp(25px,3vw,32px);letter-spacing:-.03em}
+  .directory-discovery-heading p{margin:0;color:#626879;line-height:1.6;max-width:760px}
+  .directory-total{flex:0 0 auto;border:1px solid #deddfb;border-radius:99px;background:#f7f6ff;color:#5149a0;padding:8px 12px;font-size:12px;font-weight:800}
+  .directory-search-row label{display:block;font-size:13px;font-weight:780;margin-bottom:8px;color:#393d51}
+  .directory-search-control{display:flex;align-items:center;gap:10px;border:1px solid #caceda;border-radius:12px;padding:0 12px;background:#fcfcff;min-height:52px}
+  .directory-search-control:focus-within{border-color:#7970e9;box-shadow:0 0 0 3px rgba(103,91,219,.13)}
+  .directory-search-control svg{flex:0 0 auto;color:#777d91}
+  .directory-search-control input{flex:1;min-width:0;border:0;outline:none;background:transparent;font:inherit;font-size:15px;color:#272b3e;min-height:48px}
+  .directory-search-control input::placeholder{color:#9196a5}
+  .directory-search-control button{border:0;background:#f0efff;color:#5047aa;border-radius:7px;padding:7px 10px;font-size:12px;font-weight:800;cursor:pointer}
+  .directory-filter-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+  .directory-filter-row button{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border:1px solid #dadee9;background:#fff;color:#596071;border-radius:99px;font-size:13px;font-weight:760;cursor:pointer}
+  .directory-filter-row button:hover{border-color:#9992e8;color:#5149aa}
+  .directory-filter-row button.is-active{background:#5149ae;border-color:#5149ae;color:#fff}
+  .directory-filter-row span{opacity:.75;font-size:11px}
+  .directory-result-count{margin:13px 0 0;color:#707684;font-size:12px;font-weight:700}
+  .directory-empty-inner{max-width:650px;text-align:center;margin:0 auto;border:1px dashed #d2d5e2;border-radius:18px;padding:40px 20px;background:#fafaff}
+  .directory-empty-inner h2{font-size:22px;margin:0 0 8px}
+  .directory-empty-inner p{color:#6e7280;margin:0 0 18px}
+  .directory-empty-inner button{border:0;border-radius:10px;color:white;background:#5149ae;padding:11px 18px;font-size:14px;font-weight:780;cursor:pointer}
+  [data-directory-section][hidden],.directory-empty[hidden],[data-directory-tool][hidden],.directory-search-control button[hidden]{display:none!important}
+  @media (max-width:620px){.directory-discovery-heading{display:block}.directory-total{display:inline-block;margin-top:13px}.directory-filter-row button{font-size:12px;padding:8px 10px}.directory-search-control{min-height:48px}}
+</style>

@@ -1,4 +1,5 @@
-import { createZipBlob, downloadBlob } from '../core/download';
+import { downloadResultBatch } from '../core/download';
+import { createImageFileAdmission } from '../core/file-admission';
 
 type RenameStyle = 'new' | 'keep';
 type NumberPosition = 'before' | 'after';
@@ -107,12 +108,28 @@ export function mountBulkRenameImages(root:HTMLElement):void{
     renderPreview(map);updateSelection();
   }
 
-  async function addFiles(files:readonly File[]):Promise<void>{if(!files.length)return;hideNotice();let bytes=state.items.reduce((sum,item)=>sum+item.file.size,0),skipped=0;for(const file of files){if(state.items.length>=maxFiles||bytes+file.size>maxTotal||file.size>maxFile||!supported.has(ext(file.name))){skipped++;continue;}state.items.push({id:crypto.randomUUID(),file,url:URL.createObjectURL(file),status:'ready'});bytes+=file.size;}input.value='';if(!state.activeId&&state.items[0])state.activeId=state.items[0].id;invalidate();if(skipped)showNotice(`${skipped} file${skipped===1?'':'s'} skipped by format, size, or batch limits.`);}
+  async function addFiles(files:readonly File[]):Promise<void>{
+    if(!files.length)return;
+    hideNotice();
+    const admission=createImageFileAdmission(state.items,{
+      maxFiles,maxFileBytes:maxFile,maxTotalBytes:maxTotal,acceptedExtensions:['jpg','jpeg','png','webp'],
+    });
+    let skipped=0;
+    for(const file of files){
+      if(admission.check(file)){skipped++;continue;}
+      admission.accept(file);
+      state.items.push({id:crypto.randomUUID(),file,url:URL.createObjectURL(file),status:'ready'});
+    }
+    input.value='';
+    if(!state.activeId&&state.items[0])state.activeId=state.items[0].id;
+    invalidate();
+    if(skipped)showNotice(`${skipped} file${skipped===1?'':'s'} skipped by format, size, or batch limits.`);
+  }
   function removeItem(id:string):void{const index=state.items.findIndex(item=>item.id===id);if(index<0)return;const [item]=state.items.splice(index,1);if(item)URL.revokeObjectURL(item.url);if(state.activeId===id)state.activeId=state.items[Math.min(index,state.items.length-1)]?.id;invalidate();}
   function clearAll():void{state.items.forEach(item=>URL.revokeObjectURL(item.url));state.items=[];state.activeId=undefined;hideNotice();render();}
   function setMode(mode:'shared'|'individual'):void{state.mode=mode;root.dataset.platformScope=mode;scope.forEach(button=>{const selected=button.dataset.editScope===mode;button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-checked',String(selected));button.classList.toggle('is-active',selected);});summary.textContent=mode==='shared'?'One naming setup applies to the batch.':'Select an image to override only its filename.';invalidate();}
   function prepare():void{const map=names();state.items.forEach(item=>{item.preparedName=map.get(item.id);item.status='done';});render();}
-  async function downloadFiles():Promise<void>{const files=state.items.filter(item=>item.preparedName).map(item=>({filename:item.preparedName!,blob:item.file as Blob}));if(!files.length)return;if(files.length===1){downloadBlob(files[0].blob,files[0].filename);return;}downloadBlob(await createZipBlob(files),'renamed-images.zip');}
+  async function downloadFiles():Promise<void>{const files=state.items.filter(item=>item.preparedName).map(item=>({filename:item.preparedName!,blob:item.file as Blob}));await downloadResultBatch(files,'renamed-images.zip');}
 
   styleButtons.forEach(button=>button.addEventListener('click',()=>{const style=button.dataset.renameStyle;if(style!=='new'&&style!=='keep')return;state.renameStyle=style;invalidate();}));
   newName.addEventListener('input',()=>{state.newName=newName.value;invalidate();});

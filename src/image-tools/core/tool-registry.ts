@@ -1,3 +1,6 @@
+import { getImageToolManifest } from '../../config/image-tools';
+import type { ImageToolRuntimeFamily } from '../../platform/image-tools/types';
+
 export interface MountableImageToolModule {
   mount: (root: HTMLElement) => void | Promise<void>;
 }
@@ -29,24 +32,23 @@ const watermarkToolLoader: ImageToolLoader = async () => {
   return { mount: module.mountAddWatermark };
 };
 
-const IMAGE_TOOL_LOADERS: Record<string, ImageToolLoader> = {
-  'remove-watermark': maskToolLoader,
-  'gemini-ai-logo-remover': maskToolLoader,
-  'resize-image': deterministicToolLoader,
-  'compress-image': deterministicToolLoader,
-  'rotate-flip-image': deterministicToolLoader,
-  'crop-image': deterministicToolLoader,
-  'blur-image': deterministicToolLoader,
-  'fade-image-edges': deterministicToolLoader,
-  'remove-image-metadata': metadataCleanupLoader,
-  'bulk-rename-images': renameToolLoader,
-  'add-watermark': watermarkToolLoader,
-};
+/**
+ * Loader selection is by runtime family, not by each tool ID.
+ * Adding a tool using an existing editor no longer requires editing this file.
+ */
+const RUNTIME_LOADERS = {
+  mask: maskToolLoader,
+  deterministic: deterministicToolLoader,
+  'edge-fade': deterministicToolLoader,
+  metadata: metadataCleanupLoader,
+  rename: renameToolLoader,
+  watermark: watermarkToolLoader,
+} satisfies Record<ImageToolRuntimeFamily, ImageToolLoader>;
 
 export async function mountRegisteredImageTool(toolId: string, root: HTMLElement): Promise<boolean> {
-  const loader = IMAGE_TOOL_LOADERS[toolId];
-  if (!loader) return false;
-  const module = await loader();
+  const entry = getImageToolManifest(toolId);
+  if (!entry) return false;
+  const module = await RUNTIME_LOADERS[entry.runtime]();
   await module.mount(root);
   return true;
 }

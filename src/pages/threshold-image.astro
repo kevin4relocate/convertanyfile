@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { THRESHOLD_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={THRESHOLD_IMAGE_TOOL}
+  kicker="Pure black and white · threshold"
+  heading="Convert a color photo into pure black-and-white tones."
+  copy="Use luminance-based thresholding to turn every visible pixel to black or white, with no intermediate gray shades. Adjust the cutoff from 0 to 255 and compare the resulting high-contrast graphic before saving."
+  bullets={[
+    "Convert RGB pixel brightness to black or white using a 0–255 cutoff.",
+    "Different from grayscale: output uses no intermediate gray levels.",
+    "Preserve original dimensions and alpha in compatible image formats.",
+    "Preview small changes to the cutoff before running a batch.",
+    "Download a single result or a ZIP of completed processed images."
+]}
+/>

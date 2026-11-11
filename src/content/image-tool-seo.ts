@@ -26,6 +26,628 @@ export interface ImageToolSeoContent {
 }
 
 export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
+  'hue-rotate-image': {
+    howToHeading: "How to change image colors with hue rotation.",
+    howToIntro: "Hue rotation shifts color appearance without selecting individual regions. The original remains on your device and all pixel processing happens locally.",
+    steps: [
+      {
+        "title": "Add JPG, PNG or WebP files",
+        "text": "Choose one photo or a batch. Image processing stays inside the browser."
+      },
+      {
+        "title": "Move the hue slider",
+        "text": "0° keeps the original hues. Move toward 360° to explore alternative overall color palettes."
+      },
+      {
+        "title": "Inspect the color preview",
+        "text": "Check key brand colors, portraits, skin tones and transparency before using a strong rotation."
+      },
+      {
+        "title": "Process and save",
+        "text": "Run the adjustment on the selected image or batch and download results or a ZIP."
+      }
+    ],
+    useCasesHeading: "When hue rotation is useful.",
+    useCasesIntro: "Hue rotation is a creative transformation that treats the whole image at once. It is not an automatic tool for accurately matching brand palettes.",
+    useCases: [
+      "Explore alternate colors for a background illustration or poster.",
+      "Try stylized color versions of thumbnails or banners.",
+      "Shift the palette of art assets before combining them in a layout.",
+      "Apply a consistent whole-image color shift to several pictures."
+    ],
+    faq: [
+      {
+        "question": "What does 0° or 360° hue rotation do?",
+        "answer": "Both represent a full cycle back to the original hue relationship. Intermediate angles shift RGB colors."
+      },
+      {
+        "question": "Will this change brightness or saturation?",
+        "answer": "Browser hue rotation is based on an RGB color transform; exact output can vary with the source and may also affect perceived lightness."
+      },
+      {
+        "question": "Can I change just one color in the photo?",
+        "answer": "No. This tool applies a whole-image hue rotation. Use a selective color editor to target a specific region or color."
+      }
+    ],
+    relatedIds: [
+      "adjust-image-saturation",
+      "sepia-image",
+      "invert-image",
+      "brightness-image"
+    ],
+  },
+  'posterize-image': {
+    howToHeading: "How to posterize an image in your browser.",
+    howToIntro: "Posterization converts continuous RGB shades into a smaller set of discrete channel levels for a graphic, flattened look.",
+    steps: [
+      {
+        "title": "Select your images",
+        "text": "Load JPG, PNG or WebP files. Keep the originals for later adjustments."
+      },
+      {
+        "title": "Choose levels per RGB channel",
+        "text": "Set 2 for aggressive reduction or move toward 16 for more gradation."
+      },
+      {
+        "title": "Compare the preview",
+        "text": "Check for strong banding across faces, shadows and flat graphic regions."
+      },
+      {
+        "title": "Export a new image",
+        "text": "Process the image or batch and download individual results or ZIP."
+      }
+    ],
+    useCasesHeading: "Creative applications of posterization.",
+    useCasesIntro: "Reducing levels can build print-like visual effects from photos and artwork, although it does not automatically select a limited global color palette.",
+    useCases: [
+      "Make stylized poster designs with broad color areas.",
+      "Simplify gradients in illustration references.",
+      "Try retro or screen-print-inspired graphics.",
+      "Create a batch of pictures with similarly reduced RGB tones."
+    ],
+    faq: [
+      {
+        "question": "Is 2 levels equal to two total colors?",
+        "answer": "No. Two levels are used separately for each RGB channel, resulting in up to eight RGB combinations for fully opaque pixels."
+      },
+      {
+        "question": "What happens if I increase the level count?",
+        "answer": "More distinct channel values are available, so the output retains smoother color transitions."
+      },
+      {
+        "question": "Does this reduce the image resolution?",
+        "answer": "No. Pixel dimensions stay the same. Posterization reduces channel color precision, not width or height."
+      }
+    ],
+    relatedIds: [
+      "threshold-image",
+      "pixelate-image",
+      "grayscale-image",
+      "adjust-image-saturation"
+    ],
+  },
+  'threshold-image': {
+    howToHeading: "How to create a pure black-and-white threshold image.",
+    howToIntro: "The threshold uses perceived RGB luminance to decide whether a visible pixel should be black or white. Unlike grayscale, it does not create intermediate gray colors.",
+    steps: [
+      {
+        "title": "Choose a supported photo",
+        "text": "Add JPG, PNG or WebP images to the local browser workspace."
+      },
+      {
+        "title": "Set the luminance cutoff",
+        "text": "Lower values make more pixels white; higher values turn more areas black."
+      },
+      {
+        "title": "Preview fine edges",
+        "text": "Check whether text, silhouettes and facial features retain the separation you need."
+      },
+      {
+        "title": "Save the two-tone output",
+        "text": "Process one file or a batch, then download images or a ZIP."
+      }
+    ],
+    useCasesHeading: "Useful black-and-white threshold effects.",
+    useCasesIntro: "Hard thresholding is well suited to high-contrast artwork and silhouettes but may discard subtle detail in photos.",
+    useCases: [
+      "Create silhouettes for design concepts.",
+      "Generate simple black-and-white references for icons or patterns.",
+      "Turn high-contrast art into a stark two-tone visual.",
+      "Compare different cutoff levels before making linework or stencils."
+    ],
+    faq: [
+      {
+        "question": "How is threshold different from grayscale?",
+        "answer": "Grayscale produces many gray shades; threshold produces only black or white RGB values for visible pixels."
+      },
+      {
+        "question": "Does a higher threshold make the picture darker?",
+        "answer": "Yes. A higher cutoff means more pixels fall below it and become black."
+      },
+      {
+        "question": "Will transparent areas stay transparent?",
+        "answer": "The transform keeps source alpha. Export as PNG or WebP to retain transparency; JPEG does not support alpha."
+      }
+    ],
+    relatedIds: [
+      "grayscale-image",
+      "posterize-image",
+      "contrast-image",
+      "invert-image"
+    ],
+  },
+  'adjust-image-opacity': {
+    howToHeading: "How to change an entire image's opacity and preserve transparency.",
+    howToIntro: "Opacity reduces each pixel's existing alpha instead of removing a background or cutting out a subject. This is useful for layered graphic assets.",
+    steps: [
+      {
+        "title": "Add a JPG, PNG or WebP",
+        "text": "Choose the source files and inspect the live image preview."
+      },
+      {
+        "title": "Choose image opacity",
+        "text": "100% preserves the existing visibility, 50% halves the alpha, and 0% makes the image invisible."
+      },
+      {
+        "title": "Check the transparent result",
+        "text": "Review how the image will blend over other graphics and backgrounds."
+      },
+      {
+        "title": "Download PNG copies",
+        "text": "The tool locks PNG output to retain transparency for one image or a batch."
+      }
+    ],
+    useCasesHeading: "Where partial image transparency helps.",
+    useCasesIntro: "Alpha reduction works well when layering graphics, but cannot isolate subjects from their backgrounds.",
+    useCases: [
+      "Prepare faded decorative overlays for slides and websites.",
+      "Make a subtle background illustration for a design.",
+      "Control the visibility of an existing transparent logo or sticker.",
+      "Prepare a batch of partially transparent PNG assets."
+    ],
+    faq: [
+      {
+        "question": "Does this remove the background from a photo?",
+        "answer": "No. It makes the entire picture more transparent, including its background. Background removal requires object segmentation."
+      },
+      {
+        "question": "Why is PNG output mandatory?",
+        "answer": "PNG preserves real alpha transparency. Standard JPEG files do not."
+      },
+      {
+        "question": "What happens when I choose 0%?",
+        "answer": "Every pixel becomes fully transparent in the downloaded PNG, although the output dimensions remain unchanged."
+      }
+    ],
+    relatedIds: [
+      "rounded-corners-image",
+      "add-image-border",
+      "crop-image",
+      "remove-image-metadata"
+    ],
+  },
+  'sharpen-image': {
+    howToHeading: "How to sharpen an image with adjustable edge strength.",
+    howToIntro: "Sharpening increases contrast at existing pixel transitions. Use the preview to avoid turning noise into harsh outlines.",
+    steps: [
+      {
+        "title": "Add supported photos",
+        "text": "Choose JPG, PNG or WebP files. The browser decodes them locally before applying the effect."
+      },
+      {
+        "title": "Adjust sharpening amount",
+        "text": "0× keeps the source unchanged; move toward 1.2× to emphasize edges and texture."
+      },
+      {
+        "title": "Inspect fine details",
+        "text": "Look for unwanted bright or dark halos at faces, high-contrast boundaries, and noisy areas."
+      },
+      {
+        "title": "Process and download",
+        "text": "Apply the setting to your images and download a single output or a ZIP of the batch."
+      }
+    ],
+    useCasesHeading: "Where controlled sharpening can help.",
+    useCasesIntro: "Modest sharpening makes existing features more distinct, but cannot restore missing focus or invent detail.",
+    useCases: [
+      "Improve perceived crispness in small illustrations and product photos.",
+      "Slightly emphasize existing texture before preparing social graphics.",
+      "Make text and line-art edges more visible in some screenshots.",
+      "Apply consistent subtle sharpening to a set of resized photos."
+    ],
+    faq: [
+      {
+        "question": "Can this recover a blurry or out-of-focus image?",
+        "answer": "No. It adjusts edge contrast in visible pixels, not the missing information from a badly focused photo."
+      },
+      {
+        "question": "Why do very strong settings create outlines?",
+        "answer": "Edge-contrast enhancement can exaggerate boundaries and noise. Reduce the amount when you notice halos."
+      },
+      {
+        "question": "Are original image dimensions changed?",
+        "answer": "No. Sharpening preserves pixel width and height, although encoding the result can change file size and metadata."
+      }
+    ],
+    relatedIds: [
+      "contrast-image",
+      "brightness-image",
+      "pixelate-image",
+      "resize-image"
+    ],
+  },
+  'add-image-border': {
+    howToHeading: "How to add a colored border around an image.",
+    howToIntro: "This tool expands the canvas to place a solid frame outside the image, keeping the original pixels uncovered.",
+    steps: [
+      {
+        "title": "Choose an image",
+        "text": "Add one or multiple JPG, PNG or WebP files from your device."
+      },
+      {
+        "title": "Select thickness",
+        "text": "Choose between 1 and 80 pixels of border on all four sides."
+      },
+      {
+        "title": "Pick a frame color",
+        "text": "Use the color picker for a solid border that fits your layout."
+      },
+      {
+        "title": "Preview and export",
+        "text": "Review the expanded dimensions, process the batch and download the result or ZIP."
+      }
+    ],
+    useCasesHeading: "Simple frames for photos, graphics and product shots.",
+    useCasesIntro: "An outer solid border separates the image from nearby page content without drawing over important source pixels.",
+    useCases: [
+      "Frame images in galleries and social posts.",
+      "Create matching white or dark margins around product photographs.",
+      "Build consistent image cards for presentations.",
+      "Add a color-coded frame to image batches."
+    ],
+    faq: [
+      {
+        "question": "Does a border cover part of my image?",
+        "answer": "No. The frame extends the canvas around the source. Both width and height grow by twice the border thickness."
+      },
+      {
+        "question": "Can I make a transparent border?",
+        "answer": "Not with this solid-color frame tool. Choose a color from the picker; use a transparency-capable image editor for transparent padding."
+      },
+      {
+        "question": "What if the bordered image becomes too large?",
+        "answer": "The tool checks the resulting dimensions and pixel count against browser safety limits and rejects oversized outputs."
+      }
+    ],
+    relatedIds: [
+      "rounded-corners-image",
+      "resize-image",
+      "crop-image",
+      "compress-image"
+    ],
+  },
+  'rounded-corners-image': {
+    howToHeading: "How to create transparent rounded image corners.",
+    howToIntro: "Use an adjustable radius to crop only the outer corners of the photo, preserving its canvas dimensions and exporting with alpha transparency.",
+    steps: [
+      {
+        "title": "Add an image",
+        "text": "Choose JPG, PNG or WebP files to edit locally."
+      },
+      {
+        "title": "Set the corner radius",
+        "text": "Choose 0% for square corners or up to 50% of the shorter side for a strongly rounded shape."
+      },
+      {
+        "title": "Inspect transparency",
+        "text": "Look at the preview to make sure the corners are clipped at the intended radius."
+      },
+      {
+        "title": "Download transparent PNG",
+        "text": "The export format is fixed to PNG so transparent corners are not flattened into a JPEG background."
+      }
+    ],
+    useCasesHeading: "Rounded images for web layouts and branded graphics.",
+    useCasesIntro: "Rounded corners soften a picture's shape while preserving its original pixel width and height.",
+    useCases: [
+      "Create rounded avatars and photo cards for layouts.",
+      "Prepare interface mockup images with soft corners.",
+      "Make social graphics consistent with a rounded design system.",
+      "Create PNG assets with real alpha-transparent corners."
+    ],
+    faq: [
+      {
+        "question": "Why does this tool always save PNG?",
+        "answer": "PNG preserves alpha transparency at the rounded corners. JPEG does not support transparency and could flatten those corners into a solid color."
+      },
+      {
+        "question": "Does the image become smaller?",
+        "answer": "No. The original width and height remain unchanged; only corner pixels become transparent."
+      },
+      {
+        "question": "What does 50% radius mean?",
+        "answer": "The corner radius becomes half of the shorter image side, producing a strongly rounded shape while preserving its proportions."
+      }
+    ],
+    relatedIds: [
+      "add-image-border",
+      "crop-image",
+      "resize-image",
+      "blur-image"
+    ],
+  },
+  'brightness-image': {
+    howToHeading: "How to adjust image brightness without uploading a photo.",
+    howToIntro: "Brightness controls how light or dark all image colors appear. Work locally, inspect the original, and avoid losing detail in very bright or very dark areas.",
+    steps: [
+      {
+        "title": "Choose your images",
+        "text": "Add JPG, PNG or WebP images to the local processing queue."
+      },
+      {
+        "title": "Set brightness",
+        "text": "Choose 100% for the original, lower values to darken, or values above 100% to brighten."
+      },
+      {
+        "title": "Inspect preview",
+        "text": "Compare the result with the source, especially in highlights and shadows."
+      },
+      {
+        "title": "Process and export",
+        "text": "Apply your settings to one image or the batch, then download a file or ZIP."
+      }
+    ],
+    useCasesHeading: "When a brightness tool is useful.",
+    useCasesIntro: "Simple brightness adjustment helps with presentation graphics and lightening mildly dark images; it does not perform advanced HDR recovery.",
+    useCases: [
+      "Lighten images that are a little dark.",
+      "Darken backgrounds to make overlay text more readable.",
+      "Bring a group of product photos closer to a similar brightness level.",
+      "Create alternate light and dark visual versions for a layout."
+    ],
+    faq: [
+      {
+        "question": "What does 100% brightness mean?",
+        "answer": "It preserves the source brightness. Below 100% the image becomes darker; above 100% it becomes lighter."
+      },
+      {
+        "question": "Can this fix severely overexposed photos?",
+        "answer": "No. Once highlights are clipped in the original image, increasing or decreasing brightness cannot recover missing detail."
+      },
+      {
+        "question": "Does the brightness tool upload my photo?",
+        "answer": "No. The supported canvas adjustment and downloads happen locally in your browser."
+      }
+    ],
+    relatedIds: [
+      "contrast-image",
+      "adjust-image-saturation",
+      "grayscale-image",
+      "compress-image"
+    ],
+  },
+  'contrast-image': {
+    howToHeading: "How to increase or decrease photo contrast.",
+    howToIntro: "Contrast changes the separation between shadows, middle tones and highlights. Watch the live preview before you commit an adjustment to a batch.",
+    steps: [
+      {
+        "title": "Add JPG, PNG or WebP files",
+        "text": "Choose one photo or load multiple images for local processing."
+      },
+      {
+        "title": "Choose contrast strength",
+        "text": "Keep 100% to leave contrast unchanged; move lower for flatter tones or above 100% for stronger separation."
+      },
+      {
+        "title": "Compare the preview",
+        "text": "Look at shadow and highlight detail. Back off if bright or dark regions become featureless."
+      },
+      {
+        "title": "Apply and download",
+        "text": "Export in your preferred supported format, as a single image or batch ZIP."
+      }
+    ],
+    useCasesHeading: "Use contrast to improve visual separation.",
+    useCasesIntro: "Basic contrast controls are useful for everyday photos and graphics that need a punchier or softer appearance.",
+    useCases: [
+      "Add contrast to flat product images and screenshots.",
+      "Reduce contrast for a soft, low-key photographic mood.",
+      "Preview how illustrations change with stronger dark and light regions.",
+      "Apply a consistent contrast adjustment across a small image batch."
+    ],
+    faq: [
+      {
+        "question": "Does contrast change brightness?",
+        "answer": "Contrast can make highlights brighter and shadows darker even when the overall source brightness stays similar."
+      },
+      {
+        "question": "What does 0% contrast do?",
+        "answer": "It flattens visible RGB tones toward a middle gray. Use 100% for the unchanged source contrast."
+      },
+      {
+        "question": "Can too much contrast damage the output?",
+        "answer": "High contrast can clip detail, but it does not alter your source file; the tool creates a separate downloaded copy."
+      }
+    ],
+    relatedIds: [
+      "brightness-image",
+      "adjust-image-saturation",
+      "grayscale-image",
+      "sepia-image"
+    ],
+  },
+  'adjust-image-saturation': {
+    howToHeading: "How to increase or decrease image saturation.",
+    howToIntro: "Saturation controls how vivid existing colors are. Turn it down for muted imagery, or raise it to emphasize color, while watching for unnatural results.",
+    steps: [
+      {
+        "title": "Select photos",
+        "text": "Load supported JPG, PNG or WebP images into the browser."
+      },
+      {
+        "title": "Move the saturation slider",
+        "text": "0% gives grayscale, 100% preserves the current saturation, and 200% creates a stronger color look."
+      },
+      {
+        "title": "Review skin tones and graphics",
+        "text": "Inspect the preview for oversaturated faces, product colors, or loss of natural appearance."
+      },
+      {
+        "title": "Export results",
+        "text": "Process one file or several and download completed results locally."
+      }
+    ],
+    useCasesHeading: "Where saturation controls can help.",
+    useCasesIntro: "Small changes in saturation can improve visual balance, while strong changes are better reserved for stylized imagery.",
+    useCases: [
+      "Make colorful travel photos more vivid.",
+      "Create a muted color palette for editorial graphics.",
+      "Reduce distracting saturation in screenshots or illustrations.",
+      "Maintain similar color intensity across a set of related visual assets."
+    ],
+    faq: [
+      {
+        "question": "Is 0% saturation the same as grayscale?",
+        "answer": "Yes. The saturation filter removes color at 0%, leaving luminance differences visible as shades of gray."
+      },
+      {
+        "question": "Can I recover color from a black-and-white photo?",
+        "answer": "No. Increasing saturation cannot invent color values that are absent from the source image."
+      },
+      {
+        "question": "Does saturation change image dimensions?",
+        "answer": "No. The output keeps the same pixel width and height; the encoded file size may still change."
+      }
+    ],
+    relatedIds: [
+      "brightness-image",
+      "contrast-image",
+      "sepia-image",
+      "grayscale-image"
+    ],
+  },
+  'pixelate-image': {
+    howToHeading: "How to pixelate a photo into visible square blocks.",
+    howToIntro: "Pixelation downsamples a source image and scales it up using nearest-neighbor interpolation to create sharp mosaic-like squares.",
+    steps: [
+      {
+        "title": "Add the image",
+        "text": "Choose a JPG, PNG or WebP photo from your device. No upload to a conversion server is required."
+      },
+      {
+        "title": "Choose block size",
+        "text": "Use small blocks for a subtle mosaic or larger 32–64 px blocks for chunky pixel-art styling."
+      },
+      {
+        "title": "Preview the mosaic",
+        "text": "Inspect the full image, especially edges and any areas containing important details."
+      },
+      {
+        "title": "Export the full-size image",
+        "text": "Download the processed image or use a ZIP for multiple files. Pixel dimensions are preserved."
+      }
+    ],
+    useCasesHeading: "Use pixelation for playful design effects.",
+    useCasesIntro: "Pixelation is an artistic mosaic treatment, not dependable redaction of private details.",
+    useCases: [
+      "Create pixel-art-style versions of photos and illustrations.",
+      "Make stylized backgrounds for social posts or thumbnails.",
+      "Build retro-game-inspired visual assets.",
+      "Create a deliberately low-detail mosaic effect while keeping the canvas dimensions."
+    ],
+    faq: [
+      {
+        "question": "Does pixelating reduce the output image dimensions?",
+        "answer": "No. The tool downsamples internally to create blocks, then enlarges back to the original pixel width and height."
+      },
+      {
+        "question": "Can I use pixelation to securely hide private information?",
+        "answer": "No. Pixelation is not a guaranteed secure redaction technique. Crop or permanently remove sensitive content instead."
+      },
+      {
+        "question": "What happens when I increase block size?",
+        "answer": "Each visible square covers a larger region, making the image look more abstract and less detailed."
+      }
+    ],
+    relatedIds: [
+      "blur-image",
+      "crop-image",
+      "resize-image",
+      "contrast-image"
+    ],
+  },
+  'grayscale-image': {
+    howToHeading: 'Convert an image to grayscale in four steps.',
+    howToIntro: 'Make a neutral black-and-white-style copy locally while retaining control over the original color strength and export format.',
+    steps: [
+      { title: 'Choose your photos', text: 'Add one JPG, PNG or WebP or prepare several in a batch. Original images stay on your device.' },
+      { title: 'Set grayscale intensity', text: 'Move Effect strength toward 100% to remove visible color, or use a lower percentage for partial desaturation.' },
+      { title: 'Check the live preview', text: 'Compare the current image with its grayscale output and adjust individual images if lighting and colors vary.' },
+      { title: 'Process and download', text: 'Apply the effect to the batch, then download a single image or package finished results into a ZIP.' },
+    ],
+    useCasesHeading: 'Where grayscale images are useful.',
+    useCasesIntro: 'Grayscale emphasizes shape, luminance and texture without competing hue information; it does not convert an image into strictly two colors.',
+    useCases: [
+      'Create understated black-and-white versions of product or portrait photos.',
+      'Check whether a design still reads when its colors are removed.',
+      'Prepare a monochrome reference for a printed layout or document.',
+      'Apply the same desaturation strength across a set of pictures.',
+    ],
+    faq: [
+      { question: 'Does grayscale mean only black and white pixels?', answer: 'No. Grayscale uses a range of gray values between dark and light. It is not a two-color threshold or pure black-and-white bitmap operation.' },
+      { question: 'Can I keep some original color?', answer: 'Yes. Set Effect strength below 100% to blend part of the original color into the output.' },
+      { question: 'Will grayscale change image size or dimensions?', answer: 'Pixel dimensions stay the same, but re-encoding can alter file size and metadata depending on the selected output format.' },
+    ],
+    relatedIds: ['sepia-image', 'invert-image', 'compress-image', 'resize-image'],
+  },
+  'sepia-image': {
+    howToHeading: 'Apply a sepia effect without uploading your photo.',
+    howToIntro: 'A sepia filter shifts tones toward warm browns for a vintage-style image; control how strong that color treatment becomes.',
+    steps: [
+      { title: 'Add the image or batch', text: 'Choose JPG, PNG or WebP files to work on locally in your browser.' },
+      { title: 'Adjust the sepia amount', text: 'Move the slider between 0% original color and 100% sepia to choose the amount of warmth.' },
+      { title: 'Inspect the preview', text: 'Check how skin tones, highlights and dark areas change. Different originals can need different strengths.' },
+      { title: 'Save your sepia results', text: 'Process the selected files and download one output or a ZIP for the batch.' },
+    ],
+    useCasesHeading: 'When a sepia tint works well.',
+    useCasesIntro: 'Sepia is a creative color effect, not an archival restoration process. The resulting appearance depends on the original photo.',
+    useCases: [
+      'Create vintage-style portraits and social media graphics.',
+      'Give a group of photos a consistent warm color treatment.',
+      'Build nostalgic mood boards without using external photo-upload services.',
+      'Combine sepia output with other crops or compression workflows afterward.',
+    ],
+    faq: [
+      { question: 'Is sepia the same as grayscale?', answer: 'No. Grayscale removes color saturation, while sepia adds warm brown toning to the visible colors.' },
+      { question: 'Can I reduce the vintage look?', answer: 'Yes. The Effect strength slider lets you keep part of the original colors instead of using full sepia.' },
+      { question: 'Does sepia restore a damaged photograph?', answer: 'No. It changes visible color values and does not repair scratches, improve missing detail or recover a faded original.' },
+    ],
+    relatedIds: ['grayscale-image', 'invert-image', 'crop-image', 'compress-image'],
+  },
+  'invert-image': {
+    howToHeading: 'Create an inverted-color image using your browser.',
+    howToIntro: 'Reverse visible RGB values for a negative-style effect and control the amount of inversion with a strength slider.',
+    steps: [
+      { title: 'Upload locally', text: 'Choose an image from your device. Supported processing happens in the browser.' },
+      { title: 'Choose inversion strength', text: 'At 100%, the visible RGB colors are inverted. At 0%, the source colors are preserved.' },
+      { title: 'Preview before exporting', text: 'Inspect the resulting colors and adjust per image when using a mixed batch.' },
+      { title: 'Download the negative-style copy', text: 'Export one image in a supported format or collect several results into a ZIP.' },
+    ],
+    useCasesHeading: 'Use color inversion for design experiments and visual effects.',
+    useCasesIntro: 'Full inversion maps each RGB channel to its opposite value. It does not automatically correct the orange mask of photographic film negatives.',
+    useCases: [
+      'Try negative-color versions of logos, posters and illustrations.',
+      'Explore unusual color combinations for a thumbnail or graphic.',
+      'Turn bright illustrations into darker color inversions for creative experiments.',
+      'Apply the same inversion amount to multiple related images.',
+    ],
+    faq: [
+      { question: 'What does invert colors do?', answer: 'It reverses red, green and blue channel values. For example, strong red can become cyan after full inversion.' },
+      { question: 'Can this convert scanned film negatives into accurate photos?', answer: 'No. Film negatives can require white balance, orange-mask correction and channel-specific adjustments beyond simple RGB inversion.' },
+      { question: 'Does inversion change transparent areas?', answer: 'The color filter affects visible RGB values and preserves alpha while processing. Choose PNG or WebP when you need to keep transparency in the exported file.' },
+    ],
+    relatedIds: ['grayscale-image', 'sepia-image', 'blur-image', 'resize-image'],
+  },
   'resize-image': {
     howToHeading: 'How to resize images online in a browser.',
     howToIntro: 'Choose a sizing method that matches the job, check the active preview, then process the batch locally without uploading source images to a resize API.',

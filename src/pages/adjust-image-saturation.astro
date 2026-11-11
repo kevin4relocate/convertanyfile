@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { SATURATION_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={SATURATION_IMAGE_TOOL}
+  kicker="Vivid color · muted tones"
+  heading="Control color intensity from grayscale to vivid."
+  copy="Move the saturation slider down for muted colors or up to amplify them. Use the original preview to judge skin tones and brand colors before saving the edited image."
+  bullets={[
+    "Set saturation from 0% grayscale to 200% vivid color.",
+    "At 100%, keep the original saturation level.",
+    "Preview color changes in the browser without server uploads.",
+    "Apply one saturation setting to all files or edit individual photos.",
+    "Export JPG, PNG or WebP with single-image and ZIP downloads."
+]}
+/>

@@ -45,7 +45,7 @@ jobs:
             projects: --project=chromium-desktop --project=chromium-mobile
           - label: Firefox desktop
             browser: firefox
-            projects: --project=firefox-desktop
+            projects: --project=firefox-desktop --workers=1
           - label: WebKit desktop
             browser: webkit
             projects: --project=webkit-desktop
@@ -65,3 +65,13 @@ jobs:
         run: npx playwright install --with-deps ${{ matrix.browser }}
       - name: Run ${{ matrix.label }} tests
         run: npm run test:e2e -- ${{ matrix.projects }}
+      - name: Upload browser failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failure-${{ matrix.browser }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7

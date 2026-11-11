@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { GRAYSCALE_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={GRAYSCALE_IMAGE_TOOL}
+  kicker="Black and white photos · adjustable strength"
+  heading="Create a clean grayscale copy without uploading your photos."
+  copy="Use 100% for full grayscale or dial the strength back to retain some source color. All processing happens on your device, with a live preview for the selected image and consistent settings for the whole batch."
+  bullets={[
+    'Adjust grayscale strength from the original colors at 0% to full monochrome at 100%.',
+    'Preserve source pixel dimensions and transparency where the output format supports it.',
+    'Preview JPG, PNG or WebP images locally before applying the effect.',
+    'Process a batch with the same strength or adjust individual images separately.',
+    'Download one processed image or a ZIP of multiple grayscale results.',
+  ]}
+/>

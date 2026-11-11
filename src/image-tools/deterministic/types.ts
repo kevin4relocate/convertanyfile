@@ -7,7 +7,32 @@ export type DeterministicToolId =
   | 'crop-image'
   | 'blur-image'
   | 'fade-image-edges'
-  | 'remove-image-metadata';
+  | 'remove-image-metadata'
+  | 'grayscale-image'
+  | 'sepia-image'
+  | 'invert-image'
+  | 'brightness-image'
+  | 'contrast-image'
+  | 'adjust-image-saturation'
+  | 'pixelate-image'
+  | 'sharpen-image'
+  | 'add-image-border'
+  | 'rounded-corners-image'
+  | 'hue-rotate-image'
+  | 'posterize-image'
+  | 'threshold-image'
+  | 'adjust-image-opacity';
+
+export type ColorEffectSettings = { intensity: number };
+export type ColorAdjustmentSettings = { level: number };
+export type PixelateSettings = { blockSize: number };
+export type SharpenSettings = { amount: number };
+export type ImageBorderSettings = { thickness: number; color: string };
+export type RoundedCornersSettings = { radiusPercent: number };
+export type HueRotateSettings = { degrees: number };
+export type PosterizeSettings = { levels: number };
+export type ThresholdSettings = { cutoff: number };
+export type OpacitySettings = { opacityPercent: number };
 
 export type OutputChoice = 'source' | 'png' | 'jpg' | 'webp';
 
@@ -79,7 +104,17 @@ export type DeterministicSettings =
   | RotateFlipSettings
   | CropSettings
   | BlurSettings
-  | EdgeFadeSettings;
+  | EdgeFadeSettings
+  | ColorEffectSettings
+  | ColorAdjustmentSettings
+  | PixelateSettings
+  | SharpenSettings
+  | ImageBorderSettings
+  | RoundedCornersSettings
+  | HueRotateSettings
+  | PosterizeSettings
+  | ThresholdSettings
+  | OpacitySettings;
 
 export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSettings {
   switch (toolId) {
@@ -95,6 +130,30 @@ export function defaultSettingsFor(toolId: DeterministicToolId): DeterministicSe
       return { shape: 'rect', aspect: 'free', x: 0, y: 0, width: 100, height: 100 };
     case 'blur-image':
       return { scope: 'whole', shape: 'rect', radius: 12, x: 25, y: 25, width: 50, height: 50 };
+    case 'brightness-image':
+    case 'contrast-image':
+    case 'adjust-image-saturation':
+      return { level: 100 };
+    case 'pixelate-image':
+      return { blockSize: 12 };
+    case 'sharpen-image':
+      return { amount: 0.6 };
+    case 'add-image-border':
+      return { thickness: 12, color: '#ffffff' };
+    case 'rounded-corners-image':
+      return { radiusPercent: 15 };
+    case 'hue-rotate-image':
+      return { degrees: 90 };
+    case 'posterize-image':
+      return { levels: 6 };
+    case 'threshold-image':
+      return { cutoff: 128 };
+    case 'adjust-image-opacity':
+      return { opacityPercent: 70 };
+    case 'grayscale-image':
+    case 'sepia-image':
+    case 'invert-image':
+      return { intensity: 100 };
     case 'fade-image-edges':
       return {
         effectMode: 'subtitle-safe',

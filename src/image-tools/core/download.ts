@@ -49,3 +49,20 @@ export async function createZipBlob(files: readonly { filename: string; blob: Bl
   // significant browser CPU/memory cost for little or no size reduction.
   return zip.generateAsync({ type: 'blob', compression: 'STORE', streamFiles: true });
 }
+
+/**
+ * Shared single-file vs ZIP output behavior for editor runtimes.
+ * Preserves original source naming and the existing STORE-mode ZIP policy.
+ */
+export async function downloadResultBatch(
+  files: readonly { filename: string; blob: Blob }[],
+  zipFilename: string,
+): Promise<void> {
+  if (!files.length) return;
+  if (files.length === 1) {
+    const file = files[0]!;
+    downloadBlob(file.blob, file.filename);
+    return;
+  }
+  downloadBlob(await createZipBlob(files), zipFilename);
+}

@@ -1,5 +1,15 @@
 import type {
   BlurSettings,
+  ColorEffectSettings,
+  ColorAdjustmentSettings,
+  PixelateSettings,
+  SharpenSettings,
+  ImageBorderSettings,
+  RoundedCornersSettings,
+  HueRotateSettings,
+  PosterizeSettings,
+  ThresholdSettings,
+  OpacitySettings,
   CropSettings,
   DeterministicSettings,
   DeterministicToolId,
@@ -216,6 +226,171 @@ function drawEdgeFade(bitmap: ImageBitmap, settings: EdgeFadeSettings, maxDimens
   return original.canvas;
 }
 
+/**
+ * Tile the 4-neighbour sharpening convolution instead of allocating a second
+ * full-resolution ImageData buffer. A one-pixel halo preserves tile seams.
+ * Preserve source alpha; ignore invisible neighbour RGB to avoid color fringes
+ * around transparent illustrations.
+ */
+function drawSharpen(bitmap: ImageBitmap, settings: SharpenSettings, maxDimension?: number): HTMLCanvasElement {
+  const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+  const source = canvas2d(size.width, size.height);
+  source.context.drawImage(bitmap, 0, 0, size.width, size.height);
+  const amount = clamp(Number.isFinite(settings.amount) ? settings.amount : 0, 0, 1.2);
+  if (amount === 0) return source.canvas;
+
+  const target = canvas2d(size.width, size.height);
+  const tileSize = 384;
+  for (let top = 0; top < size.height; top += tileSize) {
+    for (let left = 0; left < size.width; left += tileSize) {
+      const width = Math.min(tileSize, size.width - left);
+      const height = Math.min(tileSize, size.height - top);
+      const haloX = Math.max(0, left - 1);
+      const haloY = Math.max(0, top - 1);
+      const haloRight = Math.min(size.width, left + width + 1);
+      const haloBottom = Math.min(size.height, top + height + 1);
+      const input = source.context.getImageData(haloX, haloY, haloRight - haloX, haloBottom - haloY);
+      const output = target.context.createImageData(width, height);
+      const inPixels = input.data;
+      const rowWidth = input.width;
+      const offsetX = left - haloX;
+      const offsetY = top - haloY;
+      for (let y = 0; y < height; y += 1) {
+        const cy = y + offsetY;
+        for (let x = 0; x < width; x += 1) {
+          const cx = x + offsetX;
+          const center = (cy * rowWidth + cx) * 4;
+          const dest = (y * width + x) * 4;
+          const centerAlpha = inPixels[center + 3] ?? 0;
+          if (!centerAlpha) {
+            for (let channel = 0; channel < 4; channel += 1) output.data[dest + channel] = inPixels[center + channel] ?? 0;
+            continue;
+          }
+          const leftIndex = (cy * rowWidth + Math.max(0, cx - 1)) * 4;
+          const rightIndex = (cy * rowWidth + Math.min(rowWidth - 1, cx + 1)) * 4;
+          const topIndex = (Math.max(0, cy - 1) * rowWidth + cx) * 4;
+          const bottomIndex = (Math.min(input.height - 1, cy + 1) * rowWidth + cx) * 4;
+          for (let channel = 0; channel < 3; channel += 1) {
+            const middle = inPixels[center + channel] ?? 0;
+            const neighbor = (index: number): number => {
+              const alpha = (inPixels[index + 3] ?? 0) / 255;
+              return middle * (1 - alpha) + (inPixels[index + channel] ?? 0) * alpha;
+            };
+            const value = (1 + 4 * amount) * middle
+              - amount * (neighbor(leftIndex) + neighbor(rightIndex) + neighbor(topIndex) + neighbor(bottomIndex));
+            output.data[dest + channel] = Math.max(0, Math.min(255, Math.round(value)));
+          }
+          output.data[dest + 3] = centerAlpha;
+        }
+      }
+      target.context.putImageData(output, left, top);
+    }
+  }
+  return target.canvas;
+}
+
+function drawImageBorder(bitmap: ImageBitmap, settings: ImageBorderSettings, maxDimension?: number): HTMLCanvasElement {
+  const thickness = Math.round(clamp(Number.isFinite(settings.thickness) ? settings.thickness : 12, 1, 80));
+  const safeColor = /^#[0-9a-f]{6}$/i.test(settings.color) ? settings.color : '#ffffff';
+  const size = scaledSize(bitmap.width + 2 * thickness, bitmap.height + 2 * thickness, maxDimension);
+  const { canvas, context } = canvas2d(size.width, size.height);
+  const inset = thickness * size.scale;
+  context.fillStyle = safeColor;
+  context.fillRect(0, 0, size.width, size.height);
+  context.drawImage(bitmap, inset, inset, size.width - 2 * inset, size.height - 2 * inset);
+  return canvas;
+}
+
+function drawRoundedCorners(bitmap: ImageBitmap, settings: RoundedCornersSettings, maxDimension?: number): HTMLCanvasElement {
+  const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+  const { canvas, context } = canvas2d(size.width, size.height);
+  const radius = Math.min(size.width, size.height) * clamp(
+    Number.isFinite(settings.radiusPercent) ? settings.radiusPercent : 15, 0, 50,
+  ) / 100;
+  const w = canvas.width, h = canvas.height;
+  context.beginPath();
+  context.moveTo(radius, 0);
+  context.lineTo(w - radius, 0);
+  context.quadraticCurveTo(w, 0, w, radius);
+  context.lineTo(w, h - radius);
+  context.quadraticCurveTo(w, h, w - radius, h);
+  context.lineTo(radius, h);
+  context.quadraticCurveTo(0, h, 0, h - radius);
+  context.lineTo(0, radius);
+  context.quadraticCurveTo(0, 0, radius, 0);
+  context.closePath();
+  context.clip();
+  context.drawImage(bitmap, 0, 0, w, h);
+  return canvas;
+}
+
+/**
+ * Quantize pixels in bounded 384px tiles; this avoids multiple full-sized
+ * ImageData buffers while keeping both transforms deterministic and local.
+ * RGB processing never replaces the original alpha channel.
+ */
+function drawToneReduction(
+  bitmap: ImageBitmap,
+  settings: PosterizeSettings | ThresholdSettings,
+  mode: 'posterize' | 'threshold',
+  maxDimension?: number,
+): HTMLCanvasElement {
+  const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+  const source = canvas2d(size.width, size.height);
+  source.context.drawImage(bitmap, 0, 0, size.width, size.height);
+  const result = canvas2d(size.width, size.height);
+  const levels = mode === 'posterize'
+    ? Math.round(clamp(Number.isFinite((settings as PosterizeSettings).levels) ? (settings as PosterizeSettings).levels : 6, 2, 16))
+    : 2;
+  const step = 255 / (levels - 1);
+  const cutoff = Math.round(clamp(Number.isFinite((settings as ThresholdSettings).cutoff) ? (settings as ThresholdSettings).cutoff : 128, 0, 255));
+
+  for (let top = 0; top < size.height; top += 384) {
+    for (let left = 0; left < size.width; left += 384) {
+      const width = Math.min(384, size.width - left);
+      const height = Math.min(384, size.height - top);
+      const pixels = source.context.getImageData(left, top, width, height);
+      for (let i = 0; i < pixels.data.length; i += 4) {
+        const r = pixels.data[i] ?? 0;
+        const g = pixels.data[i + 1] ?? 0;
+        const b = pixels.data[i + 2] ?? 0;
+        if (mode === 'posterize') {
+          pixels.data[i] = Math.round(r / step) * step;
+          pixels.data[i + 1] = Math.round(g / step) * step;
+          pixels.data[i + 2] = Math.round(b / step) * step;
+        } else {
+          const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          const value = luminance >= cutoff ? 255 : 0;
+          pixels.data[i] = value;
+          pixels.data[i + 1] = value;
+          pixels.data[i + 2] = value;
+        }
+      }
+      result.context.putImageData(pixels, left, top);
+    }
+  }
+  return result.canvas;
+}
+
+function drawHueRotation(bitmap: ImageBitmap, settings: HueRotateSettings, maxDimension?: number): HTMLCanvasElement {
+  const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+  const { canvas, context } = canvas2d(size.width, size.height);
+  const degrees = Math.round(clamp(Number.isFinite(settings.degrees) ? settings.degrees : 0, 0, 360));
+  context.filter = `hue-rotate(${degrees}deg)`;
+  context.drawImage(bitmap, 0, 0, size.width, size.height);
+  context.filter = 'none';
+  return canvas;
+}
+
+function drawOpacity(bitmap: ImageBitmap, settings: OpacitySettings, maxDimension?: number): HTMLCanvasElement {
+  const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+  const { canvas, context } = canvas2d(size.width, size.height);
+  context.globalAlpha = clamp(Number.isFinite(settings.opacityPercent) ? settings.opacityPercent : 100, 0, 100) / 100;
+  context.drawImage(bitmap, 0, 0, size.width, size.height);
+  context.globalAlpha = 1;
+  return canvas;
+}
+
 export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolId, settings: DeterministicSettings, maxDimension?: number): HTMLCanvasElement {
   if (toolId === 'resize-image') {
     const dimensions = resizeDimensions(bitmap.width, bitmap.height, settings as ResizeSettings), size = scaledSize(dimensions.width, dimensions.height, maxDimension);
@@ -225,6 +400,49 @@ export function renderToolCanvas(bitmap: ImageBitmap, toolId: DeterministicToolI
   if (toolId === 'crop-image') return drawCrop(bitmap, settings as CropSettings, maxDimension);
   if (toolId === 'blur-image') return drawBlur(bitmap, settings as BlurSettings, maxDimension);
   if (toolId === 'fade-image-edges') return drawEdgeFade(bitmap, settings as EdgeFadeSettings, maxDimension);
+  if (toolId === 'sharpen-image') return drawSharpen(bitmap, settings as SharpenSettings, maxDimension);
+  if (toolId === 'add-image-border') return drawImageBorder(bitmap, settings as ImageBorderSettings, maxDimension);
+  if (toolId === 'rounded-corners-image') return drawRoundedCorners(bitmap, settings as RoundedCornersSettings, maxDimension);
+  if (toolId === 'hue-rotate-image') return drawHueRotation(bitmap, settings as HueRotateSettings, maxDimension);
+  if (toolId === 'posterize-image') return drawToneReduction(bitmap, settings as PosterizeSettings, 'posterize', maxDimension);
+  if (toolId === 'threshold-image') return drawToneReduction(bitmap, settings as ThresholdSettings, 'threshold', maxDimension);
+  if (toolId === 'adjust-image-opacity') return drawOpacity(bitmap, settings as OpacitySettings, maxDimension);
+  if (toolId === 'brightness-image' || toolId === 'contrast-image' || toolId === 'adjust-image-saturation') {
+    const filter = toolId === 'brightness-image' ? 'brightness' : toolId === 'contrast-image' ? 'contrast' : 'saturate';
+    const level = clamp((settings as ColorAdjustmentSettings).level, 0, 200);
+    const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+    const { canvas, context } = canvas2d(size.width, size.height);
+    context.filter = `${filter}(${level}%)`;
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    context.filter = 'none';
+    return canvas;
+  }
+
+  if (toolId === 'pixelate-image') {
+    const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+    // Downsample first, then upscale with nearest-neighbor interpolation.
+    // Keep the output dimensions unchanged and bound the temporary canvas.
+    const blockSize = Math.round(clamp((settings as PixelateSettings).blockSize, 2, 64));
+    const smallWidth = Math.max(1, Math.ceil(size.width / blockSize));
+    const smallHeight = Math.max(1, Math.ceil(size.height / blockSize));
+    const tiny = canvas2d(smallWidth, smallHeight);
+    tiny.context.drawImage(bitmap, 0, 0, smallWidth, smallHeight);
+    const result = canvas2d(size.width, size.height);
+    result.context.imageSmoothingEnabled = false;
+    result.context.drawImage(tiny.canvas, 0, 0, size.width, size.height);
+    return result.canvas;
+  }
+
+  if (toolId === 'grayscale-image' || toolId === 'sepia-image' || toolId === 'invert-image') {
+    const name = toolId === 'grayscale-image' ? 'grayscale' : toolId === 'sepia-image' ? 'sepia' : 'invert';
+    const intensity = clamp((settings as ColorEffectSettings).intensity, 0, 100);
+    const size = scaledSize(bitmap.width, bitmap.height, maxDimension);
+    const { canvas, context } = canvas2d(size.width, size.height);
+    context.filter = `${name}(${intensity}%)`;
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    context.filter = 'none';
+    return canvas;
+  }
   // Compress and metadata removal both intentionally re-render decoded pixels.
   // Canvas encoding drops EXIF/GPS/software metadata while preserving visible pixels.
   const size = scaledSize(bitmap.width, bitmap.height, maxDimension), { canvas, context } = canvas2d(size.width, size.height);

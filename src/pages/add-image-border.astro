@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { ADD_IMAGE_BORDER_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={ADD_IMAGE_BORDER_TOOL}
+  kicker="Solid color · customizable outer border"
+  heading="Frame photos and graphics with a clean colored border."
+  copy="Choose an outer border thickness from 1 to 80 pixels and pick its color. See the new framing in the preview, then export a single image or process several at once."
+  bullets={[
+    "Add an even solid-color border outside the original image, not over its content.",
+    "Choose a border color with the built-in color picker.",
+    "Expand canvas dimensions by twice the border thickness on each axis.",
+    "Reject images when expanded dimensions would exceed the safe browser limits.",
+    "Apply the same framing to multiple images or customize items in a batch."
+]}
+/>

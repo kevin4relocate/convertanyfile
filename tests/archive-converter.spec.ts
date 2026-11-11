@@ -226,7 +226,7 @@ test('TAR with an invalid header checksum is rejected during admission', async (
   await page.goto('/archive-converter/');
   const app = page.locator('[data-converter-app]');
   const tar = makeTar();
-  tar[10] ^= 0xff;
+  tar[10] = (tar[10] ?? 0) ^ 0xff;
   await app.locator('[data-role="file-input"]').setInputFiles({ name: 'broken.tar', mimeType: 'application/x-tar', buffer: tar });
   await expect(app.locator('[data-role="file-list"]')).not.toContainText('broken.tar');
 });

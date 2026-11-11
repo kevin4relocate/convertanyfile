@@ -1,0 +1,17 @@
+---
+import CoreImageToolPage from '../components/CoreImageToolPage.astro';
+import { BRIGHTNESS_IMAGE_TOOL } from '../config/image-tools';
+---
+<CoreImageToolPage
+  tool={BRIGHTNESS_IMAGE_TOOL}
+  kicker="Lighten · darken · batch"
+  heading="Adjust brightness without an image upload."
+  copy="Set brightness lower for darker images or higher for lighter ones. Review the original and adjusted image side by side, then process individual photos or a whole batch locally."
+  bullets={[
+    "Adjust brightness from 0% (black) to 200% (much brighter), with 100% unchanged.",
+    "Keep original image dimensions when changing brightness.",
+    "Preview the result before exporting JPG, PNG or WebP.",
+    "Reuse a shared setting across the batch or adjust files individually.",
+    "Download one image or a ZIP of completed brightness adjustments."
+]}
+/>

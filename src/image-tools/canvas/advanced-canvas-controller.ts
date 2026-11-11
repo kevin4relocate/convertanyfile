@@ -37,7 +37,7 @@ export function mountAdvancedCanvasController(root:HTMLElement):void {
       if(quality)quality.dispatchEvent(new Event('input',{bubbles:true}));
     }
   };
-  const command=(detail:CanvasCommand):void=>root.dispatchEvent(new CustomEvent<CanvasCommand>('image-canvas-command',{detail,bubbles:false}));
+  const command=(detail:CanvasCommand):void=>{root.dispatchEvent(new CustomEvent<CanvasCommand>('image-canvas-command',{detail,bubbles:false}));};
 
   zoomOut?.addEventListener('click',()=>setZoom(zoom-.25));
   zoomIn?.addEventListener('click',()=>setZoom(zoom+.25));

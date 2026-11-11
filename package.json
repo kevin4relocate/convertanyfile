@@ -13,7 +13,7 @@
     "check": "astro check",
     "check:seo": "node scripts/check-static-seo.mjs",
     "check:cloudflare-assets": "node scripts/check-cloudflare-static-assets.mjs",
-    "build": "npm run runtime:all && astro build && npm run check:seo && npm run check:cloudflare-assets",
+    "build": "npm run runtime:all && npm run check && astro build && npm run check:seo && npm run check:cloudflare-assets",
     "preview": "astro preview",
     "test:e2e": "npm run fixtures:archive && playwright test",
     "test:production": "playwright test --config=playwright.production.config.ts"

@@ -159,3 +159,32 @@ test('Unicode names and zero-byte files survive TAR to ZIP repacking', async ({ 
   expect(await zip.file(unicodePath)!.async('text')).toBe('unicode payload');
   expect((await zip.file('empty.txt')!.async('uint8array')).byteLength).toBe(0);
 });
+
+
+test('ZIP preflight rejects oversized declared extraction before attempting to inflate', async ({ page }) => {
+  await page.goto('/zip-to-tar/');
+  const zip = new JSZip();
+  zip.file('small.txt', 'small payload');
+  const bytes = Buffer.from(await zip.generateAsync({ type: 'uint8array', compression: 'STORE' }));
+  const central = bytes.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
+  expect(central).toBeGreaterThanOrEqual(0);
+  // The central-directory uncompressed size is at offset 24.
+  // A malicious archive can claim a much larger expansion than its upload size.
+  bytes.writeUInt32LE(101 * 1024 * 1024, central + 24);
+  const app = await addAndConvert(page, { name: 'oversized.zip', mimeType: 'application/zip', buffer: bytes }, 'tar');
+  await expect(app.locator('[data-role="result-summary"]')).toContainText('failed');
+  await expect(app.locator('[data-role="file-list"]')).toContainText(/100 MB|safety limit|extracted/i);
+});
+
+test('ZIP extraction verifies CRC after streamed decompression', async ({ page }) => {
+  await page.goto('/zip-to-tar/');
+  const zip = new JSZip();
+  zip.file('crc.txt', 'unique payload for CRC verification');
+  const bytes = Buffer.from(await zip.generateAsync({ type: 'uint8array', compression: 'STORE' }));
+  const position = bytes.indexOf(Buffer.from('unique payload for CRC verification'));
+  expect(position).toBeGreaterThan(0);
+  bytes[position] = bytes[position]! ^ 1;
+  const app = await addAndConvert(page, { name: 'bad-crc.zip', mimeType: 'application/zip', buffer: bytes }, 'tar');
+  await expect(app.locator('[data-role="result-summary"]')).toContainText('failed');
+  await expect(app.locator('[data-role="file-list"]')).toContainText(/CRC32 mismatch/i);
+});
