@@ -1,4 +1,4 @@
-import { createZipBlob, downloadBlob } from '../core/download';
+import { downloadResultBatch } from '../core/download';
 import { defaultQualityForImageOutput } from '../core/output-quality';
 import { encodeCanvas, extensionForOutput, type ImageOutputFormat } from '../core/output-encoder';
 import { renderToolCanvas, resizeDimensions, sourceExtension, sourceMime } from './operations';
@@ -186,7 +186,7 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
   }
   async function downloadResults():Promise<void> {
     const files=state.items.filter((item):item is Item&{result:Blob;outputName:string}=>Boolean(item.result&&item.outputName&&item.status==='done')).map(item=>({filename:item.outputName,blob:item.result}));
-    if(!files.length)return;if(files.length===1){downloadBlob(files[0]!.blob,files[0]!.filename);return;}downloadBlob(await createZipBlob(files),`${toolId}-results.zip`);
+    await downloadResultBatch(files,`${toolId}-results.zip`);
   }
 
   settingInputs.forEach(control=>{
