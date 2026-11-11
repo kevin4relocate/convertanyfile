@@ -3,7 +3,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'https://convertanyfile.net';
 const PROD_ORIGIN = 'https://convertanyfile.net';
-const IS_PRODUCTION_HOST = new URL(BASE_URL).hostname === 'convertanyfile.net';
+const IS_PRODUCTION_HOST = new Set(['convertanyfile.net', 'www.convertanyfile.net']).has(new URL(BASE_URL).hostname);
 
 const PNG_2X2 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP4z8DA8J+BkYHh////DAAe9gT9Ce00PgAAAABJRU5ErkJggg==',
