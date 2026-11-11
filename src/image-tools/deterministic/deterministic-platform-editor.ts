@@ -86,7 +86,7 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
     root.querySelectorAll<HTMLElement>('[data-setting-group]').forEach(group=>{const key=group.dataset.settingGroup;group.hidden=key!==record.mode&&key!==record.scope&&key!==record.style;});
     root.querySelectorAll<HTMLOutputElement>('[data-output-for]').forEach(output=>{
       const key=output.dataset.outputFor;if(!key)return;const value=record[key];
-      output.textContent=key==='percent'||key==='depth'||key==='softness'||key==='texture'||key==='intensity'?`${value}%`:key==='radius'?`${value} px`:String(value??'');
+      output.textContent=key==='percent'||key==='depth'||key==='softness'||key==='texture'||key==='intensity'||key==='level'?`${value}%`:key==='radius'||key==='blockSize'?`${value} px`:String(value??'');
     });
   }
   function renderSettings():void {
