@@ -51,7 +51,7 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
 
   // Transparent cut corners require an alpha-capable format. Keep the export
   // control visibly locked to PNG rather than silently writing opaque JPEGs.
-  if(toolId==='rounded-corners-image'){
+  if(toolId==='rounded-corners-image'||toolId==='adjust-image-opacity'){
     outputFormat.value='png';
     outputFormat.disabled=true;
     outputQuality.disabled=true;
@@ -101,7 +101,7 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
     root.querySelectorAll<HTMLElement>('[data-setting-group]').forEach(group=>{const key=group.dataset.settingGroup;group.hidden=key!==record.mode&&key!==record.scope&&key!==record.style;});
     root.querySelectorAll<HTMLOutputElement>('[data-output-for]').forEach(output=>{
       const key=output.dataset.outputFor;if(!key)return;const value=record[key];
-      output.textContent=key==='percent'||key==='depth'||key==='softness'||key==='texture'||key==='intensity'||key==='level'||key==='radiusPercent'?`${value}%`:key==='radius'||key==='blockSize'||key==='thickness'?`${value} px`:key==='amount'?`${value}×`:String(value??'');
+      output.textContent=key==='percent'||key==='depth'||key==='softness'||key==='texture'||key==='intensity'||key==='level'||key==='radiusPercent'||key==='opacityPercent'?`${value}%`:key==='radius'||key==='blockSize'||key==='thickness'?`${value} px`:key==='degrees'?`${value}°`:key==='levels'?`${value} levels`:key==='amount'?`${value}×`:String(value??'');
     });
   }
   function renderSettings():void {
@@ -199,7 +199,7 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
 
   function outputFor(item:Item):{format:OutputChoice;quality:number} {
     const record=asRecord(effective(item));if(typeof record.format==='string'&&typeof record.quality==='number')return{format:record.format as OutputChoice,quality:clamp(record.quality,1,100)};
-    if(toolId==='rounded-corners-image')return{format:'png',quality:100};
+    if(toolId==='rounded-corners-image'||toolId==='adjust-image-opacity')return{format:'png',quality:100};
     return{format:outputFormat.value as OutputChoice,quality:clamp(Number(outputQuality.value),1,100)};
   }
   async function processBatch():Promise<void> {
