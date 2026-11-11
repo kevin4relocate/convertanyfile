@@ -12,7 +12,7 @@ concurrency:
 jobs:
   validate:
     name: Check and build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
@@ -33,7 +33,7 @@ jobs:
   browser-smoke:
     name: Browser smoke (${{ matrix.label }})
     needs: validate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     strategy:
       fail-fast: false
@@ -61,8 +61,17 @@ jobs:
         with:
           name: production-dist
           path: dist/
-      - name: Install ${{ matrix.browser }}
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Install ${{ matrix.browser }} with network retry
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            if npx playwright install --with-deps ${{ matrix.browser }}; then
+              exit 0
+            fi
+            echo "Browser dependency installation failed (attempt $attempt of 3)."
+            if [ "$attempt" -lt 3 ]; then sleep $((attempt * 15)); fi
+          done
+          exit 1
       - name: Run ${{ matrix.label }} tests
         run: npm run test:e2e -- ${{ matrix.projects }}
       - name: Upload browser failure diagnostics
