@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       base_url:
-        description: Production URL to test
+        description: Production or Cloudflare Pages Preview URL to test
         required: true
         default: https://convertanyfile.net
         type: string
