@@ -161,7 +161,7 @@ export const PIXELATE_IMAGE_TOOL = {
 } satisfies ImageToolDefinition;
 
 export const SHARPEN_IMAGE_TOOL = {
-  ...liveBase, id: 'sharpen-image' as const, slug: 'sharpen-image', displayName: 'Sharpen Image', category: 'transform',
+  ...liveBase, maxPixels: 8_000_000, id: 'sharpen-image' as const, slug: 'sharpen-image', displayName: 'Sharpen Image', category: 'transform',
   title: 'Sharpen Image Online — Enhance Photo Edges | ConvertAnyFile',
   description: 'Sharpen JPG, PNG and WebP photos locally with an adjustable edge-strength slider. Preview the result and download one image or a batch ZIP.',
   h1: 'Sharpen an image without uploading it.',
