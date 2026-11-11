@@ -28,9 +28,13 @@ const isPixelate = tool.id === 'pixelate-image';
 const isSharpen = tool.id === 'sharpen-image';
 const isBorder = tool.id === 'add-image-border';
 const isRoundedCorners = tool.id === 'rounded-corners-image';
+const isHueRotate = tool.id === 'hue-rotate-image';
+const isPosterize = tool.id === 'posterize-image';
+const isThreshold = tool.id === 'threshold-image';
+const isOpacity = tool.id === 'adjust-image-opacity';
 const adjustmentLabel = tool.id === 'brightness-image' ? 'Brightness' : tool.id === 'contrast-image' ? 'Contrast' : 'Saturation';
 const hasEmbeddedOutput = isCompress || isMetadata;
-const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isEdgeFade ? 'Apply edge fade' : isMetadata ? 'Remove metadata' : isColorEffect ? 'Apply color effect' : isColorAdjustment ? 'Adjust image colors' : isPixelate ? 'Pixelate images' : isSharpen ? 'Sharpen images' : isBorder ? 'Add borders' : isRoundedCorners ? 'Round corners' : 'Process images';
+const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images' : isRotate ? 'Rotate / flip images' : isCrop ? 'Crop images' : isBlur ? 'Blur images' : isEdgeFade ? 'Apply edge fade' : isMetadata ? 'Remove metadata' : isColorEffect ? 'Apply color effect' : isColorAdjustment ? 'Adjust image colors' : isPixelate ? 'Pixelate images' : isSharpen ? 'Sharpen images' : isBorder ? 'Add borders' : isRoundedCorners ? 'Round corners' : isHueRotate ? 'Rotate hue' : isPosterize ? 'Posterize images' : isThreshold ? 'Threshold images' : isOpacity ? 'Adjust transparency' : 'Process images';
 ---
 
 <div class="image-editor-card deterministic-tool" data-image-tool-app data-tool-id={tool.id} data-download-suffix={tool.downloadSuffix} data-max-file-bytes={tool.maxFileBytes} data-max-pixels={tool.maxPixels} data-max-dimension={tool.maxDimension} data-max-files={maxFiles} data-has-items="false">
@@ -123,6 +127,26 @@ const processLabel = isResize ? 'Resize images' : isCompress ? 'Compress images'
           {isRoundedCorners && <div class="setting-grid">
             <label><span>Corner radius</span><div class="range-row"><input data-setting="radiusPercent" type="range" min="0" max="50" step="1" value="15" /><output data-output-for="radiusPercent">15%</output></div></label>
             <div class="setting-note setting-note--wide"><strong>Transparent PNG output.</strong><p>Corner radius is a percentage of the shorter image side; 0% keeps square corners. PNG output is locked so the rounded transparent corners are not flattened to an opaque background.</p></div>
+          </div>}
+
+          {isHueRotate && <div class="setting-grid">
+            <label><span>Hue rotation</span><div class="range-row"><input data-setting="degrees" type="range" min="0" max="360" step="1" value="90" /><output data-output-for="degrees">90°</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Recolor without changing the image dimensions.</strong><p>Rotate hues through the color wheel. 0° and 360° leave hues unchanged; intermediate values create alternative palettes. Output colors depend on the original photo.</p></div>
+          </div>}
+
+          {isPosterize && <div class="setting-grid">
+            <label><span>Color levels per channel</span><div class="range-row"><input data-setting="levels" type="range" min="2" max="16" step="1" value="6" /><output data-output-for="levels">6 levels</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Create bold blocks of color.</strong><p>Two levels produce fewer RGB shades; sixteen retain more gradations. The tool preserves each pixel's alpha channel. Adjust for illustrations, print-like graphics and creative effects.</p></div>
+          </div>}
+
+          {isThreshold && <div class="setting-grid">
+            <label><span>Black / white cutoff</span><div class="range-row"><input data-setting="cutoff" type="range" min="0" max="255" step="1" value="128" /><output data-output-for="cutoff">128</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Turn a photo into only black and white tones.</strong><p>Pixel brightness below the cutoff becomes black; brightness at or above it becomes white. Unlike grayscale, this produces no middle gray values.</p></div>
+          </div>}
+
+          {isOpacity && <div class="setting-grid">
+            <label><span>Image opacity</span><div class="range-row"><input data-setting="opacityPercent" type="range" min="0" max="100" step="1" value="70" /><output data-output-for="opacityPercent">70%</output></div></label>
+            <div class="setting-note setting-note--wide"><strong>Export real PNG transparency.</strong><p>100% keeps the image fully visible, 0% makes it transparent, and lower values reduce the alpha of each visible pixel. PNG output is locked to preserve alpha.</p></div>
           </div>}
 
           {isEdgeFade && <div class="visual-tool-controls edge-fade-controls">
