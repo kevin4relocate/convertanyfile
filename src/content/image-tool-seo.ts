@@ -26,6 +26,156 @@ export interface ImageToolSeoContent {
 }
 
 export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
+  'sharpen-image': {
+    howToHeading: "How to sharpen an image with adjustable edge strength.",
+    howToIntro: "Sharpening increases contrast at existing pixel transitions. Use the preview to avoid turning noise into harsh outlines.",
+    steps: [
+      {
+        "title": "Add supported photos",
+        "text": "Choose JPG, PNG or WebP files. The browser decodes them locally before applying the effect."
+      },
+      {
+        "title": "Adjust sharpening amount",
+        "text": "0× keeps the source unchanged; move toward 1.2× to emphasize edges and texture."
+      },
+      {
+        "title": "Inspect fine details",
+        "text": "Look for unwanted bright or dark halos at faces, high-contrast boundaries, and noisy areas."
+      },
+      {
+        "title": "Process and download",
+        "text": "Apply the setting to your images and download a single output or a ZIP of the batch."
+      }
+    ],
+    useCasesHeading: "Where controlled sharpening can help.",
+    useCasesIntro: "Modest sharpening makes existing features more distinct, but cannot restore missing focus or invent detail.",
+    useCases: [
+      "Improve perceived crispness in small illustrations and product photos.",
+      "Slightly emphasize existing texture before preparing social graphics.",
+      "Make text and line-art edges more visible in some screenshots.",
+      "Apply consistent subtle sharpening to a set of resized photos."
+    ],
+    faq: [
+      {
+        "question": "Can this recover a blurry or out-of-focus image?",
+        "answer": "No. It adjusts edge contrast in visible pixels, not the missing information from a badly focused photo."
+      },
+      {
+        "question": "Why do very strong settings create outlines?",
+        "answer": "Edge-contrast enhancement can exaggerate boundaries and noise. Reduce the amount when you notice halos."
+      },
+      {
+        "question": "Are original image dimensions changed?",
+        "answer": "No. Sharpening preserves pixel width and height, although encoding the result can change file size and metadata."
+      }
+    ],
+    relatedIds: [
+      "contrast-image",
+      "brightness-image",
+      "pixelate-image",
+      "resize-image"
+    ],
+  },
+  'add-image-border': {
+    howToHeading: "How to add a colored border around an image.",
+    howToIntro: "This tool expands the canvas to place a solid frame outside the image, keeping the original pixels uncovered.",
+    steps: [
+      {
+        "title": "Choose an image",
+        "text": "Add one or multiple JPG, PNG or WebP files from your device."
+      },
+      {
+        "title": "Select thickness",
+        "text": "Choose between 1 and 80 pixels of border on all four sides."
+      },
+      {
+        "title": "Pick a frame color",
+        "text": "Use the color picker for a solid border that fits your layout."
+      },
+      {
+        "title": "Preview and export",
+        "text": "Review the expanded dimensions, process the batch and download the result or ZIP."
+      }
+    ],
+    useCasesHeading: "Simple frames for photos, graphics and product shots.",
+    useCasesIntro: "An outer solid border separates the image from nearby page content without drawing over important source pixels.",
+    useCases: [
+      "Frame images in galleries and social posts.",
+      "Create matching white or dark margins around product photographs.",
+      "Build consistent image cards for presentations.",
+      "Add a color-coded frame to image batches."
+    ],
+    faq: [
+      {
+        "question": "Does a border cover part of my image?",
+        "answer": "No. The frame extends the canvas around the source. Both width and height grow by twice the border thickness."
+      },
+      {
+        "question": "Can I make a transparent border?",
+        "answer": "Not with this solid-color frame tool. Choose a color from the picker; use a transparency-capable image editor for transparent padding."
+      },
+      {
+        "question": "What if the bordered image becomes too large?",
+        "answer": "The tool checks the resulting dimensions and pixel count against browser safety limits and rejects oversized outputs."
+      }
+    ],
+    relatedIds: [
+      "rounded-corners-image",
+      "resize-image",
+      "crop-image",
+      "compress-image"
+    ],
+  },
+  'rounded-corners-image': {
+    howToHeading: "How to create transparent rounded image corners.",
+    howToIntro: "Use an adjustable radius to crop only the outer corners of the photo, preserving its canvas dimensions and exporting with alpha transparency.",
+    steps: [
+      {
+        "title": "Add an image",
+        "text": "Choose JPG, PNG or WebP files to edit locally."
+      },
+      {
+        "title": "Set the corner radius",
+        "text": "Choose 0% for square corners or up to 50% of the shorter side for a strongly rounded shape."
+      },
+      {
+        "title": "Inspect transparency",
+        "text": "Look at the preview to make sure the corners are clipped at the intended radius."
+      },
+      {
+        "title": "Download transparent PNG",
+        "text": "The export format is fixed to PNG so transparent corners are not flattened into a JPEG background."
+      }
+    ],
+    useCasesHeading: "Rounded images for web layouts and branded graphics.",
+    useCasesIntro: "Rounded corners soften a picture's shape while preserving its original pixel width and height.",
+    useCases: [
+      "Create rounded avatars and photo cards for layouts.",
+      "Prepare interface mockup images with soft corners.",
+      "Make social graphics consistent with a rounded design system.",
+      "Create PNG assets with real alpha-transparent corners."
+    ],
+    faq: [
+      {
+        "question": "Why does this tool always save PNG?",
+        "answer": "PNG preserves alpha transparency at the rounded corners. JPEG does not support transparency and could flatten those corners into a solid color."
+      },
+      {
+        "question": "Does the image become smaller?",
+        "answer": "No. The original width and height remain unchanged; only corner pixels become transparent."
+      },
+      {
+        "question": "What does 50% radius mean?",
+        "answer": "The corner radius becomes half of the shorter image side, producing a strongly rounded shape while preserving its proportions."
+      }
+    ],
+    relatedIds: [
+      "add-image-border",
+      "crop-image",
+      "resize-image",
+      "blur-image"
+    ],
+  },
   'brightness-image': {
     howToHeading: "How to adjust image brightness without uploading a photo.",
     howToIntro: "Brightness controls how light or dark all image colors appear. Work locally, inspect the original, and avoid losing detail in very bright or very dark areas.",
