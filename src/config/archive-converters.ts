@@ -146,7 +146,7 @@ export const ARCHIVE_CONVERTERS: readonly ConverterDefinition[] = [
   },
 ] as const;
 
-export const ARCHIVE_CONVERTER = ARCHIVE_CONVERTERS[0];
+export const ARCHIVE_CONVERTER = ARCHIVE_CONVERTERS[0]!;
 export const ARCHIVE_PAIR_CONVERTERS = ARCHIVE_CONVERTERS.filter((converter) => converter.input && converter.output);
 
 export function getArchiveConverter(slug: string): ConverterDefinition | undefined {
