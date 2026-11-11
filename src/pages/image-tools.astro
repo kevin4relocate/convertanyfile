@@ -1,9 +1,9 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
-import ImageToolGrid from '../components/ImageToolGrid.astro';
+import ImageToolsDirectory from '../components/ImageToolsDirectory.astro';
 import GrowthLinkHub from '../components/GrowthLinkHub.astro';
 import FaqList from '../components/FaqList.astro';
-import { IMAGE_TOOL_ROADMAP, IMAGE_TOOL_DIRECTORY_SECTIONS, imageToolIdsForGroup } from '../config/image-tools';
+import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
 import { POPULAR_IMAGE_GUIDES } from '../config/growth-links';
 import { SITE } from '../config/site';
 
@@ -40,10 +40,7 @@ const schema = [
 <SiteLayout title="Online Image Tools — Resize, Compress, Crop & Remove Watermarks | ConvertAnyFile" description="Browser-based image tools for resizing, compressing, rotating, cropping, blurring, renaming, stripping metadata and removing visible watermarks locally." schema={schema}>
 <section class="page-hero"><div class="site-container hero-inner"><div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Image Tools</span></div><span class="eyebrow">Online Image Tools</span><h1>Free online image tools for resize, compress, crop and more.</h1><p>Resize, compress, rotate, crop, blur, rename, strip metadata or repair visible watermarks with focused tools that run locally where the browser supports the required processing.</p></div></section>
 
-{IMAGE_TOOL_DIRECTORY_SECTIONS.map((section) => <section class:list={['content-wide-section', section.white && 'white']}><div class="site-container">
-  <div class="section-heading wide"><span class="section-kicker">{section.kicker}</span><h2>{section.heading}</h2><p>{section.description}</p></div>
-  <ImageToolGrid ids={imageToolIdsForGroup(section.id)} />
-</div></section>)}
+<ImageToolsDirectory />
 
 <section class="content-wide-section"><div class="site-container"><div class="section-heading wide"><span class="section-kicker">Image editing guides</span><h2>Start with the question, then open the matching tool.</h2><p>These guides answer common image-search questions about aspect ratio, exact dimensions, compression, circle crops, selected-area blur, EXIF and GPS metadata. Each guide links directly to the live browser tool used for the workflow.</p></div><GrowthLinkHub groups={guideGroups} compact /></div></section>
 
