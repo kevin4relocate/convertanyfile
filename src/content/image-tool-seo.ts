@@ -26,6 +26,206 @@ export interface ImageToolSeoContent {
 }
 
 export const IMAGE_TOOL_SEO: Record<string, ImageToolSeoContent> = {
+  'hue-rotate-image': {
+    howToHeading: "How to change image colors with hue rotation.",
+    howToIntro: "Hue rotation shifts color appearance without selecting individual regions. The original remains on your device and all pixel processing happens locally.",
+    steps: [
+      {
+        "title": "Add JPG, PNG or WebP files",
+        "text": "Choose one photo or a batch. Image processing stays inside the browser."
+      },
+      {
+        "title": "Move the hue slider",
+        "text": "0° keeps the original hues. Move toward 360° to explore alternative overall color palettes."
+      },
+      {
+        "title": "Inspect the color preview",
+        "text": "Check key brand colors, portraits, skin tones and transparency before using a strong rotation."
+      },
+      {
+        "title": "Process and save",
+        "text": "Run the adjustment on the selected image or batch and download results or a ZIP."
+      }
+    ],
+    useCasesHeading: "When hue rotation is useful.",
+    useCasesIntro: "Hue rotation is a creative transformation that treats the whole image at once. It is not an automatic tool for accurately matching brand palettes.",
+    useCases: [
+      "Explore alternate colors for a background illustration or poster.",
+      "Try stylized color versions of thumbnails or banners.",
+      "Shift the palette of art assets before combining them in a layout.",
+      "Apply a consistent whole-image color shift to several pictures."
+    ],
+    faq: [
+      {
+        "question": "What does 0° or 360° hue rotation do?",
+        "answer": "Both represent a full cycle back to the original hue relationship. Intermediate angles shift RGB colors."
+      },
+      {
+        "question": "Will this change brightness or saturation?",
+        "answer": "Browser hue rotation is based on an RGB color transform; exact output can vary with the source and may also affect perceived lightness."
+      },
+      {
+        "question": "Can I change just one color in the photo?",
+        "answer": "No. This tool applies a whole-image hue rotation. Use a selective color editor to target a specific region or color."
+      }
+    ],
+    relatedIds: [
+      "adjust-image-saturation",
+      "sepia-image",
+      "invert-image",
+      "brightness-image"
+    ],
+  },
+  'posterize-image': {
+    howToHeading: "How to posterize an image in your browser.",
+    howToIntro: "Posterization converts continuous RGB shades into a smaller set of discrete channel levels for a graphic, flattened look.",
+    steps: [
+      {
+        "title": "Select your images",
+        "text": "Load JPG, PNG or WebP files. Keep the originals for later adjustments."
+      },
+      {
+        "title": "Choose levels per RGB channel",
+        "text": "Set 2 for aggressive reduction or move toward 16 for more gradation."
+      },
+      {
+        "title": "Compare the preview",
+        "text": "Check for strong banding across faces, shadows and flat graphic regions."
+      },
+      {
+        "title": "Export a new image",
+        "text": "Process the image or batch and download individual results or ZIP."
+      }
+    ],
+    useCasesHeading: "Creative applications of posterization.",
+    useCasesIntro: "Reducing levels can build print-like visual effects from photos and artwork, although it does not automatically select a limited global color palette.",
+    useCases: [
+      "Make stylized poster designs with broad color areas.",
+      "Simplify gradients in illustration references.",
+      "Try retro or screen-print-inspired graphics.",
+      "Create a batch of pictures with similarly reduced RGB tones."
+    ],
+    faq: [
+      {
+        "question": "Is 2 levels equal to two total colors?",
+        "answer": "No. Two levels are used separately for each RGB channel, resulting in up to eight RGB combinations for fully opaque pixels."
+      },
+      {
+        "question": "What happens if I increase the level count?",
+        "answer": "More distinct channel values are available, so the output retains smoother color transitions."
+      },
+      {
+        "question": "Does this reduce the image resolution?",
+        "answer": "No. Pixel dimensions stay the same. Posterization reduces channel color precision, not width or height."
+      }
+    ],
+    relatedIds: [
+      "threshold-image",
+      "pixelate-image",
+      "grayscale-image",
+      "adjust-image-saturation"
+    ],
+  },
+  'threshold-image': {
+    howToHeading: "How to create a pure black-and-white threshold image.",
+    howToIntro: "The threshold uses perceived RGB luminance to decide whether a visible pixel should be black or white. Unlike grayscale, it does not create intermediate gray colors.",
+    steps: [
+      {
+        "title": "Choose a supported photo",
+        "text": "Add JPG, PNG or WebP images to the local browser workspace."
+      },
+      {
+        "title": "Set the luminance cutoff",
+        "text": "Lower values make more pixels white; higher values turn more areas black."
+      },
+      {
+        "title": "Preview fine edges",
+        "text": "Check whether text, silhouettes and facial features retain the separation you need."
+      },
+      {
+        "title": "Save the two-tone output",
+        "text": "Process one file or a batch, then download images or a ZIP."
+      }
+    ],
+    useCasesHeading: "Useful black-and-white threshold effects.",
+    useCasesIntro: "Hard thresholding is well suited to high-contrast artwork and silhouettes but may discard subtle detail in photos.",
+    useCases: [
+      "Create silhouettes for design concepts.",
+      "Generate simple black-and-white references for icons or patterns.",
+      "Turn high-contrast art into a stark two-tone visual.",
+      "Compare different cutoff levels before making linework or stencils."
+    ],
+    faq: [
+      {
+        "question": "How is threshold different from grayscale?",
+        "answer": "Grayscale produces many gray shades; threshold produces only black or white RGB values for visible pixels."
+      },
+      {
+        "question": "Does a higher threshold make the picture darker?",
+        "answer": "Yes. A higher cutoff means more pixels fall below it and become black."
+      },
+      {
+        "question": "Will transparent areas stay transparent?",
+        "answer": "The transform keeps source alpha. Export as PNG or WebP to retain transparency; JPEG does not support alpha."
+      }
+    ],
+    relatedIds: [
+      "grayscale-image",
+      "posterize-image",
+      "contrast-image",
+      "invert-image"
+    ],
+  },
+  'adjust-image-opacity': {
+    howToHeading: "How to change an entire image's opacity and preserve transparency.",
+    howToIntro: "Opacity reduces each pixel's existing alpha instead of removing a background or cutting out a subject. This is useful for layered graphic assets.",
+    steps: [
+      {
+        "title": "Add a JPG, PNG or WebP",
+        "text": "Choose the source files and inspect the live image preview."
+      },
+      {
+        "title": "Choose image opacity",
+        "text": "100% preserves the existing visibility, 50% halves the alpha, and 0% makes the image invisible."
+      },
+      {
+        "title": "Check the transparent result",
+        "text": "Review how the image will blend over other graphics and backgrounds."
+      },
+      {
+        "title": "Download PNG copies",
+        "text": "The tool locks PNG output to retain transparency for one image or a batch."
+      }
+    ],
+    useCasesHeading: "Where partial image transparency helps.",
+    useCasesIntro: "Alpha reduction works well when layering graphics, but cannot isolate subjects from their backgrounds.",
+    useCases: [
+      "Prepare faded decorative overlays for slides and websites.",
+      "Make a subtle background illustration for a design.",
+      "Control the visibility of an existing transparent logo or sticker.",
+      "Prepare a batch of partially transparent PNG assets."
+    ],
+    faq: [
+      {
+        "question": "Does this remove the background from a photo?",
+        "answer": "No. It makes the entire picture more transparent, including its background. Background removal requires object segmentation."
+      },
+      {
+        "question": "Why is PNG output mandatory?",
+        "answer": "PNG preserves real alpha transparency. Standard JPEG files do not."
+      },
+      {
+        "question": "What happens when I choose 0%?",
+        "answer": "Every pixel becomes fully transparent in the downloaded PNG, although the output dimensions remain unchanged."
+      }
+    ],
+    relatedIds: [
+      "rounded-corners-image",
+      "add-image-border",
+      "crop-image",
+      "remove-image-metadata"
+    ],
+  },
   'sharpen-image': {
     howToHeading: "How to sharpen an image with adjustable edge strength.",
     howToIntro: "Sharpening increases contrast at existing pixel transitions. Use the preview to avoid turning noise into harsh outlines.",
