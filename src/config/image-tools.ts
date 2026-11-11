@@ -120,6 +120,46 @@ export const INVERT_IMAGE_TOOL = {
   policyNote: 'Inverting pixels changes color values, not the original capture data. The effect is not a replacement for film-negative color correction or restoration. Re-encoding may remove source metadata.',
 } satisfies ImageToolDefinition;
 
+export const BRIGHTNESS_IMAGE_TOOL = {
+  ...liveBase, id: 'brightness-image' as const, slug: 'brightness-image', displayName: 'Adjust Image Brightness', category: 'transform',
+  title: 'Adjust Image Brightness Online — Lighten or Darken Photos | ConvertAnyFile',
+  description: 'Brighten or darken JPG, PNG and WebP images in your browser with a 0–200% brightness slider, local live preview, and batch image download.',
+  h1: 'Adjust image brightness online.', eyebrow: 'Image Tools',
+  intro: 'Make a photo lighter or darker without uploading it. Choose a brightness level from 0% to 200%, inspect the live preview, and export one result or a ZIP of the batch.',
+  downloadSuffix: 'brightness-adjusted',
+  policyNote: 'Brightness is a direct pixel color adjustment. Extreme settings can remove visible detail in shadows or highlights and cannot recover information that was not present in the original image.',
+} satisfies ImageToolDefinition;
+
+export const CONTRAST_IMAGE_TOOL = {
+  ...liveBase, id: 'contrast-image' as const, slug: 'contrast-image', displayName: 'Adjust Image Contrast', category: 'transform',
+  title: 'Adjust Image Contrast Online — Photo Contrast Tool | ConvertAnyFile',
+  description: 'Increase or decrease contrast in JPG, PNG and WebP photos locally. Adjust 0–200% contrast, preview the result, and download images or a batch ZIP.',
+  h1: 'Increase or reduce photo contrast.', eyebrow: 'Image Tools',
+  intro: 'Control how strongly bright and dark regions differ using an adjustable 0–200% contrast slider. See the effect instantly, customize individual images, and export locally.',
+  downloadSuffix: 'contrast-adjusted',
+  policyNote: 'High contrast settings may clip highlights and shadows; low contrast settings can flatten image detail. This is a visual color filter, not a professional raw-photo tone mapping workflow.',
+} satisfies ImageToolDefinition;
+
+export const SATURATION_IMAGE_TOOL = {
+  ...liveBase, id: 'adjust-image-saturation' as const, slug: 'adjust-image-saturation', displayName: 'Adjust Image Saturation', category: 'transform',
+  title: 'Adjust Image Saturation Online — More or Less Color | ConvertAnyFile',
+  description: 'Adjust photo saturation from grayscale to vivid color with a 0–200% slider. Supports JPG, PNG and WebP, live preview and local batch processing.',
+  h1: 'Make your image colors more or less vivid.', eyebrow: 'Image Tools',
+  intro: 'Lower saturation for a muted look or boost it for brighter colors. At 0% the output is grayscale, 100% keeps the original saturation, and values up to 200% increase it.',
+  downloadSuffix: 'saturation-adjusted',
+  policyNote: 'Saturation adjustment changes the vividness of existing colors but cannot accurately reconstruct missing color information. Excessive saturation can exaggerate noise and make colors look unnatural.',
+} satisfies ImageToolDefinition;
+
+export const PIXELATE_IMAGE_TOOL = {
+  ...liveBase, id: 'pixelate-image' as const, slug: 'pixelate-image', displayName: 'Pixelate Image', category: 'transform',
+  title: 'Pixelate Image Online — Create a Pixel Art Effect | ConvertAnyFile',
+  description: 'Create a pixel-art look by pixelating JPG, PNG or WebP images with adjustable block size. Preview in your browser and download single or batch results.',
+  h1: 'Pixelate images with adjustable square blocks.', eyebrow: 'Image Tools',
+  intro: 'Create pixelated portraits, backgrounds or art assets by choosing block sizes between 2 and 64 pixels. The tool reduces detail visually while keeping the exported image dimensions unchanged.',
+  downloadSuffix: 'pixelated',
+  policyNote: 'Pixelation is a creative image effect, not reliable privacy protection. Do not assume pixelation irreversibly hides faces, text, addresses, or other sensitive information.',
+} satisfies ImageToolDefinition;
+
 export const FADE_IMAGE_EDGES_TOOL = {
   ...commonLimits,
   status: 'preview',
@@ -179,6 +219,10 @@ export const IMAGE_TOOL_MANIFEST = [
   { tool: GRAYSCALE_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Black & white · strength', summary: 'Turn images black and white with adjustable grayscale intensity and batch export.' },
   { tool: SEPIA_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Vintage · warm tone', summary: 'Create warm vintage sepia photos with adjustable color strength and live preview.' },
   { tool: INVERT_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Negative · invert colors', summary: 'Reverse image colors for a negative-style look, with a strength slider and batch export.' },
+  { tool: BRIGHTNESS_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Darken · lighten · 0–200%', summary: 'Brighten or darken images with a live preview and consistent batch processing.' },
+  { tool: CONTRAST_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Shadows · highlights · 0–200%', summary: 'Increase or reduce image contrast while preserving original pixel dimensions.' },
+  { tool: SATURATION_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Vivid · muted · grayscale', summary: 'Boost color vividness or desaturate photos locally with a 0–200% slider.' },
+  { tool: PIXELATE_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Mosaic · block size · pixel art', summary: 'Apply an adjustable nearest-neighbor pixel-art effect to one or many images.' },
   { tool: FADE_IMAGE_EDGES_TOOL, runtime: 'edge-fade', directoryGroup: 'preview', navigationHint: 'Subtitle-safe soft fades', summary: 'Fade blur naturally from one edge or all edges to create a subtitle-safe text area.' },
   { tool: BULK_RENAME_IMAGES_TOOL, runtime: 'rename', directoryGroup: 'cleanup', navigationHint: 'Patterns · numbering', summary: 'Rename a batch without changing image bytes or source extensions.' },
   { tool: REMOVE_IMAGE_METADATA_TOOL, runtime: 'metadata', directoryGroup: 'cleanup', navigationHint: 'EXIF · GPS · software', summary: 'Strip EXIF, GPS and software metadata locally.' },
