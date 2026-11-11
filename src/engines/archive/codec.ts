@@ -63,6 +63,12 @@ function permissionMode(value: unknown, fallback: number): number {
 }
 
 
+interface BoundedZipStream {
+  on(event: 'data' | 'error' | 'end', callback: (...args: any[]) => void): BoundedZipStream;
+  pause(): void;
+  resume(): void;
+}
+
 const CRC32_TABLE = Uint32Array.from({ length: 256 }, (_, index) => {
   let value = index;
   for (let bit = 0; bit < 8; bit += 1) {
@@ -82,7 +88,7 @@ function extractZipEntryBounded(file: JSZip.JSZipObject, remainingBytes: number)
     let total = 0;
     let crc = 0xffffffff;
     let settled = false;
-    const stream = file.internalStream('uint8array');
+    const stream = (file as JSZip.JSZipObject & { internalStream(type: string): BoundedZipStream }).internalStream('uint8array');
     const fail = (error: Error) => {
       if (settled) return;
       settled = true;
@@ -179,7 +185,7 @@ function readTarString(bytes: Uint8Array): string {
 
 function tarChecksum(header: Uint8Array): number {
   let sum = 0;
-  for (let index = 0; index < TAR_BLOCK; index += 1) sum += index >= 148 && index < 156 ? 32 : header[index];
+  for (let index = 0; index < TAR_BLOCK; index += 1) sum += index >= 148 && index < 156 ? 32 : header[index]!;
   return sum;
 }
 
@@ -372,7 +378,7 @@ function buildTar(entries: readonly ArchiveEntry[]): Uint8Array {
 
 async function gzip(bytes: Uint8Array): Promise<ArrayBuffer> {
   if (typeof CompressionStream === 'undefined') throw archiveError('Gzip output is not supported by this browser');
-  return new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+  return new Response(new Blob([Uint8Array.from(bytes)]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
 }
 
 async function readEntries(input: ArrayBuffer, format: ArchiveInputFormat, sourceName?: string): Promise<ArchiveEntry[]> {
