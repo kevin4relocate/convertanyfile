@@ -3,6 +3,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'https://convertanyfile.net';
 const PROD_ORIGIN = 'https://convertanyfile.net';
+const IS_PRODUCTION_HOST = new URL(BASE_URL).hostname === 'convertanyfile.net';
 
 const PNG_2X2 = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP4z8DA8J+BkYHh////DAAe9gT9Ce00PgAAAABJRU5ErkJggg==',
@@ -21,7 +22,7 @@ test.beforeEach(async ({ context }) => {
   await context.route(/https:\/\/(?:[^/]+\.)?google-analytics\.com\/.*/, (route) => route.abort());
 });
 
-test('production shell, analytics, robots, sitemap and 404 are healthy', async ({ page, request }) => {
+test('deployed shell, host-aware analytics, robots, sitemap and 404 are healthy', async ({ page, request }) => {
   const response = await page.goto('/', { waitUntil: 'domcontentloaded' });
   expect(response?.status()).toBe(200);
   expect(response?.headers()['strict-transport-security']).toContain('max-age=31536000');
@@ -34,11 +35,19 @@ test('production shell, analytics, robots, sitemap and 404 are healthy', async (
   await expect(page).toHaveTitle(/ConvertAnyFile/i);
   await expect(page.locator('#home-converter-subtitle-tab')).toHaveText('Subtitles');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${PROD_ORIGIN}/`);
-  await expect(page.locator('script[src*="googletagmanager.com/gtag/js?id=G-LX78XZ9FH2"]')).toHaveCount(1);
-  await expect.poll(() => page.evaluate(() => Array.isArray((window as Window & { dataLayer?: unknown[] }).dataLayer))).toBe(true);
+  const analyticsScript = page.locator('script[src*="googletagmanager.com/gtag/js?id=G-LX78XZ9FH2"]');
+  if (IS_PRODUCTION_HOST) {
+    await expect(analyticsScript).toHaveCount(1);
+    await expect.poll(() => page.evaluate(() => Array.isArray((window as Window & { dataLayer?: unknown[] }).dataLayer))).toBe(true);
+  } else {
+    // Cloudflare branch previews must not send GA events or create synthetic
+    // sessions. The same release tests can run against previews via base_url.
+    await expect(analyticsScript).toHaveCount(0);
+    expect(await page.evaluate(() => Boolean((window as Window & { gtag?: unknown }).gtag))).toBe(false);
+  }
   const runtimeScript = await page.locator('script[src^="/_astro/"]').first().getAttribute('src');
   expect(runtimeScript).toBeTruthy();
-  const runtimeResponse = await request.get(`${BASE_URL}${runtimeScript}`);
+  const runtimeResponse = await request.get(new URL(runtimeScript!, BASE_URL).toString());
   expect(runtimeResponse.status()).toBe(200);
   expect(runtimeResponse.headers()['content-security-policy']).toBeUndefined();
 
@@ -86,7 +95,7 @@ test('public Image Tools routes are healthy and retired experimental routes stay
 });
 
 test('www permanently redirects to the canonical hostname and preserves path/query', async ({ request }) => {
-  test.skip(BASE_URL !== PROD_ORIGIN, 'Canonical-host redirect only applies to production');
+  test.skip(!IS_PRODUCTION_HOST, 'Canonical-host redirect only applies to production');
   const response = await request.get('https://www.convertanyfile.net/csv-to-json/?smoke=1', { maxRedirects: 0 });
   expect(response.status()).toBe(301);
   expect(response.headers()['location']).toBe('https://convertanyfile.net/csv-to-json/?smoke=1');
