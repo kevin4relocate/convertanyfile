@@ -193,6 +193,46 @@ export const ROUNDED_CORNERS_IMAGE_TOOL = {
   policyNote: 'All outputs are PNG to preserve transparent corners, even when you upload JPEG or WebP. Choose another format only after flattening transparency over a deliberate background in a separate editor.',
 } satisfies ImageToolDefinition;
 
+export const HUE_ROTATE_IMAGE_TOOL = {
+  ...liveBase, id: 'hue-rotate-image' as const, slug: 'hue-rotate-image', displayName: 'Hue Rotate Image', category: 'transform',
+  title: 'Hue Rotate Image Online — Change Photo Colors | ConvertAnyFile',
+  description: 'Rotate photo colors through the hue wheel from 0 to 360 degrees. Recolor JPG, PNG or WebP images in your browser with live preview and batch downloads.',
+  h1: 'Rotate image colors with a hue slider.', eyebrow: 'Image Tools',
+  intro: 'Explore new color palettes by rotating all visible hues around the color wheel. Move between 0° and 360° while watching a local preview, apply one setting or per-image adjustments, then download an image or ZIP.',
+  downloadSuffix: 'hue-rotated',
+  policyNote: 'Hue rotation changes RGB color relationships with a browser canvas filter; it is not selective recoloring or color grading. The source file stays unchanged, while the saved copy may have different metadata and file size.',
+} satisfies ImageToolDefinition;
+
+export const POSTERIZE_IMAGE_TOOL = {
+  ...liveBase, maxPixels: 8000000, id: 'posterize-image' as const, slug: 'posterize-image', displayName: 'Posterize Image', category: 'transform',
+  title: 'Posterize Image Online — Reduce Color Levels | ConvertAnyFile',
+  description: 'Posterize JPG, PNG and WebP images by reducing each RGB channel to 2–16 color levels. Preview locally and process one photo or a batch without upload.',
+  h1: 'Posterize photos into bold blocks of color.', eyebrow: 'Image Tools',
+  intro: 'Reduce smooth RGB color gradations into a smaller number of discrete levels. Choose 2–16 shades per color channel, preview the effect on images and graphics, and export one or several files locally.',
+  downloadSuffix: 'posterized',
+  policyNote: 'Posterization reduces the number of possible channel values; it does not automatically create a fixed artist-selected color palette. Strong reductions can remove texture and band gradients. Keep the source for further editing.',
+} satisfies ImageToolDefinition;
+
+export const THRESHOLD_IMAGE_TOOL = {
+  ...liveBase, maxPixels: 8000000, id: 'threshold-image' as const, slug: 'threshold-image', displayName: 'Black & White Threshold', category: 'transform',
+  title: 'Black and White Threshold Image Tool — Pure B&W | ConvertAnyFile',
+  description: 'Convert photos to pure black and white using an adjustable 0–255 brightness threshold. Process JPG, PNG or WebP files locally with batch downloads.',
+  h1: 'Turn a photo into pure black and white.', eyebrow: 'Image Tools',
+  intro: 'Make stark two-tone images using a luminance cutoff. Pixels darker than the chosen threshold become black, and brighter pixels become white. This is different from grayscale because intermediate gray tones are removed.',
+  downloadSuffix: 'threshold',
+  policyNote: 'A threshold image uses black and white color values rather than grayscale shades. Edge detail and subtle tones may be lost permanently in the exported copy; alpha is preserved when the chosen output format supports it.',
+} satisfies ImageToolDefinition;
+
+export const IMAGE_OPACITY_TOOL = {
+  ...liveBase, id: 'adjust-image-opacity' as const, slug: 'adjust-image-opacity', displayName: 'Adjust Image Opacity', category: 'transform',
+  title: 'Adjust Image Opacity Online — Transparent PNG | ConvertAnyFile',
+  description: 'Make JPG, PNG or WebP images more transparent with an opacity slider from 0–100%. Preview and download PNG files with real alpha transparency, locally.',
+  h1: 'Make images transparent with an opacity slider.', eyebrow: 'Image Tools',
+  intro: 'Reduce the visibility of a whole image without deleting its pixels. Choose opacity between 0% completely transparent and 100% unchanged, then download a PNG that keeps the alpha channel intact.',
+  downloadSuffix: 'opacity-adjusted',
+  policyNote: 'Opacity changes transparency for the entire image; it does not remove a background or select individual objects. PNG export is required to preserve alpha, and very low opacity can make image details difficult to see.',
+} satisfies ImageToolDefinition;
+
 export const FADE_IMAGE_EDGES_TOOL = {
   ...commonLimits,
   status: 'preview',
@@ -259,6 +299,10 @@ export const IMAGE_TOOL_MANIFEST = [
   { tool: SHARPEN_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Edge clarity · strength', summary: 'Enhance photo edges with adjustable strength and local batch processing.' },
   { tool: ADD_IMAGE_BORDER_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Color · outer width', summary: 'Frame photos with a customizable solid-color outer border.' },
   { tool: ROUNDED_CORNERS_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Radius · transparent PNG', summary: 'Create rounded-corner images while keeping transparent PNG corners.' },
+  { tool: HUE_ROTATE_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Color wheel · 0–360°', summary: 'Shift image hues around the color wheel for quick alternative color palettes.' },
+  { tool: POSTERIZE_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: '2–16 levels · color bands', summary: 'Create graphic poster effects by reducing RGB channel colors to distinct levels.' },
+  { tool: THRESHOLD_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Pure two-tone · cutoff', summary: 'Turn photos into stark black-and-white images with a luminance cutoff slider.' },
+  { tool: IMAGE_OPACITY_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Transparency · 0–100%', summary: 'Adjust the alpha transparency of an entire image and save a real PNG.' },
   { tool: FADE_IMAGE_EDGES_TOOL, runtime: 'edge-fade', directoryGroup: 'preview', navigationHint: 'Subtitle-safe soft fades', summary: 'Fade blur naturally from one edge or all edges to create a subtitle-safe text area.' },
   { tool: BULK_RENAME_IMAGES_TOOL, runtime: 'rename', directoryGroup: 'cleanup', navigationHint: 'Patterns · numbering', summary: 'Rename a batch without changing image bytes or source extensions.' },
   { tool: REMOVE_IMAGE_METADATA_TOOL, runtime: 'metadata', directoryGroup: 'cleanup', navigationHint: 'EXIF · GPS · software', summary: 'Strip EXIF, GPS and software metadata locally.' },
