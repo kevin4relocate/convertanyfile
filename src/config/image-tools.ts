@@ -165,11 +165,11 @@ export const IMAGE_TOOL_ROADMAP = IMAGE_TOOL_MANIFEST.map((entry) => ({
 }));
 
 export const IMAGE_TOOL_DIRECTORY_SECTIONS = [
-  { id: 'everyday', kicker: 'Resize, compress and compose', heading: 'Everyday image edits with one familiar batch workflow.', description: 'Use these tools to change dimensions, encoding, orientation, framing or blur. Start with a shared setup, then customize individual images.', white: false },
-  { id: 'preview', kicker: 'Preview lab', heading: 'Try new image workflows before they move to Live.', description: 'Experimental image tools remain available for hands-on testing without being promoted into the main navigation.', white: true },
-  { id: 'cleanup', kicker: 'File cleanup and organization', heading: 'Clean metadata or rename files without another upload step.', description: 'Remove image metadata by re-encoding locally, or rename source files without modifying the image bytes.', white: false },
-  { id: 'watermarks', kicker: 'Watermarking and visible-pixel repair', heading: 'Add a watermark or repair a small visible mark.', description: 'Use a draggable text or logo watermark for branding, or choose a manual mask workflow for visible-pixel reconstruction.', white: true },
-] as const satisfies readonly { id: ImageToolDirectoryGroup; kicker: string; heading: string; description: string; white: boolean }[];
+  { id: 'everyday', filterLabel: 'Everyday', kicker: 'Resize, compress and compose', heading: 'Everyday image edits with one familiar batch workflow.', description: 'Use these tools to change dimensions, encoding, orientation, framing or blur. Start with a shared setup, then customize individual images.', white: false },
+  { id: 'preview', filterLabel: 'Preview', kicker: 'Preview lab', heading: 'Try new image workflows before they move to Live.', description: 'Experimental image tools remain available for hands-on testing without being promoted into the main navigation.', white: true },
+  { id: 'cleanup', filterLabel: 'Cleanup', kicker: 'File cleanup and organization', heading: 'Clean metadata or rename files without another upload step.', description: 'Remove image metadata by re-encoding locally, or rename source files without modifying the image bytes.', white: false },
+  { id: 'watermarks', filterLabel: 'Watermarks', kicker: 'Watermarking and visible-pixel repair', heading: 'Add a watermark or repair a small visible mark.', description: 'Use a draggable text or logo watermark for branding, or choose a manual mask workflow for visible-pixel reconstruction.', white: true },
+] as const satisfies readonly { id: ImageToolDirectoryGroup; filterLabel: string; kicker: string; heading: string; description: string; white: boolean }[];
 
 export function imageToolIdsForGroup(group: ImageToolDirectoryGroup): RegisteredImageToolId[] {
   return IMAGE_TOOL_MANIFEST.filter((entry) => entry.directoryGroup === group).map((entry) => entry.tool.id);
