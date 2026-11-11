@@ -1,4 +1,6 @@
 import { downloadResultBatch } from '../core/download';
+import { createImageFileAdmission, imageDimensionsWithinLimits } from '../core/file-admission';
+import { runSequentialBatch } from '../core/batch-execution';
 import { defaultQualityForImageOutput } from '../core/output-quality';
 import { encodeCanvas, extensionForOutput, type ImageOutputFormat } from '../core/output-encoder';
 import { renderToolCanvas, resizeDimensions, sourceExtension, sourceMime } from './operations';
@@ -155,13 +157,25 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
   function updateActions():void {const done=state.items.filter(item=>item.status==='done'&&item.result).length;const downloadCount=done||state.items.length;readyCount.textContent=`${state.items.length} image${state.items.length===1?'':'s'} ready`;downloadButton.textContent=downloadCount>1?'Download ZIP':'Download image';processButton.disabled=state.processing||!state.items.length;downloadButton.disabled=state.processing||!done;add.disabled=state.processing;clear.disabled=state.processing;scopeButtons.forEach(button=>{button.disabled=state.processing;});}
 
   async function addFiles(files:readonly File[]):Promise<void> {
-    if(!files.length||state.processing)return;hideNotice();let totalBytes=state.items.reduce((sum,item)=>sum+item.file.size,0),rejected=0,limited=0;
+    if(!files.length||state.processing)return;
+    hideNotice();
+    const admission=createImageFileAdmission(state.items,{maxFiles,maxFileBytes,maxTotalBytes,acceptedExtensions:['jpg','jpeg','png','webp']});
+    let rejected=0,limited=0;
     for(const file of files){
-      if(state.items.length>=maxFiles||totalBytes+file.size>maxTotalBytes){limited++;continue;}
-      if(!['jpg','jpeg','png','webp'].includes(ext(file.name))||file.size>maxFileBytes){rejected++;continue;}
-      try{const bitmap=await createImageBitmap(file),width=bitmap.width,height=bitmap.height;bitmap.close();if(width>maxDimension||height>maxDimension||width*height>maxPixels){rejected++;continue;}state.items.push({id:crypto.randomUUID(),file,width,height,url:URL.createObjectURL(file),settingsOrigin:'shared',status:'ready'});totalBytes+=file.size;}catch{rejected++;}
+      const reason=admission.check(file);
+      if(reason){if(reason==='file-count'||reason==='total-size')limited++;else rejected++;continue;}
+      try {
+        const bitmap=await createImageBitmap(file);
+        const width=bitmap.width,height=bitmap.height;
+        bitmap.close();
+        if(!imageDimensionsWithinLimits(width,height,{maxDimension,maxPixels})){rejected++;continue;}
+        admission.accept(file);
+        state.items.push({id:crypto.randomUUID(),file,width,height,url:URL.createObjectURL(file),settingsOrigin:'shared',status:'ready'});
+      } catch {rejected++;}
     }
-    input.value='';if(!state.activeId&&state.items[0])state.activeId=state.items[0].id;renderSettings();renderQueue();schedulePreview();
+    input.value='';
+    if(!state.activeId&&state.items[0])state.activeId=state.items[0].id;
+    renderSettings();renderQueue();schedulePreview();
     if(rejected||limited)showNotice(`${rejected?`${rejected} skipped by format or size limits`:''}${rejected&&limited?' · ':''}${limited?`${limited} skipped by batch limits`:''}`);
   }
   function removeItem(id:string):void {if(state.processing)return;const index=state.items.findIndex(item=>item.id===id);if(index<0)return;const [removed]=state.items.splice(index,1);if(removed)URL.revokeObjectURL(removed.url);if(state.activeId===id)state.activeId=state.items[Math.min(index,state.items.length-1)]?.id;renderSettings();renderQueue();schedulePreview();}
@@ -172,17 +186,40 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
     return{format:outputFormat.value as OutputChoice,quality:clamp(Number(outputQuality.value),1,100)};
   }
   async function processBatch():Promise<void> {
-    if(state.processing||!state.items.length)return;state.processing=true;state.cancel=false;hideNotice();progress.hidden=false;progressLabel.textContent='Processing images…';progressBar.max=100;progressBar.value=0;cancel.disabled=false;updateActions();let completed=0,failed=0;
-    for(const item of state.items){
-      if(state.cancel)break;item.status='processing';item.error=undefined;renderQueue();
-      try{
+    if(state.processing||!state.items.length)return;
+    state.processing=true;state.cancel=false;hideNotice();
+    progress.hidden=false;progressLabel.textContent='Processing images…';
+    progressBar.max=100;progressBar.value=0;cancel.disabled=false;updateActions();
+
+    const {completed,failed}=await runSequentialBatch(state.items,{
+      cancelled:()=>state.cancel,
+      process:async(item)=>{
+        item.status='processing';item.error=undefined;renderQueue();
         const settings=effective(item);validateSettingsForItem(item,settings);
         const bitmap=await createImageBitmap(item.file);
-        try{const canvas=renderToolCanvas(bitmap,toolId,settings),output=outputFor(item),mime=mimeFor(item.file,output.format);item.result=await encodeCanvas(canvas,{type:mime,quality:mime==='image/png'?undefined:output.quality/100});const extension=output.format==='source'?sourceExtension(item.file):extensionForOutput(mime);item.outputName=`${base(item.file.name)}-${suffix}.${extension}`;item.status='done';completed++;}finally{bitmap.close();}
-      }catch(error){item.status='error';item.error=error instanceof Error?error.message:'Unable to process image.';failed++;}
-      const finished=completed+failed;progressCount.textContent=`${finished} / ${state.items.length}`;progressBar.value=Math.round(finished/state.items.length*100);renderQueue();
-    }
-    state.processing=false;cancel.disabled=true;progressLabel.textContent=state.cancel?`Stopped · ${completed} completed`:failed?`${completed} completed · ${failed} failed`:`${completed} completed`;updateActions();if(failed)showNotice(`${failed} image${failed===1?'':'s'} failed. Successful results remain available.`);
+        try {
+          const canvas=renderToolCanvas(bitmap,toolId,settings);
+          const output=outputFor(item),mime=mimeFor(item.file,output.format);
+          item.result=await encodeCanvas(canvas,{type:mime,quality:mime==='image/png'?undefined:output.quality/100});
+          const extension=output.format==='source'?sourceExtension(item.file):extensionForOutput(mime);
+          item.outputName=`${base(item.file.name)}-${suffix}.${extension}`;
+          item.status='done';
+        } finally {bitmap.close();}
+      },
+      failed:(item,error)=>{
+        item.status='error';
+        item.error=error instanceof Error?error.message:'Unable to process image.';
+      },
+      progress:({finished,total})=>{
+        progressCount.textContent=`${finished} / ${total}`;
+        progressBar.value=Math.round(finished/total*100);
+        renderQueue();
+      },
+    });
+    state.processing=false;cancel.disabled=true;
+    progressLabel.textContent=state.cancel?`Stopped · ${completed} completed`:failed?`${completed} completed · ${failed} failed`:`${completed} completed`;
+    updateActions();
+    if(failed)showNotice(`${failed} image${failed===1?'':'s'} failed. Successful results remain available.`);
   }
   async function downloadResults():Promise<void> {
     const files=state.items.filter((item):item is Item&{result:Blob;outputName:string}=>Boolean(item.result&&item.outputName&&item.status==='done')).map(item=>({filename:item.outputName,blob:item.result}));
