@@ -86,3 +86,18 @@ Any proposed new format must be verified in the deployed runtime; choosing an ex
 ## CI and release policy
 
 No automatic merge. Every batch should pass `npm run build` and existing browser tests before merge. Monitor Cloudflare Pages output size and asset counts. Production smoke tests should be run against the updated deployment. Avoid mass-generating low-value, near-duplicate landing pages for search engines.
+
+## Refactor progress — 2026-11-11
+
+- **Phase 1:** ZIP extraction budget enforcement, CRC regression tests, strict Astro type diagnostics and reliable navigation. The prior commit passed CI across Chromium, Firefox and WebKit.
+- **Phase 2:** The `IMAGE_TOOL_MANIFEST` in `src/config/image-tools.ts` is now the central source for released tool definitions and discovery/runtime metadata. IDs, slugs, statuses, SEO text and admission budgets come from the tool definitions. The roadmap, desktop/mobile navigation, directory groups and editor runtime selection are derived from it. `tests/image-tool-manifest.spec.ts` covers routes, metadata and mountability.
+- **Phase 3 started:** `downloadResultBatch` in `src/image-tools/core/download.ts` eliminates repeated single-file/ZIP branching in four image editor families. Mask-editor ZIP progress and error UX remain specialized.
+- **Release gate:** These follow-up changes must pass the full CI suite before merging. A green build alone is not sufficient.
+
+### Adding a tool using the existing editor
+
+1. Implement a real operation in the appropriate runtime and expose its settings in its dedicated editor shell.
+2. Add the typed public `ImageToolDefinition` with limits and unique SEO content in `src/config/image-tools.ts`.
+3. Add an `IMAGE_TOOL_MANIFEST` entry with runtime family, directory group and short navigation/summary copy. Do not add separate manual entries to the menu or roadmap.
+4. Add the actual Astro tool route (or use an appropriate future route factory), validation tests and output-fidelity coverage.
+5. Keep the tool in Preview and out of the live navigation until quality, cancellation, memory budgets and downloads pass.
