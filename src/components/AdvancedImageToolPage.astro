@@ -1,0 +1,30 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ImageToolPageFrame from './ImageToolPageFrame.astro';
+import ImageToolGrid from './ImageToolGrid.astro';
+import { imageToolSchemas } from '../seo/image-tool-schema';
+import type { AdvancedImageTool } from '../config/image-advanced-tools';
+import { ADVANCED_IMAGE_TOOLS } from '../config/image-advanced-tools';
+
+interface Props {tool:AdvancedImageTool}
+const {tool}=Astro.props;
+const schema=imageToolSchemas(tool,[...tool.hints,'Private browser-only image processing'],'MultimediaApplication');
+const related=ADVANCED_IMAGE_TOOLS.filter(t=>t.id!==tool.id).slice(0,6).map(t=>t.id);
+---
+<SiteLayout title={tool.title} description={tool.description} schema={schema}>
+  <ImageToolPageFrame tool={tool}/>
+  <section class="content-wide-section white"><div class="site-container">
+    <div class="content-intro-grid">
+      <div><span class="section-kicker">How to use {tool.displayName}</span><h2>Creative editing, with files kept on your device.</h2>
+      <p>{tool.policyNote}</p></div>
+      <div class="content-summary-card"><strong>Download real output files</strong>
+      <p>Upload supported images, adjust the tool settings, generate a preview and download a PNG or ZIP. Your original file is never modified or uploaded to a conversion server.</p></div>
+    </div>
+    <ol class="content-checklist">{tool.hints.map(step=><li>{step}</li>)}</ol>
+  </div></section>
+  <section class="content-wide-section"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">Other advanced tools</span><h2>Try another browser-based image edit.</h2>
+      <p>Explore creative overlays, color effects, splitting and composing tools without signing in.</p></div>
+    <ImageToolGrid compact ids={related} excludeId={tool.id}/>
+  </div></section>
+</SiteLayout>

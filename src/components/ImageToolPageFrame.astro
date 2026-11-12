@@ -9,6 +9,8 @@ import FadeImageEdgesV2Shell from './FadeImageEdgesV2Shell.astro';
 import MetadataCleanupShell from './MetadataCleanupShell.astro';
 import AddWatermarkShell from './AddWatermarkShell.astro';
 import ImageUtilityWorkbench from './ImageUtilityWorkbench.astro';
+import type { AdvancedImageTool } from '../config/image-advanced-tools';
+import AdvancedImageToolWorkbench from './AdvancedImageToolWorkbench.astro';
 interface Props { tool: ImageToolDefinition; }
 const { tool } = Astro.props;
 const entry = getImageToolManifest(tool.id);
@@ -19,6 +21,7 @@ const usesMetadataCleanup = entry.runtime === 'metadata';
 const usesEdgeFadeV2 = entry.runtime === 'edge-fade';
 const usesWatermarkEditor = entry.runtime === 'watermark';
 const usesUtility = entry.runtime === 'utility';
+const usesAdvanced = entry.runtime === 'advanced';
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -40,4 +43,4 @@ const includeBreadcrumbSchema = tool.id !== 'gemini-ai-logo-remover';
     <p>{tool.intro}</p>
   </div>
 </section>
-<section class="image-tool-page-tool"><div class="site-container">{maskTool ? <BatchMaskEditorShell tool={maskTool} /> : usesRenameEditor ? <BulkRenameImageShell tool={tool} /> : usesMetadataCleanup ? <MetadataCleanupShell tool={tool} /> : usesEdgeFadeV2 ? <FadeImageEdgesV2Shell tool={tool} /> : usesWatermarkEditor ? <AddWatermarkShell tool={tool} /> : usesUtility ? <ImageUtilityWorkbench tool={tool} /> : <DeterministicImageToolShell tool={tool} />}</div></section>
+<section class="image-tool-page-tool"><div class="site-container">{maskTool ? <BatchMaskEditorShell tool={maskTool} /> : usesRenameEditor ? <BulkRenameImageShell tool={tool} /> : usesMetadataCleanup ? <MetadataCleanupShell tool={tool} /> : usesEdgeFadeV2 ? <FadeImageEdgesV2Shell tool={tool} /> : usesWatermarkEditor ? <AddWatermarkShell tool={tool} /> : usesUtility ? <ImageUtilityWorkbench tool={tool} /> : usesAdvanced ? <AdvancedImageToolWorkbench tool={tool as AdvancedImageTool} /> : <DeterministicImageToolShell tool={tool} />}</div></section>

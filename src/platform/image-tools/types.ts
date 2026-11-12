@@ -6,8 +6,8 @@ export type ImageToolCategory = 'transform' | 'encode' | 'geometry' | 'mask' | '
  * accepted file formats and safety limits come from its implementation definition.
  * Only the runtime family, discoverability and short navigation copy live here.
  */
-export type ImageToolRuntimeFamily = 'deterministic' | 'edge-fade' | 'mask' | 'metadata' | 'rename' | 'watermark' | 'utility';
-export type ImageToolDirectoryGroup = 'everyday' | 'preview' | 'cleanup' | 'watermarks' | 'utilities';
+export type ImageToolRuntimeFamily = 'deterministic' | 'edge-fade' | 'mask' | 'metadata' | 'rename' | 'watermark' | 'utility' | 'advanced';
+export type ImageToolDirectoryGroup = 'everyday' | 'preview' | 'cleanup' | 'watermarks' | 'utilities' | 'advanced';
 
 export interface ImageToolManifestEntry<T extends ImageToolDefinition = ImageToolDefinition> {
   tool: T;

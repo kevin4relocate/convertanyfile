@@ -31,6 +31,20 @@ ConvertAnyFile.net is a browser-first file conversion and image-tools platform b
 
 All converter categories reuse the generic queue, progress, cancel, retry, per-file download, ZIP packaging, SEO shell and responsive page frame. Category behavior stays behind `EngineAdapter` implementations.
 
+
+## Advanced Image Tools (Batch D)
+
+Thirteen browser-based image editing workflows registered in the shared image-tools manifest, with an independent runtime under `src/image-tools/advanced/`, are available at dedicated SEO routes:
+
+- Image Collage Maker; Split Image into Grid; Image Strip Slicer
+- Add Text to Image; Speech Bubble Maker
+- Duotone Image Effect; Vignette Image Effect; Temperature & Tint Adjuster; Gamma Correction; Auto Image Levels; RGB Channel Mixer
+- Straighten Image; Solid Background Remover
+
+Every operation draws or manipulates actual decoded pixels and exports PNG. Multiple tiles/strips are delivered as ZIP using the existing download engine. Sources are local JPG, PNG or WebP files, with extension and signature checking plus per-tool size and dimension guards. Grid splitting is limited to 64 pieces; strip slicing to 20; collage to 12 inputs. No new npm dependencies or audio/video processing.
+
+The solid-color remover uses a corner-selected connected-region flood fill, not automatic AI subject segmentation. Auto Levels performs independent channel stretches; text layers are flattened rather than editable. Exporting loses source EXIF metadata. Existing image conversion tools continue to use their current engines.
+
 ## Data Processing Tools (Batch C)
 
 Fifteen focused browser-only utilities are available under `/data-tools/` and `/data/<tool-name>/`.

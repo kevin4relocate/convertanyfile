@@ -1,0 +1,106 @@
+---
+import type { AdvancedImageTool } from '../config/image-advanced-tools';
+import ImageBatchDropzone from '../image-tools/components/ImageBatchDropzone.astro';
+
+interface Props {tool:AdvancedImageTool}
+const {tool}=Astro.props;
+const maxFiles=tool.maxFiles??1;
+const maxTotalMb=maxFiles===1?10:60;
+---
+<div class="image-editor-card advanced-workbench" data-image-tool-app data-tool-id={tool.id}
+     data-max-files={maxFiles} data-max-file-bytes={tool.maxFileBytes}
+     data-max-dimension={tool.maxDimension} data-max-pixels={tool.maxPixels} data-has-items="false">
+  <div class="image-editor-topbar">
+    <div><span>Advanced image editor</span><strong>{tool.displayName}</strong></div>
+    <div class="image-editor-local-state"><span aria-hidden="true"></span>Browser-only</div>
+  </div>
+  <div class="advanced-content">
+    <div class="advanced-notice" data-role="notice" role="alert" aria-live="polite" hidden></div>
+    <ImageBatchDropzone variant="standard" accept=".jpg,.jpeg,.png,.webp"
+      maxFiles={maxFiles} maxFileMb={10} maxTotalMb={maxTotalMb} />
+    <section class="advanced-queue" data-advanced-queue hidden>
+      <div class="advanced-queue-header"><strong>Selected images</strong><button type="button" data-advanced-clear>Clear all</button></div>
+      <div class="advanced-file-list" data-advanced-files></div>
+    </section>
+    <div class="advanced-layout">
+      <section class="advanced-controls">
+        <h2>Settings</h2>
+        <p>{tool.intro}</p>
+        <div class="advanced-fields">
+        {tool.controls.map(control=><label>
+          <span>{control.label}</span>
+          {control.type==='select'?
+            <select data-advanced-param={control.key}>
+              {control.options?.map(item=><option value={item.value} selected={item.value===control.initial}>{item.label}</option>)}
+            </select>:
+            <input type={control.type} data-advanced-param={control.key}
+              value={control.initial} min={control.min} max={control.max} step={control.step}
+              maxlength={control.type==='text'?300:undefined}
+              autocomplete="off" spellcheck="false" />}
+        </label>)}
+        </div>
+        <div class="advanced-buttons">
+          <button type="button" data-advanced-process class="advanced-run" disabled>Generate preview</button>
+          <button type="button" data-advanced-download disabled>Download PNG</button>
+        </div>
+        <p class="advanced-status" data-advanced-status role="status" aria-live="polite">Choose an image to start.</p>
+      </section>
+      <section class="advanced-images">
+        <div class="advanced-image-pane">
+          <div class="advanced-image-head"><h2>Original</h2><small data-advanced-input-size>No image selected</small></div>
+          <div class="advanced-checker"><span data-advanced-empty>Image appears here after selection.</span><img data-advanced-original alt="Original uploaded image" hidden /></div>
+        </div>
+        <div class="advanced-image-pane">
+          <div class="advanced-image-head"><h2>Processed preview</h2><small data-advanced-output-size>Not generated</small></div>
+          <div class="advanced-checker"><span data-advanced-preview-empty>Generate a preview after adjusting settings.</span><img data-advanced-preview alt="Processed image preview" hidden /></div>
+        </div>
+      </section>
+    </div>
+    <div class="advanced-results" data-advanced-results hidden>
+      <strong data-advanced-results-count></strong>
+      <span data-advanced-output-list></span>
+    </div>
+    <p class="advanced-note">{tool.policyNote}</p>
+  </div>
+</div>
+<script src="../client/image-tool-app.ts"></script>
+<style is:global>
+ .advanced-workbench{padding:0}
+ .advanced-content{display:grid;gap:13px;padding:16px}
+ .advanced-notice{background:#401e26;border:1px solid #a65160;color:#ffe1e5;font-size:12px;line-height:1.5;padding:11px 13px;border-radius:10px}
+ .advanced-notice[hidden],.advanced-queue[hidden],.advanced-results[hidden]{display:none!important}
+ .advanced-queue{display:grid;gap:10px;padding:12px 14px;background:#101722;border:1px solid #344156;border-radius:11px}
+ .advanced-queue-header{display:flex;justify-content:space-between;align-items:center;gap:14px}
+ .advanced-queue-header strong{font-size:13px}
+ .advanced-queue button{padding:7px 11px;background:#28344a;color:#eef1fa;border:1px solid #44516a;border-radius:8px;cursor:pointer;font-size:12px}
+ .advanced-file-list{display:flex;gap:8px;flex-wrap:wrap}
+ .advanced-file{display:flex;align-items:center;gap:8px;border:1px solid #3f4960;padding:6px 8px;border-radius:9px;background:#1a2332;max-width:100%;min-width:0}
+ .advanced-file span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+ .advanced-layout{display:grid;grid-template-columns:minmax(240px,340px) minmax(0,1fr);gap:14px;align-items:stretch}
+ .advanced-controls,.advanced-images{padding:16px;background:#101722;border:1px solid #344053;border-radius:12px;min-width:0}
+ .advanced-controls h2,.advanced-image-head h2{font-size:14px;line-height:1.4;margin:0 0 8px}
+ .advanced-controls>p:first-of-type{font-size:12px;color:#b1bfd0;line-height:1.6;margin:0 0 14px}
+ .advanced-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .advanced-fields label{display:grid;gap:7px;min-width:0;align-content:start}
+ .advanced-fields label span{font-size:11px;color:#c5cfe0}
+ .advanced-fields input,.advanced-fields select{box-sizing:border-box;min-width:0;width:100%;min-height:39px;border:1px solid #40506a;background:#0b1320;color:#f1f4fa;padding:8px 10px;border-radius:8px;font:12px system-ui,sans-serif}
+ .advanced-fields input[type=color]{padding:4px;cursor:pointer}
+ .advanced-buttons{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+ .advanced-buttons button{flex:1 1 130px;padding:11px 14px;border:1px solid #495574;border-radius:9px;background:#27344a;color:#f6f7fb;font-weight:750;cursor:pointer;font-size:12px}
+ .advanced-buttons .advanced-run{background:#6559e9;border-color:#6559e9}
+ .advanced-buttons button:disabled,.advanced-queue button:disabled{opacity:.43;cursor:not-allowed}
+ .advanced-status{font-size:11px;color:#afbbcc;margin:12px 0 0;line-height:1.5;overflow-wrap:anywhere}
+ .advanced-images{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .advanced-image-pane{display:grid;grid-template-rows:auto 1fr;min-width:0}
+ .advanced-image-head{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;margin-bottom:8px}
+ .advanced-image-head h2{margin:0}.advanced-image-head small{font-size:10px;color:#a7b3c5;text-align:right}
+ .advanced-checker{display:grid;place-items:center;min-height:220px;padding:8px;overflow:hidden;border:1px solid #313d51;border-radius:9px;background-color:#d8dde6;background-image:linear-gradient(45deg,#eef0f5 25%,transparent 25%),linear-gradient(-45deg,#eef0f5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#eef0f5 75%),linear-gradient(-45deg,transparent 75%,#eef0f5 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
+ .advanced-checker span{background:#202c3b;color:#e0e5ef;padding:10px 12px;text-align:center;font-size:11px;max-width:90%;border-radius:8px;line-height:1.5}
+ .advanced-checker img{max-width:100%;max-height:350px;height:auto;width:auto;object-fit:contain}
+ .advanced-checker img[hidden],.advanced-checker span[hidden]{display:none!important}
+ .advanced-results{display:grid;gap:6px;padding:12px 14px;background:#101722;border:1px solid #35415b;border-radius:10px;font-size:12px;color:#c3cddd}
+ .advanced-results strong{color:#f3f4fb}.advanced-results span{overflow-wrap:anywhere}
+ .advanced-note{font-size:11px;color:#aab6c7;line-height:1.6;margin:0;border-top:1px solid #354052;padding-top:12px}
+ @media(max-width:860px){.advanced-layout{grid-template-columns:1fr}}
+ @media(max-width:540px){.advanced-content{padding:10px}.advanced-images{grid-template-columns:1fr}.advanced-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.advanced-checker{min-height:160px}}
+</style>

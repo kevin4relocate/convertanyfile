@@ -41,6 +41,11 @@ const utilityLoader: ImageToolLoader = async () => {
   return { mount: module.mountImageUtility };
 };
 
+const advancedLoader: ImageToolLoader = async () => {
+  const module = await import('../advanced/editor');
+  return { mount: module.mountAdvancedImageTool };
+};
+
 const RUNTIME_LOADERS = {
   mask: maskToolLoader,
   deterministic: deterministicToolLoader,
@@ -49,6 +54,7 @@ const RUNTIME_LOADERS = {
   rename: renameToolLoader,
   watermark: watermarkToolLoader,
   utility: utilityLoader,
+  advanced: advancedLoader,
 } satisfies Record<ImageToolRuntimeFamily, ImageToolLoader>;
 
 export async function mountRegisteredImageTool(toolId: string, root: HTMLElement): Promise<boolean> {
