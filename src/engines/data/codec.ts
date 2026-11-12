@@ -17,53 +17,54 @@ export function decodeUtf8(bytes: ArrayBuffer | Uint8Array): string {
   return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
 
-export function parseDelimited(text: string, delimiter: ',' | '\t'): string[][] {
+export function parseDelimited(text: string, delimiter: ',' | '\\t'): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = '';
-  let quoted = false;
-  let fieldStarted = false;
-
+  // Quoted fields may contain delimiters/newlines, but no trailing junk after closing quotes.
+  let state: 'start' | 'unquoted' | 'quoted' | 'after-quote' = 'start';
+  const finishField = () => {
+    row.push(field);
+    field = '';
+    state = 'start';
+  };
+  const finishRow = () => {
+    finishField();
+    rows.push(row);
+    row = [];
+  };
   for (let index = 0; index < text.length; index += 1) {
     const char = text[index]!;
-    if (quoted) {
+    if (state === 'quoted') {
       if (char === '"') {
         if (text[index + 1] === '"') { field += '"'; index += 1; }
-        else quoted = false;
-      } else {
-        field += char;
-      }
-      continue;
-    }
-
-    if (char === '"' && !fieldStarted) {
-      quoted = true;
-      fieldStarted = true;
+        else state = 'after-quote';
+      } else field += char;
       continue;
     }
     if (char === delimiter) {
-      row.push(field);
-      field = '';
-      fieldStarted = false;
+      finishField();
       continue;
     }
-    if (char === '\n' || char === '\r') {
-      if (char === '\r' && text[index + 1] === '\n') index += 1;
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = '';
-      fieldStarted = false;
+    if (char === '\\n' || char === '\\r') {
+      if (char === '\\r' && text[index + 1] === '\\n') index += 1;
+      finishRow();
+      continue;
+    }
+    if (state === 'after-quote') {
+      throw new Error('Invalid delimited file: unexpected character after closing quote');
+    }
+    if (char === '"') {
+      if (state !== 'start') throw new Error('Invalid delimited file: unexpected quote in unquoted field');
+      state = 'quoted';
       continue;
     }
     field += char;
-    fieldStarted = true;
+    state = 'unquoted';
   }
-
-  if (quoted) throw new Error('Invalid delimited file: unclosed quoted field');
-  row.push(field);
-  rows.push(row);
-  if (rows.length > 1 && rows.at(-1)?.length === 1 && rows.at(-1)?.[0] === '' && /(?:\r\n|\r|\n)$/.test(text)) rows.pop();
+  if (state === 'quoted') throw new Error('Invalid delimited file: unclosed quoted field');
+  finishRow();
+  if (rows.length > 1 && rows.at(-1)?.length === 1 && rows.at(-1)?.[0] === '' && /(?:\\r\\n|\\r|\\n)$/.test(text)) rows.pop();
   return rows;
 }
 
