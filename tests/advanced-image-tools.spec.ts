@@ -221,3 +221,30 @@ test('mobile workbench stays inside viewport',async({page},info)=>{
  const sizes=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth}));
  expect(sizes.scrollWidth).toBeLessThanOrEqual(sizes.width+1);
 });
+
+
+test('rapid picker and drop events are serialized without losing images',async({page},info)=>{
+ test.skip(info.project.name!=='chromium-desktop','Admission concurrency regression');
+ await page.addInitScript(()=>{
+  const nativeCreateImageBitmap=window.createImageBitmap.bind(window);
+  window.createImageBitmap=(async (...args:Parameters<typeof createImageBitmap>)=>{
+   await new Promise(resolve=>setTimeout(resolve,90));
+   return nativeCreateImageBitmap(...args);
+  }) as typeof createImageBitmap;
+ });
+ await visit(page,'image-collage-maker');
+ const first=await fixture(page,'first.png',48,48);
+ const second=await fixture(page,'second.png',48,48,'blue');
+ await page.locator('[data-role="file-input"]').setInputFiles(first);
+ await page.evaluate(({name,base64})=>{
+  const bytes=Uint8Array.from(atob(base64),char=>char.charCodeAt(0));
+  const file=new File([bytes],name,{type:'image/png'});
+  const transfer=new DataTransfer();
+  transfer.items.add(file);
+  const drop=document.querySelector<HTMLElement>('[data-role="batch-dropzone"]')!;
+  drop.dispatchEvent(new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:transfer}));
+ },{name:second.name,base64:second.buffer.toString('base64')});
+ await expect(page.locator('.advanced-file')).toHaveCount(2);
+ await expect(page.locator('[data-advanced-process]')).toBeEnabled();
+ await run(page);
+});
