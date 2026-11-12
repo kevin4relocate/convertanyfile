@@ -46,8 +46,8 @@ export function parseDelimited(text: string, delimiter: ',' | '\t'): string[][] 
       finishField();
       continue;
     }
-    if (char === '\\n' || char === '\\r') {
-      if (char === '\\r' && text[index + 1] === '\\n') index += 1;
+    if (char === '\n' || char === '\r') {
+      if (char === '\r' && text[index + 1] === '\n') index += 1;
       finishRow();
       continue;
     }
@@ -64,7 +64,7 @@ export function parseDelimited(text: string, delimiter: ',' | '\t'): string[][] 
   }
   if (state === 'quoted') throw new Error('Invalid delimited file: unclosed quoted field');
   finishRow();
-  if (rows.length > 1 && rows.at(-1)?.length === 1 && rows.at(-1)?.[0] === '' && /(?:\\r\\n|\\r|\\n)$/.test(text)) rows.pop();
+  if (rows.length > 1 && rows.at(-1)?.length === 1 && rows.at(-1)?.[0] === '' && /(?:\r\n|\r|\n)$/.test(text)) rows.pop();
   return rows;
 }
 
