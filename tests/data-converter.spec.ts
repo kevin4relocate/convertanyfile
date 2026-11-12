@@ -167,3 +167,22 @@ test('data batch reuses the shared queue and ZIP workflow', async ({ page }) => 
   await expect(app.locator('[data-role="download-zip"]')).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+
+test('CSV rejects unexpected quotes instead of silently changing field data', async ({ page }) => {
+  for (const [name, csv, reason] of [
+    ['stray.csv', 'name,notes\nAlice,he"llo', 'unexpected quote in unquoted field'],
+    ['trailing.csv', 'name,notes\nAlice,"hello"garbage', 'unexpected character after closing quote'],
+    ['broken.tsv', 'name\tnotes\nAlice\t"hello"garbage', 'unexpected character after closing quote'],
+  ] as const) {
+    await page.goto(name.endsWith('.tsv') ? '/tsv-to-json/' : '/csv-to-json/');
+    const app = await appReady(page);
+    await app.locator('[data-role="file-input"]').setInputFiles({
+      name, mimeType: name.endsWith('.tsv') ? 'text/tab-separated-values' : 'text/csv',
+      buffer: Buffer.from(csv),
+    });
+    await app.locator('[data-role="convert-all"]').click();
+    await expect(app.locator('.status-error')).toContainText(reason);
+    await expect(app.getByRole('button', { name: 'Retry', exact: true })).toHaveCount(0);
+  }
+});
