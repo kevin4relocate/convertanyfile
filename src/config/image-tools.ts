@@ -1,4 +1,5 @@
 import { IMAGE_UTILITY_MANIFEST } from './image-utility-tools';
+import { ADVANCED_IMAGE_MANIFEST } from './image-advanced-tools';
 import type { ImageToolDefinition, MaskImageToolDefinition, ImageToolManifestEntry, ImageToolDirectoryGroup } from '../platform/image-tools/types';
 
 const MIB = 1024 * 1024;
@@ -308,6 +309,7 @@ export const IMAGE_TOOL_MANIFEST = [
   { tool: BULK_RENAME_IMAGES_TOOL, runtime: 'rename', directoryGroup: 'cleanup', navigationHint: 'Patterns · numbering', summary: 'Rename a batch without changing image bytes or source extensions.' },
   { tool: REMOVE_IMAGE_METADATA_TOOL, runtime: 'metadata', directoryGroup: 'cleanup', navigationHint: 'EXIF · GPS · software', summary: 'Strip EXIF, GPS and software metadata locally.' },
   ...IMAGE_UTILITY_MANIFEST,
+  ...ADVANCED_IMAGE_MANIFEST,
 ] as const satisfies readonly ImageToolManifestEntry[];
 
 export type RegisteredImageTool = (typeof IMAGE_TOOL_MANIFEST)[number];
@@ -329,6 +331,7 @@ export const IMAGE_TOOL_ROADMAP = IMAGE_TOOL_MANIFEST.map((entry) => ({
 export const IMAGE_TOOL_DIRECTORY_SECTIONS = [
   { id: 'everyday', filterLabel: 'Everyday', kicker: 'Resize, compress and compose', heading: 'Everyday image edits with one familiar batch workflow.', description: 'Use these tools to change dimensions, encoding, orientation, framing or blur. Start with a shared setup, then customize individual images.', white: false },
   { id: 'utilities', filterLabel: 'Utilities', kicker: 'Inspect, convert and compose', heading: 'Everyday image utilities for design and development.', description: 'Read colors and EXIF, create icons and contact sheets, merge images or trim transparency locally.', white: true },
+  { id: 'advanced', filterLabel: 'Advanced', kicker: 'Creative editing and color grading', heading: 'Advanced image editing tools, still processed entirely in your browser.', description: 'Create collages, slice images, place text, mix color channels, correct tone and clear simple solid backgrounds.', white: false },
   { id: 'preview', filterLabel: 'Preview', kicker: 'Preview lab', heading: 'Try new image workflows before they move to Live.', description: 'Experimental image tools remain available for hands-on testing without being promoted into the main navigation.', white: true },
   { id: 'cleanup', filterLabel: 'Cleanup', kicker: 'File cleanup and organization', heading: 'Clean metadata or rename files without another upload step.', description: 'Remove image metadata by re-encoding locally, or rename source files without modifying the image bytes.', white: false },
   { id: 'watermarks', filterLabel: 'Watermarks', kicker: 'Watermarking and visible-pixel repair', heading: 'Add a watermark or repair a small visible mark.', description: 'Use a draggable text or logo watermark for branding, or choose a manual mask workflow for visible-pixel reconstruction.', white: true },
