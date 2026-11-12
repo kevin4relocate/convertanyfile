@@ -1,4 +1,4 @@
-import {expect,test,type Page,type TestInfo} from '@playwright/test';
+import {expect,test,type Page} from '@playwright/test';
 import JSZip from 'jszip';
 import {readFile} from 'node:fs/promises';
 import {ADVANCED_IMAGE_TOOLS} from '../src/config/image-advanced-tools';

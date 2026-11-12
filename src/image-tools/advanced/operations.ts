@@ -255,7 +255,7 @@ export async function runAdvancedImageTool(
   for(let i=0;i<rgba.length;i+=4){
    if(rgba[i+3]===0)continue;
    for(let c=0;c<3;c++){
-    const [lo,hi]=range[c]!;
+    const [lo,hi]=range[c]! as [number,number];
     if(hi>lo)rgba[i+c]=clamp(Math.round((rgba[i+c]!-lo)*255/(hi-lo)));
    }
   }
