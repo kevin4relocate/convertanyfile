@@ -17,7 +17,7 @@ export function decodeUtf8(bytes: ArrayBuffer | Uint8Array): string {
   return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
 
-export function parseDelimited(text: string, delimiter: ',' | '\\t'): string[][] {
+export function parseDelimited(text: string, delimiter: ',' | '\t'): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = '';
