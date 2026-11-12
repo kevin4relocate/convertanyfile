@@ -41,6 +41,8 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
  let outputs:AdvancedOutput[]=[];
  let sourceUrl:string|undefined,previewUrl:string|undefined;
  let working=false;
+ // Prevent overlapping picker/drop events from racing the shared admission budget.
+ let admitting=false;
 
  const revokeSource=()=>{
   if(sourceUrl){URL.revokeObjectURL(sourceUrl);sourceUrl=undefined;}
@@ -71,7 +73,7 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
  const showFiles=()=>{
   queue.hidden=images.length===0;
   root.dataset.hasItems=images.length?'true':'false';
-  run.disabled=working||images.length===0;
+  run.disabled=working||admitting||images.length===0;
   fileList.replaceChildren();
   images.forEach((image,index)=>{
    const item=document.createElement('div');item.className='advanced-file';
@@ -99,7 +101,7 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
   clearOutput();clearError();showFiles();showSource();
  };
  clear.addEventListener('click',()=>{
-  if(working)return;
+  if(working||admitting)return;
   resetImages();input.value='';status.textContent='Choose an image to start.';
  });
  const policy={
@@ -107,8 +109,11 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
   acceptedExtensions:['jpg','jpeg','png','webp'],
  };
  async function addFiles(files:readonly File[]):Promise<void>{
-  if(working)return;
+  if(working||admitting||!files.length)return;
+  admitting=true;
+  input.disabled=true;
   const admission=createImageFileAdmission(images,policy);
+  try {
   const failures:string[]=[];
   let added=0;
   for(const file of files){
@@ -134,6 +139,10 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
    status.textContent=images.length+' image(s) ready to process.';
   }
   if(failures.length)error(failures.slice(0,3).join(' | ')+(failures.length>3?' | More rejected files.':''));
+  } finally {
+   admitting=false;
+   input.disabled=working;
+  }
  }
  input.addEventListener('change',()=>{
   const files=Array.from(input.files??[]);
@@ -161,7 +170,7 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
  };
 
  run.addEventListener('click',async()=>{
-  if(working||!images.length)return;
+  if(working||admitting||!images.length)return;
   clearError();clearOutput();setWorking(true);
   status.textContent='Processing images locally…';
   try{
