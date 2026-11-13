@@ -41,6 +41,10 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
  let outputs:AdvancedOutput[]=[];
  let sourceUrl:string|undefined,previewUrl:string|undefined;
  let working=false;
+ // Prevent overlapping picker/drop events from racing the shared admission budget.
+ let admitting=false;
+ let pendingAdmissions=0;
+ let admissionQueue:Promise<void>=Promise.resolve();
 
  const revokeSource=()=>{
   if(sourceUrl){URL.revokeObjectURL(sourceUrl);sourceUrl=undefined;}
@@ -71,7 +75,7 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
  const showFiles=()=>{
   queue.hidden=images.length===0;
   root.dataset.hasItems=images.length?'true':'false';
-  run.disabled=working||images.length===0;
+  run.disabled=working||admitting||pendingAdmissions>0||images.length===0;
   fileList.replaceChildren();
   images.forEach((image,index)=>{
    const item=document.createElement('div');item.className='advanced-file';
@@ -79,12 +83,12 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
    const view=document.createElement('button');
    view.textContent='View';view.type='button';
    view.setAttribute('aria-label','View '+image.name);
-   view.addEventListener('click',()=>{if(working)return;activeIndex=index;showSource();});
+   view.addEventListener('click',()=>{if(working||pendingAdmissions>0)return;activeIndex=index;showSource();});
    const remove=document.createElement('button');
    remove.textContent='Remove';remove.type='button';
    remove.setAttribute('aria-label','Remove '+image.name);
    remove.addEventListener('click',()=>{
-    if(working)return;
+    if(working||pendingAdmissions>0)return;
     image.bitmap.close();
     images.splice(index,1);
     activeIndex=Math.max(0,Math.min(activeIndex,images.length-1));
@@ -99,7 +103,7 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
   clearOutput();clearError();showFiles();showSource();
  };
  clear.addEventListener('click',()=>{
-  if(working)return;
+  if(working||admitting||pendingAdmissions>0)return;
   resetImages();input.value='';status.textContent='Choose an image to start.';
  });
  const policy={
@@ -107,8 +111,10 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
   acceptedExtensions:['jpg','jpeg','png','webp'],
  };
  async function addFiles(files:readonly File[]):Promise<void>{
-  if(working)return;
+  if(working||!files.length)return;
+  admitting=true;
   const admission=createImageFileAdmission(images,policy);
+  try {
   const failures:string[]=[];
   let added=0;
   for(const file of files){
@@ -134,18 +140,38 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
    status.textContent=images.length+' image(s) ready to process.';
   }
   if(failures.length)error(failures.slice(0,3).join(' | ')+(failures.length>3?' | More rejected files.':''));
+  } finally {
+   admitting=false;
+  }
  }
+ const enqueueFiles=(files:readonly File[])=>{
+  if(working||!files.length)return;
+  pendingAdmissions+=1;
+  input.disabled=true;
+  clear.disabled=true;
+  run.disabled=true;
+  admissionQueue=admissionQueue.then(()=>addFiles(files)).catch(e=>{
+   error(e instanceof Error?e.message:'Unable to add images.');
+  }).finally(()=>{
+   pendingAdmissions-=1;
+   if(pendingAdmissions===0){
+    input.disabled=working;
+    clear.disabled=working;
+    run.disabled=working||images.length===0;
+   }
+  });
+ };
  input.addEventListener('change',()=>{
   const files=Array.from(input.files??[]);
   input.value='';
-  void addFiles(files);
+  enqueueFiles(files);
  });
  drop.addEventListener('dragover',event=>{event.preventDefault();drop.classList.add('is-dragging');});
  drop.addEventListener('dragleave',()=>drop.classList.remove('is-dragging'));
  drop.addEventListener('drop',event=>{
   event.preventDefault();drop.classList.remove('is-dragging');
   const files=Array.from(event.dataTransfer?.files??[]);
-  void addFiles(files);
+  enqueueFiles(files);
  });
  for(const param of params)param.addEventListener(param instanceof HTMLSelectElement?'change':'input',()=>{
   if(working)return;
@@ -155,13 +181,13 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
   working=flag;
   run.disabled=flag||images.length===0;
   download.disabled=flag||outputs.length===0;
-  input.disabled=flag;clear.disabled=flag;
+  input.disabled=flag||pendingAdmissions>0;clear.disabled=flag||pendingAdmissions>0;
   for(const param of params)param.disabled=flag;
   status.setAttribute('aria-busy',String(flag));
  };
 
  run.addEventListener('click',async()=>{
-  if(working||!images.length)return;
+  if(working||admitting||pendingAdmissions>0||!images.length)return;
   clearError();clearOutput();setWorking(true);
   status.textContent='Processing images locally…';
   try{
