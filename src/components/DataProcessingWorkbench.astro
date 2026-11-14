@@ -54,7 +54,10 @@ const accept=tool.outputExt==='sql'||tool.id==='sql-insert-to-csv'?'.sql,.txt':t
     const error=root.querySelector<HTMLElement>('[data-data-error]')!;
     const options=root.querySelectorAll<HTMLInputElement|HTMLSelectElement>('[data-data-option]');
     let result:DataRunResult|undefined;
+    let revision=0;
+    let downloading=false;
     const reset=()=>{
+      revision+=1;
       result=undefined;output.value='';copy.disabled=true;download.disabled=true;
       error.textContent='';error.hidden=true;status.textContent='Ready';
     };
@@ -68,14 +71,19 @@ const accept=tool.outputExt==='sql'||tool.id==='sql-insert-to-csv'?'.sql,.txt':t
         const file=fileInput.files?.[0];fileInput.value='';
         if(!file)return;
         reset();
+        const uploadRevision=revision;
         try{
           if(file.size>MAX_DATA_CHARS*4)throw new Error('File exceeds the 8 MB local upload limit.');
           const bytes=await file.arrayBuffer();
+          if(uploadRevision!==revision)return;
           const text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
           if(text.length>MAX_DATA_CHARS)throw new Error('Text file is over 2,000,000 characters.');
           target.value=text;
           status.textContent='Opened '+file.name+' locally.';
-        }catch(e){error.hidden=false;error.textContent=e instanceof Error?e.message:'Could not read file.';}
+        }catch(e){
+          if(uploadRevision!==revision)return;
+          error.hidden=false;error.textContent=e instanceof Error?e.message:'Could not read file.';
+        }
       });
     };
     bindUpload('[data-data-upload]',input);
@@ -98,22 +106,34 @@ const accept=tool.outputExt==='sql'||tool.id==='sql-insert-to-csv'?'.sql,.txt':t
       catch{status.textContent='Copy unavailable; select output text manually.';}
     });
     download.addEventListener('click',async()=>{
-      if(!result)return;
+      if(!result||downloading)return;
+      downloading=true;
       download.disabled=true;
+      download.setAttribute('aria-busy','true');
+      const downloadRevision=revision;
+      const ready=result;
       try{
         let blob:Blob;
-        if(result.files){
+        if(ready.files){
           const {default:JSZip}=await import('jszip');
           const zip=new JSZip();
-          for(const part of result.files)zip.file(part.name,part.content);
+          for(const part of ready.files)zip.file(part.name,part.content);
           blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
         }else{
-          const type=result.filename.endsWith('.csv')?'text/csv':result.filename.endsWith('.xml')?'application/xml':result.filename.endsWith('.json')?'application/json':'text/plain';
-          blob=new Blob([result.text],{type:type+';charset=utf-8'});
+          const type=ready.filename.endsWith('.csv')?'text/csv':ready.filename.endsWith('.xml')?'application/xml':ready.filename.endsWith('.json')?'application/json':'text/plain';
+          blob=new Blob([ready.text],{type:type+';charset=utf-8'});
         }
-        downloadBlob(blob,result.filename);status.textContent='Result downloaded.';
-      }catch(e){status.textContent=e instanceof Error?e.message:'Download failed.';}
-      finally{download.disabled=false;}
+        // A changed input, newer result, or Clear invalidates this download.
+        if(downloadRevision!==revision)return;
+        downloadBlob(blob,ready.filename);
+        status.textContent='Result downloaded.';
+      }catch(e){
+        if(downloadRevision===revision)status.textContent=e instanceof Error?e.message:'Download failed.';
+      }finally{
+        downloading=false;
+        download.setAttribute('aria-busy','false');
+        download.disabled=!result;
+      }
     });
   }
 </script>
