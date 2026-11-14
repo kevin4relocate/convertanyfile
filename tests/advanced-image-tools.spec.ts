@@ -256,7 +256,15 @@ test('64-tile boundary exports unique PNGs and clears stale results on reset',as
  await upload(page,await fixture(page,'large-grid.png',800,800,'checker'));
  await page.locator('[data-advanced-param="columns"]').fill('8');
  await page.locator('[data-advanced-param="rows"]').fill('8');
- await run(page,64);
+ await page.locator('[data-advanced-process]').click();
+ try {
+  await expect(page.locator('[data-advanced-preview]')).toBeVisible({timeout:60_000});
+ } catch (cause) {
+  const status=await page.locator('[data-advanced-status]').innerText();
+  const notice=await page.locator('[data-role="notice"]').innerText().catch(()=>'(no notice)');
+  throw new Error('64-tile generation did not complete. Status: '+status+'; Notice: '+notice,{cause});
+ }
+ await expect(page.locator('[data-advanced-results-count]')).toContainText('64 PNG');
  const downloadPromise=page.waitForEvent('download');
  await page.locator('[data-advanced-download]').click();
  const downloaded=await downloadPromise;
