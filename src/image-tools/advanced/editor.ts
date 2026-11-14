@@ -41,6 +41,8 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
  let outputs:AdvancedOutput[]=[];
  let sourceUrl:string|undefined,previewUrl:string|undefined;
  let working=false;
+ let downloading=false;
+ let outputRevision=0;
  // Prevent overlapping picker/drop events from racing the shared admission budget.
  let admitting=false;
  let pendingAdmissions=0;
@@ -51,6 +53,7 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
   original.removeAttribute('src');
  };
  const clearOutput=()=>{
+  outputRevision+=1;
   outputs=[];download.disabled=true;results.hidden=true;
   resultList.textContent='';resultCount.textContent='';
   preview.hidden=true;previewEmpty.hidden=false;outputSize.textContent='Not generated';
@@ -180,7 +183,7 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
  const setWorking=(flag:boolean)=>{
   working=flag;
   run.disabled=flag||images.length===0;
-  download.disabled=flag||outputs.length===0;
+  download.disabled=flag||downloading||outputs.length===0;
   input.disabled=flag||pendingAdmissions>0;clear.disabled=flag||pendingAdmissions>0;
   for(const param of params)param.disabled=flag;
   status.setAttribute('aria-busy',String(flag));
@@ -217,13 +220,23 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
  });
 
  download.addEventListener('click',async()=>{
-  if(working||!outputs.length)return;
+  if(working||downloading||!outputs.length)return;
+  downloading=true;
   download.disabled=true;
+  // Editing settings or clearing an image may invalidate a result while the
+  // asynchronous ZIP is being generated. Never resurrect its download button.
+  const revision=outputRevision;
+  const batch=outputs;
   try{
-   await downloadResultBatch(outputs,'advanced-'+id+'.zip');
-   status.textContent=outputs.length===1?'PNG download started.':'ZIP download started.';
-  }catch(e){error(e instanceof Error?e.message:'Download failed.');}
-  finally{download.disabled=false;}
+   await downloadResultBatch(batch,'advanced-'+id+'.zip');
+   if(revision===outputRevision)
+    status.textContent=batch.length===1?'PNG download started.':'ZIP download started.';
+  }catch(e){
+   if(revision===outputRevision)error(e instanceof Error?e.message:'Download failed.');
+  }finally{
+   downloading=false;
+   download.disabled=working||outputs.length===0;
+  }
  });
 
  window.addEventListener('pagehide',()=>{
