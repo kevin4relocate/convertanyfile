@@ -21,12 +21,12 @@ test('CSV converter handles 160,000 short rows without argument-count overflow',
   await page.goto('/csv-to-json/');
   const app=page.locator('[data-converter-app]');
   await expect(app).toHaveAttribute('data-initialized','true');
-  const csv='code\\n'+Array.from({length:160000},(_,i)=>String(i)).join('\\n');
+  const csv='code\n'+Array.from({length:160000},(_,i)=>String(i)).join('\n');
   await app.locator('[data-role="file-input"]').setInputFiles({
     name:'many-rows.csv',mimeType:'text/csv',buffer:Buffer.from(csv),
   });
   await app.locator('[data-role="convert-all"]').click();
-  await expect(app.locator('[data-role="result-summary]')).toContainText('1/1 converted',{timeout:60000});
+  await expect(app.locator('[data-role="result-summary"]')).toContainText('1/1 converted',{timeout:60000});
   const downloadPromise=page.waitForEvent('download');
   await app.getByRole('button',{name:'Download',exact:true}).click();
   const file=await downloadPromise;
@@ -43,15 +43,15 @@ test('wide CSV merger aligns reordered column headers and preserves all records'
   await page.goto('/data/csv-file-merger/');
   const cols=Array.from({length:200},(_,i)=>'c'+i);
   const backwards=[...cols].reverse();
-  const first=[cols.join(','),...Array.from({length:400},()=>Array(200).fill('a').join(','))].join('\\n');
+  const first=[cols.join(','),...Array.from({length:400},()=>Array(200).fill('a').join(','))].join('\n');
   const second=[backwards.join(','),backwards.map((_,i)=>'v'+i).join(','),
-    ...Array.from({length:399},()=>Array(200).fill('b').join(','))].join('\\n');
+    ...Array.from({length:399},()=>Array(200).fill('b').join(','))].join('\n');
   await page.locator('[data-data-input]').fill(first);
   await page.locator('[data-data-secondary]').fill(second);
   await page.locator('[data-data-run]').click();
   await expect(page.locator('[data-data-error]')).toBeHidden();
   const output=await page.locator('[data-data-output]').inputValue();
-  const lines=output.split('\\n');
+  const lines=output.split('\n');
   expect(lines).toHaveLength(801);
   expect(lines[0]).toBe(cols.join(','));
   expect(lines[401]).toBe(cols.map((_,i)=>'v'+(199-i)).join(','));
@@ -74,7 +74,7 @@ test('late file reads cannot repopulate Data Tools after Clear',async({page},inf
   });
   await page.goto('/data/csv-row-filter/');
   await page.locator('[data-data-upload]').setInputFiles({
-    name:'delayed.csv',mimeType:'text/csv',buffer:Buffer.from('name\\nAlice'),
+    name:'delayed.csv',mimeType:'text/csv',buffer:Buffer.from('name\nAlice'),
   });
   await expect.poll(()=>page.evaluate(()=>
     (window as Window & {__pendingReads?:Array<()=>void>}).__pendingReads?.length??0)).toBe(1);
@@ -99,7 +99,7 @@ test('editing CSV while ZIP encodes does not re-enable or download an obsolete r
     const button=document.querySelector<HTMLButtonElement>('[data-data-download]')!;
     button.click();
     const input=document.querySelector<HTMLTextAreaElement>('[data-data-input]')!;
-    input.value='name\\nChanged';
+    input.value='name\nChanged';
     input.dispatchEvent(new Event('input',{bubbles:true}));
   });
   await expect(page.locator('[data-data-download]')).toHaveAttribute('aria-busy','false');
