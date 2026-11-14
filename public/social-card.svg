@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">ConvertAnyFile — local-first file tools</title>
+  <desc id="desc">Brand card based on the site's original three overlapping rounded-square favicon and dark violet theme.</desc>
+  <defs>
+    <radialGradient id="glow"><stop stop-color="#252046"/><stop offset="1" stop-color="#0b0e14"/></radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#0b0e14"/>
+  <ellipse cx="440" cy="302" rx="540" ry="430" fill="url(#glow)"/>
+  <g transform="translate(128 156) scale(5.2)">
+    <rect x="11" y="28" width="26" height="26" rx="7" fill="#141923" stroke="#d9dce7" stroke-width="4"/>
+    <rect x="20" y="19" width="26" height="26" rx="7" fill="#201f3b" stroke="#7770d8" stroke-width="4"/>
+    <rect x="29" y="10" width="26" height="26" rx="7" fill="#7c73ff" stroke="#7c73ff" stroke-width="4"/>
+  </g>
+  <g fill="#f3f5fb" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif">
+    <text x="494" y="282" font-weight="800" font-size="73" letter-spacing="-2">ConvertAnyFile</text>
+    <text x="498" y="342" font-weight="500" font-size="32" fill="#aaa4ff">Local-first file tools</text>
+    <text x="498" y="390" font-weight="400" font-size="22" fill="#a7adbb">Fast · Private · In your browser</text>
+  </g>
+  <rect x="494" y="424" width="560" height="3" rx="2" fill="#7c73ff" opacity=".64"/>
+</svg>
