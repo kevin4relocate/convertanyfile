@@ -223,18 +223,20 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
   if(working||downloading||!outputs.length)return;
   downloading=true;
   download.disabled=true;
+  download.setAttribute('aria-busy','true');
   // Editing settings or clearing an image may invalidate a result while the
   // asynchronous ZIP is being generated. Never resurrect its download button.
   const revision=outputRevision;
   const batch=outputs;
   try{
-   await downloadResultBatch(batch,'advanced-'+id+'.zip');
+   await downloadResultBatch(batch,'advanced-'+id+'.zip',()=>revision===outputRevision);
    if(revision===outputRevision)
     status.textContent=batch.length===1?'PNG download started.':'ZIP download started.';
   }catch(e){
    if(revision===outputRevision)error(e instanceof Error?e.message:'Download failed.');
   }finally{
    downloading=false;
+   download.setAttribute('aria-busy','false');
    download.disabled=working||outputs.length===0;
   }
  });
