@@ -6,6 +6,8 @@ import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
 import { IMAGE_GROWTH_GUIDES } from '../content/image-growth-guides';
 import { CONVERSION_GROWTH_GUIDES } from '../content/conversion-growth-guides';
 import { STATIC_GUIDES } from '../config/guide-links';
+import { TEXT_TOOLS } from '../config/text-tools';
+import { DATA_PROCESSING_TOOLS } from '../config/data-processing-tools';
 
 const topPages = [
   { href: '/', label: 'Home' },
@@ -14,6 +16,8 @@ const topPages = [
   { href: '/archive-converter/', label: 'Archive Converter' },
   { href: '/subtitle-converter/', label: 'Subtitle Converter' },
   { href: '/image-tools/', label: 'Image Tools' },
+  { href: '/text-tools/', label: 'Text & Developer Tools' },
+  { href: '/data-tools/', label: 'Data Processing Tools' },
   { href: '/formats/', label: 'Supported Formats' },
   { href: '/guides/', label: 'Guides' },
   { href: '/faq/', label: 'FAQ' },
@@ -53,6 +57,16 @@ const schema = {
   <section class="content-wide-section white"><div class="site-container">
     <div class="section-heading wide"><span class="section-kicker">Image tools</span><h2>Browser-based image utility pages.</h2><p>All currently live Image Tools are linked here directly.</p></div>
     <div class="related-grid">{IMAGE_TOOL_ROADMAP.filter((item) => item.status === 'live').map((item) => <a class="related-card" href={item.href}>{item.label} <span>→</span></a>)}</div>
+  </div></section>
+
+  <section class="content-wide-section"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">Text &amp; Developer Tools</span><h2>Text and developer utilities.</h2><p>All 14 live text tools, including JSON, Base64 and encoding helpers, have their own crawlable pages.</p></div>
+    <div class="related-grid">{TEXT_TOOLS.map((tool) => <a class="related-card" href={`/text/${tool.slug}/`}>{tool.name} <span>→</span></a>)}</div>
+  </div></section>
+
+  <section class="content-wide-section white"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">Data processing</span><h2>JSON, XML, CSV and SQL utilities.</h2><p>All 15 live data tools have dedicated pages for local editing and conversion workflows.</p></div>
+    <div class="related-grid">{DATA_PROCESSING_TOOLS.map((tool) => <a class="related-card" href={`/data/${tool.id}/`}>{tool.name} <span>→</span></a>)}</div>
   </div></section>
 
   {converterGroups.map((group, index) => <section class:list={['content-wide-section', index % 2 === 0 ? '' : 'white']}><div class="site-container">
