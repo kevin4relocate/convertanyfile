@@ -248,3 +248,41 @@ test('rapid picker and drop events are serialized without losing images',async({
  await expect(page.locator('[data-advanced-process]')).toBeEnabled();
  await run(page);
 });
+
+
+test('64-tile boundary exports unique PNGs and clears stale results on reset',async({page},info)=>{
+ test.skip(info.project.name!=='chromium-desktop','Maximum-output memory and reset regression');
+ await visit(page,'split-image-into-grid');
+ await upload(page,await fixture(page,'large-grid.png',800,800,'checker'));
+ await page.locator('[data-advanced-param="columns"]').fill('8');
+ await page.locator('[data-advanced-param="rows"]').fill('8');
+ await run(page,64);
+ const downloadPromise=page.waitForEvent('download');
+ await page.locator('[data-advanced-download]').click();
+ const downloaded=await downloadPromise;
+ const outputPath=info.outputPath('64-tiles.zip');
+ await downloaded.saveAs(outputPath);
+ const zip=await JSZip.loadAsync(await readFile(outputPath));
+ const names=Object.keys(zip.files);
+ expect(names).toHaveLength(64);
+ expect(new Set(names).size).toBe(64);
+ const sample=await zip.file('large-grid-row-08-col-08.png')!.async('nodebuffer');
+ expect(sample.subarray(0,8).toString('hex')).toBe('89504e470d0a1a0a');
+ expect(sample.readUInt32BE(16)).toBe(100);
+ expect(sample.readUInt32BE(20)).toBe(100);
+ await page.locator('[data-advanced-clear]').click();
+ await expect(page.locator('[data-advanced-download]')).toBeDisabled();
+ await expect(page.locator('[data-advanced-preview]')).toBeHidden();
+ await expect(page.locator('.advanced-file')).toHaveCount(0);
+});
+test('settings changes invalidate generated outputs before reprocessing',async({page},info)=>{
+ test.skip(info.project.name!=='chromium-desktop','Advanced output lifecycle regression');
+ await visit(page,'gamma-correction');
+ await upload(page,await fixture(page,'adjust.png',100,100));
+ await run(page);
+ await page.locator('[data-advanced-param="gamma"]').fill('2');
+ await expect(page.locator('[data-advanced-download]')).toBeDisabled();
+ await expect(page.locator('[data-advanced-preview]')).toBeHidden();
+ await run(page);
+ await expect(page.locator('[data-advanced-download]')).toBeEnabled();
+});
