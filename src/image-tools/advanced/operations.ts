@@ -1,4 +1,5 @@
 import { outputCanvas, pngBlob, type LoadedImage } from '../utilities/operations';
+import { wrapText } from './text-layout';
 
 export type AdvancedParams = Readonly<Record<string,string>>;
 export type AdvancedOutput = {filename:string;blob:Blob};
@@ -57,25 +58,7 @@ function softRoundRect(ctx:CanvasRenderingContext2D,x:number,y:number,w:number,h
  ctx.lineTo(x+radius,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-radius);
  ctx.lineTo(x,y+radius);ctx.quadraticCurveTo(x,y,x+radius,y);ctx.closePath();
 }
-function wrapText(ctx:CanvasRenderingContext2D,text:string,maxWidth:number,maxLines:number):string[]{
- const lines:string[]=[];
- for(const para of text.split('\n')){
-  let current='';
-  for(const word of para.split(/\s+/).filter(Boolean)){
-   const proposed=current?current+' '+word:word;
-   if(ctx.measureText(proposed).width<=maxWidth){current=proposed;continue;}
-   if(current){lines.push(current);current='';}
-   // Break long words instead of painting beyond image bounds.
-   for(const char of word){
-    if(ctx.measureText(current+char).width>maxWidth&&current){lines.push(current);current='';}
-    current+=char;
-   }
-  }
-  lines.push(current);
- }
- if(lines.length>maxLines)throw new Error('Text is too long to fit. Reduce font size or shorten the caption.');
- return lines;
-}
+
 export async function runAdvancedImageTool(
  id:string,images:readonly LoadedImage[],settings:AdvancedParams,
 ):Promise<AdvancedOutput[]>{
