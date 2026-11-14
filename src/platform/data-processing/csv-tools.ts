@@ -8,7 +8,8 @@ export function parseCsv(text:string):CsvTable{
  if(!raw.trim())throw new Error('Enter CSV with at least one header row.');
  const parsed=parseDelimited(raw,',');
  if(parsed.length>MAX_ROWS+1)throw new Error('CSV exceeds 20,000 data rows.');
- const width=Math.max(...parsed.map(row=>row.length));
+ let width=0;
+ for(const row of parsed)if(row.length>width)width=row.length;
  if(width>MAX_COLS)throw new Error('CSV exceeds 200 columns.');
  const first=parsed[0]??[];
  if(first.length===1&&!first[0]?.trim()&&parsed.length===1)throw new Error('CSV has no usable header.');
@@ -103,9 +104,15 @@ export function mergeCsv(primary:string,secondary:string,options:CsvOptions):Csv
   throw new Error('Strict mode requires exactly matching CSV headers in the same order.');
  const columns=strict?first.columns:[...new Set([...first.columns,...second.columns])];
  if(columns.length>MAX_COLS)throw new Error('Merged CSV exceeds 200 columns.');
- const map=(table:CsvTable)=>table.rows.map(row=>columns.map(c=>{const index=table.columns.indexOf(c);return index>=0?row[index]! :'';}));
- const rows=[...map(first),...map(second)];
- if(rows.length>MAX_ROWS)throw new Error('Merged CSV exceeds 20,000 rows.');
+ if(first.rows.length+second.rows.length>MAX_ROWS)throw new Error('Merged CSV exceeds 20,000 rows.');
+ // Resolve each header once instead of searching up to 200 columns per cell.
+ // This keeps wide, multi-thousand-row CSV merges responsive.
+ const align=(table:CsvTable)=>{
+  const columnIndex=new Map(table.columns.map((name,index)=>[name,index] as const));
+  const positions=columns.map(name=>columnIndex.get(name));
+  return table.rows.map(row=>positions.map(index=>index===undefined?'':row[index]!));
+ };
+ const rows=[...align(first),...align(second)];
  return result({columns,rows});
 }
 export function splitCsv(text:string,options:CsvOptions):CsvResult{
