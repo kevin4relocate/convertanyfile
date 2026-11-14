@@ -1,0 +1,192 @@
+[
+  {
+    "name": "HEIC to JPG",
+    "category": "Image Conversion",
+    "url": "https://convertanyfile.net/heic-to-jpg/"
+  },
+  {
+    "name": "WEBP to JPG",
+    "category": "Image Conversion",
+    "url": "https://convertanyfile.net/webp-to-jpg/"
+  },
+  {
+    "name": "PNG to WEBP",
+    "category": "Image Conversion",
+    "url": "https://convertanyfile.net/png-to-webp/"
+  },
+  {
+    "name": "Resize Image",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/resize-image/"
+  },
+  {
+    "name": "Compress Image",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/compress-image/"
+  },
+  {
+    "name": "CSV to JSON",
+    "category": "Data Conversion",
+    "url": "https://convertanyfile.net/csv-to-json/"
+  },
+  {
+    "name": "JSON to CSV",
+    "category": "Data Conversion",
+    "url": "https://convertanyfile.net/json-to-csv/"
+  },
+  {
+    "name": "Crop Image",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/crop-image/"
+  },
+  {
+    "name": "Remove Image Metadata",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/remove-image-metadata/"
+  },
+  {
+    "name": "JPG to WEBP",
+    "category": "Image Conversion",
+    "url": "https://convertanyfile.net/jpg-to-webp/"
+  },
+  {
+    "name": "PNG to JPG",
+    "category": "Image Conversion",
+    "url": "https://convertanyfile.net/png-to-jpg/"
+  },
+  {
+    "name": "AVIF to JPG",
+    "category": "Image Conversion",
+    "url": "https://convertanyfile.net/avif-to-jpg/"
+  },
+  {
+    "name": "JSONL to JSON",
+    "category": "Data Conversion",
+    "url": "https://convertanyfile.net/jsonl-to-json/"
+  },
+  {
+    "name": "JSON to JSONL",
+    "category": "Data Conversion",
+    "url": "https://convertanyfile.net/json-to-jsonl/"
+  },
+  {
+    "name": "Image Converter",
+    "category": "Image Conversion",
+    "url": "https://convertanyfile.net/image-converter/"
+  },
+  {
+    "name": "Data Converter",
+    "category": "Data Conversion",
+    "url": "https://convertanyfile.net/data-converter/"
+  },
+  {
+    "name": "Archive Converter",
+    "category": "Archive Conversion",
+    "url": "https://convertanyfile.net/archive-converter/"
+  },
+  {
+    "name": "Subtitle Converter",
+    "category": "Subtitle Conversion",
+    "url": "https://convertanyfile.net/subtitle-converter/"
+  },
+  {
+    "name": "Add Watermark",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/add-watermark/"
+  },
+  {
+    "name": "Add Image Border",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/add-image-border/"
+  },
+  {
+    "name": "Adjust Image Brightness",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/brightness-image/"
+  },
+  {
+    "name": "Adjust Image Contrast",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/contrast-image/"
+  },
+  {
+    "name": "Adjust Image Opacity",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/adjust-image-opacity/"
+  },
+  {
+    "name": "Adjust Image Saturation",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/adjust-image-saturation/"
+  },
+  {
+    "name": "Black and White Threshold",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/threshold-image/"
+  },
+  {
+    "name": "Blur Image",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/blur-image/"
+  },
+  {
+    "name": "Bulk Rename Images",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/bulk-rename-images/"
+  },
+  {
+    "name": "Gemini Watermark Remover",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/gemini-ai-logo-remover/"
+  },
+  {
+    "name": "Grayscale Image",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/grayscale-image/"
+  },
+  {
+    "name": "Hue Rotate Image",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/hue-rotate-image/"
+  },
+  {
+    "name": "Invert Image Colors",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/invert-image/"
+  },
+  {
+    "name": "Pixelate Image",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/pixelate-image/"
+  },
+  {
+    "name": "Posterize Image",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/posterize-image/"
+  },
+  {
+    "name": "Remove Watermark",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/remove-watermark/"
+  },
+  {
+    "name": "Rotate and Flip Image",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/rotate-flip-image/"
+  },
+  {
+    "name": "Rounded Image Corners",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/rounded-corners-image/"
+  },
+  {
+    "name": "Sepia Image",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/sepia-image/"
+  },
+  {
+    "name": "Sharpen Image",
+    "category": "Image Tools",
+    "url": "https://convertanyfile.net/sharpen-image/"
+  }
+]
