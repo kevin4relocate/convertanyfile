@@ -86,14 +86,21 @@ export async function runAdvancedImageTool(
    if(columns*rows<2)throw new Error('Choose at least two grid cells.');
    if(columns>image.width||rows>image.height)throw new Error('Image is too small for that many rows or columns.');
    const result:AdvancedOutput[]=[];
-   for(let r=0;r<rows;r++){
-    for(let c=0;c<columns;c++){
+   // Encode a bounded group concurrently. Serial canvas.toBlob callbacks can be
+   // heavily delayed in Chromium when exporting the maximum 64 small tiles.
+   // Eight small canvases cap intermediate encoder memory without stalling UI.
+   const tiles=Array.from({length:rows*columns},(_,index)=>({
+    r:Math.floor(index/columns),c:index%columns,
+   }));
+   for(let offset=0;offset<tiles.length;offset+=8){
+    const batch=await Promise.all(tiles.slice(offset,offset+8).map(async({r,c})=>{
      const x=Math.floor(c*image.width/columns),x2=Math.floor((c+1)*image.width/columns);
      const y=Math.floor(r*image.height/rows),y2=Math.floor((r+1)*image.height/rows);
      const tile=outputCanvas(x2-x,y2-y);
      ctx2d(tile).drawImage(image.bitmap,x,y,tile.width,tile.height,0,0,tile.width,tile.height);
-     result.push(await createFile(tile,base+'-row-'+String(r+1).padStart(2,'0')+'-col-'+String(c+1).padStart(2,'0')+'.png'));
-    }
+     return createFile(tile,base+'-row-'+String(r+1).padStart(2,'0')+'-col-'+String(c+1).padStart(2,'0')+'.png');
+    }));
+    result.push(...batch);
    }
    return result;
   }
