@@ -57,12 +57,16 @@ export async function createZipBlob(files: readonly { filename: string; blob: Bl
 export async function downloadResultBatch(
   files: readonly { filename: string; blob: Blob }[],
   zipFilename: string,
+  isCurrent: () => boolean = () => true,
 ): Promise<void> {
-  if (!files.length) return;
+  if (!files.length || !isCurrent()) return;
   if (files.length === 1) {
     const file = files[0]!;
-    downloadBlob(file.blob, file.filename);
+    if (isCurrent()) downloadBlob(file.blob, file.filename);
     return;
   }
-  downloadBlob(await createZipBlob(files), zipFilename);
+  const archive = await createZipBlob(files);
+  // ZIP encoding is asynchronous. Do not download a result invalidated by
+  // a subsequent edit or Clear while the archive was being assembled.
+  if (isCurrent()) downloadBlob(archive, zipFilename);
 }
