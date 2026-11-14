@@ -85,13 +85,18 @@ function normalizeHeaders(source: string[], width: number): string[] {
 
 function rowsToTable(rows: string[][]): { rows: Row[]; columns: string[] } {
   if (!rows.length || (rows.length === 1 && rows[0]!.every((value) => value === ''))) return { rows: [], columns: [] };
-  const width = Math.max(...rows.map((row) => row.length));
+  // Avoid spreading one entry per CSV row into Math.max: real files can have
+  // hundreds of thousands of short rows (within the 20 MiB input limit).
+  let width = 0;
+  for (const values of rows) if (values.length > width) width = values.length;
   const columns = normalizeHeaders(rows[0] ?? [], width);
-  const records = rows.slice(1).map((values) => {
+  const records: Row[] = [];
+  for (let rowIndex = 1; rowIndex < rows.length; rowIndex += 1) {
+    const values = rows[rowIndex]!;
     const record = createRow();
     for (let index = 0; index < columns.length; index += 1) record[columns[index]!] = values[index] ?? '';
-    return record;
-  });
+    records.push(record);
+  }
   return { rows: records, columns };
 }
 
