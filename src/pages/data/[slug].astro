@@ -1,12 +1,15 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import DataProcessingWorkbench from '../../components/DataProcessingWorkbench.astro';
+import ToolWorkedExample from '../../components/ToolWorkedExample.astro';
+import { DATA_TOOL_EXAMPLES } from '../../content/tool-worked-examples';
 import {DATA_PROCESSING_TOOLS,type DataProcessingTool} from '../../config/data-processing-tools';
 import {SITE} from '../../config/site';
 export function getStaticPaths(){
  return DATA_PROCESSING_TOOLS.map(tool=>({params:{slug:tool.id},props:{tool}}));
 }
 const {tool}=Astro.props as {tool:DataProcessingTool};
+const workedExample = DATA_TOOL_EXAMPLES[tool.id];
 const url=SITE.origin+'/data/'+tool.id+'/';
 const related=DATA_PROCESSING_TOOLS.filter(x=>x.id!==tool.id&&x.category===tool.category).slice(0,5);
 const schema=[
@@ -35,6 +38,7 @@ const schema=[
    <a href="/data-tools/">All 15 Data Tools →</a><a href="/data-converter/">CSV / JSON file converter →</a>
   </aside>
  </div></div></section>
+ {workedExample && <ToolWorkedExample example={workedExample} />}
 </SiteLayout>
 <style>
  .data-info{display:grid;grid-template-columns:minmax(0,2fr) minmax(220px,1fr);gap:24px}
