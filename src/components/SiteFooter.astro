@@ -15,6 +15,7 @@ import { FOOTER_GROUPS, SITE } from '../config/site';
       <div class="footer-links">
         <strong>{group.title}</strong>
         {group.links.map((link) => <a href={link.href}>{link.label}</a>)}
+        {group.title === 'Company' && <button type="button" class="footer-privacy-button" data-open-privacy-preferences>Privacy choices</button>}
       </div>
     ))}
   </div>
@@ -22,4 +23,5 @@ import { FOOTER_GROUPS, SITE } from '../config/site';
     <span>© 2026 {SITE.name}</span>
     <a href="/">{SITE.domain}</a>
   </div>
+  <style>.footer-privacy-button{display:block;border:0;background:transparent;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:3px}.footer-privacy-button:focus-visible{outline:2px solid #b9a8ff;outline-offset:3px}</style>
 </footer>

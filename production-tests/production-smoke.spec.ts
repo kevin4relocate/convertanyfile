@@ -32,19 +32,32 @@ test('deployed shell, host-aware analytics, robots, sitemap and 404 are healthy'
   expect(csp).toContain("script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'");
   expect(csp).toContain("worker-src 'self' blob:");
   expect(csp).toContain('https://www.googletagmanager.com');
+  expect(csp).toContain('https://pagead2.googlesyndication.com');
+  expect(csp).toContain('frame-src');
   await expect(page).toHaveTitle(/ConvertAnyFile/i);
   await expect(page.locator('#home-converter-subtitle-tab')).toHaveText('Subtitles');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${PROD_ORIGIN}/`);
   const analyticsScript = page.locator('script[src*="googletagmanager.com/gtag/js?id=G-LX78XZ9FH2"]');
+  // Analytics must not load before explicit opt-in, including on the real production host.
+  await expect(analyticsScript).toHaveCount(0);
+  await expect(page.locator('[data-privacy-preferences]')).toBeVisible();
   if (IS_PRODUCTION_HOST) {
-    await expect(analyticsScript).toHaveCount(1);
     await expect.poll(() => page.evaluate(() => Array.isArray((window as Window & { dataLayer?: unknown[] }).dataLayer))).toBe(true);
+    const hasDeniedDefault = await page.evaluate(() => {
+      const dataLayer = (window as Window & { dataLayer?: ArrayLike<unknown>[] }).dataLayer ?? [];
+      return dataLayer.some((entry) => {
+        const consent = entry[2] as { analytics_storage?: string } | undefined;
+        return entry[0] === 'consent' && entry[1] === 'default' && consent?.analytics_storage === 'denied';
+      });
+    });
+    expect(hasDeniedDefault).toBe(true);
   } else {
-    // Cloudflare branch previews must not send GA events or create synthetic
-    // sessions. The same release tests can run against previews via base_url.
-    await expect(analyticsScript).toHaveCount(0);
+    // Previews never send GA events even after the user opts in.
     expect(await page.evaluate(() => Boolean((window as Window & { gtag?: unknown }).gtag))).toBe(false);
   }
+  await page.locator('[data-analytics-accept]').click();
+  if (IS_PRODUCTION_HOST) await expect(analyticsScript).toHaveCount(1);
+  else await expect(analyticsScript).toHaveCount(0);
   const runtimeScript = await page.locator('script[src^="/_astro/"]').first().getAttribute('src');
   expect(runtimeScript).toBeTruthy();
   const runtimeResponse = await request.get(new URL(runtimeScript!, BASE_URL).toString());
