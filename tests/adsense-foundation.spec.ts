@@ -46,18 +46,24 @@ test('user can opt in and revoke consent without enabling ads', async ({ page })
   await page.reload();
   await expect(page.locator('[data-privacy-preferences]')).toBeHidden();
   await expect(page.locator('script[src*="googletagmanager.com/gtag/js"]')).toHaveCount(0);
+  // Site ownership uses metadata only; no third-party advertising loader is requested.
   await expect(page.locator('script[src*="pagead2.googlesyndication.com"]')).toHaveCount(0);
+  await expect(page.locator('meta[name="google-adsense-account"]')).toHaveAttribute('content','ca-pub-4046271575630296');
 });
 
-test('CSP is prepared for AdSense but no publisher ID is deployed', async ({ request }) => {
-  const [index, contact, privacy] = await Promise.all([
-    request.get('/'), request.get('/contact/'), request.get('/privacy/'),
+test('AdSense account is verifiable without downloading advertising scripts', async ({ request }) => {
+  const [index, contact, privacy, adsTxt] = await Promise.all([
+    request.get('/'), request.get('/contact/'), request.get('/privacy/'), request.get('/ads.txt'),
   ]);
   expect(index.status()).toBe(200);
   expect(contact.status()).toBe(200);
   expect(privacy.status()).toBe(200);
+  expect(adsTxt.status()).toBe(200);
+  expect((await adsTxt.text()).trim()).toBe('google.com, pub-4046271575630296, DIRECT, f08c47fec0942fa0');
   const html = await index.text();
-  expect(html).not.toMatch(/ca-pub-\d{16}/);
+  expect(html).toContain('<meta name="google-adsense-account" content="ca-pub-4046271575630296"');
+  expect(html).not.toContain('pagead/js/adsbygoogle.js');
+  expect(html).not.toContain('data-ad-slot=');
   expect(html).toContain('convertanyfile-analytics-consent-v1');
-  expect(await privacy.text()).toContain('Advertising is not currently active');
+  expect(await privacy.text()).toContain('We do not currently load the Google AdSense advertising JavaScript');
 });

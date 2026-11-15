@@ -54,9 +54,15 @@ test('production publishes the new editorial content and policy', async ({ reque
     expect(await response.text()).toContain(literal);
   }
   const privacy = await request.get('/privacy/');
-  expect(await privacy.text()).toContain('Advertising is not currently active');
+  expect(await privacy.text()).toContain('We do not currently load the Google AdSense advertising JavaScript');
   const home = await request.get('/');
-  expect(await home.text()).not.toMatch(/ca-pub-\d{16}/);
+  const html = await home.text();
+  expect(html).toContain('<meta name="google-adsense-account" content="ca-pub-4046271575630296"');
+  expect(html).not.toContain('pagead/js/adsbygoogle.js');
+  expect(html).not.toContain('data-ad-slot=');
+  const adsTxt = await request.get('/ads.txt');
+  expect(adsTxt.status()).toBe(200);
+  expect((await adsTxt.text()).trim()).toBe('google.com, pub-4046271575630296, DIRECT, f08c47fec0942fa0');
 });
 
 test('production headers and static assets have expected safety properties', async ({ request }) => {
@@ -135,4 +141,5 @@ test('analytics is opt-in, revocable and separate from advertising', async ({ pa
   await page.reload();
   await expect(page.locator('script[src*="googletagmanager.com/gtag/js"]')).toHaveCount(0);
   await expect(page.locator('script[src*="pagead2.googlesyndication.com"]')).toHaveCount(0);
+  await expect(page.locator('meta[name="google-adsense-account"]')).toHaveAttribute('content','ca-pub-4046271575630296');
 });

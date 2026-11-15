@@ -15,12 +15,13 @@
     "check": "astro check",
     "check:seo": "node scripts/check-static-seo.mjs",
     "check:cloudflare-assets": "node scripts/check-cloudflare-static-assets.mjs",
-    "build": "node scripts/generate-social-card.mjs && npm run runtime:all && npm run check && astro build && npm run check:seo && npm run check:links && npm run check:cloudflare-assets",
+    "build": "node scripts/generate-social-card.mjs && npm run runtime:all && npm run check && astro build && npm run check:seo && npm run check:adsense && npm run check:links && npm run check:cloudflare-assets",
     "preview": "astro preview",
     "test:text-tools": "node --experimental-strip-types --test tests/text-operations.node.test.mjs",
     "test:e2e": "npm run fixtures:archive && playwright test",
     "test:production": "playwright test --config=playwright.production.config.ts",
-    "check:links": "node scripts/check-site-links.mjs"
+    "check:links": "node scripts/check-site-links.mjs",
+    "check:adsense": "node scripts/check-adsense-verification.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.3",
