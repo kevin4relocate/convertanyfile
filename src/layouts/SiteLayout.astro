@@ -10,6 +10,7 @@ import '../styles/image-tools-standard.css';
 import '../styles/tool-sticky-actions.css';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import PrivacyPreferences from '../components/PrivacyPreferences.astro';
 import { SITE } from '../config/site';
 
 interface Props {
@@ -69,20 +70,50 @@ const websiteSchema = {
     <meta name="twitter:description" content={description} />
     <title>{title}</title>
     <script is:inline>
-      const analyticsHosts = new Set(['convertanyfile.net', 'www.convertanyfile.net']);
-      if (analyticsHosts.has(window.location.hostname)) {
-        window.dataLayer = window.dataLayer || [];
-        window.gtag = function () {
-          window.dataLayer.push(arguments);
+      // Basic Consent Mode v2: Google tags never load before explicit Analytics opt-in.
+      (() => {
+        const analyticsHosts = new Set(['convertanyfile.net', 'www.convertanyfile.net']);
+        const isProduction = analyticsHosts.has(window.location.hostname);
+        const consentKey = 'convertanyfile-analytics-consent-v1';
+        const measurementId = 'G-LX78XZ9FH2';
+        let selected = null;
+        try {
+          const stored = window.localStorage.getItem(consentKey);
+          if (stored === 'granted' || stored === 'denied') selected = stored;
+        } catch (_) { /* Browsers may disable storage; keep a session-only choice. */ }
+        let gaLoaded = false;
+        window.cafGetAnalyticsConsent = () => selected;
+        if (isProduction) {
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function () { window.dataLayer.push(arguments); };
+          window.gtag('consent', 'default', {
+            analytics_storage: 'denied', ad_storage: 'denied',
+            ad_user_data: 'denied', ad_personalization: 'denied'
+          });
+        }
+        const loadAnalytics = () => {
+          if (!isProduction || gaLoaded) return;
+          gaLoaded = true;
+          window.gtag('js', new Date());
+          window.gtag('config', measurementId);
+          const tag = document.createElement('script');
+          tag.async = true;
+          tag.src = 'https://www.googletagmanager.com/gtag/js?id=' + measurementId;
+          document.head.appendChild(tag);
         };
-        window.gtag('js', new Date());
-        window.gtag('config', 'G-LX78XZ9FH2');
-
-        const analyticsScript = document.createElement('script');
-        analyticsScript.async = true;
-        analyticsScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-LX78XZ9FH2';
-        document.head.appendChild(analyticsScript);
-      }
+        window.cafSetAnalyticsConsent = (allow) => {
+          const wasGranted = selected === 'granted';
+          selected = allow ? 'granted' : 'denied';
+          try { window.localStorage.setItem(consentKey, selected); } catch (_) {}
+          if (isProduction) window.gtag('consent', 'update', { analytics_storage: selected });
+          if (allow) loadAnalytics();
+          else if (wasGranted && gaLoaded) window.location.reload();
+        };
+        if (selected === 'granted') {
+          if (isProduction) window.gtag('consent', 'update', { analytics_storage: 'granted' });
+          loadAnalytics();
+        }
+      })();
     </script>
     {isHomePage && <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>}
     {schemas.map((item) => <script is:inline type="application/ld+json" set:html={JSON.stringify(item)}></script>)}
@@ -93,5 +124,6 @@ const websiteSchema = {
     <SiteHeader />
     <main id="main-content"><slot /></main>
     <SiteFooter />
+    <PrivacyPreferences />
   </body>
 </html>
