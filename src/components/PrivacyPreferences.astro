@@ -1,0 +1,57 @@
+<aside class="privacy-preferences" data-privacy-preferences hidden role="region" aria-label="Analytics privacy preferences">
+  <div class="privacy-preferences-copy">
+    <strong>Your privacy choices</strong>
+    <p>ConvertAnyFile uses optional Google Analytics to learn which pages are useful. The analytics tag stays off until you allow it. File contents remain on your device for supported local tools. Advertising is not active yet. <a href="/privacy/">Read our Privacy Policy</a>.</p>
+  </div>
+  <div class="privacy-preferences-actions">
+    <button type="button" class="privacy-preferences-secondary" data-analytics-reject>Reject analytics</button>
+    <button type="button" class="privacy-preferences-primary" data-analytics-accept>Allow analytics</button>
+    <button type="button" class="privacy-preferences-close" data-privacy-close hidden>Close settings</button>
+  </div>
+</aside>
+<script is:inline>
+  (() => {
+    const panel = document.querySelector('[data-privacy-preferences]');
+    if (!panel) return;
+    const closeButton = panel.querySelector('[data-privacy-close]');
+    const choice = () => typeof window.cafGetAnalyticsConsent === 'function' ? window.cafGetAnalyticsConsent() : null;
+    const open = () => {
+      panel.hidden = false;
+      closeButton.hidden = choice() === null;
+    };
+    const hide = () => { panel.hidden = true; };
+    if (choice() === null) open();
+    document.querySelectorAll('[data-open-privacy-preferences]').forEach((button) => {
+      button.addEventListener('click', open);
+    });
+    panel.querySelector('[data-analytics-accept]').addEventListener('click', () => {
+      window.cafSetAnalyticsConsent?.(true);
+      hide();
+    });
+    panel.querySelector('[data-analytics-reject]').addEventListener('click', () => {
+      window.cafSetAnalyticsConsent?.(false);
+      hide();
+    });
+    closeButton.addEventListener('click', hide);
+  })();
+</script>
+<style>
+  .privacy-preferences[hidden], .privacy-preferences-close[hidden] { display: none !important; }
+  .privacy-preferences {
+    position: fixed; z-index: 1100; bottom: 16px; left: 16px; right: 16px;
+    margin-inline: auto; max-width: 800px; padding: 18px 20px;
+    border: 1px solid #6a5799; border-radius: 16px;
+    background: #121923; color: #f3f4fa; box-shadow: 0 12px 42px #000b;
+    display: flex; align-items: center; gap: 18px;
+  }
+  .privacy-preferences-copy { flex: 1; min-width: 0; }
+  .privacy-preferences-copy strong { display: block; margin-bottom: 6px; font-size: 16px; }
+  .privacy-preferences-copy p { font-size: 13px; margin: 0; line-height: 1.55; color: #e0deec; }
+  .privacy-preferences-copy a { color: #cebaff; text-decoration: underline; }
+  .privacy-preferences-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; min-width: 200px; }
+  .privacy-preferences-actions button { border-radius: 8px; padding: 9px 12px; min-height: 40px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; }
+  .privacy-preferences-secondary, .privacy-preferences-close { color: #f3f4fa; border: 1px solid #a19bb8; background: #212b3b; }
+  .privacy-preferences-primary { color: #fff; border: 1px solid #b3a0ff; background: #6542cc; }
+  .privacy-preferences-actions button:focus-visible { outline: 3px solid #d1baff; outline-offset: 2px; }
+  @media (max-width: 650px) { .privacy-preferences { flex-direction: column; align-items: stretch; gap: 12px; } .privacy-preferences-actions { justify-content: stretch; } .privacy-preferences-actions button { flex: 1; } }
+</style>
