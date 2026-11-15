@@ -18,7 +18,7 @@ test('Text workbench accepts the first Run click only after listeners attach', a
   await page.goto('/text/json-validator/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('[data-text-workbench]')).toHaveAttribute('data-tool-ready', 'true');
   await page.locator('[data-tool-run]').click();
-  await expect(page.locator('[data-tool-output]')).toContainText('Valid JSON');
+  await expect(page.locator('[data-tool-output]')).toHaveValue(/Valid JSON/);
   await expect(page.locator('[data-tool-download]')).toBeEnabled();
 });
 
