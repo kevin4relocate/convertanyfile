@@ -48,7 +48,7 @@ test('production publishes the new editorial content and policy', async ({ reque
     ['/data/json-schema-validator/', 'Catch a rule violation that valid JSON alone misses'],
     ['/jpg-to-webp/', 'Example: preparing photographs for a website'],
     ['/contact/', 'Help us improve ConvertAnyFile'],
-  ]) {
+  ] as const) {
     const response = await request.get(path);
     expect(response.status()).toBe(200);
     expect(await response.text()).toContain(literal);
