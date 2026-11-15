@@ -43,8 +43,14 @@ test('deployed shell, host-aware analytics, robots, sitemap and 404 are healthy'
   await expect(page.locator('[data-privacy-preferences]')).toBeVisible();
   if (IS_PRODUCTION_HOST) {
     await expect.poll(() => page.evaluate(() => Array.isArray((window as Window & { dataLayer?: unknown[] }).dataLayer))).toBe(true);
-    const defaults = await page.evaluate(() => (window as Window & { dataLayer?: unknown[][] }).dataLayer ?? []);
-    expect(defaults.some((entry) => entry[0] === 'consent' && entry[1] === 'default' && entry[2]?.analytics_storage === 'denied')).toBe(true);
+    const hasDeniedDefault = await page.evaluate(() => {
+      const dataLayer = (window as Window & { dataLayer?: ArrayLike<unknown>[] }).dataLayer ?? [];
+      return dataLayer.some((entry) => {
+        const consent = entry[2] as { analytics_storage?: string } | undefined;
+        return entry[0] === 'consent' && entry[1] === 'default' && consent?.analytics_storage === 'denied';
+      });
+    });
+    expect(hasDeniedDefault).toBe(true);
   } else {
     // Previews never send GA events even after the user opts in.
     expect(await page.evaluate(() => Boolean((window as Window & { gtag?: unknown }).gtag))).toBe(false);
