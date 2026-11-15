@@ -46,18 +46,26 @@ test('user can opt in and revoke consent without enabling ads', async ({ page })
   await page.reload();
   await expect(page.locator('[data-privacy-preferences]')).toBeHidden();
   await expect(page.locator('script[src*="googletagmanager.com/gtag/js"]')).toHaveCount(0);
-  await expect(page.locator('script[src*="pagead2.googlesyndication.com"]')).toHaveCount(0);
+  // A site-verification snippet exists, but no ad slots or requests are enabled.
+  await expect(page.locator('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]')).toHaveCount(1);
+  expect(await page.evaluate(() => (window as Window & { adsbygoogle?: { pauseAdRequests?: number } }).adsbygoogle?.pauseAdRequests)).toBe(1);
 });
 
-test('CSP is prepared for AdSense but no publisher ID is deployed', async ({ request }) => {
-  const [index, contact, privacy] = await Promise.all([
-    request.get('/'), request.get('/contact/'), request.get('/privacy/'),
+test('AdSense account is verifiable while ad requests remain paused', async ({ request }) => {
+  const [index, contact, privacy, adsTxt] = await Promise.all([
+    request.get('/'), request.get('/contact/'), request.get('/privacy/'), request.get('/ads.txt'),
   ]);
   expect(index.status()).toBe(200);
   expect(contact.status()).toBe(200);
   expect(privacy.status()).toBe(200);
+  expect(adsTxt.status()).toBe(200);
+  expect((await adsTxt.text()).trim()).toBe('google.com, pub-4046271575630296, DIRECT, f08c47fec0942fa0');
   const html = await index.text();
-  expect(html).not.toMatch(/ca-pub-\d{16}/);
+  expect(html).toContain('<meta name="google-adsense-account" content="ca-pub-4046271575630296"');
+  expect(html).toContain('pagead/js/adsbygoogle.js?client=ca-pub-4046271575630296');
+  expect(html).toContain('crossorigin="anonymous"');
+  expect(html.indexOf('pauseAdRequests = 1')).toBeLessThan(html.indexOf('adsbygoogle.js?client=ca-pub-4046271575630296'));
+  expect(html).not.toContain('data-ad-slot=');
   expect(html).toContain('convertanyfile-analytics-consent-v1');
-  expect(await privacy.text()).toContain('Advertising is not currently active');
+  expect(await privacy.text()).toContain('All AdSense ad requests are paused');
 });
