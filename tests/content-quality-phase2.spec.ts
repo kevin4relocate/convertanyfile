@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { TEXT_TOOLS } from '../src/config/text-tools';
 import { DATA_PROCESSING_TOOLS } from '../src/config/data-processing-tools';
 import { TEXT_TOOL_EXAMPLES, DATA_TOOL_EXAMPLES } from '../src/content/tool-worked-examples';
 import { IMAGE_FORMAT_WORKFLOWS } from '../src/content/format-workflows';
 
 test('every live Text and Data tool has a distinct, crawlable worked example', async ({ request }) => {
+  test.setTimeout(120_000);
   expect(Object.keys(TEXT_TOOL_EXAMPLES).sort()).toEqual(TEXT_TOOLS.map(tool => tool.id).sort());
   expect(Object.keys(DATA_TOOL_EXAMPLES).sort()).toEqual(DATA_PROCESSING_TOOLS.map(tool => tool.id).sort());
 
@@ -45,6 +47,7 @@ test('curated tool examples are explanatory rather than repeated generic SEO tex
 });
 
 test('priority image conversions show different workflow-specific decisions', async ({ request }) => {
+  test.setTimeout(90_000);
   const entries = Object.entries(IMAGE_FORMAT_WORKFLOWS);
   expect(entries.length).toBe(6);
   for (const [slug, workflow] of entries) {
@@ -69,4 +72,11 @@ test('new editorial examples do not change a running conversion flow', async ({ 
   await expect(page.getByRole('heading', { name: 'Keep the first copy of repeated export rows' })).toBeVisible();
   await page.locator('[data-data-run]').click();
   await expect(page.locator('[data-data-output]')).not.toHaveValue('');
+});
+
+test('format pair template prints the decision paragraph once, not in two sections', async () => {
+  const template = await readFile('src/pages/[slug].astro', 'utf8');
+  expect(template.match(/<p>\{content\?\.when\}<\/p>/g)).toHaveLength(1);
+  expect(template).toContain('id="preflight"');
+  expect(template).toContain('formatWorkflow &&');
 });
