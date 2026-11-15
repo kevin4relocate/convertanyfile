@@ -1,0 +1,45 @@
+---
+import type { ToolWorkedExample } from '../content/tool-worked-examples';
+
+const { example } = Astro.props as { example: ToolWorkedExample };
+---
+<section class="content-wide-section tool-learning-section" aria-labelledby="worked-example">
+  <div class="site-container">
+    <article class="tool-learning">
+      <div class="tool-learning-intro">
+        <span class="section-kicker">Practical walkthrough</span>
+        <h2 id="worked-example">{example.title}</h2>
+        <p>{example.scenario}</p>
+      </div>
+      <div class="tool-learning-examples">
+        <div class="tool-learning-code">
+          <h3>{example.inputLabel}</h3>
+          <pre><code>{example.input}</code></pre>
+        </div>
+        {example.secondInput && <div class="tool-learning-code">
+          <h3>{example.secondInputLabel}</h3>
+          <pre><code>{example.secondInput}</code></pre>
+        </div>}
+      </div>
+      <div class="tool-learning-details">
+        <div><h3>Expected behavior</h3><p>{example.expected}</p></div>
+        <div><h3>Check before using the output</h3><p>{example.caution}</p></div>
+      </div>
+      <p class="tool-learning-next">Next step: <a href={example.relatedHref}>{example.relatedLabel}</a>.</p>
+    </article>
+  </div>
+</section>
+<style>
+  .tool-learning { max-width: 1060px; padding-block: 28px 38px; }
+  .tool-learning-intro p, .tool-learning-details p { line-height: 1.7; }
+  .tool-learning h2 { font-size: clamp(23px,3vw,32px); margin-block: 8px 12px; }
+  .tool-learning h3 { font-size: 18px; margin-block: 0 10px; }
+  .tool-learning-examples { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,330px),1fr)); gap: 16px; margin-block: 20px; }
+  .tool-learning-code { min-width: 0; }
+  .tool-learning-code pre { overflow-x: auto; max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; background: #111825; color: #f1edff; padding: 18px; border: 1px solid #47405d; border-radius: 12px; }
+  .tool-learning-code code { font-size: 13px; line-height: 1.65; }
+  .tool-learning-details { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,330px),1fr)); gap: 18px; margin-block: 18px; }
+  .tool-learning-next { font-weight: 700; margin-bottom: 0; }
+  .tool-learning-next a { text-decoration: underline; text-underline-offset: 3px; }
+  @media(max-width:650px) { .tool-learning { padding-block: 22px 30px; } }
+</style>

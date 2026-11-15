@@ -71,6 +71,10 @@ test('category buttons, empty state, clear and reset work without losing link ta
   await expect(directory.locator('[data-directory-clear]')).toBeVisible();
   await directory.getByRole('button', { name: 'Clear', exact: true }).click();
   await expect(search).toHaveValue('');
+  // A later focus must not resurrect a previous search value (WebKit regression).
+  await search.blur();
+  await search.focus();
+  await expect(search).toHaveValue('');
   await expect(directory.locator('[data-directory-clear]')).toBeHidden();
 });
 
