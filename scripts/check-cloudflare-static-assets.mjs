@@ -106,6 +106,9 @@ const requiredCspTokens = [
   "connect-src 'self'",
   'https://www.googletagmanager.com',
   'https://*.google-analytics.com',
+  'https://pagead2.googlesyndication.com',
+  'https://tpc.googlesyndication.com',
+  "frame-src 'self'",
   'upgrade-insecure-requests',
 ];
 for (const token of requiredCspTokens) {
