@@ -1,0 +1,30 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+const configuredSupportEmail = (import.meta.env.PUBLIC_SUPPORT_EMAIL ?? '').trim();
+const supportEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(configuredSupportEmail) ? configuredSupportEmail : '';
+---
+<SiteLayout title="Contact & Support | ConvertAnyFile" description="Contact ConvertAnyFile about converter errors, supported formats, privacy, accessibility or feedback. Find the maintained support channel and troubleshooting details.">
+  <section class="page-hero"><div class="site-container hero-inner">
+    <div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Contact</span></div>
+    <span class="eyebrow">Contact & support</span>
+    <h1>Help us improve ConvertAnyFile.</h1>
+    <p>Questions about file conversion, image editing, privacy or accessibility? Here is how to reach the project maintainer and report a reproducible issue.</p>
+  </div></section>
+  <section class="content-wide-section"><div class="site-container contact-content">
+    <h2>Contact the maintainer</h2>
+    {supportEmail ? <p>Send questions and support requests to <a href={'mailto:' + supportEmail}>{supportEmail}</a>.</p>
+      : <p>For now, visit the <a href="https://github.com/kevin4relocate" rel="noopener noreferrer" target="_blank">ConvertAnyFile maintainer's GitHub profile</a> and use any public contact option shown there. A dedicated email contact will appear here once it is configured.</p>}
+    <h2>How to report a problem</h2>
+    <p>Include the tool URL, source and target format, browser and operating system, the steps you took, and the exact error displayed. Do not send private files or confidential data with your report.</p>
+    <h2>Privacy inquiries</h2>
+    <p>Our <a href="/privacy/">Privacy Policy</a> explains local file processing and optional analytics. You can reopen your analytics choices at any time using the Privacy choices control in the footer.</p>
+    <h2>Useful resources</h2>
+    <p>Before reporting a compatibility issue, check the <a href="/faq/">FAQ</a>, <a href="/formats/">supported formats</a> and <a href="/guides/">practical guides</a> for common limitations and workarounds.</p>
+  </div></section>
+  <style>
+    .contact-content { max-width: 860px; padding-block: 32px 56px; }
+    .contact-content h2 { font-size: 23px; margin: 24px 0 10px; }
+    .contact-content p { line-height: 1.8; }
+    .contact-content a { text-decoration: underline; text-underline-offset: 3px; }
+  </style>
+</SiteLayout>
