@@ -30,7 +30,7 @@ const accept=tool.outputExt==='sql'||tool.id==='sql-insert-to-csv'?'.sql,.txt':t
     </label>)}
   </div>}
   <div class="data-workbench-actions">
-    <button class="data-run" data-data-run type="button">{tool.button}</button>
+    <button class="data-run" data-data-run type="button" disabled>{tool.button}</button>
     <button type="button" data-data-copy disabled>Copy result</button>
     <button type="button" data-data-download disabled>Download result</button>
     <button type="button" data-data-clear>Clear inputs</button>
@@ -135,6 +135,9 @@ const accept=tool.outputExt==='sql'||tool.id==='sql-insert-to-csv'?'.sql,.txt':t
         download.disabled=!result;
       }
     });
+    // Event handlers are now installed; early clicks must not be lost.
+    root.dataset.toolReady='true';
+    run.disabled=false;
   }
 </script>
 <style>

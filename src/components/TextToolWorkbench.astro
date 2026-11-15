@@ -14,11 +14,11 @@ const {tool} = Astro.props as {tool:TextToolDefinition};
   {tool.options && <label>{tool.id === 'unix-timestamp-converter' ? 'Input unit' : tool.id === 'json-formatter' ? 'Indentation' : 'Letter case'}<select data-tool-option>{tool.options.map((item)=><option value={item.value}>{item.label}</option>)}</select></label>}
   {tool.kind === 'generator' && <label>Count<select data-tool-option>{[1,5,10,25,50].map((n)=><option value={n}>{n}</option>)}</select></label>}
   <button type="button" data-tool-clear>Clear</button>
-  <button type="button" data-tool-run>{tool.buttonLabel}</button>
+  <button type="button" data-tool-run disabled>{tool.buttonLabel}</button>
   <button type="button" data-tool-copy disabled>Copy</button>
   <button type="button" data-tool-download disabled>Download</button>
  </div>
- <p data-tool-status role="status" aria-live="polite">Ready</p>
+ <p data-tool-status role="status" aria-live="polite">Initializing tool…</p>
  <p data-tool-error role="alert" hidden></p>
 </div>
 <script>
@@ -63,6 +63,10 @@ const {tool} = Astro.props as {tool:TextToolDefinition};
    setTimeout(()=>URL.revokeObjectURL(url),1000);
    status.textContent='Result downloaded';
   });
+  // Do not expose an enabled Run action before its event listener exists.
+  root.dataset.toolReady='true';
+  run.disabled=false;
+  status.textContent='Ready';
  }
 </script>
 <style>
