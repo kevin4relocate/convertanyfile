@@ -48,7 +48,9 @@ test('user can opt in and revoke consent without enabling ads', async ({ page })
   await expect(page.locator('script[src*="googletagmanager.com/gtag/js"]')).toHaveCount(0);
   // A site-verification snippet exists, but no ad slots or requests are enabled.
   await expect(page.locator('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]')).toHaveCount(1);
-  expect(await page.evaluate(() => (window as Window & { adsbygoogle?: { pauseAdRequests?: number } }).adsbygoogle?.pauseAdRequests)).toBe(1);
+  const headHtml = await page.locator('head').innerHTML();
+  expect(headHtml).toContain('pauseAdRequests = 1');
+  expect(headHtml.indexOf('pauseAdRequests = 1')).toBeLessThan(headHtml.indexOf('adsbygoogle.js?client=ca-pub-4046271575630296'));
 });
 
 test('AdSense account is verifiable while ad requests remain paused', async ({ request }) => {
