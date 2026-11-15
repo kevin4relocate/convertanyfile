@@ -15,6 +15,8 @@ test('every live Text and Data tool has a distinct, crawlable worked example', a
     ...DATA_PROCESSING_TOOLS.map(tool => ({ path: '/data/' + tool.id + '/', example: DATA_TOOL_EXAMPLES[tool.id] })),
   ];
   for (const route of routes) {
+    const example = route.example;
+    if (!example) throw new Error('Missing editorial example for ' + route.path);
     const res = await request.get(route.path);
     expect(res.status(), route.path).toBe(200);
     const html = await res.text();
@@ -23,8 +25,8 @@ test('every live Text and Data tool has a distinct, crawlable worked example', a
     expect(html, route.path).toContain('id="worked-example"');
     expect(html, route.path).toContain('Practical walkthrough');
     expect(html, route.path).toContain('Expected behavior');
-    expect(html, route.path).toContain(route.example.title);
-    expect(html, route.path).toContain('href="' + route.example.relatedHref + '"');
+    expect(html, route.path).toContain(example.title);
+    expect(html, route.path).toContain('href="' + example.relatedHref + '"');
     expect((html.match(/<h1\b/g) ?? []).length, route.path).toBe(1);
     expect((html.match(/id="worked-example"/g) ?? []).length, route.path).toBe(1);
   }
