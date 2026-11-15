@@ -11,6 +11,12 @@ const PATHS = [
   '/guides/how-to-convert-jpg-to-webp/',
 ] as const;
 
+// Avoid synthetic analytics events when testing live production.
+test.beforeEach(async ({ context }) => {
+  await context.route(/https:\/\/www\.googletagmanager\.com\/.*/, route => route.abort());
+  await context.route(/https:\/\/(?:[^/]+\.)?google-analytics\.com\/.*/, route => route.abort());
+});
+
 test('deployed revision is transparent and non-sensitive', async ({ request }) => {
   const response = await request.get('/build-info.json');
   expect(response.status()).toBe(200);
