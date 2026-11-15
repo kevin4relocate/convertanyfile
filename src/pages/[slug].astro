@@ -9,6 +9,7 @@ import SubtitlePairContent from '../components/SubtitlePairContent.astro';
 import { ALL_PAIR_CONVERTERS, getAnyConverter } from '../config/converter-registry';
 import { PAIR_CONTENT } from '../content/pair-content';
 import { SEO_PAIR_CONTENT } from '../content/seo-pair-content';
+import { IMAGE_FORMAT_WORKFLOWS } from '../content/format-workflows';
 import { FORMAT_REFERENCE } from '../content/format-reference';
 import { SITE } from '../config/site';
 
@@ -16,6 +17,7 @@ export function getStaticPaths(){return ALL_PAIR_CONVERTERS.map((converter)=>({p
 const { converter } = Astro.props;
 const content = PAIR_CONTENT[converter.slug];
 const seoContent = SEO_PAIR_CONTENT[converter.slug];
+const formatWorkflow = IMAGE_FORMAT_WORKFLOWS[converter.slug];
 const source = converter.input ? FORMAT_REFERENCE[converter.input] : undefined;
 const target = converter.output ? FORMAT_REFERENCE[converter.output] : undefined;
 const related = (converter.related ?? []).map((slug:string)=>getAnyConverter(slug)).filter(Boolean);
@@ -25,10 +27,11 @@ const outputLabel = converter.output?.toUpperCase();
 const toc = [
   {id:'why',label:`Why convert ${inputLabel} to ${outputLabel}?`},
   ...(seoContent ? [{id:'best-for',label:'When this conversion is useful'}] : []),
+  ...(formatWorkflow ? [{id:'real-world-example',label:'Example and checks'}] : []),
   {id:'formats',label:'Source vs output'},
   {id:'changes',label:'What changes in conversion'},
   {id:'workflow',label:'How the local workflow works'},
-  {id:'faq',label:'Common questions'},
+  {id:'preflight',label:'Before you convert'},
 ];
 const faq = [
   {question:`Can I convert ${inputLabel} to ${outputLabel} without uploading the file?`,answer:'Yes. This converter runs the supported image conversion workflow in your browser, so an image upload step is not required.'},
@@ -60,7 +63,6 @@ const breadcrumbSchema = {'@context':'https://schema.org','@type':'BreadcrumbLis
 
   <h2 id="why">Why convert {inputLabel} to {outputLabel}?</h2>
   <p>{content?.why}</p>
-  <p>{content?.when}</p>
 
   {seoContent && <>
     <h2 id="best-for">When is {inputLabel} to {outputLabel} useful?</h2>
@@ -74,6 +76,14 @@ const breadcrumbSchema = {'@context':'https://schema.org','@type':'BreadcrumbLis
     </ul>
     {seoContent.guideHref && seoContent.guideLabel && <p><strong>Want a walkthrough before converting?</strong> Read <a href={seoContent.guideHref}>{seoContent.guideLabel}</a> for the practical workflow and trade-offs.</p>}
   </>}
+
+  {formatWorkflow && <section aria-labelledby="real-world-example">
+    <h2 id="real-world-example">{formatWorkflow.heading}</h2>
+    <p>{formatWorkflow.situation}</p>
+    <h3>Before conversion</h3><p>{formatWorkflow.sourceCheck}</p>
+    <h3>After conversion</h3><p>{formatWorkflow.outputCheck}</p>
+    <div class="callout"><strong>When to keep the original format</strong><p>{formatWorkflow.avoidWhen}</p></div>
+  </section>}
 
   {source && target && <>
     <h2 id="formats">Understand the source and the output</h2>
@@ -96,7 +106,7 @@ const breadcrumbSchema = {'@context':'https://schema.org','@type':'BreadcrumbLis
   </ol>
   <p>Batch conversion runs sequentially to reduce browser memory pressure. If one image fails, the rest of the batch can continue, and recoverable failures can be retried without re-running successful files.</p>
 
-  <h2 id="faq">Before you convert</h2>
+  <h2 id="preflight">Before you convert</h2>
   <ul class="content-checklist">
     <li>Keep important source files until you have checked the converted output.</li>
     <li>Do not assume a larger output means the image gained real quality or detail.</li>
