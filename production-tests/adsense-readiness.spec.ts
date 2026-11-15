@@ -54,9 +54,15 @@ test('production publishes the new editorial content and policy', async ({ reque
     expect(await response.text()).toContain(literal);
   }
   const privacy = await request.get('/privacy/');
-  expect(await privacy.text()).toContain('Advertising is not currently active');
+  expect(await privacy.text()).toContain('All AdSense ad requests are paused');
   const home = await request.get('/');
-  expect(await home.text()).not.toMatch(/ca-pub-\d{16}/);
+  const html = await home.text();
+  expect(html).toContain('pagead/js/adsbygoogle.js?client=ca-pub-4046271575630296');
+  expect(html.indexOf('pauseAdRequests = 1')).toBeLessThan(html.indexOf('adsbygoogle.js?client=ca-pub-4046271575630296'));
+  expect(html).not.toContain('data-ad-slot=');
+  const adsTxt = await request.get('/ads.txt');
+  expect(adsTxt.status()).toBe(200);
+  expect((await adsTxt.text()).trim()).toBe('google.com, pub-4046271575630296, DIRECT, f08c47fec0942fa0');
 });
 
 test('production headers and static assets have expected safety properties', async ({ request }) => {
@@ -134,5 +140,6 @@ test('analytics is opt-in, revocable and separate from advertising', async ({ pa
   await page.locator('[data-analytics-reject]').click();
   await page.reload();
   await expect(page.locator('script[src*="googletagmanager.com/gtag/js"]')).toHaveCount(0);
-  await expect(page.locator('script[src*="pagead2.googlesyndication.com"]')).toHaveCount(0);
+  await expect(page.locator('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]')).toHaveCount(1);
+  expect(await page.evaluate(() => (window as Window & { adsbygoogle?: { pauseAdRequests?: number } }).adsbygoogle?.pauseAdRequests)).toBe(1);
 });
