@@ -1,0 +1,95 @@
+name: Deploy Cloudflare Pages (manual recovery)
+
+# An opt-in alternative for projects where the Cloudflare Pages Git integration
+# is disconnected or production branch auto-deploy is disabled. Never runs on push.
+on:
+  workflow_dispatch:
+    inputs:
+      project_name:
+        description: "Existing Cloudflare Pages project name (not custom domain)"
+        required: true
+        type: string
+      confirm:
+        description: "Explicitly confirm publishing the current main branch to production"
+        required: true
+        type: choice
+        options:
+          - do-not-deploy
+          - deploy-production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: convertanyfile-cloudflare-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Manually publish and verify Cloudflare Pages
+    if: ${{ github.ref == 'refs/heads/main' && inputs.confirm == 'deploy-production' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PUBLIC_SUPPORT_EMAIL: ${{ vars.PUBLIC_SUPPORT_EMAIL }}
+      PLAYWRIGHT_BASE_URL: https://convertanyfile.net
+      EXPECTED_RELEASE_SHA: ${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.19.0'
+          cache: npm
+
+      - name: Verify production destination and credentials exist
+        env:
+          PROJECT_NAME: ${{ inputs.project_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$PROJECT_NAME" =~ ^[a-z0-9][a-z0-9-]*$ ]] || { echo "Invalid Pages project name. Use lowercase letters, digits and hyphens."; exit 1; }
+          [[ -n "$CLOUDFLARE_ACCOUNT_ID" ]] || { echo "Missing secret CLOUDFLARE_ACCOUNT_ID."; exit 1; }
+          [[ -n "$CLOUDFLARE_API_TOKEN" ]] || { echo "Missing secret CLOUDFLARE_API_TOKEN."; exit 1; }
+          echo "Validated target project name and required secret presence. Credentials are not printed."
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build audited Astro output
+        run: npm run build
+
+      - name: Verify built output includes this commit identity
+        run: node scripts/verify-build-fingerprint.mjs
+
+      - name: Publish explicit production branch to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ inputs.project_name }} --branch=main --commit-hash=${{ github.sha }}
+
+      - name: Wait until the public domain serves the exact published commit
+        timeout-minutes: 5
+        run: node scripts/wait-for-production-deploy.mjs
+
+      - name: Install Chromium for live smoke tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify production website and real conversion workflows
+        run: npm run test:production
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudflare-deploy-recovery-diagnostics
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
