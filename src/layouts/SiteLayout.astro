@@ -69,13 +69,9 @@ const websiteSchema = {
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <title>{title}</title>
-    <!-- AdSense ownership verification for ca-pub-4046271575630296.
-         Ad requests remain paused until site approval and a certified ad consent
-         integration are configured. This is separate from optional GA4 analytics. -->
+    <!-- AdSense site ownership verification: no advertising JavaScript is loaded
+         until site approval and a suitable ad consent solution are configured. -->
     <meta name="google-adsense-account" content="ca-pub-4046271575630296" />
-    <script is:inline>
-      (window.adsbygoogle = window.adsbygoogle || []).pauseAdRequests = 1;
-    </script>
     <script is:inline>
       // Basic Consent Mode v2: GA4 does not load before explicit Analytics opt-in.
       (() => {
@@ -122,7 +118,6 @@ const websiteSchema = {
         }
       })();
     </script>
-    <script is:inline async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4046271575630296" crossorigin="anonymous"></script>
     {isHomePage && <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)}></script>}
     {schemas.map((item) => <script is:inline type="application/ld+json" set:html={JSON.stringify(item)}></script>)}
     <style is:global>.nav-tool-status{display:none!important}</style>
