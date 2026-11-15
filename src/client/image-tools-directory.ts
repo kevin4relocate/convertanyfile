@@ -76,9 +76,11 @@ function initializeImageToolsDirectory(root: HTMLElement): void {
     }
   });
   clear.addEventListener('click', () => {
+    // Focus first: WebKit can restore a search field's prior value on focus.
+    // Clear after focus so the visible input and filter state stay in sync.
+    input.focus();
     input.value = '';
     applyFilter();
-    input.focus();
   });
   reset.addEventListener('click', showAll);
 
