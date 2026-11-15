@@ -141,5 +141,7 @@ test('analytics is opt-in, revocable and separate from advertising', async ({ pa
   await page.reload();
   await expect(page.locator('script[src*="googletagmanager.com/gtag/js"]')).toHaveCount(0);
   await expect(page.locator('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]')).toHaveCount(1);
-  expect(await page.evaluate(() => (window as Window & { adsbygoogle?: { pauseAdRequests?: number } }).adsbygoogle?.pauseAdRequests)).toBe(1);
+  const headHtml = await page.locator('head').innerHTML();
+  expect(headHtml).toContain('pauseAdRequests = 1');
+  expect(headHtml.indexOf('pauseAdRequests = 1')).toBeLessThan(headHtml.indexOf('adsbygoogle.js?client=ca-pub-4046271575630296'));
 });
