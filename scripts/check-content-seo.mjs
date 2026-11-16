@@ -8,9 +8,9 @@ const readCatalog = async (filePath, declaration) => {
   const start = source.indexOf(prefix);
   if (start < 0) throw new Error(`Catalog declaration missing in ${filePath}`);
   const arrayStart = source.indexOf('[',start+prefix.length);
-  const end = source.indexOf(';',arrayStart);
+  const end = source.indexOf('\n];',arrayStart);
   if (arrayStart < 0 || end < 0) throw new Error(`Catalog array malformed: ${filePath}`);
-  return JSON.parse(source.slice(arrayStart,end));
+  return JSON.parse(source.slice(arrayStart,end+2));
 };
 const guides = [
   ...await readCatalog('src/content/tool-seo-guides.ts','BATCH_01_TOOL_SEO_GUIDES'),
