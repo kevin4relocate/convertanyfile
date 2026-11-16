@@ -4,12 +4,14 @@ import GrowthLinkHub from '../../components/GrowthLinkHub.astro';
 import { IMAGE_GROWTH_GUIDES } from '../../content/image-growth-guides';
 import { CONVERSION_GROWTH_GUIDES } from '../../content/conversion-growth-guides';
 import { STATIC_GUIDES } from '../../config/guide-links';
+import { getPublishedToolSeoGuides } from '../../content/tool-seo-guides';
 import { POPULAR_IMAGE_GUIDES, POPULAR_CONVERSION_GUIDES } from '../../config/growth-links';
 import { SITE } from '../../config/site';
 
 const imageGuideCards = IMAGE_GROWTH_GUIDES.map((guide)=>({href:`/guides/${guide.slug}/`,title:guide.h1,text:guide.indexText}));
 const conversionGuideCards = CONVERSION_GROWTH_GUIDES.map((guide)=>({href:`/guides/${guide.slug}/`,title:guide.h1,text:guide.indexText}));
-const guides=[...conversionGuideCards,...imageGuideCards,...STATIC_GUIDES];
+const publishedToolGuides = getPublishedToolSeoGuides().map((guide)=>({href:`/guides/tool/${guide.slug}/`,title:guide.h1,text:guide.indexText}));
+const guides=[...publishedToolGuides,...conversionGuideCards,...imageGuideCards,...STATIC_GUIDES];
 const conversionGuideGroups=[{title:'High-demand conversion guides',links:POPULAR_CONVERSION_GUIDES}] as const;
 const imageGuideGroups=[{title:'Popular image editing guides',links:POPULAR_IMAGE_GUIDES}] as const;
 const schema=[
