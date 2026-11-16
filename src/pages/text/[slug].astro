@@ -2,6 +2,7 @@
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import TextToolWorkbench from '../../components/TextToolWorkbench.astro';
 import ToolWorkedExample from '../../components/ToolWorkedExample.astro';
+import ToolSeoGuideLink from '../../components/ToolSeoGuideLink.astro';
 import { TEXT_TOOL_EXAMPLES } from '../../content/tool-worked-examples';
 import { TEXT_TOOLS } from '../../config/text-tools';
 import { SITE } from '../../config/site';
@@ -24,6 +25,7 @@ const related=TEXT_TOOLS.filter((item)=>item.id!==tool.id).slice(0,5);
   <aside><h2>Related utilities</h2>{related.map((item)=><a href={'/text/'+item.slug+'/'}>{item.name} →</a>)}<a href="/text-tools/">Browse all text tools →</a></aside>
  </div></div></section>
  {workedExample && <ToolWorkedExample example={workedExample} />}
+ <ToolSeoGuideLink toolHref={'/text/'+tool.slug+'/'} />
 </SiteLayout>
 <style>
  .text-tool-details{display:grid;grid-template-columns:minmax(0,2fr) minmax(220px,1fr);gap:28px}
