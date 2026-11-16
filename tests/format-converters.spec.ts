@@ -137,10 +137,10 @@ test('switching direction preserves user-pasted data, while chaining completed o
   await root.locator('[data-direction]').selectOption('reverse');
   await expect(root.locator('[data-input]')).toHaveValue(custom);
   await root.locator('[data-run]').click();
-  await expect(root.locator('[data-output]')).toContainText('A custom user value');
+  await expect(root.locator('[data-output]')).toHaveValue(/A custom user value/);
   const produced=await root.locator('[data-output]').inputValue();
   await root.locator('[data-swap]').click();
   await expect(root.locator('[data-input]')).toHaveValue(produced);
   await root.locator('[data-run]').click();
-  await expect(root.locator('[data-output]')).toContainText('title = "A custom user value"');
+  await expect(root.locator('[data-output]')).toHaveValue(/title = "A custom user value"/);
 });
