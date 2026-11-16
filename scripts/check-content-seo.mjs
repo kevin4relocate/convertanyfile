@@ -16,6 +16,7 @@ const guides = [
   ...await readCatalog('src/content/tool-seo-guides.ts','BATCH_01_TOOL_SEO_GUIDES'),
   ...await readCatalog('src/content/tool-seo-guides-batch-02.ts','BATCH_02_TOOL_SEO_GUIDES'),
   ...await readCatalog('src/content/tool-seo-guides-batch-03.ts','BATCH_03_TOOL_SEO_GUIDES'),
+  ...await readCatalog('src/content/tool-seo-guides-batch-04.ts','BATCH_04_TOOL_SEO_GUIDES'),
 ];
 const coverage = (await readFile(join(root,'docs/tool-guide-coverage.csv'),'utf8')).trim().split('\n');
 const rows = coverage.slice(1).map(line=>line.split(','));
@@ -24,7 +25,7 @@ if (rows.length !== 151) errors.push(`Coverage inventory unexpectedly changed: $
 if (new Set(rows.map(r=>r[2])).size !== rows.length) errors.push('Duplicate tool paths in coverage audit');
 if (rows.some(row=>row[2].includes('gemini-ai-logo-remover'))) errors.push('Hidden Gemini tool must not be included');
 if (rows.filter(row=>row[3]==='scheduled').length !== guides.length) errors.push('Scheduled coverage count does not match published content queue');
-if (guides.length !== 30) errors.push(`Expected 30 independently reviewed guides across three batches; found ${guides.length}`);
+if (guides.length !== 40) errors.push(`Expected 40 independently reviewed guides across four batches; found ${guides.length}`);
 const titleSet=new Set(), slugSet=new Set(),dateSet=new Set();
 for (const [index,g] of guides.entries()) {
   if (g.publishDate !== new Date(Date.UTC(2026,10,17+index)).toISOString().slice(0,10)) errors.push(`Unexpected publication date: ${g.slug}`);
@@ -42,7 +43,7 @@ for (const [index,g] of guides.entries()) {
   if (g.sections.length<4||g.faq.length<2||g.related.length<2) errors.push(`Sections, FAQs or links missing: ${g.slug}`);
   if (g.related.some(r=>/gemini-ai-logo-remover/.test(r.href))) errors.push(`Disabled tool linked: ${g.slug}`);
 }
-if (rows.filter(r=>r[3]==='covered').length!==19 ||rows.filter(r=>r[3]==='scheduled').length!==30 ||rows.filter(r=>r[3]==='missing').length!==102) errors.push('Inventory status totals unexpected');
+if (rows.filter(r=>r[3]==='covered').length!==19 ||rows.filter(r=>r[3]==='scheduled').length!==40 ||rows.filter(r=>r[3]==='missing').length!==92) errors.push('Inventory status totals unexpected');
 const date=new Date(Date.now()+7*3600000).toISOString().slice(0,10);
 for(const g of guides){
  const page=join(root,'dist/guides/tool',g.slug,'index.html');
@@ -57,4 +58,4 @@ for(const g of guides){
  }catch{if(live) errors.push(`Due article missing from static build: ${g.slug}`);}
 }
 if(errors.length){for(const error of errors)console.error('SEO CONTENT:',error);process.exit(1);}
-console.log(`Tool SEO audit passed: 151 tools, 19 existing guides, 30 scheduled articles, 102 remaining; ${guides.filter(g=>g.publishDate<=date).length} published on ${date} VN.`);
+console.log(`Tool SEO audit passed: 151 tools, 19 existing guides, 40 scheduled articles, 92 remaining; ${guides.filter(g=>g.publishDate<=date).length} published on ${date} VN.`);
