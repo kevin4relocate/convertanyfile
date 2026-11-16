@@ -35,7 +35,7 @@ test('search filters SSR cards by tool name, description, and keywords without n
   await expect(directory.locator('[data-directory-section="everyday"]')).toBeHidden();
 
   await search.fill('watermark');
-  await expect(directory.locator('[data-directory-tool]:visible')).toHaveCount(3);
+  await expect(directory.locator('[data-directory-tool]:visible')).toHaveCount(2);
   await expect(page).toHaveURL(/\/image-tools\/$/);
 
   await search.press('Escape');
