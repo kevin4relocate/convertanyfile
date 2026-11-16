@@ -2,6 +2,7 @@
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import DataProcessingWorkbench from '../../components/DataProcessingWorkbench.astro';
 import ToolWorkedExample from '../../components/ToolWorkedExample.astro';
+import ToolSeoGuideLink from '../../components/ToolSeoGuideLink.astro';
 import { DATA_TOOL_EXAMPLES } from '../../content/tool-worked-examples';
 import {DATA_PROCESSING_TOOLS,type DataProcessingTool} from '../../config/data-processing-tools';
 import {SITE} from '../../config/site';
@@ -39,6 +40,7 @@ const schema=[
   </aside>
  </div></div></section>
  {workedExample && <ToolWorkedExample example={workedExample} />}
+ <ToolSeoGuideLink toolHref={'/data/'+tool.id+'/'} />
 </SiteLayout>
 <style>
  .data-info{display:grid;grid-template-columns:minmax(0,2fr) minmax(220px,1fr);gap:24px}
