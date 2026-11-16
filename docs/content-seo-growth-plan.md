@@ -16,7 +16,7 @@ Source of truth: [tool-guide-coverage.csv](./tool-guide-coverage.csv), extracted
 | Data processing tools | 15 |
 | **Total** | **151** |
 
-Strict **primary-guide** coverage after batch 02: **19 existing**, **70 scheduled across six batches**, **62 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
+Strict **primary-guide** coverage after batch 02: **19 existing**, **90 scheduled across seven batches**, **42 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
 
 This is a *route audit*, not a claim of 151 separately differentiated editing engines. Summary hub routes and some Preview tools are included for tracking, and Preview features should not be promoted as live.
 
@@ -48,7 +48,7 @@ Each guide includes a real tool-specific scenario, accurate constraints checked 
 - Manual `workflow_dispatch` is available for recovery. Same-day re-runs do not add a second release trigger if the date's commit already exists.
 - The publication script **does not** modify any AdSense verification or advertising scripts. No future article is advertised before its publication date.
 
-## Follow-on backlog (62 uncovered)
+## Follow-on backlog (42 uncovered)
 
 1. Prioritize remaining high-use, straightforward functionality: JSON Minifier/Decoder, URL Decoder, HTML Entity tools, CSV filters and transformations, image crop/compress/color utilities.
 2. Expand detailed image utilities and advanced editors, using feature-specific examples verified against their real controls and limitations.
@@ -150,5 +150,15 @@ This larger editorial batch covers twenty live image tools omitted from earlier 
 - Distinguish image aesthetic filters from irreversible privacy redaction. The unpublished Gemini feature remains excluded.
 
 **Updated audit:** 151 tool/route entries; 19 previously covered; 70 newly prepared and scheduled; 62 still missing a primary guide. Of the remaining 62, image editing and format conversion, archive repackaging, subtitle conversion and the three converter hubs require differentiated editorials, not superficial find-and-replace copy.
+
+
+## Batch 07 — Jan 26 to Feb 14, 2027 (20 subtitle and archive guides)
+
+Fifteen distinct subtitle conversion guides cover missing SRT/SBV, WebVTT/SBV, ASS and SSA conversions, plus text transcript exports. Five archive conversion guides cover 7Z→TAR, 7Z→TAR.GZ, RAR→TAR, RAR→TAR.GZ and ZIP→TAR. Each guide documents the actual target format, source features that may be lost, a realistic use case and how to inspect the converted result. Source assets are not uploaded to a third-party conversion server in these flows.
+
+- Catalog: `src/content/tool-seo-guides-batch-07.ts`; SVGs in `public/guide-images/guide-*-workflow.svg`.
+- Publication: one article per day from Jan 26 to Feb 14, at the existing 09:30 Vietnam-time build schedule.
+- Coverage after this batch: **151 routes, 19 already covered, 90 queued new articles, 42 remaining**.
+- Future pages are generated only on or after their publication dates; archive limitations and subtitle formatting losses are described rather than hidden.
 
 After each 10-article batch, review Google Search Console impressions/indexing and engagement before expanding. Regular publication is an editorial cadence, **not** a ranking guarantee.
