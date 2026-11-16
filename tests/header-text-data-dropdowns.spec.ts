@@ -33,6 +33,9 @@ test('desktop dropdowns open with accessible summaries and navigate to tool page
 test('mobile menu provides separate expandable Text and Data sections', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'Mobile accordion test');
   await page.goto('/');
+  // Dismiss the consent overlay as a real visitor would, so it cannot cover menu rows.
+  const rejectAnalytics = page.locator('[data-analytics-reject]');
+  if (await rejectAnalytics.isVisible()) await rejectAnalytics.click();
   const menu = page.locator('details.mobile-nav');
   await menu.locator(':scope > summary').click();
   const textSection = menu.locator('details.mobile-menu-section').filter({ has: page.locator('summary').filter({ hasText: 'Text Tools' }) });
