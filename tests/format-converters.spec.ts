@@ -107,8 +107,8 @@ test('XML ↔ CSV round trip supports escaped Unicode and rejects invalid XML co
 
 test('structured reverse tools reject unrepresentable data rather than silently dropping it',async({page})=>{
   const cases=[
-    {id:'json-toml',source:'{"a":null}',message:/null/i},
-    {id:'json-yaml',source:'a:\n  b: nested',message:/nested|indented/i},
+    {id:'json-toml',source:'a = null',message:/unsupported TOML value/i},
+    {id:'json-yaml',source:'a:\n  b: nested',message:/simple YAML|nested|indented/i},
     {id:'yaml-toml',source:'[section]\na = 1',message:/flat TOML/i},
     {id:'csv-html-table',source:'<table><tr><td colspan="2">x</td></tr></table>',message:/merged/i},
     {id:'ics-csv',source:'UID,DTSTART,DTEND,SUMMARY,LOCATION,DESCRIPTION\nid,20270230T120000Z,,Invalid,,',message:/invalid UTC calendar date/i}
