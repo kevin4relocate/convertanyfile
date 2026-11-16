@@ -16,7 +16,7 @@ Source of truth: [tool-guide-coverage.csv](./tool-guide-coverage.csv), extracted
 | Data processing tools | 15 |
 | **Total** | **151** |
 
-Strict **primary-guide** coverage after batch 02: **19 existing**, **30 scheduled across three batches**, **102 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
+Strict **primary-guide** coverage after batch 02: **19 existing**, **40 scheduled across four batches**, **92 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
 
 This is a *route audit*, not a claim of 151 separately differentiated editing engines. Summary hub routes and some Preview tools are included for tracking, and Preview features should not be promoted as live.
 
@@ -48,7 +48,7 @@ Each guide includes a real tool-specific scenario, accurate constraints checked 
 - Manual `workflow_dispatch` is available for recovery. Same-day re-runs do not add a second release trigger if the date's commit already exists.
 - The publication script **does not** modify any AdSense verification or advertising scripts. No future article is advertised before its publication date.
 
-## Follow-on backlog (102 uncovered)
+## Follow-on backlog (92 uncovered)
 
 1. Prioritize remaining high-use, straightforward functionality: JSON Minifier/Decoder, URL Decoder, HTML Entity tools, CSV filters and transformations, image crop/compress/color utilities.
 2. Expand detailed image utilities and advanced editors, using feature-specific examples verified against their real controls and limitations.
@@ -98,5 +98,25 @@ The next ten guides follow the existing 09:30 Vietnam-time daily release workflo
 | Dec 16 | App Icon Generator: PNG sizes and sample web app manifest |
 
 The catalog is `src/content/tool-seo-guides-batch-03.ts`, loaded by `tool-seo-guides.ts`. The existing scheduled workflow glob `src/content/tool-seo-guides*.ts` recognizes the new dates automatically. Nothing is built or linked publicly before its Vietnam publication date. Updated primary-guide coverage: **151 total routes, 19 existing, 30 prepared, 102 uncovered**.
+
+
+## Batch 04 — Dec 17 to Dec 26, 2026
+
+A fourth ten-day daily queue is prepared with standalone practical tutorials, distinct SVG images, alt descriptions, captions, FAQs, and direct tool links. The unchanged GitHub Actions schedule (02:30 UTC = 09:30 Vietnam) automatically detects its dates via the existing content-file glob.
+
+| Date (Vietnam) | Topic |
+| --- | --- |
+| Dec 17 | Word & Character Counter — graphemes versus UTF-8 bytes |
+| Dec 18 | HEX / RGB / HSL Converter — CSS color equivalents |
+| Dec 19 | Unix Timestamp Converter — seconds, milliseconds and timezones |
+| Dec 20 | JSONPath Tester — supported safe expression subset |
+| Dec 21 | JSON to XML — typed representation and round trip |
+| Dec 22 | XML to JSON — generic attribute and repeated-element mapping |
+| Dec 23 | CSV Data Profiler — missing values and numeric summaries |
+| Dec 24 | Contact Sheet Maker — labeled photo overview grid |
+| Dec 25 | Rotate / Flip Image — batch orientation and re-encoding |
+| Dec 26 | Add Watermark — text/logo batch placement |
+
+The fourth batch is stored in `src/content/tool-seo-guides-batch-04.ts`. **Updated coverage: 151 routes; 19 existing primary guides; 40 newly prepared and date-scheduled; 92 uncovered.** Do not publish future pages in the static build before their scheduled date, and keep the temporarily unpublished Gemini feature excluded.
 
 After each 10-article batch, review Google Search Console impressions/indexing and engagement before expanding. Regular publication is an editorial cadence, **not** a ranking guarantee.
