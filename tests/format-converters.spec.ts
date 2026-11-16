@@ -126,3 +126,21 @@ test('structured reverse tools reject unrepresentable data rather than silently 
     await expect(root.locator('[data-download]')).toBeDisabled();
   }
 });
+
+
+test('switching direction preserves user-pasted data, while chaining completed output',async({page})=>{
+  await page.goto('/convert/json-toml/');
+  const root=page.locator('[data-format-workbench]');
+  await expect(root).toHaveAttribute('data-ready','true');
+  const custom='title = "A custom user value"';
+  await root.locator('[data-input]').fill(custom);
+  await root.locator('[data-direction]').selectOption('reverse');
+  await expect(root.locator('[data-input]')).toHaveValue(custom);
+  await root.locator('[data-run]').click();
+  await expect(root.locator('[data-output]')).toContainText('A custom user value');
+  const produced=await root.locator('[data-output]').inputValue();
+  await root.locator('[data-swap]').click();
+  await expect(root.locator('[data-input]')).toHaveValue(produced);
+  await root.locator('[data-run]').click();
+  await expect(root.locator('[data-output]')).toContainText('title = "A custom user value"');
+});
