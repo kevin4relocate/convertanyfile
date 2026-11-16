@@ -16,7 +16,8 @@ const imageToolLinks = IMAGE_TOOL_MANIFEST
     status: entry.tool.status,
   }));
 const imageToolsActive = currentPath === '/image-tools/' || IMAGE_TOOL_ROADMAP.some((tool) => tool.href === currentPath);
-const textToolLinks = TEXT_TOOLS.map((tool) => ({ href: `/text/${tool.slug}/`, label: tool.name, icon: tool.name.charAt(0).toUpperCase(), hint: tool.description }));
+const textToolLinks = TEXT_TOOLS.map((tool) => ({ href: `/text/${tool.slug}/`, label: tool.name, icon: tool.name.charAt(0).toUpperCase(), hint: tool.description, category: /json|xml|yaml|base64|url|html|css|javascript|unicode|encoder|decoder/i.test(tool.name) ? 'Developer & Encoding' : /word|sentence|case|line|paragraph|text|character|whitespace/i.test(tool.name) ? 'Writing & Text' : 'Other Utilities' }));
+const textToolGroups = ['Writing & Text', 'Developer & Encoding', 'Other Utilities'].map((category) => ({ category, tools: textToolLinks.filter((tool) => tool.category === category) })).filter((group) => group.tools.length > 0);
 const dataToolLinks = DATA_PROCESSING_TOOLS.map((tool) => ({ href: `/data/${tool.id}/`, label: tool.name, icon: tool.name.charAt(0).toUpperCase(), hint: tool.description, category: tool.category }));
 const dataToolGroups = [...new Set(DATA_PROCESSING_TOOLS.map((tool) => tool.category))].map((category) => ({ category, tools: dataToolLinks.filter((tool) => tool.category === category) }));
 const textToolsActive = currentPath === '/text-tools/' || textToolLinks.some((tool) => tool.href === currentPath);
@@ -32,7 +33,25 @@ const convertersActive = converterPaths.includes(currentPath);
     </a>
 
     <nav class="main-nav" aria-label="Main navigation">
-      {NAV_ITEMS.map((item) => item.label === 'Image Tools' ? (
+      {NAV_ITEMS.map((item) => item.label === 'Converters' ? (
+        <details class:list={['nav-dropdown', convertersActive && 'is-current']}>
+          <summary><span>Converters</span><svg class="nav-dropdown-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" /></svg></summary>
+          <div class="nav-submenu nav-submenu--converters">
+            <a class="nav-submenu-overview" href="/#converters"><span>All Converters</span><span aria-hidden="true">→</span></a>
+            <div class="nav-tool-grid">
+              {[
+                { label: 'Image Converter', href: '/image-converter/', hint: 'Convert image formats' },
+                { label: 'Data Converter', href: '/data-converter/', hint: 'CSV, JSON and structured data' },
+                { label: 'Archive Converter', href: '/archive-converter/', hint: 'ZIP, RAR, 7Z and more' },
+                { label: 'Subtitle Converter', href: '/subtitle-converter/', hint: 'SRT, VTT and subtitles' },
+              ].map((tool) => <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} href={tool.href}>
+                <span class="nav-tool-icon" aria-hidden="true">{tool.label.charAt(0)}</span>
+                <span class="nav-tool-copy"><strong>{tool.label}</strong><small>{tool.hint}</small></span>
+              </a>)}
+            </div>
+          </div>
+        </details>
+      ) : item.label === 'Image Tools' ? (
         <details class:list={['nav-dropdown', imageToolsActive && 'is-current']}>
           <summary>
             <span>Image Tools</span>
@@ -62,23 +81,32 @@ const convertersActive = converterPaths.includes(currentPath);
             <span>{item.label}</span>
             <svg class="nav-dropdown-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" /></svg>
           </summary>
-          <div class:list={['nav-submenu', 'nav-submenu--catalog', item.label === 'Data Tools' && 'nav-submenu--data-tools']}>
+          <div class:list={['nav-submenu', 'nav-submenu--catalog', item.label === 'Data Tools' && 'nav-submenu--data-tools']} data-tool-catalog>
+            <label class="nav-search-label">
+              <span class="sr-only">Search {item.label}</span>
+              <input type="search" class="nav-tool-search" placeholder={`Find ${item.label.toLowerCase()}…`} aria-label={`Search ${item.label}`} data-nav-search />
+            </label>
             <a class:list={['nav-submenu-overview', currentPath === item.href && 'is-current']} href={item.href}>
               <span>All {item.label}</span><span aria-hidden="true">→</span>
             </a>
             {item.label === 'Text Tools' ? (
-              <div class="nav-tool-grid">
-                {textToolLinks.map((tool) => <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} href={tool.href}>
-                  <span class="nav-tool-icon" aria-hidden="true">{tool.icon}</span>
-                  <span class="nav-tool-copy"><strong>{tool.label}</strong><small>{tool.hint}</small></span>
-                </a>)}
+              <div class="nav-catalog-groups">
+                {textToolGroups.map((group) => <section class="nav-catalog-group" data-nav-group>
+                  <h2>{group.category}</h2>
+                  <div class="nav-tool-grid">
+                    {group.tools.map((tool) => <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} data-nav-item data-search-text={`${tool.label} ${tool.hint}`.toLowerCase()} href={tool.href}>
+                      <span class="nav-tool-icon" aria-hidden="true">{tool.icon}</span>
+                      <span class="nav-tool-copy"><strong>{tool.label}</strong><small>{tool.hint}</small></span>
+                    </a>)}
+                  </div>
+                </section>)}
               </div>
             ) : (
               <div class="nav-catalog-groups">
-                {dataToolGroups.map((group) => <section class="nav-catalog-group">
+                {dataToolGroups.map((group) => <section class="nav-catalog-group" data-nav-group>
                   <h2>{group.category}</h2>
                   <div class="nav-tool-grid">
-                    {group.tools.map((tool) => <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} href={tool.href}>
+                    {group.tools.map((tool) => <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} data-nav-item data-search-text={`${tool.label} ${tool.hint}`.toLowerCase()} href={tool.href}>
                       <span class="nav-tool-icon" aria-hidden="true">{tool.icon}</span>
                       <span class="nav-tool-copy"><strong>{tool.label}</strong><small>{tool.hint}</small></span>
                     </a>)}
@@ -127,7 +155,10 @@ const convertersActive = converterPaths.includes(currentPath);
           <summary class="mobile-menu-row"><span>Text Tools</span><span class="mobile-menu-chevron" aria-hidden="true">⌄</span></summary>
           <div class="mobile-menu-submenu">
             <a class:list={['mobile-menu-subitem', currentPath === '/text-tools/' && 'is-current']} href="/text-tools/">All Text Tools</a>
-            {textToolLinks.map((tool) => <a class:list={['mobile-menu-subitem', currentPath === tool.href && 'is-current']} href={tool.href}>{tool.label}</a>)}
+            {textToolGroups.map((group) => <div class="mobile-menu-tool-group">
+              <span class="mobile-menu-tool-group-label">{group.category}</span>
+              {group.tools.map((tool) => <a class:list={['mobile-menu-subitem', currentPath === tool.href && 'is-current']} href={tool.href}>{tool.label}</a>)}
+            </div>)}
           </div>
         </details>
 
@@ -161,6 +192,22 @@ const convertersActive = converterPaths.includes(currentPath);
       if (dropdown.open) closeDesktopDropdowns(dropdown);
     });
     dropdown.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => dropdown.removeAttribute('open')));
+  }
+
+  for (const catalog of document.querySelectorAll<HTMLElement>('[data-tool-catalog]')) {
+    const input = catalog.querySelector<HTMLInputElement>('[data-nav-search]');
+    input?.addEventListener('input', () => {
+      const query = input.value.trim().toLocaleLowerCase();
+      for (const group of catalog.querySelectorAll<HTMLElement>('[data-nav-group]')) {
+        let visible = 0;
+        for (const item of group.querySelectorAll<HTMLElement>('[data-nav-item]')) {
+          const matches = (item.dataset.searchText ?? '').includes(query);
+          item.hidden = !matches;
+          if (matches) visible++;
+        }
+        group.hidden = visible === 0;
+      }
+    });
   }
 
   const mobileSections = Array.from(document.querySelectorAll<HTMLDetailsElement>('.mobile-menu-section'));
@@ -230,6 +277,11 @@ const convertersActive = converterPaths.includes(currentPath);
     backdrop-filter: blur(18px);
   }
   .nav-submenu--image-tools, .nav-submenu--catalog { width: min(560px, calc(100vw - 32px)); }
+  .nav-submenu--converters { width: min(470px, calc(100vw - 32px)); }
+  .nav-search-label { display: block; }
+  .nav-tool-search { width: 100%; min-height: 38px; padding: 9px 12px; border: 1px solid #394052; border-radius: 9px; background: #111722; color: #f3f5fb; font: inherit; font-size: 13px; }
+  .nav-tool-search:focus-visible { outline: 2px solid #a69ffd; outline-offset: 2px; }
+  .nav-catalog-group[hidden], .nav-tool-link[hidden] { display: none !important; }
   .nav-submenu--data-tools { left: auto; right: 0; transform: none; }
   .nav-catalog-groups { max-height: min(65vh, 540px); overflow-y: auto; padding-right: 2px; }
   .nav-catalog-groups .nav-tool-grid { max-height: none; overflow: visible; }
@@ -391,7 +443,7 @@ const convertersActive = converterPaths.includes(currentPath);
 
   @media (max-width: 980px) {
     .nav-submenu { width: 286px; }
-    .nav-submenu--image-tools, .nav-submenu--catalog { width: 286px; }
+    .nav-submenu--image-tools, .nav-submenu--catalog, .nav-submenu--converters { width: 286px; }
     .nav-tool-grid { grid-template-columns: 1fr; }
     .mobile-nav > nav.mobile-menu > a.mobile-menu-row,
     .mobile-nav > nav.mobile-menu > details.mobile-menu-section > summary.mobile-menu-row {
