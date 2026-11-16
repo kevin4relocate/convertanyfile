@@ -1,0 +1,57 @@
+---
+import SiteLayout from '../../../layouts/SiteLayout.astro';
+import ArticleFrame from '../../../components/ArticleFrame.astro';
+import { getPublishedToolSeoGuides } from '../../../content/tool-seo-guides';
+import { SITE } from '../../../config/site';
+
+export function getStaticPaths() {
+  return getPublishedToolSeoGuides().map((guide) => ({ params: { slug: guide.slug }, props: { guide } }));
+}
+const { guide } = Astro.props;
+const canonical = `${SITE.origin}/guides/tool/${guide.slug}/`;
+const toc = [
+  { id: 'quick-answer', label: 'Quick answer' },
+  ...guide.sections.map((section: {id:string;heading:string}) => ({ id:section.id, label:section.heading })),
+  { id:'faq',label:'Common questions' },
+];
+const schema = [
+  { '@context':'https://schema.org', '@type':'Article', headline:guide.h1, description:guide.description, mainEntityOfPage:canonical,
+    image: `${SITE.origin}${guide.image}`, datePublished:guide.publishDate, dateModified:guide.publishDate, inLanguage:'en',
+    author:{ '@type':'Organization',name:SITE.name,url:SITE.origin },
+    publisher:{ '@type':'Organization',name:SITE.name,url:SITE.origin } },
+  { '@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[
+    {'@type':'ListItem',position:1,name:'Home',item:`${SITE.origin}/`},
+    {'@type':'ListItem',position:2,name:'Guides',item:`${SITE.origin}/guides/`},
+    {'@type':'ListItem',position:3,name:guide.h1,item:canonical},
+  ]},
+];
+---
+<SiteLayout title={guide.title} description={guide.description} canonical={canonical} schema={schema} image={guide.image} imageAlt={guide.imageAlt}>
+  <section class="page-hero"><div class="site-container hero-inner">
+    <div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/guides/">Guides</a><span>/</span><span>{guide.toolLabel}</span></div>
+    <span class="eyebrow">Practical tool guide · Published <time datetime={guide.publishDate}>{guide.publishDate}</time></span>
+    <h1>{guide.h1}</h1>
+    <p>{guide.heroIntro}</p>
+  </div></section>
+  <ArticleFrame toc={toc} related={[{href:guide.toolHref,label:`Open ${guide.toolLabel}`},...guide.related]} relatedTitle="Relevant tools" asideNote="Examples are illustrative. Check your files and keep originals until the exported result works in your destination app.">
+    <figure class="content-guide-figure">
+      <img src={guide.image} width="1200" height="630" alt={guide.imageAlt} loading="eager" decoding="async" />
+      <figcaption>{guide.caption}</figcaption>
+    </figure>
+    <div id="quick-answer" class="quick-answer"><strong>Quick answer</strong><p>{guide.quickAnswer} <a href={guide.toolHref}>Try {guide.toolLabel}</a>.</p></div>
+    {guide.sections.map((section: {id:string;heading:string;paragraphs:readonly string[];bullets?:readonly string[]}) => (
+      <section class="guide-section" aria-labelledby={section.id}>
+        <h2 id={section.id}>{section.heading}</h2>
+        {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+        {section.bullets && <ul class="content-checklist">{section.bullets.map((bullet)=><li>{bullet}</li>)}</ul>}
+      </section>
+    ))}
+    <h2 id="faq">Common questions</h2>
+    {guide.faq.map((item: {question:string;answer:string}) => <><h3>{item.question}</h3><p>{item.answer}</p></>)}
+  </ArticleFrame>
+</SiteLayout>
+<style>
+  .content-guide-figure { margin: 0 0 28px; }
+  .content-guide-figure img { width: 100%; height: auto; display: block; border: 1px solid rgba(139,148,177,.36); border-radius: 18px; background: #0b0e14; }
+  .content-guide-figure figcaption { font-size: 13px; line-height: 1.5; margin: 9px 4px 0; color: var(--muted, #b5c0d2); }
+</style>
