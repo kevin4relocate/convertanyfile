@@ -1,7 +1,9 @@
+import { BATCH_02_TOOL_SEO_GUIDES } from './tool-seo-guides-batch-02';
+
 export interface ToolSeoGuide { slug:string; toolHref:string; toolLabel:string; publishDate:string; title:string; description:string; h1:string; heroIntro:string; indexText:string; quickAnswer:string; image:string; imageAlt:string; caption:string; sections: readonly {id:string;heading:string;paragraphs:readonly string[];bullets?:readonly string[]}[]; faq:readonly {question:string;answer:string}[]; related:readonly {href:string;label:string}[] }
 
 /** Prepared editorial content. Pages become public only when local VN publication date arrives and a build runs. */
-export const TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
+const BATCH_01_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
   {
     "slug": "format-json-without-changing-data",
     "toolHref": "/text/json-formatter/",
@@ -746,6 +748,8 @@ export const TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
     ]
   }
 ];
+
+export const TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [...BATCH_01_TOOL_SEO_GUIDES, ...BATCH_02_TOOL_SEO_GUIDES];
 
 export const todayInVietnam = (date:Date=new Date()):string => new Date(date.getTime()+7*3600000).toISOString().slice(0,10);
 export const getPublishedToolSeoGuides=(date:Date=new Date()):readonly ToolSeoGuide[]=>TOOL_SEO_GUIDES.filter(guide=>guide.publishDate<=todayInVietnam(date));
