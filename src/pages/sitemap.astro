@@ -9,6 +9,8 @@ import { STATIC_GUIDES } from '../config/guide-links';
 import { getPublishedToolSeoGuides } from '../content/tool-seo-guides';
 import { TEXT_TOOLS } from '../config/text-tools';
 import { DATA_PROCESSING_TOOLS } from '../config/data-processing-tools';
+// @ts-ignore lightweight format registry is a JavaScript module
+import { CONVERSIONS } from '../platform/format-converters/simple.mjs';
 
 const topPages = [
   { href: '/', label: 'Home' },
@@ -19,6 +21,7 @@ const topPages = [
   { href: '/image-tools/', label: 'Image Tools' },
   { href: '/text-tools/', label: 'Text & Developer Tools' },
   { href: '/data-tools/', label: 'Data Processing Tools' },
+  { href: '/format-converters/', label: 'Text & Data Format Converters' },
   { href: '/formats/', label: 'Supported Formats' },
   { href: '/guides/', label: 'Guides' },
   { href: '/faq/', label: 'FAQ' },
@@ -70,6 +73,11 @@ const schema = {
   <section class="content-wide-section white"><div class="site-container">
     <div class="section-heading wide"><span class="section-kicker">Data processing</span><h2>JSON, XML, CSV and SQL utilities.</h2><p>All 15 live data tools have dedicated pages for local editing and conversion workflows.</p></div>
     <div class="related-grid">{DATA_PROCESSING_TOOLS.map((tool) => <a class="related-card" href={`/data/${tool.id}/`}>{tool.name} <span>→</span></a>)}</div>
+  </div></section>
+
+  <section class="content-wide-section white"><div class="site-container">
+    <div class="section-heading wide"><span class="section-kicker">Format converters</span><h2>Markdown, HTML, YAML, TOML, XML, INI, vCard and calendar tools.</h2><p>Each converter supports both listed directions with documented limitations.</p></div>
+    <div class="related-grid">{CONVERSIONS.map((tool: {id:string; name:string}) => <a class="related-card" href={`/convert/${tool.id}/`}>{tool.name} <span>→</span></a>)}</div>
   </div></section>
 
   {converterGroups.map((group, index) => <section class:list={['content-wide-section', index % 2 === 0 ? '' : 'white']}><div class="site-container">
