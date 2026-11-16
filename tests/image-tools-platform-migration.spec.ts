@@ -17,7 +17,6 @@ const PNG_WIDE = Buffer.from(
 
 const tools = [
   { name: 'Remove Watermark', path: '/remove-watermark/', maskCount: 6, hasText: true },
-  { name: 'Gemini AI Logo Remover', path: '/gemini-ai-logo-remover/', maskCount: 2, hasText: false },
 ] as const;
 
 for (const tool of tools) {
