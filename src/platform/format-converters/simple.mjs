@@ -1,14 +1,16 @@
+import {convertReverse} from './reverse.mjs';
+import {parseCsv,writeCsv} from './shared.mjs';
 export const CONVERSIONS = [
- {id:'markdown-html',name:'Markdown to HTML',input:'Markdown',output:'HTML',example:'# Hello\n\nThis is **bold**.',note:'Supports headings, paragraphs, emphasis and unordered lists. Not a full CommonMark implementation.'},
- {id:'html-plain-text',name:'HTML to Plain Text',input:'HTML',output:'TXT',example:'<h1>Hello</h1><p>A <strong>simple</strong> example.</p>',note:'Removes styles and scripts; layout and formatting are not preserved.'},
- {id:'csv-html-table',name:'CSV to HTML Table',input:'CSV',output:'HTML',example:'name,city\nAlice,Hanoi\nBob,Tokyo',note:'The first CSV row is used as the header. Supports quoted fields and embedded newlines.'},
- {id:'ini-json',name:'INI to JSON',input:'INI',output:'JSON',example:'[server]\nhost=localhost\nport=8080',note:'INI values are kept as strings; duplicate section names and keys are rejected.'},
- {id:'json-yaml',name:'JSON to YAML',input:'JSON',output:'YAML',example:'{"title":"Example","enabled":true,"count":3}',note:'Supports JSON objects with flat scalar keys and values. Nested arrays, objects and advanced YAML are not supported.'},
- {id:'json-toml',name:'JSON to TOML',input:'JSON',output:'TOML',example:'{"title":"Example","enabled":true,"count":3}',note:'Supports JSON objects with flat scalar keys and values. Null, dates, arrays, tables and nested objects are not supported.'},
- {id:'yaml-toml',name:'YAML to TOML',input:'YAML',output:'TOML',example:'title: Example\nenabled: true\ncount: 3',note:'Supports simple flat YAML scalar mappings only. Anchors, tags, arrays and nested objects are rejected.'},
- {id:'xml-csv',name:'XML to CSV',input:'XML',output:'CSV',example:'<rows><row><name>Alice</name><city>Hanoi</city></row></rows>',note:'Accepts row elements with flat child elements and no attributes. Mixed or nested XML is unsupported.'},
- {id:'vcf-csv',name:'VCF (vCard) to CSV',input:'VCF',output:'CSV',example:'BEGIN:VCARD\nVERSION:3.0\nFN:Alice Example\nEMAIL:alice@example.com\nEND:VCARD',note:'Exports basic FN, EMAIL, TEL and ORG fields. Additional properties, multiple values, photos and extended attributes are not preserved.'},
- {id:'ics-csv',name:'ICS (Calendar) to CSV',input:'ICS',output:'CSV',example:'BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:event-1\nDTSTART:20270101T090000Z\nDTEND:20270101T100000Z\nSUMMARY:Example\nEND:VEVENT\nEND:VCALENDAR',note:'Exports basic UID, DTSTART, DTEND, SUMMARY, LOCATION and DESCRIPTION. Recurrence, custom timezone definitions and attendees are unsupported.'}
+ {id:'markdown-html',name:'Markdown ↔ HTML',input:'Markdown',output:'HTML',example:'# Hello\n\nThis is **bold**.',note:'Supports headings, paragraphs, emphasis and unordered lists. Not a full CommonMark implementation.'},
+ {id:'html-plain-text',name:'HTML ↔ Plain Text',input:'HTML',output:'TXT',example:'<h1>Hello</h1><p>A <strong>simple</strong> example.</p>',note:'HTML → text removes markup and styling. Text → HTML wraps escaped text in a preformatted block; these are not exact inverse operations.'},
+ {id:'csv-html-table',name:'CSV ↔ HTML Table',input:'CSV',output:'HTML',example:'name,city\nAlice,Hanoi\nBob,Tokyo',note:'The first CSV row is used as the header. Supports quoted fields and embedded newlines.'},
+ {id:'ini-json',name:'INI ↔ JSON',input:'INI',output:'JSON',example:'[server]\nhost=localhost\nport=8080',note:'INI values are strings. JSON → INI allows scalar root keys and flat object sections; numeric and boolean values become text. Complex objects and multiline values are rejected.'},
+ {id:'json-yaml',name:'JSON ↔ YAML',input:'JSON',output:'YAML',example:'{"title":"Example","enabled":true,"count":3}',note:'Supports JSON objects with flat scalar keys and values. Nested arrays, objects and advanced YAML are not supported.'},
+ {id:'json-toml',name:'JSON ↔ TOML',input:'JSON',output:'TOML',example:'{"title":"Example","enabled":true,"count":3}',note:'Supports JSON objects with flat scalar keys and values. Null, dates, arrays, tables and nested objects are not supported.'},
+ {id:'yaml-toml',name:'YAML ↔ TOML',input:'YAML',output:'TOML',example:'title: Example\nenabled: true\ncount: 3',note:'Supports simple flat YAML scalar mappings only. Anchors, tags, arrays and nested objects are rejected.'},
+ {id:'xml-csv',name:'XML ↔ CSV',input:'XML',output:'CSV',example:'<rows><row><name>Alice</name><city>Hanoi</city></row></rows>',note:'Accepts row elements with flat child elements and no attributes. Mixed or nested XML is unsupported.'},
+ {id:'vcf-csv',name:'VCF (vCard) ↔ CSV',input:'VCF',output:'CSV',example:'BEGIN:VCARD\nVERSION:3.0\nFN:Alice Example\nEMAIL:alice@example.com\nEND:VCARD',note:'Only FN, EMAIL, TEL and ORG are supported. Other properties, multiple values, photos and extended attributes are lost on VCF → CSV. CSV → VCF requires Name, Email, Phone and Organization columns.'},
+ {id:'ics-csv',name:'ICS (Calendar) ↔ CSV',input:'ICS',output:'CSV',example:'BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:event-1\nDTSTART:20270101T090000Z\nDTEND:20270101T100000Z\nSUMMARY:Example\nEND:VEVENT\nEND:VCALENDAR',note:'Only UID, UTC DTSTART/DTEND, SUMMARY, LOCATION and DESCRIPTION are supported. Recurrence, local timezone definitions and attendees are not preserved. CSV → ICS requires UTC dates.'}
 ];
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function markdown(src){
@@ -33,24 +35,8 @@ function htmlPlain(src){
  doc.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,li,tr').forEach(n=>n.append('\n'));
  return (doc.body.textContent||'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
 }
-function csvRows(s){
- const rows=[];let row=[],cell='',quoted=false;
- for(let i=0;i<s.length;i++){const c=s[i];
-  if(quoted){if(c==='"'&&s[i+1]==='"'){cell+='"';i++;}else if(c==='"')quoted=false;else cell+=c;}
-  else if(c==='"'){if(cell)throw Error('Unexpected CSV quote.');quoted=true;}
-  else if(c===','){row.push(cell);cell='';}
-  else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell='';}
-  else if(c==='\r'&&s[i+1]==='\n'){}else cell+=c;
- }
- if(quoted)throw Error('Unclosed CSV quoted field.');
- if(cell||row.length){row.push(cell);rows.push(row);}
- if(rows.length===0)throw Error('CSV is empty.');
- const columns=rows[0].length;
- if(rows.some(r=>r.length!==columns))throw Error('All CSV rows must have the same number of columns.');
- return rows;
-}
 function csvHtml(s){
- const rows=csvRows(s);
+ const rows=parseCsv(s);
  const tableRow=(row,tag)=>'<tr>'+row.map(v=>'<'+tag+'>'+esc(v)+'</'+tag+'>').join('')+'</tr>';
  return '<table>\n<thead>'+tableRow(rows[0],'th')+'</thead>\n<tbody>\n'+rows.slice(1).map(r=>tableRow(r,'td')).join('\n')+'\n</tbody>\n</table>';
 }
@@ -114,12 +100,6 @@ function yamlToml(text){
  }
  return Object.entries(object).map(([k,v])=>k+' = '+tomlScalar(v)).join('\n');
 }
-function csvSerialize(rows){
- return rows.map(row=>row.map(value=>{
-  const v=String(value??'');
-  return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
- }).join(',')).join('\n');
-}
 function xmlCsv(text){
  if(/<!DOCTYPE|<!ENTITY/i.test(text))throw Error('DTD and external entities are not supported.');
  const xml=new DOMParser().parseFromString(text,'application/xml');
@@ -138,7 +118,7 @@ function xmlCsv(text){
   return values;
  });
  const header=[...new Set(data.flatMap(record=>Object.keys(record)))];
- return csvSerialize([header,...data.map(record=>header.map(key=>record[key]??''))]);
+ return writeCsv([header,...data.map(record=>header.map(key=>record[key]??''))]);
 }
 function unfold(text){return text.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,'');}
 function unescapeCalendar(s){return s.replace(/\\n/gi,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\');}
@@ -155,7 +135,7 @@ function vcfCsv(text){
    return matching.length?unescapeCalendar(matching[0].slice(key.length+1)):'';
   });
  });
- return csvSerialize([['Name','Email','Phone','Organization'],...rows]);
+ return writeCsv([['Name','Email','Phone','Organization'],...rows]);
 }
 function icsCsv(text){
  const blocks=unfold(text).split('BEGIN:VEVENT').slice(1);
@@ -172,12 +152,14 @@ function icsCsv(text){
    return matching.length?unescapeCalendar(matching[0].slice(key.length+1)):'';
   });
  });
- return csvSerialize([fields,...rows]);
+ return writeCsv([fields,...rows]);
 }
 
-export function convertSimple(id,input){
+export function convertSimple(id,input,direction='forward'){
+ if(direction!=='forward'&&direction!=='reverse')throw Error('Unknown conversion direction.');
  if(typeof input!=='string'||!input.trim())throw Error('Enter source text.');
  if(input.length>500000)throw Error('Input exceeds 500,000 characters.');
+ if(direction==='reverse')return convertReverse(id,input);
  switch(id){
  case 'markdown-html':return {text:markdown(input),ext:'html'};
  case 'html-plain-text':return {text:htmlPlain(input),ext:'txt'};
