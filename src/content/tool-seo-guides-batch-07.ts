@@ -45,7 +45,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Test the SBV subtitle track against the same video used for the SRT original. A cue around 00:00:59 to 00:01:02 is a good timestamp boundary check because a malformed time conversion can otherwise go unnoticed.",
           "Load a short instructional clip into its target player and check cue start, end and line breaks. Pay attention to a caption that crosses a minute boundary, because punctuation differences are easy to miss in a text editor."
         ]
       }
@@ -114,7 +114,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "For a narration transcript, compare the first and last spoken sentence from SRT with the plain-text output. If you chose dialogue-only mode, verify that numerical timestamps and cue indices are absent by design.",
           "Compare early and late text passages and count lines in the transcript. If you retained timestamps, check their consistency and ensure they are not accidentally inserted into the spoken words."
         ]
       }
@@ -183,7 +183,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Open the SBV export in the intended publishing portal and compare its text to a WebVTT cue with a line break. Confirm that VTT-specific cue identifiers and layout directives have not leaked into caption text.",
           "Test a cue with a long line and another with punctuation or a speaker label. Confirm that the destination player displays clean text and follows the intended sequence."
         ]
       }
@@ -252,7 +252,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Read the generated TXT as a standalone document without the video. Make sure that VTT NOTE text, timestamp arrows and player-only tags are not distracting the reader from dialogue.",
           "Read a passage from the middle of the generated transcript, then compare it to the original cues. Verify that cue identifiers and formatting commands did not become unintended words."
         ]
       }
@@ -321,7 +321,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Inspect an ASS scene that originally included two styled lines at once. When using SRT, make sure the flattened words still follow a sensible speaking order and are not cut off at cue boundaries.",
           "Check a fast conversation or scene with two speakers on screen, not just a simple opening title. Confirm that the resulting SRT cue sequence remains understandable without the original placement."
         ]
       }
@@ -390,7 +390,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "After converting ASS to VTT, load the result into the target web player and check a scene previously styled with karaoke or positioning commands. These should not appear literally in the displayed captions.",
           "Test the exported VTT in the real HTML video player, including a scene with multiple simultaneous captions. Verify that long dialogue wraps acceptably at mobile width."
         ]
       }
@@ -459,7 +459,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Check whether the destination SBV portal accepts a subtitle with two lines of quick dialogue from the ASS original. Confirm text remains readable after the complex visual layout is discarded.",
           "Upload a small converted sample and inspect the subtitle preview on the destination platform. Pay attention to pauses and overlap, where a visually layered ASS track may read differently as basic captions."
         ]
       }
@@ -528,7 +528,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Choose one ASS dialogue line containing formatting overrides and find it in the TXT export. The manuscript should contain the readable words rather than the original script's override syntax.",
           "Search the transcript for an uncommon line of dialogue and verify it appears without backslash override commands. If a timestamp mode was selected, ensure it helps locate rather than clutter the text."
         ]
       }
@@ -597,7 +597,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Review SSA-to-SRT cue numbering and timing near a scene transition, then compare the spoken text to the original. Ensure that older style tags did not become visible text.",
           "Play a source scene with styled dialogue and compare the exported SRT in an editor. Confirm cue order and that text formerly displayed in separate positions still reads naturally."
         ]
       }
@@ -666,7 +666,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Preview SSA-to-VTT in an HTML5 video element on a narrow screen. Watch whether long captions wrap acceptably without depending on the old SSA positioning.",
           "Load the converted caption file into the HTML5 video player used by the website. Verify its first, middle and last cues, especially around cuts and near-simultaneous dialogue."
         ]
       }
@@ -735,7 +735,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Import the SBV generated from SSA into the destination caption system and check the resulting track's beginning and ending. Watch for an unexpected extra line from an SSA script header.",
           "Import a small output sample into the receiving platform. Check that each caption appears in reading order and that line breaks do not collide with the platform's display limits."
         ]
       }
@@ -804,7 +804,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Read a paragraph from the SSA-derived TXT transcript and see whether speaker identifiers or non-dialogue events are still meaningful outside of the video. Keep the timed source for reconciliation.",
           "Compare a scene that contains sound effects or non-dialogue signs against the TXT output. Verify whether those entries should stay in a transcript intended only for spoken dialogue."
         ]
       }
@@ -873,7 +873,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Load the generated SRT into an editor that shows cue indices; verify that cue numbers progress in sequence and that a line spanning a minute boundary retains the expected start and end values.",
           "Open the exported SRT in a caption editor and check cue one and the last cue. Confirm that numbering is sequential and no caption has a negative duration."
         ]
       }
@@ -942,7 +942,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Test a WebVTT export from SBV in an actual browser player. Verify the WEBVTT header is accepted and that captions begin at the same moment as the original.",
           "Load the output in a browser video element and check a minute-boundary timestamp. If captions appear early or late, verify any timing shift set during conversion."
         ]
       }
@@ -1011,7 +1011,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "Play the exported captions with the corresponding video and check three points: an early cue, a rapid dialogue exchange and a late cue. Watch for shifted timing, missing words and line-break changes. Read the raw file to confirm that timestamps follow the destination syntax.",
+          "Compare the TXT copy with an SBV cue containing two sentences and a line break. Choose consistent spacing so editors can read the transcript without mistaking cue breaks for paragraph ends.",
           "Compare a sentence split over two SBV cues and check whether the transcript introduces an awkward break. Choose a spacing option that matches the downstream editing task."
         ]
       }
@@ -1080,7 +1080,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "List or extract the output into a safe temporary folder and compare names, paths and file counts with the original. Be careful with archives containing unusual names, empty folders or large decoded data. Never assume a smaller output proves that every entry survived.",
+          "List the contents of the TAR generated from 7Z and inspect the top-level folders. TAR is typically uncompressed, so compare members rather than judging output integrity by byte size alone.",
           "List the TAR members in a safe environment, compare expected folder hierarchy and inspect a representative extracted file. An output that downloads successfully is not proof that all input entries were supported."
         ]
       }
@@ -1149,7 +1149,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "List or extract the output into a safe temporary folder and compare names, paths and file counts with the original. Be careful with archives containing unusual names, empty folders or large decoded data. Never assume a smaller output proves that every entry survived.",
+          "Extract a sample member from the TAR.GZ converted from 7Z and compare its bytes with the source. Confirm that the gzip wrapper opens and that the directory tree has not flattened.",
           "Extract a small output sample and compare path structure, names and file bytes with the source. Do not rely on the compressed file's size as a substitute for validating the contents."
         ]
       }
@@ -1218,7 +1218,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "List or extract the output into a safe temporary folder and compare names, paths and file counts with the original. Be careful with archives containing unusual names, empty folders or large decoded data. Never assume a smaller output proves that every entry survived.",
+          "Open a RAR-derived TAR with a standard Unix archive listing tool. Look for unexpected absolute paths or missing ordinary files; do not try to bypass rejected password-protected entries.",
           "Use a TAR listing tool to compare extracted members and names with the permitted source tree. Confirm the expected directory structure before moving the bundle to a deployment environment."
         ]
       }
@@ -1287,7 +1287,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "List or extract the output into a safe temporary folder and compare names, paths and file counts with the original. Be careful with archives containing unusual names, empty folders or large decoded data. Never assume a smaller output proves that every entry survived.",
+          "Verify the TAR.GZ built from RAR by extracting it into a temporary folder. Compare member counts and names before distributing it; a compressed download alone cannot prove the source decoded fully.",
           "Extract the generated TAR.GZ in a temporary folder and compare member counts and representative contents. Confirm that filenames remain usable on the intended destination filesystem."
         ]
       }
@@ -1356,7 +1356,7 @@ export const BATCH_07_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "id": "checks",
         "heading": "Verify before publishing or importing",
         "paragraphs": [
-          "List or extract the output into a safe temporary folder and compare names, paths and file counts with the original. Be careful with archives containing unusual names, empty folders or large decoded data. Never assume a smaller output proves that every entry survived.",
+          "Compare the ZIP source member list with the resulting TAR listing, especially nested folders and executable scripts. Test the TAR in a staging environment rather than deploying it unexamined.",
           "List the TAR and compare its files and directories with the original ZIP. Test file permissions and executable scripts explicitly before using the new archive in an automated deployment."
         ]
       }
