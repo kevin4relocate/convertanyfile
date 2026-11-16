@@ -2,7 +2,7 @@
 import SiteLayout from '../../layouts/SiteLayout.astro';
 // @ts-ignore - lightweight converter registry is runtime JavaScript
 import {CONVERSIONS} from '../../platform/format-converters/simple.mjs';
-export function getStaticPaths(){return CONVERSIONS.map((tool:{id:string})=>({params:{slug:tool.id},props:{tool}}));}
+export function getStaticPaths(){return CONVERSIONS.map((tool:{id:string;name:string;input:string;output:string;example:string;note:string})=>({params:{slug:tool.id},props:{tool}}));}
 const {tool}=Astro.props;
 const description=tool.name+' — paste text and convert it locally without an upload or account. '+tool.note;
 ---
