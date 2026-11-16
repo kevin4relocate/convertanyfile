@@ -3,7 +3,7 @@ import { join, relative, sep } from 'node:path';
 
 const DIST = new URL('../dist/', import.meta.url);
 const ORIGIN = 'https://convertanyfile.net';
-const HIDDEN_TOOL_PATHS = ['/remove-object/', '/remove-background/'];
+const HIDDEN_TOOL_PATHS = ['/remove-object/', '/remove-background/', '/gemini-ai-logo-remover/'];
 
 async function walk(dir, predicate) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -108,6 +108,9 @@ for (const file of htmlFiles) {
     indexablePages.push({ route, canonical });
   }
 
+  if (/Gemini (?:Watermark Remover|AI Logo Remover)/i.test(html)) {
+    fail(errors, route, 'promotes hidden Gemini Remover by name');
+  }
   for (const hiddenPath of HIDDEN_TOOL_PATHS) {
     if (html.includes(`href="${hiddenPath}"`) || html.includes(`href='${hiddenPath}'`)) {
       fail(errors, route, `contains a public link to hidden experimental tool ${hiddenPath}`);
