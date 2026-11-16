@@ -1,0 +1,67 @@
+# A static Astro site only emits pages whose publishDate is on or before build day.
+# This workflow causes a new production build every Vietnam calendar day.
+name: Publish scheduled SEO guides
+
+on:
+  schedule:
+    # 00:15 Asia/Ho_Chi_Minh, which has no DST (17:15 UTC previous day).
+    - cron: '15 17 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: scheduled-seo-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 30
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.19.0'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Rebuild and validate today's scheduled content
+        run: npm run build
+      - name: Trigger Cloudflare production deployment
+        env:
+          CF_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TODAY="$(TZ=Asia/Ho_Chi_Minh date +%F)"
+          LAST_GUIDE="2027-02-14"
+          FIRST_GUIDE="2026-11-17"
+          if [[ "$TODAY" < "$FIRST_GUIDE" || "$TODAY" > "$LAST_GUIDE" ]]; then
+            echo "No scheduled SEO guide publication for $TODAY; skipping deployment."
+            exit 0
+          fi
+
+          # A Cloudflare Pages deploy hook is recommended: add it as an Actions secret.
+          # In its absence, a no-op Git commit triggers Cloudflare's Git integration.
+          if [[ -n "$CF_DEPLOY_HOOK" ]]; then
+            echo "Triggering Cloudflare deploy hook for $TODAY."
+            curl --fail --silent --show-error --location --retry 3 --request POST "$CF_DEPLOY_HOOK"
+          else
+            echo "Deploy hook not configured. Triggering Cloudflare via Git commit."
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git fetch origin main
+            git checkout main
+            git pull --ff-only origin main
+            # Avoid pushing two empty commits for repeated manual dispatch on the same day.
+            if git log -30 --format=%s | grep -Fqx "chore(seo): publish scheduled guides $TODAY"; then
+              echo "A publication trigger already exists for $TODAY."
+              exit 0
+            fi
+            git commit --allow-empty -m "chore(seo): publish scheduled guides $TODAY"
+            git push origin HEAD:main
+          fi
