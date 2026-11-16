@@ -1,12 +1,26 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
+import { FORMAT_SEO_CONTENT } from '../../content/format-converter-seo';
+import { SITE } from '../../config/site';
 // @ts-ignore - lightweight converter registry is runtime JavaScript
 import {CONVERSIONS} from '../../platform/format-converters/simple.mjs';
 export function getStaticPaths(){return CONVERSIONS.map((tool:{id:string;name:string;input:string;output:string;example:string;note:string})=>({params:{slug:tool.id},props:{tool}}));}
 const {tool}=Astro.props;
-const description=tool.name+' online. Convert in either direction privately in your browser, without file uploads or sign-up. Supports the documented simple formats.';
+const seo=FORMAT_SEO_CONTENT[tool.id];
+const description=seo.description;
+const relatedTools=seo.related.map((id:string)=>CONVERSIONS.find((entry:{id:string})=>entry.id===id)).filter(Boolean);
+const canonical=`${SITE.origin}/convert/${tool.id}/`;
+const schema=[
+ {'@context':'https://schema.org','@type':'WebApplication',name:tool.name,description:seo.description,url:canonical,
+  applicationCategory:'UtilitiesApplication',operatingSystem:'Any',offers:{'@type':'Offer',price:'0',priceCurrency:'USD'}},
+ {'@context':'https://schema.org','@type':'BreadcrumbList',itemListElement:[
+  {'@type':'ListItem',position:1,name:'Home',item:`${SITE.origin}/`},
+  {'@type':'ListItem',position:2,name:'Format Converters',item:`${SITE.origin}/format-converters/`},
+  {'@type':'ListItem',position:3,name:tool.name,item:canonical}
+ ]}
+];
 ---
-<SiteLayout title={tool.name+' Online Free | ConvertAnyFile'} description={description}>
+<SiteLayout title={tool.name+' Online Free | ConvertAnyFile'} description={description} schema={schema}>
  <section class="page-hero"><div class="site-container">
   <div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/format-converters/">Format Converters</a><span>/</span><span>{tool.name}</span></div>
   <span class="eyebrow">Local text conversion</span><h1>{tool.name}</h1>
@@ -35,6 +49,27 @@ const description=tool.name+' online. Convert in either direction privately in y
    <p data-error role="alert" hidden></p>
   </div>
   <div class="notes"><h2>Supported input & limitations</h2><p>{tool.note}</p><p>Input limit: 500,000 characters. Original text stays on your device. Check the output before using it in production.</p><a href="/format-converters/">Browse all text and data converters →</a></div>
+  <article class="converter-seo-content">
+   <h2>How to convert {tool.input} and {tool.output}</h2>
+   <p>{seo.summary}</p>
+   <div class="converter-examples">
+    <div><h3>Example {tool.input} input</h3><pre><code>{seo.exampleFrom}</code></pre></div>
+    <div><h3>Example {tool.output} output</h3><pre><code>{seo.exampleTo}</code></pre></div>
+   </div>
+   {seo.sections.map((section:{heading:string;paragraph:string})=><section class="converter-seo-section">
+    <h3>{section.heading}</h3><p>{section.paragraph}</p>
+   </section>)}
+   <section aria-label="Common questions about this conversion">
+    <h2>Frequently asked questions</h2>
+    {seo.faq.map((item:{question:string;answer:string})=><div class="converter-faq"><h3>{item.question}</h3><p>{item.answer}</p></div>)}
+   </section>
+   <section><h2>Related converters</h2>
+    <div class="converter-related">{relatedTools.map((item:{id:string;name:string})=>
+     <a href={`/convert/${item.id}/`}>{item.name} <span aria-hidden="true">→</span></a>)}
+     <a href="/guides/">Browse conversion guides <span aria-hidden="true">→</span></a>
+    </div>
+   </section>
+  </article>
  </div></section>
 </SiteLayout>
 <script>
@@ -94,4 +129,18 @@ const description=tool.name+' online. Convert in either direction privately in y
 .actions button:disabled{opacity:.45;cursor:not-allowed}.format-workbench [data-error]{color:#ffb3aa}
 .notes{margin-top:20px;font-size:14px;line-height:1.7}.notes h2{font-size:19px}.notes a{color:#beb5ff}
 @media(max-width:700px){.editors{grid-template-columns:1fr}.editors textarea{min-height:165px}.format-workbench{padding:13px}}
+.converter-seo-content{margin-top:38px;max-width:940px;color:#dae2ee;line-height:1.75}
+.converter-seo-content h2{font-size:clamp(22px,2.7vw,30px);line-height:1.25;margin:32px 0 12px}
+.converter-seo-content h3{font-size:18px;line-height:1.4;margin:24px 0 8px}
+.converter-seo-content p{margin:0 0 16px;max-width:78ch}
+.converter-examples{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:18px 0 26px}
+.converter-examples>div{min-width:0}.converter-examples h3{margin:0 0 10px}
+.converter-examples pre{overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#0e1725;border:1px solid #36435b;border-radius:10px;padding:16px;min-height:125px}
+.converter-examples code{font:13px/1.6 monospace;color:#e4e9f5}
+.converter-seo-section{margin:18px 0 24px}
+.converter-faq{border-bottom:1px solid #354153;padding:4px 0 12px}
+.converter-related{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 36px}
+.converter-related a{display:inline-block;border:1px solid #45536c;border-radius:10px;padding:10px 14px;color:#d1caff;text-decoration:none}
+.converter-related a:hover{border-color:#a49afb}
+@media(max-width:700px){.converter-examples{grid-template-columns:1fr}}
 </style>
