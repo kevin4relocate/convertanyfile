@@ -42,11 +42,9 @@ export function xmlEscape(text){
   return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
 }
 export function ensureXmlChars(text){
-  if(/[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD]/u.test(text))throw Error('Input contains characters not permitted in XML 1.0.');
-  // Unpaired UTF-16 surrogate characters are invalid XML characters.
-  for(let i=0;i<text.length;i++){
-    const c=text.charCodeAt(i);
-    if(c>=0xD800&&c<=0xDBFF){const n=text.charCodeAt(++i);if(!(n>=0xDC00&&n<=0xDFFF))throw Error('Invalid Unicode surrogate in XML data.');}
-    else if(c>=0xDC00&&c<=0xDFFF)throw Error('Invalid Unicode surrogate in XML data.');
+  for(const character of text){
+    const code=character.codePointAt(0);
+    const accepted=code===9||code===10||code===13||(code>=32&&code<=0xD7FF)||(code>=0xE000&&code<=0xFFFD)||(code>=0x10000&&code<=0x10FFFF);
+    if(!accepted)throw Error('Input contains characters not permitted in XML 1.0.');
   }
 }
