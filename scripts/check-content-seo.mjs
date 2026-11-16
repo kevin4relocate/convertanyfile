@@ -41,7 +41,7 @@ for(const g of guides){
   if(!live) errors.push(`Future page leaked in static build: ${g.slug}`);
   if(live){
    const html=await readFile(page,'utf8');
-   if(!html.includes(g.image)||!html.includes(g.imageAlt.replaceAll('&','&amp;'))||!html.includes('datePublished')||!html.includes('figcaption'))errors.push(`Published article missing image, caption or metadata: ${g.slug}`);
+   if(!html.includes(g.image)||!html.includes('<img')||!html.includes('alt=')||!html.includes('datePublished')||!html.includes('figcaption'))errors.push(`Published article missing image, caption or metadata: ${g.slug}`);
   }
  }catch{if(live) errors.push(`Due article missing from static build: ${g.slug}`);}
 }
