@@ -1,0 +1,25 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+// @ts-ignore - lightweight converter registry is runtime JavaScript
+import {CONVERSIONS} from '../platform/format-converters/simple.mjs';
+const description='Convert Markdown, HTML, CSV, and INI text privately in your browser with simple, focused tools.';
+---
+<SiteLayout title="Text & Data Format Converters | ConvertAnyFile" description={description}>
+ <section class="page-hero"><div class="site-container">
+  <div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Format Converters</span></div>
+  <span class="eyebrow">Private browser tools</span>
+  <h1>Text & data format converters</h1>
+  <p>Paste text, convert locally, copy or download. These tools do not upload source data.</p>
+ </div></section>
+ <section class="content-wide-section"><div class="site-container">
+  <div class="tools">
+   {CONVERSIONS.map((tool:{id:string;name:string;note:string;input:string;output:string})=><a href={'/convert/'+tool.id+'/'}><strong>{tool.name}</strong><span>{tool.input} → {tool.output}</span><p>{tool.note}</p><small>Open converter →</small></a>)}
+  </div>
+ </div></section>
+</SiteLayout>
+<style>
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.tools a{display:grid;align-content:start;gap:8px;padding:22px;border:1px solid #39435b;border-radius:14px;background:#151e2c;color:#f0f2f8}
+.tools a:hover{border-color:#a49afb}.tools strong{font-size:19px}.tools span{color:#c5bcff;font-size:12px}
+.tools p{color:#abb8c9;font-size:13px;line-height:1.6}.tools small{color:#bcb6ff;font-weight:750}
+</style>

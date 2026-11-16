@@ -22,7 +22,7 @@ const dataToolLinks = DATA_PROCESSING_TOOLS.map((tool) => ({ href: `/data/${tool
 const dataToolGroups = [...new Set(DATA_PROCESSING_TOOLS.map((tool) => tool.category))].map((category) => ({ category, tools: dataToolLinks.filter((tool) => tool.category === category) }));
 const textToolsActive = currentPath === '/text-tools/' || textToolLinks.some((tool) => tool.href === currentPath);
 const dataToolsActive = currentPath === '/data-tools/' || dataToolLinks.some((tool) => tool.href === currentPath);
-const converterPaths = ['/image-converter/', '/data-converter/', '/archive-converter/', '/subtitle-converter/'];
+const converterPaths = ['/image-converter/', '/data-converter/', '/archive-converter/', '/subtitle-converter/', '/format-converters/'];
 const convertersActive = converterPaths.includes(currentPath);
 ---
 <header class="site-header">
@@ -44,6 +44,7 @@ const convertersActive = converterPaths.includes(currentPath);
                 { label: 'Data Converter', href: '/data-converter/', hint: 'CSV, JSON and structured data' },
                 { label: 'Archive Converter', href: '/archive-converter/', hint: 'ZIP, RAR, 7Z and more' },
                 { label: 'Subtitle Converter', href: '/subtitle-converter/', hint: 'SRT, VTT and subtitles' },
+                { label: 'Text & Data Format Converters', href: '/format-converters/', hint: 'Markdown, HTML, YAML and more' },
               ].map((tool) => <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} href={tool.href}>
                 <span class="nav-tool-icon" aria-hidden="true">{tool.label.charAt(0)}</span>
                 <span class="nav-tool-copy"><strong>{tool.label}</strong><small>{tool.hint}</small></span>
@@ -134,6 +135,7 @@ const convertersActive = converterPaths.includes(currentPath);
             <a class:list={['mobile-menu-subitem', currentPath === '/data-converter/' && 'is-current']} href="/data-converter/">Data Converter</a>
             <a class:list={['mobile-menu-subitem', currentPath === '/archive-converter/' && 'is-current']} href="/archive-converter/">Archive Converter</a>
             <a class:list={['mobile-menu-subitem', currentPath === '/subtitle-converter/' && 'is-current']} href="/subtitle-converter/">Subtitle Converter</a>
+            <a class:list={['mobile-menu-subitem', currentPath === '/format-converters/' && 'is-current']} href="/format-converters/">Text & Data Format Converters</a>
           </div>
         </details>
 

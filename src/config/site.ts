@@ -29,6 +29,7 @@ export const FOOTER_GROUPS = [
       { label: 'Image Tools', href: '/image-tools/' },
       { label: 'Text Tools', href: '/text-tools/' },
       { label: 'Data Tools', href: '/data-tools/' },
+      { label: 'Format Converters', href: '/format-converters/' },
       { label: 'CSV File Merger', href: '/data/csv-file-merger/' },
       { label: 'JSON Schema Validator', href: '/data/json-schema-validator/' },
       { label: 'JSON Formatter', href: '/text/json-formatter/' },
