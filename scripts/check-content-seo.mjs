@@ -2,10 +2,20 @@ import { readFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const root = process.cwd();
-const source = await readFile(join(root,'src/content/tool-seo-guides.ts'),'utf8');
-const match = source.match(/export const TOOL_SEO_GUIDES:[^=]*=\s*(\[[\s\S]*?\]);/);
-if (!match) throw new Error('Tool SEO guide array is missing or not JSON-readable');
-const guides = JSON.parse(match[1]);
+const readCatalog = async (filePath, declaration) => {
+  const source = await readFile(join(root,filePath),'utf8');
+  const prefix = `const ${declaration}: readonly ToolSeoGuide[] = `;
+  const start = source.indexOf(prefix);
+  if (start < 0) throw new Error(`Catalog declaration missing in ${filePath}`);
+  const arrayStart = source.indexOf('[',start+prefix.length);
+  const end = source.indexOf(';',arrayStart);
+  if (arrayStart < 0 || end < 0) throw new Error(`Catalog array malformed: ${filePath}`);
+  return JSON.parse(source.slice(arrayStart,end));
+};
+const guides = [
+  ...await readCatalog('src/content/tool-seo-guides.ts','BATCH_01_TOOL_SEO_GUIDES'),
+  ...await readCatalog('src/content/tool-seo-guides-batch-02.ts','BATCH_02_TOOL_SEO_GUIDES'),
+];
 const coverage = (await readFile(join(root,'docs/tool-guide-coverage.csv'),'utf8')).trim().split('\n');
 const rows = coverage.slice(1).map(line=>line.split(','));
 const errors = [];
@@ -13,10 +23,10 @@ if (rows.length !== 151) errors.push(`Coverage inventory unexpectedly changed: $
 if (new Set(rows.map(r=>r[2])).size !== rows.length) errors.push('Duplicate tool paths in coverage audit');
 if (rows.some(row=>row[2].includes('gemini-ai-logo-remover'))) errors.push('Hidden Gemini tool must not be included');
 if (rows.filter(row=>row[3]==='scheduled').length !== guides.length) errors.push('Scheduled coverage count does not match published content queue');
-if (guides.length !== 10) errors.push(`Expected 10 independently reviewed first-batch guides; found ${guides.length}`);
+if (guides.length !== 20) errors.push(`Expected 20 independently reviewed guides across two batches; found ${guides.length}`);
 const titleSet=new Set(), slugSet=new Set(),dateSet=new Set();
 for (const [index,g] of guides.entries()) {
-  if (!/^2026-11-(1[7-9]|2[0-6])$/.test(g.publishDate)) errors.push(`Unexpected date: ${g.slug}`);
+  if (g.publishDate !== new Date(Date.UTC(2026,10,17+index)).toISOString().slice(0,10)) errors.push(`Unexpected publication date: ${g.slug}`);
   if (dateSet.has(g.publishDate)) errors.push(`Multiple articles scheduled on ${g.publishDate}`);
   dateSet.add(g.publishDate);
   if (slugSet.has(g.slug)||titleSet.has(g.title)) errors.push(`Duplicate slug/title: ${g.slug}`);
@@ -31,7 +41,7 @@ for (const [index,g] of guides.entries()) {
   if (g.sections.length<4||g.faq.length<2||g.related.length<2) errors.push(`Sections, FAQs or links missing: ${g.slug}`);
   if (g.related.some(r=>/gemini-ai-logo-remover/.test(r.href))) errors.push(`Disabled tool linked: ${g.slug}`);
 }
-if (rows.filter(r=>r[3]==='covered').length!==19 ||rows.filter(r=>r[3]==='missing').length!==122) errors.push('Inventory status totals unexpected');
+if (rows.filter(r=>r[3]==='covered').length!==19 ||rows.filter(r=>r[3]==='scheduled').length!==20 ||rows.filter(r=>r[3]==='missing').length!==112) errors.push('Inventory status totals unexpected');
 const date=new Date(Date.now()+7*3600000).toISOString().slice(0,10);
 for(const g of guides){
  const page=join(root,'dist/guides/tool',g.slug,'index.html');
@@ -46,4 +56,4 @@ for(const g of guides){
  }catch{if(live) errors.push(`Due article missing from static build: ${g.slug}`);}
 }
 if(errors.length){for(const error of errors)console.error('SEO CONTENT:',error);process.exit(1);}
-console.log(`Tool SEO audit passed: 151 tools, 19 existing guides, 10 scheduled articles, 122 remaining; ${guides.filter(g=>g.publishDate<=date).length} published on ${date} VN.`);
+console.log(`Tool SEO audit passed: 151 tools, 19 existing guides, 20 scheduled articles, 112 remaining; ${guides.filter(g=>g.publishDate<=date).length} published on ${date} VN.`);
