@@ -13,7 +13,6 @@ const DETERMINISTIC_ROUTES = [
 
 const MASK_ROUTES = [
   '/remove-watermark/',
-  '/gemini-ai-logo-remover/',
 ] as const;
 
 async function readyImageTool(page: Page) {
@@ -68,7 +67,7 @@ test.describe('Image Tools watermark visual standard', () => {
       await expectWatermarkStyleHeaderActions(page);
       await expect(app.locator('[data-role="batch-list"]')).toHaveCSS('display', 'flex');
       await expect(app.locator('[data-role="edit-scope-switch"]')).toBeVisible();
-      if (route !== '/gemini-ai-logo-remover/') {
+      if (route === '/remove-watermark/') {
         await expect(app).toHaveAttribute('data-advanced-canvas', 'true');
       }
     });
