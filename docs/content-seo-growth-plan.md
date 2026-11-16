@@ -16,7 +16,7 @@ Source of truth: [tool-guide-coverage.csv](./tool-guide-coverage.csv), extracted
 | Data processing tools | 15 |
 | **Total** | **151** |
 
-Strict **primary-guide** coverage: **19 existing**, **10 scheduled in this batch**, **122 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
+Strict **primary-guide** coverage after batch 02: **19 existing**, **20 scheduled across two batches**, **112 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
 
 This is a *route audit*, not a claim of 151 separately differentiated editing engines. Summary hub routes and some Preview tools are included for tracking, and Preview features should not be promoted as live.
 
@@ -48,7 +48,7 @@ Each guide includes a real tool-specific scenario, accurate constraints checked 
 - Manual `workflow_dispatch` is available for recovery. Same-day re-runs do not add a second release trigger if the date's commit already exists.
 - The publication script **does not** modify any AdSense verification or advertising scripts. No future article is advertised before its publication date.
 
-## Follow-on backlog (122 uncovered)
+## Follow-on backlog (112 uncovered)
 
 1. Prioritize remaining high-use, straightforward functionality: JSON Minifier/Decoder, URL Decoder, HTML Entity tools, CSV filters and transformations, image crop/compress/color utilities.
 2. Expand detailed image utilities and advanced editors, using feature-specific examples verified against their real controls and limitations.
@@ -56,5 +56,27 @@ Each guide includes a real tool-specific scenario, accurate constraints checked 
 4. Cover converter hub pages with genuine task selection guides and avoid keyword-cannibalizing the format pair guides.
 
 Editorial gate for every future article: test the actual tool; include a meaningful independent use case and example; explain accuracy/format caveats; write unique H1/title/description; include one relevant original visual; use helpful alt and caption; add direct internal links; verify accessibility, structured data, images, 404s and build. Never generate content for disabled Gemini routes while they are unpublished.
+
+
+## Batch 02 — Nov 27 to Dec 06, 2026
+
+Following the same one-article-per-day calendar (09:30 Asia/Ho_Chi_Minh), ten additional English tutorials are staged in `src/content/tool-seo-guides-batch-02.ts`. Each has its own SEO SVG diagram, alt and caption, practical examples, four distinct sections, FAQs and links to the real tool and relevant neighbors.
+
+| Vietnam publish date | Primary guide / tool |
+| --- | --- |
+| Nov 27 | Minify JSON for APIs — JSON Minifier |
+| Nov 28 | Decode UTF-8 Base64 — Base64 Text Decoder |
+| Nov 29 | Percent-decoding and plus signs — URL Decoder |
+| Nov 30 | HTML escaping — HTML Entity Encoder |
+| Dec 01 | HTML entity decoding — HTML Entity Decoder |
+| Dec 02 | Title case vs sentence case — Text Case Converter |
+| Dec 03 | Numeric CSV sorting and leading zeros — CSV Row Sorter |
+| Dec 04 | Literal CSV row filtering — CSV Row Filter |
+| Dec 05 | CSV duplicates and key columns — CSV Duplicate Remover |
+| Dec 06 | Dominant-color palettes — Color Palette Extractor |
+
+**Updated audit:** 151 tool/route entries; 19 existing primary guides; 20 staged new guides across both batches; 112 missing primary guides. Next work should select from the remaining 112 rather than replicate the first 20.
+
+The publication workflow now searches both content catalogs for the due date. Future articles remain absent from the static build until the date is reached and the main branch is rebuilt; no content is made public by the act of adding it to source control alone. A GitHub workflow run and Cloudflare deployment should be checked on the first scheduled publication date.
 
 After each 10-article batch, review Google Search Console impressions/indexing and engagement before expanding. Regular publication is an editorial cadence, **not** a ranking guarantee.
