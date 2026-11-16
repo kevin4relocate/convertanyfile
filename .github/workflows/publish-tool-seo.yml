@@ -1,0 +1,50 @@
+name: Publish scheduled tool SEO guide
+
+on:
+  schedule:
+    # 09:30 Asia/Ho_Chi_Minh (UTC+7), daily. GitHub cron is UTC.
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-tool-seo-guide
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Select today's approved article
+        id: article
+        shell: bash
+        run: |
+          DAY="$(TZ=Asia/Ho_Chi_Minh date +%F)"
+          echo "day=$DAY" >> "$GITHUB_OUTPUT"
+          if grep -Fq "\"publishDate\": \"$DAY\"" src/content/tool-seo-guides.ts; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "No scheduled article for $DAY; no deployment triggered."
+          fi
+      - name: Trigger content build by committing the publication date
+        if: steps.article.outputs.ready == 'true'
+        env:
+          DAY: ${{ steps.article.outputs.day }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --ff-only origin main
+          if git log -30 --format=%s | grep -Fqx "content: publish tool guide $DAY"; then
+            echo "Already triggered for $DAY"
+            exit 0
+          fi
+          git commit --allow-empty -m "content: publish tool guide $DAY"
+          git push origin HEAD:main
