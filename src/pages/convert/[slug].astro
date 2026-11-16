@@ -6,9 +6,12 @@ import { SITE } from '../../config/site';
 import {CONVERSIONS} from '../../platform/format-converters/simple.mjs';
 export function getStaticPaths(){return CONVERSIONS.map((tool:{id:string;name:string;input:string;output:string;example:string;note:string})=>({params:{slug:tool.id},props:{tool}}));}
 const {tool}=Astro.props;
-const seo=FORMAT_SEO_CONTENT[tool.id];
+const seo=FORMAT_SEO_CONTENT[tool.id]!;
 const description=seo.description;
-const relatedTools=seo.related.map((id:string)=>CONVERSIONS.find((entry:{id:string})=>entry.id===id)).filter(Boolean);
+const relatedTools=seo.related.flatMap((id:string)=>{
+ const entry=CONVERSIONS.find((item:{id:string})=>item.id===id);
+ return entry ? [{id:entry.id,name:entry.name}] : [];
+});
 const canonical=`${SITE.origin}/convert/${tool.id}/`;
 const schema=[
  {'@context':'https://schema.org','@type':'WebApplication',name:tool.name,description:seo.description,url:canonical,
