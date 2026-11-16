@@ -285,7 +285,6 @@ export const ADD_WATERMARK_TOOL = {
 export const IMAGE_TOOL_MANIFEST = [
   { tool: ADD_WATERMARK_TOOL, runtime: 'watermark', directoryGroup: 'watermarks', navigationHint: 'Text · logo · batch', summary: 'Add draggable text or logo watermarks to one image or a batch, then download files or ZIP.' },
   { tool: REMOVE_WATERMARK_TOOL, runtime: 'mask', directoryGroup: 'watermarks', navigationHint: 'Shapes · text mask', summary: 'Batch visible-watermark repair with six manual mask modes, including a movable text mask.' },
-  { tool: GEMINI_AI_LOGO_REMOVER_TOOL, runtime: 'mask', directoryGroup: 'watermarks', navigationHint: 'Circle · 4-Point Star', navigationLabel: 'Gemini Watermark Remover', summary: 'Focused local repair for a small visible sparkle mark.' },
   { tool: RESIZE_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Pixels · percentage · fit', summary: 'Resize by pixels, percentage, or fit-to-box with batch and individual settings.' },
   { tool: COMPRESS_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Format · quality', summary: 'Reduce image size with output-format and quality controls.' },
   { tool: ROTATE_FLIP_IMAGE_TOOL, runtime: 'deterministic', directoryGroup: 'everyday', navigationHint: 'Rotate · mirror', navigationLabel: 'Rotate / Flip', summary: 'Rotate or mirror one image or a batch locally.' },

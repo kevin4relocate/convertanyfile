@@ -1,6 +1,9 @@
+// Preserve functional regression coverage for reactivation, but do not run while the route is unpublished.
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { expect, test, type Locator, type Page } from '@playwright/test';
+
+test.skip(true, 'Gemini Watermark Remover is temporarily unpublished');
 
 async function readyImageTool(page: Page): Promise<Locator> {
   const root = page.locator('[data-image-tool-app]');

@@ -17,7 +17,6 @@ const HOME_PRIORITY_LINKS = [
   '/crop-image/',
   '/remove-image-metadata/',
   '/remove-watermark/',
-  '/gemini-ai-logo-remover/',
   '/heic-to-jpg/',
   '/png-to-webp/',
   '/jpg-to-webp/',

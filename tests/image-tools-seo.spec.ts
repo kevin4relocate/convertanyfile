@@ -10,7 +10,6 @@ const routes = [
   { path: '/bulk-rename-images/', title: /Bulk Rename Images/i, h1: /Bulk rename/i },
   { path: '/remove-image-metadata/', title: /Remove Image Metadata/i, h1: /metadata/i },
   { path: '/remove-watermark/', title: /Watermark Remover/i, h1: /watermarks/i },
-  { path: '/gemini-ai-logo-remover/', title: /Gemini Watermark Remover/i, h1: /Gemini watermark/i },
 ] as const;
 
 const hiddenExperimentalRoutes = ['/remove-object/', '/remove-background/'] as const;

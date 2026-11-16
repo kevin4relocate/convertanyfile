@@ -15,7 +15,6 @@ export const POPULAR_IMAGE_TOOLS: readonly GrowthLink[] = [
   { href: '/crop-image/', label: 'Crop Image', description: 'Crop by shape or aspect ratio with direct drag and live preview.' },
   { href: '/remove-image-metadata/', label: 'Remove Image Metadata', description: 'Create clean copies without common EXIF, GPS or software tags.' },
   { href: '/remove-watermark/', label: 'Remove Watermark', description: 'Repair small visible watermark areas with manual shape or text masks.' },
-  { href: '/gemini-ai-logo-remover/', label: 'Gemini Watermark Remover', description: 'Focused Circle or 4-Point Star repair for the visible sparkle mark.' },
 ];
 
 export const POPULAR_IMAGE_CONVERSIONS: readonly GrowthLink[] = [
