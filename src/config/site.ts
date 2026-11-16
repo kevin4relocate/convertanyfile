@@ -12,7 +12,6 @@ export const NAV_ITEMS = [
   { label: 'Image Tools', href: '/image-tools/' },
   { label: 'Text Tools', href: '/text-tools/' },
   { label: 'Data Tools', href: '/data-tools/' },
-  { label: 'Format Converters', href: '/format-converters/' },
   { label: 'Formats', href: '/formats/' },
   { label: 'Guides', href: '/guides/' },
   { label: 'FAQ', href: '/faq/' },
