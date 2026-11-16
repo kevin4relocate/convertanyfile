@@ -14,7 +14,6 @@ const SINGLE_IMAGE_ROUTES = [
   ['/bulk-rename-images/', 'bulk-rename-images', 'download-batch'],
   ['/remove-image-metadata/', 'remove-image-metadata', 'download-batch'],
   ['/remove-watermark/', 'remove-watermark', 'download'],
-  ['/gemini-ai-logo-remover/', 'gemini-ai-logo-remover', 'download'],
 ] as const;
 
 for (const [path, toolId, downloadRole] of SINGLE_IMAGE_ROUTES) {
@@ -36,7 +35,6 @@ for (const [path, toolId, downloadRole] of SINGLE_IMAGE_ROUTES) {
 
 for (const [path, toolId, actionLabel] of [
   ['/remove-watermark/', 'remove-watermark', 'Remove watermark'],
-  ['/gemini-ai-logo-remover/', 'gemini-ai-logo-remover', 'Remove AI logo'],
 ] as const) {
   test(`${toolId} uses a singular repair action for one image`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'chromium-desktop', 'Run mask action-label coverage once in Chromium');

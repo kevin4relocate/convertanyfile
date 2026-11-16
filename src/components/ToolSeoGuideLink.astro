@@ -1,0 +1,28 @@
+---
+import { getPublishedToolSeoGuides } from '../content/tool-seo-guides';
+interface Props {toolHref:string}
+const {toolHref}=Astro.props;
+const guide=getPublishedToolSeoGuides().find(item=>item.toolHref===toolHref);
+---
+{guide && <section class="content-wide-section tool-seo-backlink">
+  <div class="site-container">
+    <div class="content-intro-grid">
+      <div>
+        <span class="section-kicker">In-depth how-to guide</span>
+        <h2>{guide.h1}</h2>
+        <p>{guide.heroIntro}</p>
+        <a href={`/guides/tool/${guide.slug}/`}>Read the practical tutorial →</a>
+      </div>
+      <a class="tool-seo-backlink-image" href={`/guides/tool/${guide.slug}/`} aria-label={`Read guide: ${guide.h1}`}>
+        <img src={guide.image} alt={guide.imageAlt} loading="lazy" decoding="async" width="1200" height="630" />
+      </a>
+    </div>
+  </div>
+</section>}
+<style>
+  .tool-seo-backlink h2 { font-size: clamp(21px,2.6vw,32px);line-height:1.2; }
+  .tool-seo-backlink p { line-height:1.65; }
+  .tool-seo-backlink a { color: #bcb4ff; font-weight:700; }
+  .tool-seo-backlink-image { display:block; align-self:center; }
+  .tool-seo-backlink-image img { width:100%;height:auto;display:block;border-radius:14px;border:1px solid #3d4960; }
+</style>
