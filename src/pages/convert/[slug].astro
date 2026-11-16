@@ -4,7 +4,7 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 import {CONVERSIONS} from '../../platform/format-converters/simple.mjs';
 export function getStaticPaths(){return CONVERSIONS.map((tool:{id:string;name:string;input:string;output:string;example:string;note:string})=>({params:{slug:tool.id},props:{tool}}));}
 const {tool}=Astro.props;
-const description=tool.name+' — convert in both directions locally without an upload or account. '+tool.note;
+const description=tool.name+' online. Convert in either direction privately in your browser, without file uploads or sign-up. Supports the documented simple formats.';
 ---
 <SiteLayout title={tool.name+' Online Free | ConvertAnyFile'} description={description}>
  <section class="page-hero"><div class="site-container">
