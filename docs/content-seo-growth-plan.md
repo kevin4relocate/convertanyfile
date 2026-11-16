@@ -16,7 +16,7 @@ Source of truth: [tool-guide-coverage.csv](./tool-guide-coverage.csv), extracted
 | Data processing tools | 15 |
 | **Total** | **151** |
 
-Strict **primary-guide** coverage after batch 02: **19 existing**, **20 scheduled across two batches**, **112 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
+Strict **primary-guide** coverage after batch 02: **19 existing**, **30 scheduled across three batches**, **102 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
 
 This is a *route audit*, not a claim of 151 separately differentiated editing engines. Summary hub routes and some Preview tools are included for tracking, and Preview features should not be promoted as live.
 
@@ -48,7 +48,7 @@ Each guide includes a real tool-specific scenario, accurate constraints checked 
 - Manual `workflow_dispatch` is available for recovery. Same-day re-runs do not add a second release trigger if the date's commit already exists.
 - The publication script **does not** modify any AdSense verification or advertising scripts. No future article is advertised before its publication date.
 
-## Follow-on backlog (112 uncovered)
+## Follow-on backlog (102 uncovered)
 
 1. Prioritize remaining high-use, straightforward functionality: JSON Minifier/Decoder, URL Decoder, HTML Entity tools, CSV filters and transformations, image crop/compress/color utilities.
 2. Expand detailed image utilities and advanced editors, using feature-specific examples verified against their real controls and limitations.
@@ -78,5 +78,25 @@ Following the same one-article-per-day calendar (09:30 Asia/Ho_Chi_Minh), ten ad
 **Updated audit:** 151 tool/route entries; 19 existing primary guides; 20 staged new guides across both batches; 112 missing primary guides. Next work should select from the remaining 112 rather than replicate the first 20.
 
 The publication workflow now searches both content catalogs for the due date. Future articles remain absent from the static build until the date is reached and the main branch is rebuilt; no content is made public by the act of adding it to source control alone. A GitHub workflow run and Cloudflare deployment should be checked on the first scheduled publication date.
+
+
+## Batch 03 — Dec 07 to Dec 16, 2026
+
+The next ten guides follow the existing 09:30 Vietnam-time daily release workflow. Each is explicitly tied to one live tool, with four distinct sections, real operation-specific caveats, two FAQs, two relevant internal links and an original SVG illustration.
+
+| Date (Vietnam) | Guide target |
+| --- | --- |
+| Dec 07 | CSV File Splitter: repeat headers and respect ZIP part cap |
+| Dec 08 | CSV Column Selector: export exact named columns |
+| Dec 09 | CSV Column Reorderer: retain unmentioned columns |
+| Dec 10 | CSV Find & Replace: preserve CSV quoting |
+| Dec 11 | CSV to SQL INSERT: escaping and textual identifiers |
+| Dec 12 | SQL INSERT to CSV: supported literal statements only |
+| Dec 13 | Image Dimension Inspector: pixels, aspect ratio and file size |
+| Dec 14 | EXIF Metadata Viewer: supported tags, scope and GPS caution |
+| Dec 15 | Image to Favicon: ICO sizes 16/32/48 |
+| Dec 16 | App Icon Generator: PNG sizes and sample web app manifest |
+
+The catalog is `src/content/tool-seo-guides-batch-03.ts`, loaded by `tool-seo-guides.ts`. The existing scheduled workflow glob `src/content/tool-seo-guides*.ts` recognizes the new dates automatically. Nothing is built or linked publicly before its Vietnam publication date. Updated primary-guide coverage: **151 total routes, 19 existing, 30 prepared, 102 uncovered**.
 
 After each 10-article batch, review Google Search Console impressions/indexing and engagement before expanding. Regular publication is an editorial cadence, **not** a ranking guarantee.
