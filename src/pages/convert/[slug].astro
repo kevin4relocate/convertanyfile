@@ -4,21 +4,28 @@ import SiteLayout from '../../layouts/SiteLayout.astro';
 import {CONVERSIONS} from '../../platform/format-converters/simple.mjs';
 export function getStaticPaths(){return CONVERSIONS.map((tool:{id:string;name:string;input:string;output:string;example:string;note:string})=>({params:{slug:tool.id},props:{tool}}));}
 const {tool}=Astro.props;
-const description=tool.name+' — paste text and convert it locally without an upload or account. '+tool.note;
+const description=tool.name+' — convert in both directions locally without an upload or account. '+tool.note;
 ---
 <SiteLayout title={tool.name+' Online Free | ConvertAnyFile'} description={description}>
  <section class="page-hero"><div class="site-container">
   <div class="breadcrumbs"><a href="/">Home</a><span>/</span><a href="/format-converters/">Format Converters</a><span>/</span><span>{tool.name}</span></div>
   <span class="eyebrow">Local text conversion</span><h1>{tool.name}</h1>
-  <p>{tool.input} → {tool.output}. Works on your device with no server upload.</p>
+  <p>{tool.input} ↔ {tool.output}. Switch direction any time. Your data stays in the browser.</p>
  </div></section>
  <section class="content-wide-section"><div class="site-container">
   <div class="format-workbench" data-format-workbench data-id={tool.id}>
    <div class="editors">
-    <label>Input {tool.input}<textarea data-input rows="13" spellcheck="false">{tool.example}</textarea></label>
-    <label>Output {tool.output}<textarea data-output rows="13" readonly placeholder="Result appears here"></textarea></label>
+    <label>Input <span data-input-format>{tool.input}</span><textarea data-input rows="13" spellcheck="false">{tool.example}</textarea></label>
+    <label>Output <span data-output-format>{tool.output}</span><textarea data-output rows="13" readonly placeholder="Result appears here"></textarea></label>
    </div>
    <div class="actions">
+    <label class="direction-picker">Direction
+     <select data-direction aria-label="Conversion direction">
+      <option value="forward">{tool.input} → {tool.output}</option>
+      <option value="reverse">{tool.output} → {tool.input}</option>
+     </select>
+    </label>
+    <button type="button" data-swap title="Switch source and destination formats">Swap direction</button>
     <button type="button" data-run disabled>Convert</button>
     <button type="button" data-copy disabled>Copy output</button>
     <button type="button" data-download disabled>Download result</button>
@@ -32,8 +39,13 @@ const description=tool.name+' — paste text and convert it locally without an u
 </SiteLayout>
 <script>
  // @ts-ignore - converter runtime is a JavaScript module
- import {convertSimple} from '../../platform/format-converters/simple.mjs';
+ import {convertSimple,CONVERSIONS} from '../../platform/format-converters/simple.mjs';
  for(const root of document.querySelectorAll<HTMLElement>('[data-format-workbench]')){
+  const direction=root.querySelector<HTMLSelectElement>('[data-direction]')!;
+  const swap=root.querySelector<HTMLButtonElement>('[data-swap]')!;
+  const inputFormat=root.querySelector<HTMLElement>('[data-input-format]')!;
+  const outputFormat=root.querySelector<HTMLElement>('[data-output-format]')!;
+  const config=CONVERSIONS.find((x:{id:string})=>x.id===root.dataset.id)!;
   const input=root.querySelector<HTMLTextAreaElement>('[data-input]')!;
   const output=root.querySelector<HTMLTextAreaElement>('[data-output]')!;
   const run=root.querySelector<HTMLButtonElement>('[data-run]')!;
@@ -45,10 +57,22 @@ const description=tool.name+' — paste text and convert it locally without an u
   let result:{text:string;ext:string}|undefined;
   const reset=()=>{result=undefined;output.value='';copy.disabled=true;download.disabled=true;error.hidden=true;error.textContent='';status.textContent='Ready';};
   input.addEventListener('input',reset);
+  const switchDirection=()=>{
+    const next=direction.value==='reverse';
+    const priorResult=result?.text;
+    // Re-use the converted result for round trips; otherwise offer a valid sample of the newly selected input format.
+    if(priorResult!==undefined)input.value=priorResult;
+    else input.value=next?convertSimple(config.id,config.example,'forward').text:config.example;
+    inputFormat.textContent=next?config.output:config.input;
+    outputFormat.textContent=next?config.input:config.output;
+    reset();status.textContent=next?'Ready for reverse conversion.':'Ready for forward conversion.';
+  };
+  direction.addEventListener('change',switchDirection);
+  swap.addEventListener('click',()=>{direction.value=direction.value==='forward'?'reverse':'forward';switchDirection();});
   clear.addEventListener('click',()=>{input.value='';reset();input.focus();});
   run.addEventListener('click',()=>{
    reset();
-   try{result=convertSimple(root.dataset.id??'',input.value);output.value=result.text;copy.disabled=false;download.disabled=false;status.textContent='Converted locally.';}
+   try{result=convertSimple(root.dataset.id??'',input.value,direction.value);output.value=result.text;copy.disabled=false;download.disabled=false;status.textContent='Converted locally.';}
    catch(e){error.hidden=false;error.textContent=e instanceof Error?e.message:'Conversion failed.';status.textContent='Review the input.';}
   });
   copy.addEventListener('click',async()=>{if(!result)return;try{await navigator.clipboard.writeText(result.text);status.textContent='Copied.';}catch{status.textContent='Select output to copy manually.';}});
@@ -61,6 +85,7 @@ const description=tool.name+' — paste text and convert it locally without an u
 .editors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.editors label{min-width:0;display:grid;gap:9px;font-size:13px;font-weight:800}
 .editors textarea{box-sizing:border-box;width:100%;min-height:265px;resize:vertical;background:#0a1019;color:#fff;border:1px solid #4a5770;border-radius:10px;padding:12px;font:13px/1.6 monospace}
 .editors textarea[readonly]{background:#182230}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+.direction-picker{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700}.direction-picker select{max-width:240px;min-height:40px;padding:9px;border:1px solid #45536c;border-radius:9px;background:#1c2739;color:#fff}
 .actions button{padding:11px 16px;background:#29364d;border:1px solid #45536c;color:#fff;border-radius:9px;cursor:pointer}.actions [data-run]{background:#6659eb;border-color:#6659eb}
 .actions button:disabled{opacity:.45;cursor:not-allowed}.format-workbench [data-error]{color:#ffb3aa}
 .notes{margin-top:20px;font-size:14px;line-height:1.7}.notes h2{font-size:19px}.notes a{color:#beb5ff}
