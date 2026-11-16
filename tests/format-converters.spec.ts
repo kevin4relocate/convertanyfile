@@ -30,6 +30,6 @@ test('converter rejects invalid structured data and clears outdated output',asyn
  await root.locator('[data-input]').fill('{"nested":{"x":1}}');
  await expect(root.locator('[data-output]')).toHaveValue('');
  await root.locator('[data-run]').click();
- await expect(root.locator('[data-error]')).toContainText('Nested');
+ await expect(root.locator('[data-error]')).toContainText(/nested objects/i);
  await expect(root.locator('[data-download]')).toBeDisabled();
 });
