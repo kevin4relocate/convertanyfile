@@ -322,7 +322,7 @@ export const BATCH_02_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "heading": "Safe handling of the result",
         "paragraphs": [
           "Use decoded content for inspection, editing or text search. If it must be inserted into HTML later, escape it for the exact destination context.",
-          "The decoder is not an HTML renderer or a sanitizer. Retain the original source when processing mixed CMS exports where fields may already be decoded."
+          "The decoder is not an HTML renderer or a sanitizer. Retain the original source when processing mixed CMS exports where fields may already be decoded. For a CMS migration, test both an ampersand-heavy sentence and a snippet containing literal angle brackets. Compare the destination page with the source text: if readers see &amp; instead of &, the processing chain may be adding an unwanted escaping stage. Correct that stage rather than repeatedly decoding all content."
         ]
       }
     ],
@@ -391,7 +391,7 @@ export const BATCH_02_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "heading": "Do not change identifiers",
         "paragraphs": [
           "Uppercasing a password, case-sensitive URL or database key can change its meaning and break a lookup.",
-          "Use case conversion on display text and ordinary copy rather than on exact identifiers. Preserve originals for sensitive records and apply a consistent publishing style."
+          "Use case conversion on display text and ordinary copy rather than on exact identifiers. Preserve originals for sensitive records and apply a consistent publishing style. For a newsletter, make a list of headings containing names, abbreviations, product labels and questions. Convert them using the intended style and review every result against your editorial guide. Apply that review again to translated or imported content rather than assuming one transformation works across languages."
         ]
       }
     ],
@@ -460,7 +460,7 @@ export const BATCH_02_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "heading": "Re-import checks",
         "paragraphs": [
           "Count rows and review quoted strings after export. Sorting should only reorder complete CSV records.",
-          "Spreadsheet software may infer numbers when opening a CSV and strip leading zeros. Explicitly import identifier columns as text in that application."
+          "Spreadsheet software may infer numbers when opening a CSV and strip leading zeros. Explicitly import identifier columns as text in that application. For inventory exports, compare rows with scores of 2, 10 and 100 before trusting the final order. If you use the result in another application, verify that padded stock codes survive that application's CSV import. Keep the untouched source file for diagnosis if a later tool changes identifiers."
         ]
       }
     ],
@@ -529,7 +529,7 @@ export const BATCH_02_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "heading": "Limits and reproducibility",
         "paragraphs": [
           "The tool does not execute SQL joins or multi-condition expressions. It applies one literal condition to the selected column.",
-          "Record the filter field and condition when sharing results. Preserve original source data to support later auditing and recovery."
+          "Record the filter field and condition when sharing results. Preserve original source data to support later auditing and recovery. For a monthly report, document the exact header, condition and search text. If upstream exports change a column name, an old filter can unexpectedly produce zero matches. Check a known matching record each time before sharing a filtered dataset with a team."
         ]
       }
     ],
@@ -598,7 +598,7 @@ export const BATCH_02_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "heading": "Audit removed records",
         "paragraphs": [
           "Count original and output rows and review representative duplicate groups. Keep the input and document the selected key fields.",
-          "Incorrect deduplication can remove real transactions or customer updates. A smaller CSV file is not proof that the correct records were kept."
+          "Incorrect deduplication can remove real transactions or customer updates. A smaller CSV file is not proof that the correct records were kept. For customer records, inspect examples where matching IDs carry different phone numbers or update dates. If you need the newest value, retaining the first row may be wrong without a deliberate ordering step. Define which version should win before preparing the cleaned export."
         ]
       }
     ],
@@ -667,7 +667,7 @@ export const BATCH_02_TOOL_SEO_GUIDES: readonly ToolSeoGuide[] = [
         "heading": "Test accessibility and use",
         "paragraphs": [
           "Check contrast ratios for each selected foreground and background combination. Do not automatically assign every extracted shade to a UI element.",
-          "These colors are creative starting points rather than licenses to reuse a brand identity. Design consistency and legal rights require separate judgment."
+          "These colors are creative starting points rather than licenses to reuse a brand identity. Design consistency and legal rights require separate judgment. For a landing page, try the extracted shades on light and dark surfaces with real text rather than isolated color swatches. A cohesive palette can still be difficult to read. Adjust tones as needed and record the final approved design tokens independently from the original photo."
         ]
       }
     ],
