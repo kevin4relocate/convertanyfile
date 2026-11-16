@@ -154,7 +154,8 @@ test('desktop homepage keeps universal converter compact, active picker above fo
   expect(universalBox!.y).toBeLessThan(400);
   expect(dropBox!.y + dropBox!.height).toBeLessThanOrEqual(900);
 
-  await page.getByRole('link', { name: 'Converters', exact: true }).click();
+  await page.locator('.main-nav .nav-dropdown > summary').filter({ hasText: 'Converters' }).click();
+  await page.getByRole('link', { name: 'All Converters', exact: true }).click();
   await expect(page).toHaveURL(/#converters$/);
   await page.waitForFunction(() => {
     const section = document.querySelector('#converters');
