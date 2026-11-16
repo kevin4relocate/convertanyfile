@@ -16,7 +16,7 @@ Source of truth: [tool-guide-coverage.csv](./tool-guide-coverage.csv), extracted
 | Data processing tools | 15 |
 | **Total** | **151** |
 
-Strict **primary-guide** coverage after batch 02: **19 existing**, **50 scheduled across five batches**, **82 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
+Strict **primary-guide** coverage after batch 02: **19 existing**, **70 scheduled across six batches**, **62 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
 
 This is a *route audit*, not a claim of 151 separately differentiated editing engines. Summary hub routes and some Preview tools are included for tracking, and Preview features should not be promoted as live.
 
@@ -48,7 +48,7 @@ Each guide includes a real tool-specific scenario, accurate constraints checked 
 - Manual `workflow_dispatch` is available for recovery. Same-day re-runs do not add a second release trigger if the date's commit already exists.
 - The publication script **does not** modify any AdSense verification or advertising scripts. No future article is advertised before its publication date.
 
-## Follow-on backlog (82 uncovered)
+## Follow-on backlog (62 uncovered)
 
 1. Prioritize remaining high-use, straightforward functionality: JSON Minifier/Decoder, URL Decoder, HTML Entity tools, CSV filters and transformations, image crop/compress/color utilities.
 2. Expand detailed image utilities and advanced editors, using feature-specific examples verified against their real controls and limitations.
@@ -138,5 +138,17 @@ The fifth batch extends the same one-article-per-day Vietnam-local schedule, inc
 | Jan 05 | WebP to PNG: editing and transparency trade-offs |
 
 **Updated coverage:** 151 tool/route entries; 19 previously covered, 50 newly staged across five batches, and 82 without a primary guide. Future batches should not repeat topics already in the catalog. The hidden Gemini Watermark Remover remains excluded. Verify actual Cloudflare deployment and GitHub Actions push rights before relying on date-triggered releases.
+
+
+## Batch 06 — Jan 06 to Jan 25, 2027 (20 image editing guides)
+
+This larger editorial batch covers twenty live image tools omitted from earlier primary-guide coverage: grayscale, sepia, invert, brightness, contrast, saturation, pixelate, sharpen, border, rounded corners, hue rotate, posterize, black/white threshold, opacity, Base64 to Image, horizontal/vertical merge, transparent-border trim, collage maker, and image-grid splitting. Each guide has original explanatory content including tool-specific limits and export checks; dates remain sequential, one daily at 09:30 Vietnam time.
+
+- Catalog: `src/content/tool-seo-guides-batch-06.ts`.
+- Image assets: `public/guide-images/guide-*-practical.svg`, each has accessible title, description, alt and caption from the guide.
+- Tool page and guide directory links are released only once each date is reached at build time.
+- Distinguish image aesthetic filters from irreversible privacy redaction. The unpublished Gemini feature remains excluded.
+
+**Updated audit:** 151 tool/route entries; 19 previously covered; 70 newly prepared and scheduled; 62 still missing a primary guide. Of the remaining 62, image editing and format conversion, archive repackaging, subtitle conversion and the three converter hubs require differentiated editorials, not superficial find-and-replace copy.
 
 After each 10-article batch, review Google Search Console impressions/indexing and engagement before expanding. Regular publication is an editorial cadence, **not** a ranking guarantee.
