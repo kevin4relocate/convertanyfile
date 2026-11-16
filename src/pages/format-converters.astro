@@ -2,18 +2,18 @@
 import SiteLayout from '../layouts/SiteLayout.astro';
 // @ts-ignore - lightweight converter registry is runtime JavaScript
 import {CONVERSIONS} from '../platform/format-converters/simple.mjs';
-const description='Convert Markdown, HTML, CSV, and INI text privately in your browser with simple, focused tools.';
+const description='Convert Markdown, HTML, JSON, YAML, TOML, XML, INI, CSV, vCard and ICS in both directions in your browser.';
 ---
 <SiteLayout title="Text & Data Format Converters | ConvertAnyFile" description={description}>
  <section class="page-hero"><div class="site-container">
   <div class="breadcrumbs"><a href="/">Home</a><span>/</span><span>Format Converters</span></div>
   <span class="eyebrow">Private browser tools</span>
   <h1>Text & data format converters</h1>
-  <p>Paste text, convert locally, copy or download. These tools do not upload source data.</p>
+  <p>Convert in either direction. Paste text, switch formats, copy or download. No source data is uploaded.</p>
  </div></section>
  <section class="content-wide-section"><div class="site-container">
   <div class="tools">
-   {CONVERSIONS.map((tool:{id:string;name:string;note:string;input:string;output:string})=><a href={'/convert/'+tool.id+'/'}><strong>{tool.name}</strong><span>{tool.input} → {tool.output}</span><p>{tool.note}</p><small>Open converter →</small></a>)}
+   {CONVERSIONS.map((tool:{id:string;name:string;note:string;input:string;output:string})=><a href={'/convert/'+tool.id+'/'}><strong>{tool.name}</strong><span>{tool.input} ↔ {tool.output}</span><p>{tool.note}</p><small>Open converter →</small></a>)}
   </div>
  </div></section>
 </SiteLayout>
