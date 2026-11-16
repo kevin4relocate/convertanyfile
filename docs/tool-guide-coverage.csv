@@ -150,3 +150,13 @@ data-tool,csv-find-replace,/data/csv-find-replace/,scheduled,/guides/tool/find-r
 data-tool,csv-to-sql-insert,/data/csv-to-sql-insert/,scheduled,/guides/tool/csv-to-sql-insert-keep-leading-zeros/,2026-12-11
 data-tool,sql-insert-to-csv,/data/sql-insert-to-csv/,scheduled,/guides/tool/convert-sql-insert-statements-to-csv/,2026-12-12
 data-tool,csv-data-profiler,/data/csv-data-profiler/,scheduled,/guides/tool/profile-csv-columns-before-import/,2026-12-23
+format-converter,markdown-html,/convert/markdown-html/,missing,,
+format-converter,html-plain-text,/convert/html-plain-text/,missing,,
+format-converter,csv-html-table,/convert/csv-html-table/,missing,,
+format-converter,ini-json,/convert/ini-json/,missing,,
+format-converter,json-yaml,/convert/json-yaml/,missing,,
+format-converter,json-toml,/convert/json-toml/,missing,,
+format-converter,yaml-toml,/convert/yaml-toml/,missing,,
+format-converter,xml-csv,/convert/xml-csv/,missing,,
+format-converter,vcf-csv,/convert/vcf-csv/,missing,,
+format-converter,ics-csv,/convert/ics-csv/,missing,,
