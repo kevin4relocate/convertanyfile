@@ -57,12 +57,16 @@ const description=tool.name+' online. Convert in either direction privately in y
   let result:{text:string;ext:string}|undefined;
   const reset=()=>{result=undefined;output.value='';copy.disabled=true;download.disabled=true;error.hidden=true;error.textContent='';status.textContent='Ready';};
   input.addEventListener('input',reset);
+  let activeDirection='forward';
+  const reverseSample=convertSimple(config.id,config.example,'forward').text;
   const switchDirection=()=>{
     const next=direction.value==='reverse';
     const priorResult=result?.text;
-    // Re-use the converted result for round trips; otherwise offer a valid sample of the newly selected input format.
+    const previousSample=activeDirection==='forward'?config.example:reverseSample;
+    // Preserve user-edited input; only replace untouched examples or chain the last completed result.
     if(priorResult!==undefined)input.value=priorResult;
-    else input.value=next?convertSimple(config.id,config.example,'forward').text:config.example;
+    else if(input.value===previousSample||input.value.trim()==='')input.value=next?reverseSample:config.example;
+    activeDirection=direction.value;
     inputFormat.textContent=next?config.output:config.input;
     outputFormat.textContent=next?config.input:config.output;
     reset();status.textContent=next?'Ready for reverse conversion.':'Ready for forward conversion.';
