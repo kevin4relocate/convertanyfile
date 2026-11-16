@@ -16,7 +16,7 @@ Source of truth: [tool-guide-coverage.csv](./tool-guide-coverage.csv), extracted
 | Data processing tools | 15 |
 | **Total** | **151** |
 
-Strict **primary-guide** coverage after batch 02: **19 existing**, **40 scheduled across four batches**, **92 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
+Strict **primary-guide** coverage after batch 02: **19 existing**, **50 scheduled across five batches**, **82 without a dedicated primary article**. The CSV deliberately does not count a mere mention or a "related" link as a primary guide. Static existing guides are mapped when they directly address a tool; existing image/conversion growth articles are mapped by their `toolHref`.
 
 This is a *route audit*, not a claim of 151 separately differentiated editing engines. Summary hub routes and some Preview tools are included for tracking, and Preview features should not be promoted as live.
 
@@ -48,7 +48,7 @@ Each guide includes a real tool-specific scenario, accurate constraints checked 
 - Manual `workflow_dispatch` is available for recovery. Same-day re-runs do not add a second release trigger if the date's commit already exists.
 - The publication script **does not** modify any AdSense verification or advertising scripts. No future article is advertised before its publication date.
 
-## Follow-on backlog (92 uncovered)
+## Follow-on backlog (82 uncovered)
 
 1. Prioritize remaining high-use, straightforward functionality: JSON Minifier/Decoder, URL Decoder, HTML Entity tools, CSV filters and transformations, image crop/compress/color utilities.
 2. Expand detailed image utilities and advanced editors, using feature-specific examples verified against their real controls and limitations.
@@ -118,5 +118,25 @@ A fourth ten-day daily queue is prepared with standalone practical tutorials, di
 | Dec 26 | Add Watermark — text/logo batch placement |
 
 The fourth batch is stored in `src/content/tool-seo-guides-batch-04.ts`. **Updated coverage: 151 routes; 19 existing primary guides; 40 newly prepared and date-scheduled; 92 uncovered.** Do not publish future pages in the static build before their scheduled date, and keep the temporarily unpublished Gemini feature excluded.
+
+
+## Batch 05 — Dec 27, 2026 to Jan 05, 2027
+
+The fifth batch extends the same one-article-per-day Vietnam-local schedule, including the year boundary. Each article has an original explanatory SVG, alt and caption, useful input/output examples, four topic-specific editorial sections, limitations, FAQs and related-tool links. The existing date-aware build and GitHub Actions workflow find the new batch via `src/content/tool-seo-guides*.ts`. No future article appears in the built pages, directory, or sitemap before its scheduled day.
+
+| Publish date (Vietnam) | Guide target |
+| --- | --- |
+| Dec 27 | CSV to TSV: quoted commas and preserved fields |
+| Dec 28 | TSV to CSV: quoting, line endings and UTF-8 BOM |
+| Dec 29 | JSON to TSV: nested dot-notation headers |
+| Dec 30 | TSV to JSON: headers and string value fidelity |
+| Dec 31 | JSONL to JSON: newline records into one array |
+| Jan 01 | JSON to JSONL: array records for line-based pipelines |
+| Jan 02 | CSV to JSONL: headers and text identifiers |
+| Jan 03 | JSONL to CSV: nested paths and array strings |
+| Jan 04 | PNG to WebP: quality and transparent image delivery |
+| Jan 05 | WebP to PNG: editing and transparency trade-offs |
+
+**Updated coverage:** 151 tool/route entries; 19 previously covered, 50 newly staged across five batches, and 82 without a primary guide. Future batches should not repeat topics already in the catalog. The hidden Gemini Watermark Remover remains excluded. Verify actual Cloudflare deployment and GitHub Actions push rights before relying on date-triggered releases.
 
 After each 10-article batch, review Google Search Console impressions/indexing and engagement before expanding. Regular publication is an editorial cadence, **not** a ranking guarantee.
