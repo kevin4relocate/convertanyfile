@@ -6,6 +6,7 @@ import { IMAGE_TOOL_ROADMAP } from '../config/image-tools';
 import { IMAGE_GROWTH_GUIDES } from '../content/image-growth-guides';
 import { CONVERSION_GROWTH_GUIDES } from '../content/conversion-growth-guides';
 import { STATIC_GUIDES } from '../config/guide-links';
+import { getPublishedToolSeoGuides } from '../content/tool-seo-guides';
 import { TEXT_TOOLS } from '../config/text-tools';
 import { DATA_PROCESSING_TOOLS } from '../config/data-processing-tools';
 
@@ -32,7 +33,8 @@ const converterGroups = (['image','data','archive','subtitle'] as const).map((ca
 }));
 const growthGuides = [...CONVERSION_GROWTH_GUIDES, ...IMAGE_GROWTH_GUIDES].map((guide) => ({ href: `/guides/${guide.slug}/`, label: guide.h1 }));
 const staticGuides = STATIC_GUIDES.map((guide) => ({ href: guide.href, label: guide.title }));
-const allGuideLinks = [...growthGuides, ...staticGuides];
+const toolSeoGuides = getPublishedToolSeoGuides().map((guide) => ({href: `/guides/tool/${guide.slug}/`,label:guide.h1}));
+const allGuideLinks = [...toolSeoGuides, ...growthGuides, ...staticGuides];
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
