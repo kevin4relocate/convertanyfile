@@ -33,6 +33,16 @@ jobs:
             echo "ready=false" >> "$GITHUB_OUTPUT"
             echo "No scheduled article for $DAY; no deployment triggered."
           fi
+      - uses: actions/setup-node@v6
+        if: steps.article.outputs.ready == 'true'
+        with:
+          node-version: '22.19.0'
+          cache: npm
+      - name: Validate site build on the publication date
+        if: steps.article.outputs.ready == 'true'
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
       - name: Trigger content build by committing the publication date
         if: steps.article.outputs.ready == 'true'
         env:
