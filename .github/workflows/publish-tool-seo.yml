@@ -27,7 +27,7 @@ jobs:
         run: |
           DAY="$(TZ=Asia/Ho_Chi_Minh date +%F)"
           echo "day=$DAY" >> "$GITHUB_OUTPUT"
-          if grep -Fq "\"publishDate\": \"$DAY\"" src/content/tool-seo-guides.ts; then
+          if grep -Fq "\"publishDate\": \"$DAY\"" src/content/tool-seo-guides*.ts; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
