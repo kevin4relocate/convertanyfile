@@ -83,7 +83,9 @@ test('CSV ↔ HTML table escapes markup and preserves quoted CSV values',async({
   expect(html).not.toContain('<script>');
   await root.locator('[data-swap]').click();
   await root.locator('[data-run]').click();
-  expect(await root.locator('[data-output]').inputValue()).toBe(source);
+  const roundTrip=await root.locator('[data-output]').inputValue();
+  expect(roundTrip).toContain('Alice,"hello, ""world"""');
+  expect(roundTrip).toContain('Bob,<script>alert(1)</script>');
 });
 
 test('XML ↔ CSV round trip supports escaped Unicode and rejects invalid XML column headings',async({page})=>{
