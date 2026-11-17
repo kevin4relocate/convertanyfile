@@ -84,7 +84,7 @@ const convertersActive = converterPaths.includes(currentPath);
           </summary>
           <div class:list={['nav-submenu', 'nav-submenu--catalog', item.label === 'Data Tools' && 'nav-submenu--data-tools']} data-tool-catalog>
             <label class="nav-search-label">
-              <span class="sr-only">Search {item.label}</span>
+              <span class="nav-search-heading">Search {item.label}</span>
               <input type="search" class="nav-tool-search" placeholder={`Find ${item.label.toLowerCase()}…`} aria-label={`Search ${item.label}`} data-nav-search />
             </label>
             <a class:list={['nav-submenu-overview', currentPath === item.href && 'is-current']} href={item.href}>
@@ -280,8 +280,34 @@ const convertersActive = converterPaths.includes(currentPath);
   }
   .nav-submenu--image-tools, .nav-submenu--catalog { width: min(560px, calc(100vw - 32px)); }
   .nav-submenu--converters { width: min(470px, calc(100vw - 32px)); }
-  .nav-search-label { display: block; }
-  .nav-tool-search { width: 100%; min-height: 38px; padding: 9px 12px; border: 1px solid #394052; border-radius: 9px; background: #111722; color: #f3f5fb; font: inherit; font-size: 13px; }
+  /* Consistent search typography and breathing room in both tool catalogs. */
+  .nav-submenu--catalog { padding: 14px; gap: 10px; }
+  .nav-search-label { display: grid; gap: 10px; min-width: 0; }
+  .nav-search-heading {
+    display: block;
+    color: #eef0f6;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: normal;
+  }
+  .nav-tool-search {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+    padding: 11px 14px;
+    border: 1px solid #394052;
+    border-radius: 10px;
+    background: #111722;
+    color: #f3f5fb;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 450;
+    line-height: 1.4;
+  }
   .nav-tool-search:focus-visible { outline: 2px solid #a69ffd; outline-offset: 2px; }
   .nav-catalog-group[hidden], .nav-tool-link[hidden] { display: none !important; }
   .nav-submenu--data-tools { left: auto; right: 0; transform: none; }
