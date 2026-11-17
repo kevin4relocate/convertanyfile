@@ -45,7 +45,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
         </div>
       </div>
       <div class="translation-controls">
-        <button type="button" data-translate class="translation-primary">Translate subtitles</button>
+        <button type="button" data-translate class="translation-primary" disabled>Translate subtitles</button>
         <button type="button" data-stop disabled>Stop</button>
         <button type="button" data-download disabled>Download translated SRT</button>
         <span data-progress role="status" aria-live="polite">Checking browser support…</span>
@@ -180,6 +180,9 @@ import SiteLayout from '../layouts/SiteLayout.astro';
         setBusy(false);
       }
     });
+    // Do not expose an enabled action until the click handler is attached.
+    root.dataset.translatorReady = 'true';
+    translate.disabled = !api;
   }
 </script>
 <style>
