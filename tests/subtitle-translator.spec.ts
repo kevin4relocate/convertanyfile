@@ -53,6 +53,10 @@ test('SRT translation preserves cue timestamps and indices, and remains editable
   await page.locator('[data-download]').click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe('translated_ja_to_en.srt');
+  await page.locator('[data-reset]').click();
+  await expect(page.locator('[data-source]')).toHaveValue('');
+  await expect(page.locator('[data-output]')).toHaveValue('');
+  await expect(page.locator('[data-download]')).toBeDisabled();
 });
 
 test('unsupported language pair and malformed SRT fail without partial download', async ({ page }) => {
@@ -109,4 +113,35 @@ test('SRT file picker has a compact filename indicator', async ({ page }) => {
   });
   await expect(page.locator('[data-file-name]')).toHaveText('football-jp.srt');
   await expect(page.locator('[data-source]')).toHaveValue(/こんにちは/);
+});
+
+test('file chooser lives in actions row and Reset clears input, result and filename', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'Translator', {
+      configurable: true,
+      value: {
+        availability: async () => 'available',
+        create: async () => ({
+          translate: async (text: string) => text,
+          destroy: () => {},
+        }),
+      },
+    });
+  });
+  await page.goto('/subtitle-translator/');
+  await expect(page.locator('.translation-controls [data-file]')).toHaveCount(1);
+  await expect(page.locator('.translation-editors [data-file]')).toHaveCount(0);
+  await page.locator('[data-file]').setInputFiles({
+    name: 'sample.srt', mimeType: 'text/plain',
+    buffer: Buffer.from('1\\n00:00:01,000 --> 00:00:02,000\\nこんにちは', 'utf8'),
+  });
+  await expect(page.locator('[data-file-name]')).toHaveText('sample.srt');
+  // Reset must work without depending on language-model availability or translation.
+  await page.locator('[data-output]').fill('Draft translated subtitle');
+  await page.locator('[data-reset]').click();
+  await expect(page.locator('[data-source]')).toHaveValue('');
+  await expect(page.locator('[data-output]')).toHaveValue('');
+  await expect(page.locator('[data-file-name]')).toHaveText('No file selected');
+  await expect(page.locator('[data-download]')).toBeDisabled();
+  await expect(page.locator('[data-error]')).toBeHidden();
 });

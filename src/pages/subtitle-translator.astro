@@ -14,7 +14,6 @@ import SiteLayout from '../layouts/SiteLayout.astro';
   </div></section>
   <section class="converter-page-tool"><div class="site-container">
     <div class="srt-translator" data-srt-translator>
-      <div class="translation-banner"><strong>Browser-only preview</strong><span>Chrome Translator API is required. No server translation, paid API or automatic cloud fallback. The browser may download language packs on first use.</span></div>
       <div class="translation-settings">
         <label>Source language
           <select data-source-language aria-label="Source language">
@@ -30,7 +29,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       </div>
       <div class="translation-editors">
         <div class="translation-editor">
-          <div class="editor-label"><label for="subtitle-source">Original SRT</label><span class="translation-picker"><label class="translation-file">Choose .srt file <input type="file" accept=".srt,text/plain" data-file aria-label="Choose SRT file" /></label><span data-file-name aria-live="polite">No file selected</span></span></div>
+          <div class="editor-label"><label for="subtitle-source">Original SRT</label></div>
           <textarea id="subtitle-source" data-source spellcheck="false" aria-label="Original SRT text" placeholder="1&#10;00:00:01,000 --> 00:00:04,500&#10;今日は日本の歴史について話します。">1
 00:00:01,000 --> 00:00:04,500
 今日は日本の歴史について話します。
@@ -45,9 +44,11 @@ import SiteLayout from '../layouts/SiteLayout.astro';
         </div>
       </div>
       <div class="translation-controls">
+        <span class="translation-picker"><label class="translation-file">Choose .srt file <input type="file" accept=".srt,text/plain" data-file aria-label="Choose SRT file" /></label><span data-file-name aria-live="polite">No file selected</span></span>
         <button type="button" data-translate class="translation-primary" disabled>Translate subtitles</button>
         <button type="button" data-stop disabled>Stop</button>
         <button type="button" data-download disabled>Download translated SRT</button>
+        <button type="button" data-reset>Reset</button>
         <span data-progress role="status" aria-live="polite">Checking browser support…</span>
       </div>
       <p data-error class="translation-error" role="alert" hidden></p>
@@ -87,6 +88,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     const translate = get<HTMLButtonElement>('[data-translate]');
     const stop = get<HTMLButtonElement>('[data-stop]');
     const download = get<HTMLButtonElement>('[data-download]');
+    const reset = get<HTMLButtonElement>('[data-reset]');
     const progress = get<HTMLElement>('[data-progress]');
     const error = get<HTMLElement>('[data-error]');
     let busy = false;
@@ -98,6 +100,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       busy = value;
       translate.disabled = value || !api;
       stop.disabled = !value;
+      reset.disabled = value;
       from.disabled = value; to.disabled = value; source.disabled = value; fileInput.disabled = value;
       get<HTMLButtonElement>('[data-swap]').disabled = value;
     };
@@ -122,6 +125,19 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       if (file.size > MAX_SRT_BYTES) { setError('The file exceeds the 1 MB preview limit.'); return; }
       try { source.value = await file.text(); invalidate(); fileName.textContent = file.name; fileName.title = file.name; progress.textContent = `Loaded ${file.name} locally.`; }
       catch { setError('Could not read this file. Use UTF-8 SRT text.'); }
+    });
+    reset.addEventListener('click', () => {
+      if (busy) return;
+      source.value = '';
+      output.value = '';
+      fileInput.value = '';
+      fileName.textContent = 'No file selected';
+      fileName.removeAttribute('title');
+      stopRequested = false;
+      invalidate();
+      progress.textContent = api
+        ? 'Ready to check language support when you click Translate.'
+        : 'Translator API unavailable. Try recent desktop Chrome (138+).';
     });
     stop.addEventListener('click', () => { stopRequested = true; progress.textContent = 'Stopping after the current cue…'; });
     output.addEventListener('input', () => { if (isComplete) download.disabled = !output.value.trim(); });
@@ -200,8 +216,6 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 </script>
 <style>
   .srt-translator{background:#111722;border:1px solid #354055;border-radius:18px;padding:20px;color:#eef1f9}
-  .translation-banner{display:flex;flex-wrap:wrap;gap:9px;align-items:center;border:1px solid #4d4770;border-radius:12px;background:#211c36;padding:12px 15px;font-size:13px;color:#d4cff6}
-  .translation-banner strong{color:#fff}
   .translation-settings{display:flex;gap:16px;align-items:end;flex-wrap:wrap;margin:20px 0}
   .translation-settings label{display:grid;gap:8px;flex:1 1 240px;font-size:13px;font-weight:750}
   .translation-settings select{width:100%;height:44px;border-radius:9px;border:1px solid #465470;background:#0d1624;color:#f3f4fa;padding:8px 12px;font-size:13px}
@@ -219,10 +233,12 @@ import SiteLayout from '../layouts/SiteLayout.astro';
   .translation-editor textarea{display:block;width:100%;min-height:270px;resize:vertical;padding:15px;border:1px solid #48546b;border-radius:12px;background:#0b121e;color:#f5f6fa;line-height:1.6;font-size:13px}
   .translation-editor textarea:focus-visible,.translation-settings select:focus-visible{outline:2px solid #a59aff;outline-offset:2px}
   .translation-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
-  .translation-controls button{padding:11px 15px;border-radius:9px;background:#26354b;color:white;border:1px solid #475775;cursor:pointer;font-size:12px;font-weight:750}
+  .translation-controls button,.translation-controls .translation-file{padding:11px 15px;border-radius:9px;background:#26354b;color:white;border:1px solid #475775;cursor:pointer;font-size:12px;font-weight:750;min-height:44px}
   .translation-controls .translation-primary{background:#6956ea;border-color:#6956ea}
   .translation-controls button:disabled,.translation-swap:disabled{opacity:.46;cursor:not-allowed}
-  .translation-controls span{flex:1 1 240px;color:#b9c5da;font-size:12px}
+  .translation-controls [data-progress]{flex:1 1 240px;color:#b9c5da;font-size:12px}
+  .translation-controls .translation-picker{flex:0 1 auto;min-width:0}
+  .translation-controls [data-file-name]{max-width:120px}
   .translation-error{color:#ffc1bb;border:1px solid #a35757;padding:12px;border-radius:10px;font-size:13px}
   .translation-note{font-size:12px;line-height:1.7;color:#b1bdd0;margin:16px 0 0}
   @media(max-width:760px){.srt-translator{padding:14px}.translation-editors{grid-template-columns:1fr}.translation-editor textarea{min-height:180px}.translation-settings{gap:10px}.translation-swap{width:100%}}
