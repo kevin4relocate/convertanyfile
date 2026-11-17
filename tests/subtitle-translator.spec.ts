@@ -53,6 +53,10 @@ test('SRT translation preserves cue timestamps and indices, and remains editable
   await page.locator('[data-download]').click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe('translated_ja_to_en.srt');
+  await page.locator('[data-reset]').click();
+  await expect(page.locator('[data-source]')).toHaveValue('');
+  await expect(page.locator('[data-output]')).toHaveValue('');
+  await expect(page.locator('[data-download]')).toBeDisabled();
 });
 
 test('unsupported language pair and malformed SRT fail without partial download', async ({ page }) => {
@@ -132,8 +136,8 @@ test('file chooser lives in actions row and Reset clears input, result and filen
     buffer: Buffer.from('1\\n00:00:01,000 --> 00:00:02,000\\nこんにちは', 'utf8'),
   });
   await expect(page.locator('[data-file-name]')).toHaveText('sample.srt');
-  await page.locator('[data-translate]').click();
-  await expect(page.locator('[data-download]')).toBeEnabled();
+  // Reset must work without depending on language-model availability or translation.
+  await page.locator('[data-output]').fill('Draft translated subtitle');
   await page.locator('[data-reset]').click();
   await expect(page.locator('[data-source]')).toHaveValue('');
   await expect(page.locator('[data-output]')).toHaveValue('');
