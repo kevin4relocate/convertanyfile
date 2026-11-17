@@ -2,13 +2,13 @@
 export interface SrtCue { index: string; timing: string; text: string }
 export const MAX_SRT_BYTES = 1_000_000;
 export const MAX_SRT_CUES = 1500;
-const TIMING = /^(\\d{2,}:\\d{2}:\\d{2},\\d{3})\\s*-->\\s*(\\d{2,}:\\d{2}:\\d{2},\\d{3})(?:\\s+.*)?$/;
+const TIMING = /^(\d{2,}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2,}:\d{2}:\d{2},\d{3})(?:\s+.*)?$/;
 
 export function parseSrt(source: string): SrtCue[] {
-  const clean = source.replace(/^\\uFEFF/, '').replace(/\\r\\n?/g, '\n').trim();
+  const clean = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').trim();
   if (!clean) throw new Error('Paste SRT subtitles or choose a .srt file.');
   if (new TextEncoder().encode(clean).length > MAX_SRT_BYTES) throw new Error('SRT is too large for this preview (1 MB limit).');
-  const blocks = clean.split(/\\n[\\t ]*\\n+/);
+  const blocks = clean.split(/\n[\t ]*\n+/);
   if (blocks.length > MAX_SRT_CUES) throw new Error('This preview supports up to 1,500 subtitle cues.');
   const result: SrtCue[] = [];
   for (const [position, block] of blocks.entries()) {
@@ -18,7 +18,7 @@ export function parseSrt(source: string): SrtCue[] {
     if (TIMING.test(lines[0] ?? '')) timing = lines.shift()!;
     else {
       const id = lines.shift() ?? '';
-      if (!/^\\d+$/.test(id) || !TIMING.test(lines[0] ?? '')) {
+      if (!/^\d+$/.test(id) || !TIMING.test(lines[0] ?? '')) {
         throw new Error(`Invalid SRT block ${position + 1}: expected a numeric index followed by a timestamp line.`);
       }
       index = id;
