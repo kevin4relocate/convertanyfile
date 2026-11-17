@@ -25,6 +25,7 @@ jobs:
       - name: Verify build-info.json is present and matches CI commit
         run: node scripts/verify-build-fingerprint.mjs
       - run: npm run test:text-tools
+      - run: npm run test:seo-publication
       - name: Upload production build
         uses: actions/upload-artifact@v4
         with:
