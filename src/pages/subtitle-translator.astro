@@ -1,0 +1,212 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+---
+<SiteLayout
+  title="SRT Subtitle Translator (Browser Preview) | ConvertAnyFile"
+  description="Try translating SRT subtitle text locally with Chrome's built-in Translator API. Keep timestamp lines and review translations before downloading."
+  noindex={true}
+>
+  <section class="converter-page-hero"><div class="site-container converter-page-hero-inner">
+    <div class="breadcrumbs converter-page-breadcrumbs"><a href="/">Home</a><span>/</span><a href="/subtitle-converter/">Subtitle Converter</a><span>/</span><span>Subtitle Translator preview</span></div>
+    <span class="eyebrow converter-page-eyebrow">Experimental · local browser AI</span>
+    <h1>Translate SRT subtitles on your device</h1>
+    <p>Try Japanese ↔ English and other supported language pairs. The original SRT timestamps and cue numbers stay unchanged. Translation quality varies; review the output before publishing.</p>
+  </div></section>
+  <section class="converter-page-tool"><div class="site-container">
+    <div class="srt-translator" data-srt-translator>
+      <div class="translation-banner"><strong>Browser-only preview</strong><span>Chrome Translator API is required. No server translation, paid API or automatic cloud fallback. The browser may download language packs on first use.</span></div>
+      <div class="translation-settings">
+        <label>Source language
+          <select data-source-language aria-label="Source language">
+            <option value="ja">Japanese</option><option value="en">English</option><option value="vi">Vietnamese</option><option value="ko">Korean</option><option value="zh">Chinese (Simplified)</option><option value="fr">French</option><option value="de">German</option><option value="es">Spanish</option><option value="pt">Portuguese</option><option value="id">Indonesian</option><option value="th">Thai</option>
+          </select>
+        </label>
+        <button type="button" class="translation-swap" data-swap aria-label="Swap source and target languages">⇄ Swap</button>
+        <label>Target language
+          <select data-target-language aria-label="Target language">
+            <option value="en" selected>English</option><option value="ja">Japanese</option><option value="vi">Vietnamese</option><option value="ko">Korean</option><option value="zh">Chinese (Simplified)</option><option value="fr">French</option><option value="de">German</option><option value="es">Spanish</option><option value="pt">Portuguese</option><option value="id">Indonesian</option><option value="th">Thai</option>
+          </select>
+        </label>
+      </div>
+      <div class="translation-editors">
+        <div class="translation-editor">
+          <div class="editor-label"><label for="subtitle-source">Original SRT</label><label class="translation-file">Choose .srt file <input type="file" accept=".srt,text/plain" data-file aria-label="Choose SRT file" /></label></div>
+          <textarea id="subtitle-source" data-source spellcheck="false" aria-label="Original SRT text" placeholder="1&#10;00:00:01,000 --> 00:00:04,500&#10;今日は日本の歴史について話します。">1
+00:00:01,000 --> 00:00:04,500
+今日は日本の歴史について話します。
+
+2
+00:00:05,000 --> 00:00:07,500
+よろしくお願いします。</textarea>
+        </div>
+        <div class="translation-editor">
+          <div class="editor-label"><label for="subtitle-output">Translated SRT · editable</label><span>Check wording and line lengths</span></div>
+          <textarea id="subtitle-output" data-output spellcheck="false" aria-label="Translated SRT text" placeholder="Your translation will appear here after processing"></textarea>
+        </div>
+      </div>
+      <div class="translation-controls">
+        <button type="button" data-translate class="translation-primary" disabled>Translate subtitles</button>
+        <button type="button" data-stop disabled>Stop</button>
+        <button type="button" data-download disabled>Download translated SRT</button>
+        <span data-progress role="status" aria-live="polite">Checking browser support…</span>
+      </div>
+      <p data-error class="translation-error" role="alert" hidden></p>
+      <p class="translation-note">Up to 1 MB / 1,500 cues per file. Each cue is translated individually. Cue numbers and timestamp lines are preserved, but sentence wrapping and nuance may change. Do not rely on automatic translation without reviewing it. Language availability depends on your browser and installed packs.</p>
+    </div>
+  </div></section>
+  <section class="content-wide-section"><div class="site-container"><h2>How this experimental translator works</h2>
+    <p>Paste a UTF-8 SRT or open a local .srt file. Choose the source and target languages, then press Translate. Your browser checks whether the language pair is available. If a pack needs downloading, Chrome may download it before local translation starts. Only translated text is replaced; SRT numbering and timing stay the same.</p>
+    <p><strong>Unsupported browser?</strong> This preview cannot translate without the built-in API. Try a recent desktop version of Chrome, or use the <a href="/subtitle-converter/">Subtitle Converter</a> for format and timing changes without translation.</p>
+  </div></section>
+</SiteLayout>
+<script>
+  import { parseSrt, serializeSrt, MAX_SRT_BYTES } from '../platform/subtitle-translation/srt';
+
+  interface BrowserTranslationSession {
+    translate(text: string): Promise<string>;
+    destroy?(): void;
+  }
+  interface BrowserTranslatorAPI {
+    availability(options: { sourceLanguage: string; targetLanguage: string }): Promise<string>;
+    create(options: {
+      sourceLanguage: string;
+      targetLanguage: string;
+      monitor?: (monitor: { addEventListener(type: 'downloadprogress', listener: (event: { loaded: number }) => void): void }) => void;
+    }): Promise<BrowserTranslationSession>;
+  }
+  const api = (globalThis as typeof globalThis & { Translator?: BrowserTranslatorAPI }).Translator;
+  const root = document.querySelector<HTMLElement>('[data-srt-translator]');
+  if (root) {
+    const get = <T extends HTMLElement>(selector: string) => root.querySelector<T>(selector)!;
+    const source = get<HTMLTextAreaElement>('[data-source]');
+    const output = get<HTMLTextAreaElement>('[data-output]');
+    const from = get<HTMLSelectElement>('[data-source-language]');
+    const to = get<HTMLSelectElement>('[data-target-language]');
+    const fileInput = get<HTMLInputElement>('[data-file]');
+    const translate = get<HTMLButtonElement>('[data-translate]');
+    const stop = get<HTMLButtonElement>('[data-stop]');
+    const download = get<HTMLButtonElement>('[data-download]');
+    const progress = get<HTMLElement>('[data-progress]');
+    const error = get<HTMLElement>('[data-error]');
+    let busy = false;
+    let stopRequested = false;
+    let isComplete = false;
+    const setError = (message: string) => { error.textContent = message; error.hidden = !message; };
+    const invalidate = () => { isComplete = false; download.disabled = true; output.value = ''; setError(''); };
+    const setBusy = (value: boolean) => {
+      busy = value;
+      translate.disabled = value || !api;
+      stop.disabled = !value;
+      from.disabled = value; to.disabled = value; source.disabled = value; fileInput.disabled = value;
+      get<HTMLButtonElement>('[data-swap]').disabled = value;
+    };
+    if (!api) {
+      progress.textContent = 'Translator API unavailable. Try recent desktop Chrome (138+).';
+      setError('This browser does not expose the built-in Translator API. No content was sent anywhere.');
+      translate.disabled = true;
+    } else {
+      progress.textContent = 'Ready to check language support when you click Translate.';
+    }
+    source.addEventListener('input', invalidate);
+    from.addEventListener('change', invalidate);
+    to.addEventListener('change', invalidate);
+    get<HTMLButtonElement>('[data-swap]').addEventListener('click', () => {
+      [from.value, to.value] = [to.value, from.value]; invalidate();
+    });
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+      fileInput.value = '';
+      if (!/\.srt$/i.test(file.name)) { setError('Please choose a .srt file.'); return; }
+      if (file.size > MAX_SRT_BYTES) { setError('The file exceeds the 1 MB preview limit.'); return; }
+      try { source.value = await file.text(); invalidate(); progress.textContent = `Loaded ${file.name} locally.`; }
+      catch { setError('Could not read this file. Use UTF-8 SRT text.'); }
+    });
+    stop.addEventListener('click', () => { stopRequested = true; progress.textContent = 'Stopping after the current cue…'; });
+    output.addEventListener('input', () => { if (isComplete) download.disabled = !output.value.trim(); });
+    download.addEventListener('click', () => {
+      if (!isComplete || !output.value.trim()) return;
+      try { parseSrt(output.value); } catch (e) { setError(`Output is not valid SRT: ${e instanceof Error ? e.message : String(e)}`); return; }
+      const blob = new Blob(['\uFEFF', output.value], { type: 'application/x-subrip;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a'); anchor.href = url;
+      anchor.download = `translated_${from.value}_to_${to.value}.srt`;
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+    translate.addEventListener('click', async () => {
+      if (!api || busy) return;
+      invalidate();
+      let cues;
+      try { cues = parseSrt(source.value); } catch (e) { setError(e instanceof Error ? e.message : 'Invalid SRT file.'); return; }
+      if (from.value === to.value) { setError('Choose two different languages.'); return; }
+      stopRequested = false;
+      setBusy(true);
+      let session: BrowserTranslationSession | undefined;
+      try {
+        const options = { sourceLanguage: from.value, targetLanguage: to.value };
+        progress.textContent = 'Checking language availability…';
+        const availability = await api.availability(options);
+        if (availability === 'unavailable') throw new Error('This browser does not support the selected language pair.');
+        if (!['available', 'downloadable', 'downloading'].includes(availability)) throw new Error('Translation is not available for this pair in your browser.');
+        progress.textContent = availability === 'available' ? 'Preparing translator…' : 'Downloading a browser language pack (first use may take time)…';
+        session = await api.create({
+          ...options,
+          monitor(monitor) {
+            monitor.addEventListener('downloadprogress', (event) => {
+              progress.textContent = `Downloading language pack: ${Math.round(event.loaded * 100)}%`;
+            });
+          },
+        });
+        const results = [];
+        for (let i = 0; i < cues.length; i++) {
+          if (stopRequested) throw new Error('Translation stopped; partial results were discarded.');
+          progress.textContent = `Translating cue ${i + 1} of ${cues.length}…`;
+          const translated = await session.translate(cues[i]!.text);
+          if (!translated.trim()) throw new Error(`Translation returned empty text at cue ${i + 1}.`);
+          // Prevent a malformed model response from inserting SRT cue separators.
+          results.push({ ...cues[i]!, text: translated.trim().replace(/\r\n?/g, '\n').replace(/\n\s*\n/g, '\n') });
+        }
+        if (stopRequested) throw new Error('Translation stopped; partial results were discarded.');
+        output.value = serializeSrt(results);
+        isComplete = true;
+        download.disabled = false;
+        progress.textContent = `Translated ${results.length} cues locally. Review and download the result.`;
+      } catch (e) {
+        progress.textContent = 'Translation not completed.';
+        setError(e instanceof Error ? e.message : 'Translation failed. Check browser support and try again.');
+      } finally {
+        session?.destroy?.();
+        setBusy(false);
+      }
+    });
+    // Do not expose an enabled action until the click handler is attached.
+    root.dataset.translatorReady = 'true';
+    translate.disabled = !api;
+  }
+</script>
+<style>
+  .srt-translator{background:#111722;border:1px solid #354055;border-radius:18px;padding:20px;color:#eef1f9}
+  .translation-banner{display:flex;flex-wrap:wrap;gap:9px;align-items:center;border:1px solid #4d4770;border-radius:12px;background:#211c36;padding:12px 15px;font-size:13px;color:#d4cff6}
+  .translation-banner strong{color:#fff}
+  .translation-settings{display:flex;gap:16px;align-items:end;flex-wrap:wrap;margin:20px 0}
+  .translation-settings label{display:grid;gap:8px;flex:1 1 240px;font-size:13px;font-weight:750}
+  .translation-settings select{width:100%;height:44px;border-radius:9px;border:1px solid #465470;background:#0d1624;color:#f3f4fa;padding:8px 12px;font-size:13px}
+  .translation-swap{height:44px;border:1px solid #59637b;border-radius:9px;background:#273248;color:white;padding:0 15px;font-size:13px;cursor:pointer}
+  .translation-editors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .translation-editor{min-width:0}
+  .editor-label{min-height:36px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;font-weight:750}
+  .editor-label span{font-size:11px;color:#abb8ce;font-weight:500}
+  .translation-file{color:#c8bdff;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .translation-file input{max-width:150px;font-size:11px;display:block;margin-top:5px;color:#c7d0e2}
+  .translation-editor textarea{display:block;width:100%;min-height:270px;resize:vertical;padding:15px;border:1px solid #48546b;border-radius:12px;background:#0b121e;color:#f5f6fa;line-height:1.6;font-size:13px}
+  .translation-editor textarea:focus-visible,.translation-settings select:focus-visible{outline:2px solid #a59aff;outline-offset:2px}
+  .translation-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
+  .translation-controls button{padding:11px 15px;border-radius:9px;background:#26354b;color:white;border:1px solid #475775;cursor:pointer;font-size:12px;font-weight:750}
+  .translation-controls .translation-primary{background:#6956ea;border-color:#6956ea}
+  .translation-controls button:disabled,.translation-swap:disabled{opacity:.46;cursor:not-allowed}
+  .translation-controls span{flex:1 1 240px;color:#b9c5da;font-size:12px}
+  .translation-error{color:#ffc1bb;border:1px solid #a35757;padding:12px;border-radius:10px;font-size:13px}
+  .translation-note{font-size:12px;line-height:1.7;color:#b1bdd0;margin:16px 0 0}
+  @media(max-width:760px){.srt-translator{padding:14px}.translation-editors{grid-template-columns:1fr}.translation-editor textarea{min-height:180px}.translation-settings{gap:10px}.translation-swap{width:100%}}
+</style>
