@@ -61,7 +61,7 @@ test('unsupported language pair and malformed SRT fail without partial download'
       configurable: true,
       value: {
         availability: async () => 'unavailable',
-        create: async () => { throw new Error('should not create translator'); },
+        create: async () => { throw new DOMException('Unable to create translator for the given source and target language.', 'NotSupportedError'); },
       },
     });
   });
@@ -72,6 +72,41 @@ test('unsupported language pair and malformed SRT fail without partial download'
   await expect(page.locator('[data-download]')).toBeDisabled();
   await page.locator('[data-source]').fill('1\n00:00:01,000 --> 00:00:02,000\nこんにちは');
   await page.locator('[data-translate]').click();
-  await expect(page.locator('[data-error]')).toContainText('does not support the selected language pair');
+  await expect(page.locator('[data-error]')).toContainText('Chrome could not initialize ja → en');
   await expect(page.locator('[data-download]')).toBeDisabled();
+});
+
+test('create is invoked inside click without awaiting availability, preserving browser activation', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as Window & { __translatorCalls?: string[] }).__translatorCalls = [];
+    Object.defineProperty(window, 'Translator', {
+      configurable: true,
+      value: {
+        availability: async () => {
+          (window as Window & { __translatorCalls?: string[] }).__translatorCalls?.push('availability');
+          return 'downloadable';
+        },
+        create: () => {
+          (window as Window & { __translatorCalls?: string[] }).__translatorCalls?.push('create');
+          return Promise.resolve({ translate: async (text: string) => text, destroy: () => {} });
+        },
+      },
+    });
+  });
+  await page.goto('/subtitle-translator/');
+  await page.locator('[data-translate]').click();
+  await expect(page.locator('[data-progress]')).toContainText('Translated 2 cues locally');
+  const calls = await page.evaluate(() => (window as Window & { __translatorCalls?: string[] }).__translatorCalls);
+  expect(calls?.[0]).toBe('create');
+});
+
+test('SRT file picker has a compact filename indicator', async ({ page }) => {
+  await page.goto('/subtitle-translator/');
+  await expect(page.locator('[data-file-name]')).toHaveText('No file selected');
+  await page.locator('[data-file]').setInputFiles({
+    name: 'football-jp.srt', mimeType: 'text/plain',
+    buffer: Buffer.from('1\n00:00:01,000 --> 00:00:02,000\nこんにちは', 'utf8'),
+  });
+  await expect(page.locator('[data-file-name]')).toHaveText('football-jp.srt');
+  await expect(page.locator('[data-source]')).toHaveValue(/こんにちは/);
 });

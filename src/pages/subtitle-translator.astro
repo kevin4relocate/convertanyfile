@@ -30,7 +30,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       </div>
       <div class="translation-editors">
         <div class="translation-editor">
-          <div class="editor-label"><label for="subtitle-source">Original SRT</label><label class="translation-file">Choose .srt file <input type="file" accept=".srt,text/plain" data-file aria-label="Choose SRT file" /></label></div>
+          <div class="editor-label"><label for="subtitle-source">Original SRT</label><span class="translation-picker"><label class="translation-file">Choose .srt file <input type="file" accept=".srt,text/plain" data-file aria-label="Choose SRT file" /></label><span data-file-name aria-live="polite">No file selected</span></span></div>
           <textarea id="subtitle-source" data-source spellcheck="false" aria-label="Original SRT text" placeholder="1&#10;00:00:01,000 --> 00:00:04,500&#10;今日は日本の歴史について話します。">1
 00:00:01,000 --> 00:00:04,500
 今日は日本の歴史について話します。
@@ -83,6 +83,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
     const from = get<HTMLSelectElement>('[data-source-language]');
     const to = get<HTMLSelectElement>('[data-target-language]');
     const fileInput = get<HTMLInputElement>('[data-file]');
+    const fileName = get<HTMLElement>('[data-file-name]');
     const translate = get<HTMLButtonElement>('[data-translate]');
     const stop = get<HTMLButtonElement>('[data-stop]');
     const download = get<HTMLButtonElement>('[data-download]');
@@ -119,7 +120,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       fileInput.value = '';
       if (!/\.srt$/i.test(file.name)) { setError('Please choose a .srt file.'); return; }
       if (file.size > MAX_SRT_BYTES) { setError('The file exceeds the 1 MB preview limit.'); return; }
-      try { source.value = await file.text(); invalidate(); progress.textContent = `Loaded ${file.name} locally.`; }
+      try { source.value = await file.text(); invalidate(); fileName.textContent = file.name; fileName.title = file.name; progress.textContent = `Loaded ${file.name} locally.`; }
       catch { setError('Could not read this file. Use UTF-8 SRT text.'); }
     });
     stop.addEventListener('click', () => { stopRequested = true; progress.textContent = 'Stopping after the current cue…'; });
@@ -143,14 +144,13 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       stopRequested = false;
       setBusy(true);
       let session: BrowserTranslationSession | undefined;
+      const options = { sourceLanguage: from.value, targetLanguage: to.value };
       try {
-        const options = { sourceLanguage: from.value, targetLanguage: to.value };
-        progress.textContent = 'Checking language availability…';
-        const availability = await api.availability(options);
-        if (availability === 'unavailable') throw new Error('This browser does not support the selected language pair.');
-        if (!['available', 'downloadable', 'downloading'].includes(availability)) throw new Error('Translation is not available for this pair in your browser.');
-        progress.textContent = availability === 'available' ? 'Preparing translator…' : 'Downloading a browser language pack (first use may take time)…';
-        session = await api.create({
+        // IMPORTANT: create() must be invoked directly from the user's click.
+        // Awaiting availability() first can lose transient user activation,
+        // preventing Chrome from downloading a required language pack.
+        progress.textContent = 'Preparing on-device translator (a language pack may download)…';
+        const creation = api.create({
           ...options,
           monitor(monitor) {
             monitor.addEventListener('downloadprogress', (event) => {
@@ -158,6 +158,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
             });
           },
         });
+        session = await creation;
         const results = [];
         for (let i = 0; i < cues.length; i++) {
           if (stopRequested) throw new Error('Translation stopped; partial results were discarded.');
@@ -174,7 +175,19 @@ import SiteLayout from '../layouts/SiteLayout.astro';
         progress.textContent = `Translated ${results.length} cues locally. Review and download the result.`;
       } catch (e) {
         progress.textContent = 'Translation not completed.';
-        setError(e instanceof Error ? e.message : 'Translation failed. Check browser support and try again.');
+        const original = e instanceof Error ? e.message : String(e);
+        const name = e instanceof Error ? e.name : '';
+        let guidance = '';
+        if (name === 'NotSupportedError' || /Unable to create translator|language/i.test(original)) {
+          let availability = 'unknown';
+          try { availability = await api.availability(options); } catch { /* Diagnostics only. */ }
+          guidance = `Chrome could not initialize ${options.sourceLanguage} → ${options.targetLanguage} (availability: ${availability}). Try updating desktop Chrome, restarting it, and allowing language-pack downloads. If it still fails, this pair or device is not currently supported by Chrome's on-device engine.`;
+        } else if (name === 'NotAllowedError') {
+          guidance = 'Chrome blocked the model download. Click Translate again directly, or check browser download and AI settings.';
+        } else if (name === 'QuotaExceededError') {
+          guidance = 'Chrome could not store another language pack. Free browser storage and retry.';
+        }
+        setError(guidance ? `${guidance} Browser detail: ${original}` : original);
       } finally {
         session?.destroy?.();
         setBusy(false);
@@ -197,8 +210,12 @@ import SiteLayout from '../layouts/SiteLayout.astro';
   .translation-editor{min-width:0}
   .editor-label{min-height:36px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;font-weight:750}
   .editor-label span{font-size:11px;color:#abb8ce;font-weight:500}
-  .translation-file{color:#c8bdff;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-  .translation-file input{max-width:150px;font-size:11px;display:block;margin-top:5px;color:#c7d0e2}
+  .translation-picker{display:inline-flex;align-items:center;gap:10px;min-width:0;max-width:100%;font-size:12px}
+  .translation-file{position:relative;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;background:#273248;border:1px solid #59637b;border-radius:8px;padding:8px 12px;color:#f3f4fa;cursor:pointer;font-size:12px;font-weight:700;text-decoration:none}
+  .translation-file:hover{border-color:#a99cff}
+  .translation-file:focus-within{outline:2px solid #a59aff;outline-offset:2px}
+  .translation-file input{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
+  [data-file-name]{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#aab6ca;font-size:11px;font-weight:500}
   .translation-editor textarea{display:block;width:100%;min-height:270px;resize:vertical;padding:15px;border:1px solid #48546b;border-radius:12px;background:#0b121e;color:#f5f6fa;line-height:1.6;font-size:13px}
   .translation-editor textarea:focus-visible,.translation-settings select:focus-visible{outline:2px solid #a59aff;outline-offset:2px}
   .translation-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
