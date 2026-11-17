@@ -108,5 +108,5 @@ test('SRT file picker has a compact filename indicator', async ({ page }) => {
     buffer: Buffer.from('1\n00:00:01,000 --> 00:00:02,000\nこんにちは', 'utf8'),
   });
   await expect(page.locator('[data-file-name]')).toHaveText('football-jp.srt');
-  await expect(page.locator('[data-source]')).toContainText('こんにちは');
+  await expect(page.locator('[data-source]')).toHaveValue(/こんにちは/);
 });
