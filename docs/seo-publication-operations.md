@@ -1,41 +1,44 @@
-# Daily SEO guide publication — operational notes
+# Daily SEO guide publication — operations and deployment verification
 
-## Why a scheduled rebuild is necessary
+## Why the previous schedule was insufficient
 
-The site is an Astro static export. `getPublishedToolSeoGuides()` includes guides whose `publishDate` is no later than the Vietnamese calendar date **at build time**. Simply storing future-dated guides in Git does **not** publish them automatically.
+Astro builds static pages. Each guide is included only when its `publishDate` is on or before the current Vietnamese date **at build time**.
 
-The 90 scheduled articles run daily from **2026-11-17** through **2027-02-14**. Their slugs, dates and SVG assets are kept intact. The first day's content only appears after a build on/after its publication date.
+The original workflow was merged on **2026-11-17 at 00:57 Asia/Ho_Chi_Minh**, after that day's **00:15** scheduled event. The initial scheduled run therefore could not start on November 17. A Cloudflare production build triggered by the merge could still publish the first guide, but a GitHub merge alone is not proof that the production URL exists.
 
-## Daily workflow
+## Updated release workflow
 
-`.github/workflows/publish-scheduled-guides.yml` runs at **17:15 UTC**, equivalent to **00:15 Asia/Ho_Chi_Minh on the next calendar day**. UTC is fixed; Vietnam does not use daylight saving time.
+`.github/workflows/publish-scheduled-guides.yml` now runs at **17:15 UTC every day** (00:15 the next morning in Vietnam). It can also be started manually via GitHub Actions, and a change to the workflow file on `main` triggers a **one-time bootstrap run**. The bootstrap covers deployments when a workflow is merged after the daily cron event.
 
-1. Checks out `main` and builds the site, including SEO audits.
-2. If the optional `CLOUDFLARE_DEPLOY_HOOK` GitHub Actions secret is configured, sends the deploy hook a POST request.
-3. Otherwise pushes a single dated, empty Git commit to `main`; this is intended to trigger a Cloudflare Pages production build via an existing GitHub/Cloudflare Git integration.
-4. Avoids duplicate daily empty commits when the same workflow runs repeatedly.
-5. Stops creating publication triggers after 2027-02-14. Existing pages remain published.
+1. Reads the dated guide catalog directly via `scripts/seo-publication-plan.mjs`. There are 90 consecutive entries from **2026-11-17** to **2027-02-14**. No first or last dates are hard-coded in the workflow.
+2. Runs `npm run test:seo-publication` to validate day boundaries and ensure the catalog is contiguous.
+3. If a guide is due that day, runs the full production build, content checks and SEO checks. The due guide must exist in `dist/guides/tool/<slug>/index.html`.
+4. Triggers Cloudflare production. If the GitHub Actions secret `CLOUDFLARE_DEPLOY_HOOK` exists, it sends a POST to that hook. Otherwise it attempts a dated, empty Git commit to `main` as a fallback for projects already using Cloudflare's GitHub integration.
+5. **Checks the live production site** via `scripts/verify-live-seo-publication.mjs`. The target article must return HTTP 200 with its canonical URL and publication metadata, and the XML sitemap must include its exact URL.
+6. The production verification retries for approximately six minutes to allow Cloudflare build and propagation. If the site or sitemap is not updated, the GitHub workflow **fails** with a deployment warning instead of claiming that publication succeeded.
 
-**Recommended production configuration:** create a Cloudflare Pages production Deploy Hook and add its URL as GitHub Actions secret `CLOUDFLARE_DEPLOY_HOOK`. This bypasses branch-protection restrictions and is more direct than pushing an empty commit. Do not commit a deploy hook URL to Git.
+Days outside the catalog do not cause empty commits or unnecessary builds. Each day's empty-commit trigger is idempotent for manual reruns. GitHub Actions scheduled jobs can be delayed or occasionally skipped; they do not guarantee an exact publication minute.
 
-**No-config fallback:** the empty-commit method requires `GITHUB_TOKEN` with `contents: write` to be allowed to push to `main`. If GitHub branch protection or Cloudflare's Git integration blocks that action, publication will not occur; use the Deploy Hook instead.
+## Cloudflare setup and first verification
 
-## How to verify that publication really happened
+For the most reliable deployment, create a **Cloudflare Pages production Deploy Hook** in the Cloudflare project for ConvertAnyFile and save its full URL in the GitHub repository's Actions secret named `CLOUDFLARE_DEPLOY_HOOK`.
 
-- In GitHub Actions, inspect `Publish scheduled SEO guides` for the day. A successful GitHub workflow only proves that a trigger was sent or a commit was pushed, not that Cloudflare finished deploying.
-- In Cloudflare Pages, check the production deployment log and its completion status.
-- Fetch `/guides/tool/<today-slug>/` with a normal GET request and confirm HTTP 200; also check that tomorrow's article is not already public.
-- Fetch `/sitemap-index.xml` and confirm only already-published guides are included.
-- In Google Search Console, inspect important URLs, indexing and page impressions. A successful static build does **not** guarantee Google indexing.
+The fallback without a hook can work if GitHub Actions is permitted to push to `main` and Cloudflare's Git integration creates builds from those pushes. It is **not guaranteed**: organization policies, GitHub branch rules or Cloudflare Git integration may prevent it. Production verification detects many such failures.
 
-A first manual workflow dispatch is recommended after merging this feature to verify the deployment integration, and again after configuring the optional secret if needed. GitHub's scheduled runners may start late; the workflow does not promise publication at an exact minute.
+After merging the revised workflow:
 
-## Content quality guardrails
+1. Open **GitHub → Actions → Publish scheduled SEO guides** and look for the bootstrap run triggered by the workflow file change. If necessary, select **Run workflow** manually.
+2. Check the job logs: a successful *build* and a successful *Cloudflare trigger* are not enough; the final **Confirm guide and XML sitemap are live** step must pass.
+3. Open Cloudflare Pages and confirm a new production deployment completed successfully.
+4. Check today's published guide at `https://convertanyfile.net/guides/tool/<slug>/` and verify that tomorrow's guide is not already public.
+5. In Search Console, examine index coverage, chosen canonicals and impressions. Successful publication does **not** guarantee indexing.
 
-`npm run check:content-seo` now checks each scheduled article's independent title/slug, at least 260 words, publish date, image/alt/caption, internal links and duplicate substantial paragraphs. It also rejects generic template descriptions and checks the ten new format converters have explanatory SEO content.
+The live verification checks HTTP and sitemap responses. It does not replace Cloudflare deployment logs, Google Search Console, manual content review, or Core Web Vitals measurement.
 
-The SEO inventory `docs/tool-guide-coverage.csv` tracks **161 URLs**: 19 already covered with separate guides, 90 scheduled, and 52 without dedicated guide articles (including ten new format converters). The new converter pages have their own on-page explanatory content; an in-page FAQ is not counted as an independent guide.
+## SEO content inventory
 
-## Hidden Gemini remover
+`docs/tool-guide-coverage.csv` tracks 161 tool URLs: 19 with independent guides, 90 scheduled guides, and 52 without independent guides (including 10 new format converter pages with their own on-page examples and FAQ).
 
-The Gemini AI Logo Remover engine is retained in source but omitted from the public image manifest, navigation, sitemap and informational pages. Do not restore public references without an explicit release decision.
+The editorial checker rejects duplicate substantial paragraphs and generic descriptions in the scheduled queue. Keep every article's slug, date, image, alt text and caption stable unless explicitly updating the publishing plan.
+
+The Gemini AI Logo Remover engine is retained in source and stays hidden from public navigation, promotional copy and sitemap until explicitly requested.
