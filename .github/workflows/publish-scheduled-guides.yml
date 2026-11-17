@@ -44,14 +44,14 @@ jobs:
         if: steps.publication.outputs.due == 'true'
         run: |
           npm run build
-          test -f "dist/guides/tool/\${{ steps.publication.outputs.slug }}/index.html"
-          echo "Build includes the due guide: \${{ steps.publication.outputs.slug }}"
+          test -f "dist/guides/tool/${{ steps.publication.outputs.slug }}/index.html"
+          echo "Build includes the due guide: ${{ steps.publication.outputs.slug }}"
 
       - name: Request Cloudflare production build
         if: steps.publication.outputs.due == 'true'
         env:
-          CF_DEPLOY_HOOK: \${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
-          GUIDE_DATE: \${{ steps.publication.outputs.date }}
+          CF_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+          GUIDE_DATE: ${{ steps.publication.outputs.date }}
         shell: bash
         run: |
           set -euo pipefail
@@ -76,7 +76,7 @@ jobs:
 
       - name: Confirm guide and XML sitemap are live
         if: steps.publication.outputs.due == 'true'
-        run: node scripts/verify-live-seo-publication.mjs --date="\${{ steps.publication.outputs.date }}"
+        run: node scripts/verify-live-seo-publication.mjs --date="${{ steps.publication.outputs.date }}"
 
       - name: Note days without scheduled articles
         if: steps.publication.outputs.due != 'true'
