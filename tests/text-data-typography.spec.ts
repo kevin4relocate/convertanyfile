@@ -16,8 +16,12 @@ test('Text and Data tool pages use matching heading typography', async ({ page }
     });
     styles.push(typography);
   }
-  expect(styles[0]).toEqual(styles[1]);
-  expect(styles[0].fontWeight).toBe('700');
+  expect(styles).toHaveLength(2);
+  const [textHeading, dataHeading] = styles;
+  expect(textHeading).toBeDefined();
+  expect(dataHeading).toBeDefined();
+  expect(textHeading!).toEqual(dataHeading);
+  expect(textHeading!.fontWeight).toBe('700');
 });
 
 test('Text tool buttons and selector match Data tool action typography', async ({ page }) => {
