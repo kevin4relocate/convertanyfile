@@ -62,10 +62,12 @@ function initializeImageToolsDirectory(root: HTMLElement): void {
   };
 
   const showAll = (): void => {
+    // WebKit may restore an old search value on focus. Focus before clearing,
+    // then synchronize the visible input, filter state and result count.
+    input.focus();
     input.value = '';
     activeGroup = 'all';
     applyFilter();
-    input.focus();
   };
 
   input.addEventListener('input', applyFilter);
