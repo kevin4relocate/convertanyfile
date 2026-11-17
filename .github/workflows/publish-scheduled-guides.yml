@@ -35,6 +35,7 @@ jobs:
           node-version: '22.19.0'
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - run: npm run test:seo-publication
 
       - name: Determine exactly which guide is due today
         id: publication
