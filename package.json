@@ -22,7 +22,8 @@
     "test:production": "playwright test --config=playwright.production.config.ts",
     "check:links": "node scripts/check-site-links.mjs",
     "check:adsense": "node scripts/check-adsense-verification.mjs",
-    "check:content-seo": "node scripts/check-content-seo.mjs"
+    "check:content-seo": "node scripts/check-content-seo.mjs",
+    "test:seo-publication": "node --test tests/seo-publication.node.test.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.3",
