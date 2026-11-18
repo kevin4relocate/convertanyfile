@@ -2,7 +2,7 @@
  * Shared download filename policy for image editors.
  * Names change only at download time; source files and rendered pixels are untouched.
  */
-export type ImageDownloadNameMode = 'original' | 'prefix' | 'suffix';
+export type ImageDownloadNameMode = 'tool-default' | 'original' | 'prefix' | 'suffix';
 export interface ImageDownloadFile { filename: string; blob: Blob; sourceFilename?: string }
 export interface ImageDownloadNameOptions { mode: ImageDownloadNameMode; affix: string }
 
@@ -36,6 +36,8 @@ export function imageDownloadFilename(
   outputFilename: string,
   options: ImageDownloadNameOptions,
 ): string {
+  // Existing image tools retain their established default filenames unless the user opts in.
+  if (options.mode === 'tool-default') return outputFilename;
   const output = splitExtension(outputFilename);
   if (!OUTPUT_EXTENSIONS.has(output.extension.toLowerCase())) return outputFilename;
   const sourceStem = splitExtension(sourceFilename.replace(/[\\/]/g, '-')).stem;
@@ -64,7 +66,7 @@ export function readImageDownloadNaming(root: HTMLElement): ImageDownloadNameOpt
   const input = root.querySelector<HTMLInputElement>('[data-download-name-affix]');
   const mode = select?.value;
   return {
-    mode: mode === 'prefix' || mode === 'suffix' ? mode : 'original',
+    mode: mode === 'original' || mode === 'prefix' || mode === 'suffix' ? mode : 'tool-default',
     affix: input?.value ?? '',
   };
 }
@@ -96,6 +98,7 @@ export function mountImageDownloadNaming(root: HTMLElement): void {
     <label class="image-download-naming__mode">
       <span>Downloaded filename</span>
       <select data-download-name-mode aria-label="Downloaded filename option">
+        <option value="tool-default">Tool default (current naming)</option>
         <option value="original">Same original name</option>
         <option value="prefix">Add prefix</option>
         <option value="suffix">Add suffix</option>
@@ -113,7 +116,7 @@ export function mountImageDownloadNaming(root: HTMLElement): void {
   const affixLabel = panel.querySelector<HTMLElement>('[data-download-name-affix-label]')!;
   const field = panel.querySelector<HTMLElement>('.image-download-naming__affix')!;
   mode.addEventListener('change', () => {
-    field.hidden = mode.value === 'original';
+    field.hidden = mode.value !== 'prefix' && mode.value !== 'suffix';
     affixLabel.textContent = mode.value === 'suffix' ? 'Suffix' : 'Prefix';
     affix.placeholder = mode.value === 'suffix' ? 'e.g. -edited' : 'e.g. edited-';
   });
