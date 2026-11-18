@@ -1,4 +1,5 @@
 import { downloadResultBatch } from '../core/download';
+import { withImageDownloadNames } from '../core/download-naming';
 import { createImageFileAdmission, imageDimensionsWithinLimits } from '../core/file-admission';
 import { runSequentialBatch } from '../core/batch-execution';
 import { defaultQualityForImageOutput } from '../core/output-quality';
@@ -284,8 +285,8 @@ export function mountMetadataCleanup(root: HTMLElement): void {
   async function downloadResults(): Promise<void> {
     const files = state.items
       .filter((item): item is Item & { result: Blob; outputName: string } => Boolean(item.result && item.outputName && item.status === 'done'))
-      .map((item) => ({ filename: item.outputName, blob: item.result }));
-    await downloadResultBatch(files, `metadata-clean-${files.length}-images.zip`);
+      .map((item) => ({ filename: item.outputName, blob: item.result, sourceFilename: item.file.name }));
+    await downloadResultBatch(withImageDownloadNames(root, files), `metadata-clean-${files.length}-images.zip`);
   }
 
   drop.addEventListener('dragover', (event) => {
