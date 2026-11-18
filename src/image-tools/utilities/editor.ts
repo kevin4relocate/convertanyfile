@@ -1,4 +1,5 @@
 import { downloadBlob, createZipBlob } from '../core/download';
+import { withImageDownloadNames } from '../core/download-naming';
 import { createImageFileAdmission, imageDimensionsWithinLimits } from '../core/file-admission';
 import {
   sniffFileMime, makePreviewCanvas, pngBlob,
@@ -326,7 +327,7 @@ export function mountImageUtility(root:HTMLElement):void {
   });
 
   download.addEventListener('click',()=>{
-    if(lastOutput)downloadBlob(lastOutput.blob,lastOutput.filename);
+    if(lastOutput){const [file]=withImageDownloadNames(root,[{filename:lastOutput.filename,blob:lastOutput.blob,sourceFilename:images[0]?.file.name}]);if(file)downloadBlob(file.blob,file.filename);}
   });
   copy.addEventListener('click',()=>{
     if(!text.value)return;

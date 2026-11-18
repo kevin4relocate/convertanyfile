@@ -1,5 +1,6 @@
 import {createImageFileAdmission,imageDimensionsWithinLimits} from '../core/file-admission';
 import {downloadResultBatch} from '../core/download';
+import {withImageDownloadNames} from '../core/download-naming';
 import {sniffFileMime,type LoadedImage} from '../utilities/operations';
 import {runAdvancedImageTool,type AdvancedOutput,type AdvancedParams} from './operations';
 
@@ -227,7 +228,7 @@ export function mountAdvancedImageTool(root:HTMLElement):void{
   // Editing settings or clearing an image may invalidate a result while the
   // asynchronous ZIP is being generated. Never resurrect its download button.
   const revision=outputRevision;
-  const batch=outputs;
+  const batch=withImageDownloadNames(root,outputs.map((output,index)=>({...output,sourceFilename:images[index]?.file.name??images[0]?.file.name})));
   try{
    await downloadResultBatch(batch,'advanced-'+id+'.zip',()=>revision===outputRevision);
    if(revision===outputRevision)

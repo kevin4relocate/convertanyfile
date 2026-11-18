@@ -1,4 +1,5 @@
 import { downloadResultBatch } from '../core/download';
+import { withImageDownloadNames } from '../core/download-naming';
 import { createImageFileAdmission, imageDimensionsWithinLimits } from '../core/file-admission';
 import { runSequentialBatch } from '../core/batch-execution';
 import { IMAGE_TOOL_MANIFEST } from '../../config/image-tools';
@@ -239,8 +240,8 @@ export function mountDeterministicImageTool(root:HTMLElement):void {
     if(failed)showNotice(`${failed} image${failed===1?'':'s'} failed. Successful results remain available.`);
   }
   async function downloadResults():Promise<void> {
-    const files=state.items.filter((item):item is Item&{result:Blob;outputName:string}=>Boolean(item.result&&item.outputName&&item.status==='done')).map(item=>({filename:item.outputName,blob:item.result}));
-    await downloadResultBatch(files,`${toolId}-results.zip`);
+    const files=state.items.filter((item):item is Item&{result:Blob;outputName:string}=>Boolean(item.result&&item.outputName&&item.status==='done')).map(item=>({filename:item.outputName,blob:item.result,sourceFilename:item.file.name}));
+    await downloadResultBatch(withImageDownloadNames(root, files),`${toolId}-results.zip`);
   }
 
   settingInputs.forEach(control=>{
