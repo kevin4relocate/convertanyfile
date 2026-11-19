@@ -58,14 +58,18 @@ const convertersActive = converterPaths.includes(currentPath);
             <span>Image Tools</span>
             <svg class="nav-dropdown-chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="m3 4.5 3 3 3-3" /></svg>
           </summary>
-          <div class="nav-submenu nav-submenu--image-tools">
+          <div class="nav-submenu nav-submenu--image-tools nav-submenu--catalog" data-tool-catalog>
+            <label class="nav-search-label">
+              <span class="nav-search-heading">Search Image Tools</span>
+              <input type="search" class="nav-tool-search" placeholder="Find image tools…" aria-label="Search Image Tools" data-nav-search />
+            </label>
             <a class:list={['nav-submenu-overview', currentPath === '/image-tools/' && 'is-current']} href="/image-tools/">
               <span>All Image Tools</span>
               <span aria-hidden="true">→</span>
             </a>
-            <div class="nav-tool-grid">
+            <div class="nav-tool-grid nav-image-tool-grid">
               {imageToolLinks.map((tool) => (
-                <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} href={tool.href}>
+                <a class:list={['nav-tool-link', currentPath === tool.href && 'is-current']} data-nav-item data-search-text={`${tool.label} ${tool.hint} ${tool.id}`.toLocaleLowerCase()} href={tool.href}>
                   <span class="nav-tool-icon" aria-hidden="true">{tool.icon}</span>
                   <span class="nav-tool-copy">
                     <span class="nav-tool-title-row"><strong>{tool.label}</strong><small class:list={['nav-tool-status', tool.status === 'live' && 'is-live']}>{tool.status === 'live' ? 'LIVE' : 'PREVIEW'}</small></span>
@@ -74,6 +78,7 @@ const convertersActive = converterPaths.includes(currentPath);
                 </a>
               ))}
             </div>
+            <p class="nav-search-empty" data-nav-empty hidden role="status">No matching image tools.</p>
           </div>
         </details>
       ) : item.label === 'Text Tools' || item.label === 'Data Tools' ? (
@@ -200,15 +205,29 @@ const convertersActive = converterPaths.includes(currentPath);
     const input = catalog.querySelector<HTMLInputElement>('[data-nav-search]');
     input?.addEventListener('input', () => {
       const query = input.value.trim().toLocaleLowerCase();
-      for (const group of catalog.querySelectorAll<HTMLElement>('[data-nav-group]')) {
-        let visible = 0;
-        for (const item of group.querySelectorAll<HTMLElement>('[data-nav-item]')) {
+      let totalVisible = 0;
+      const groups = catalog.querySelectorAll<HTMLElement>('[data-nav-group]');
+      if (groups.length) {
+        for (const group of groups) {
+          let visible = 0;
+          for (const item of group.querySelectorAll<HTMLElement>('[data-nav-item]')) {
+            const matches = (item.dataset.searchText ?? '').includes(query);
+            item.hidden = !matches;
+            if (matches) visible++;
+          }
+          group.hidden = visible === 0;
+          totalVisible += visible;
+        }
+      } else {
+        // Image Tools has one flat grid rather than Text/Data category groups.
+        for (const item of catalog.querySelectorAll<HTMLElement>('[data-nav-item]')) {
           const matches = (item.dataset.searchText ?? '').includes(query);
           item.hidden = !matches;
-          if (matches) visible++;
+          if (matches) totalVisible++;
         }
-        group.hidden = visible === 0;
       }
+      const empty = catalog.querySelector<HTMLElement>('[data-nav-empty]');
+      if (empty) empty.hidden = totalVisible !== 0;
     });
   }
 
@@ -309,7 +328,9 @@ const convertersActive = converterPaths.includes(currentPath);
     line-height: 1.4;
   }
   .nav-tool-search:focus-visible { outline: 2px solid #a69ffd; outline-offset: 2px; }
-  .nav-catalog-group[hidden], .nav-tool-link[hidden] { display: none !important; }
+  .nav-catalog-group[hidden], .nav-tool-link[hidden], .nav-search-empty[hidden] { display: none !important; }
+  .nav-image-tool-grid { max-height: min(65vh, 540px); overflow-y: auto; }
+  .nav-search-empty { margin: 12px 8px; color: #b3bdd0; font-size: 12px; font-weight: 600; }
   .nav-submenu--data-tools { left: auto; right: 0; transform: none; }
   .nav-catalog-groups { max-height: min(65vh, 540px); overflow-y: auto; padding-right: 2px; }
   .nav-catalog-groups .nav-tool-grid { max-height: none; overflow: visible; }
